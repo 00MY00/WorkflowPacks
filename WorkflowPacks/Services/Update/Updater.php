@@ -129,8 +129,23 @@ class Updater
         return storage_path('app/workflowpacks'.($sub !== '' ? '/'.$sub : ''));
     }
 
+    /** Last check / last update, kept in FreeScout's options table (before 1.4.1: a file, still read once). */
+    const OPTION_STATUS = 'workflowpacks.update_status';
+
+    /**
+     * Stored in the database, not in storage/: the web server ("Check for updates") and the scheduler (cron, often
+     * another system user) both write it. With a file, a folder created by cron could not be written by the web
+     * server: the check result was lost and "Update now" never appeared.
+     */
     public static function status()
     {
+        try {
+            $data = json_decode((string) \App\Option::get(self::OPTION_STATUS, '', false, false), true);
+            if (is_array($data)) {
+                return $data;
+            }
+        } catch (\Throwable $e) {
+        }
         $file = self::dir('update-status.json');
         $data = is_file($file) ? json_decode((string) @file_get_contents($file), true) : null;
 
@@ -140,8 +155,13 @@ class Updater
     protected function saveStatus(array $changes)
     {
         $status = array_merge(self::status(), $changes);
-        @mkdir(self::dir(), 0775, true);
-        @file_put_contents(self::dir('update-status.json'), json_encode($status, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        try {
+            \App\Option::set(self::OPTION_STATUS, json_encode($status, JSON_UNESCAPED_SLASHES));
+        } catch (\Throwable $e) {
+            // database unreachable: the file, as before
+            @mkdir(self::dir(), 0775, true);
+            @file_put_contents(self::dir('update-status.json'), json_encode($status, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        }
 
         return $status;
     }

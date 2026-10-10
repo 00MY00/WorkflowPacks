@@ -19,27 +19,43 @@ class SettingsTest extends TestCase
         $this->seeIn($page, 'Workflow Packs');
     }
 
-    /** Status file written by the update check (Updater::check(), daily from the scheduler). */
+    /** Status written by the update check (Updater::check(), daily from the scheduler), in the options table. */
     protected function latest($version)
     {
-        @mkdir(Updater::dir(), 0775, true);
-        $file = Updater::dir('update-status.json');
-        $this->statusBackup = is_file($file) ? file_get_contents($file) : null;
-        file_put_contents($file, json_encode(['latest' => $version, 'last_check_at' => date('c'), 'source' => 'release']));
+        \App\Option::set(Updater::OPTION_STATUS, json_encode(['latest' => $version, 'last_check_at' => date('c'), 'source' => 'release']));
         Updater::clearRequest();
     }
 
-    protected $statusBackup = null;
-
-    protected function tearDown(): void
+    public function testTheCheckResultIsKeptEvenWhenTheStorageFolderIsNotWritable()
     {
-        $file = Updater::dir('update-status.json');
-        if ($this->statusBackup !== null) {
-            file_put_contents($file, $this->statusBackup);
-        } elseif (is_file($file)) {
-            @unlink($file);
+        $admin = $this->user([], true);
+        \App\Option::set(Updater::OPTION_STATUS, '');
+        // a newer release, as GitHub would answer it (local file instead of the network)
+        $dir = sys_get_temp_dir().'/wp-release-'.self::uid();
+        @mkdir($dir, 0775, true);
+        file_put_contents($dir.'/module.json', json_encode(['alias' => 'workflowpacks', 'version' => '99.0.0']));
+        config(['workflowpacks.update_url' => $dir]);
+        // storage/app/workflowpacks owned by another user (created by cron): simulated by a file in its place
+        $storage = Updater::dir();
+        $moved = is_dir($storage) ? $storage.'.bak-'.self::uid() : null;
+        if ($moved) {
+            rename($storage, $moved);
         }
-        parent::tearDown();
+        file_put_contents($storage, 'not a folder');
+        try {
+            $this->actingAs($admin)->post(route('workflowpacks.check_update'), ['back' => 'settings'])->assertRedirect();
+            $this->assertSame('available', Updater::state(), 'result saved in the database');
+            $page = $this->actingAs($admin)->get(route('settings', ['section' => 'workflowpacks']));
+            $this->seeIn($page, '99.0.0');
+            $this->seeIn($page, route('workflowpacks.update_now'));
+        } finally {
+            @unlink($storage);
+            if ($moved) {
+                rename($moved, $storage);
+            }
+            @unlink($dir.'/module.json');
+            @rmdir($dir);
+        }
     }
 
     public function testUpdateNowButtonIsAlwaysThereAndTheBannerOnlyWhenANewVersionIsKnown()
