@@ -104,7 +104,9 @@ detect_freescout() {
             if [ -f "$candidate/artisan" ] && grep -q "freescout" "$candidate/config/app.php" 2>/dev/null; then FS_PATH="$candidate"; break; fi
         done
     fi
-    [ -n "$FS_PATH" ] && [ -f "$FS_PATH/artisan" ] || die "FreeScout introuvable : indiquez son dossier avec --path /chemin/vers/freescout"
+    if [ -z "$FS_PATH" ] || [ ! -f "$FS_PATH/artisan" ]; then
+        die "FreeScout introuvable : indiquez son dossier avec --path /chemin/vers/freescout"
+    fi
     FS_PATH="$(cd "$FS_PATH" && pwd)"
     WEB_USER="$(stat -c '%U' "$FS_PATH/storage" 2>/dev/null || echo www-data)"
     [ "$WEB_USER" = "root" ] && WEB_USER="www-data"
