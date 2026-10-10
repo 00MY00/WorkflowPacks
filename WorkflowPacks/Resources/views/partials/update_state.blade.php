@@ -45,7 +45,9 @@
         {{ csrf_field() }}
         @if (!empty($back))<input type="hidden" name="back" value="{{ $back }}">@endif
         <button type="submit" class="btn btn-default btn-sm" @if ($wp_busy) disabled @endif><i class="glyphicon glyphicon-search"></i> {{ __('workflowpacks::messages.check_update') }}</button>
-        <button type="submit" formaction="{{ route('workflowpacks.update_now') }}" class="btn btn-sm {{ $wp_state === 'available' ? 'btn-primary' : 'btn-default' }}" @if ($wp_busy) disabled @endif><i class="glyphicon glyphicon-download-alt"></i> {{ __('workflowpacks::messages.update_now') }}</button>
+        @if ($wp_state === 'available')
+            <button type="submit" formaction="{{ route('workflowpacks.update_now') }}" class="btn btn-sm btn-primary"><i class="glyphicon glyphicon-download-alt"></i> {{ __('workflowpacks::messages.update_now') }}</button>
+        @endif
     </form>
     <p class="form-help text-muted">{{ __('workflowpacks::messages.update_help') }}</p>
 </div>

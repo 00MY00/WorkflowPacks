@@ -5,6 +5,7 @@
     form). The settings form posts to FreeScout's own settings route, which saves the values in its options table.
 --}}
 @php $wp_U = '\Modules\WorkflowPacks\Services\Update\Updater'; @endphp
+<div class="margin-top">@include('workflowpacks::partials.update_banner', ['back' => 'settings'])</div>
 <p class="margin-top">{{ __('workflowpacks::messages.settings_intro') }}</p>
 <p>
     <a href="{{ route('workflowpacks.index') }}">{{ __('workflowpacks::messages.menu') }}</a>

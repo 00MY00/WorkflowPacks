@@ -194,4 +194,6 @@ return [
     'update_result_incompatible' => 'FreeScout-Version zu alt',
     'update_result_failed'     => 'fehlgeschlagen, nichts geändert',
     'auto_update_label'        => 'Tägliche Aktualisierung',
+    'update_banner'            => 'Workflow Packs :latest ist verfügbar (installiert: :current).',
+    'update_banner_help'       => 'Die Aktualisierung startet innerhalb einer Minute (FreeScout-Planer), mit SHA-256-Prüfung, Sicherung und automatischer Rückkehr bei Problemen.',
 ];

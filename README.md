@@ -234,7 +234,13 @@ présentation que RefreshGlobal :
 - la section « Mise à jour automatique » avec son interrupteur et le bouton Enregistrer ;
 - la section « Mise à jour du module » avec la version, l'état et les boutons.
 
-Le même bloc apparaît dans **Diagnostic**. Trois actions :
+Le même bloc apparaît dans **Diagnostic**. Dès qu'une version plus récente est trouvée, un bandeau « Workflow Packs X
+est disponible » s'affiche, avec un bouton **Mettre à jour maintenant**. Il est visible par les administrateurs sur
+les pages du module et dans les réglages.
+
+![Réglages](docs/screenshots/reglages-mise-a-jour.png)
+
+Trois actions :
 
 - « Rechercher une mise à jour » ;
 - « Mettre à jour maintenant » : exécuté par le planificateur de FreeScout dans la minute, jamais pendant une requête
@@ -253,7 +259,7 @@ Déroulement d'une mise à jour :
 6. Si l'installation échoue ou si l'état est pire qu'avant, **retour arrière automatique** : migrations annulées,
    dossier et tables restaurés. Une version annulée n'est pas retentée automatiquement.
 
-Les numéros de version suivent `module.json` (actuellement **1.2.0**) ; voir [CHANGELOG.md](CHANGELOG.md).
+Les numéros de version suivent `module.json` (actuellement **1.2.1**) ; voir [CHANGELOG.md](CHANGELOG.md).
 
 ## Limites
 

@@ -4,6 +4,14 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [1.2.1] - 2026-10-11
+
+### Ajouté
+- Bandeau « Workflow Packs X est disponible » avec un bouton **Mettre à jour maintenant**. Il s'affiche pour les
+  administrateurs sur les pages du module et dans Gérer › Paramètres › Workflow Packs, dès que la vérification
+  quotidienne ou « Rechercher une mise à jour » trouve une version plus récente.
+- Dans le bloc de mise à jour, le bouton n'apparaît que si une version est disponible.
+
 ## [1.2.0] - 2026-10-11
 
 ### Ajouté

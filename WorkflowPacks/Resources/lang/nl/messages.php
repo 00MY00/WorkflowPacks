@@ -194,4 +194,6 @@ return [
     'update_result_incompatible' => 'FreeScout-versie te oud',
     'update_result_failed'     => 'mislukt, niets gewijzigd',
     'auto_update_label'        => 'Dagelijkse update',
+    'update_banner'            => 'Workflow Packs :latest is beschikbaar (geïnstalleerd: :current).',
+    'update_banner_help'       => 'De update start binnen een minuut (FreeScout-planner), met SHA-256-controle, back-up en automatisch terugzetten als er iets misgaat.',
 ];

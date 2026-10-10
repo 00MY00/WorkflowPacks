@@ -28,6 +28,7 @@
             @endforeach
         </div>
     @endif
+    @include('workflowpacks::partials.update_banner', ['back' => ''])
     @yield('wp_content')
 </div>
 @endsection

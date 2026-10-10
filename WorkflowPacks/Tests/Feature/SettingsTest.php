@@ -16,8 +16,66 @@ class SettingsTest extends TestCase
         $this->seeIn($page, 'name="settings['.Updater::OPTION.']"');
         $this->seeIn($page, 'class="subheader"');
         $this->seeIn($page, route('workflowpacks.check_update'));
-        $this->seeIn($page, route('workflowpacks.update_now'));
         $this->seeIn($page, 'Workflow Packs');
+    }
+
+    /** Status file written by the update check (Updater::check(), daily from the scheduler). */
+    protected function latest($version)
+    {
+        @mkdir(Updater::dir(), 0775, true);
+        $file = Updater::dir('update-status.json');
+        $this->statusBackup = is_file($file) ? file_get_contents($file) : null;
+        file_put_contents($file, json_encode(['latest' => $version, 'last_check_at' => date('c'), 'source' => 'release']));
+        Updater::clearRequest();
+    }
+
+    protected $statusBackup = null;
+
+    protected function tearDown(): void
+    {
+        $file = Updater::dir('update-status.json');
+        if ($this->statusBackup !== null) {
+            file_put_contents($file, $this->statusBackup);
+        } elseif (is_file($file)) {
+            @unlink($file);
+        }
+        parent::tearDown();
+    }
+
+    public function testUpdateNowButtonOnlyWhenANewVersionIsAvailable()
+    {
+        $admin = $this->user([], true);
+
+        // up to date: no "Update now", no banner
+        $this->latest(Updater::currentVersion());
+        $page = $this->actingAs($admin)->get(route('settings', ['section' => 'workflowpacks']));
+        $this->assertStringNotContainsString(route('workflowpacks.update_now'), $page->getContent());
+        $this->assertStringNotContainsString('wp-update-banner', $this->actingAs($admin)->get(route('workflowpacks.index'))->getContent());
+
+        // newer version: banner + button on the settings page and on the module pages
+        $this->latest('99.0.0');
+        $page = $this->actingAs($admin)->get(route('settings', ['section' => 'workflowpacks']));
+        $this->seeIn($page, 'wp-update-banner');
+        $this->seeIn($page, route('workflowpacks.update_now'));
+        $this->seeIn($page, '99.0.0');
+        $index = $this->actingAs($admin)->get(route('workflowpacks.index'));
+        $this->seeIn($index, 'wp-update-banner');
+        $this->seeIn($index, route('workflowpacks.update_now'));
+
+        // clicked: the request is recorded and the banner says it is running soon
+        $this->actingAs($admin)->post(route('workflowpacks.update_now'))->assertRedirect(route('workflowpacks.diagnostic'));
+        $this->seeIn($this->actingAs($admin)->get(route('workflowpacks.index')), e(__('workflowpacks::messages.update_state_requested')));
+        Updater::clearRequest();
+    }
+
+    public function testTheBannerIsNotShownToNonAdministrators()
+    {
+        $a = $this->mailbox('A');
+        $agent = $this->user([$a], false, true);
+        $this->latest('99.0.0');
+        $page = $this->actingAs($agent)->get(route('workflowpacks.index'));
+        $page->assertStatus(200);
+        $this->assertStringNotContainsString('wp-update-banner', $page->getContent());
     }
 
     public function testFreeScoutSavesTheAutomaticUpdateSwitch()
