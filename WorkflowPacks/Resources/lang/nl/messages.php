@@ -209,4 +209,12 @@ return [
     'dest_assigned'            => 'toegewezen aan',
     'dest_other_mailbox'       => 'andere mailbox',
     'dest_tag'                 => 'label',
+    'imap_group'               => 'Workflow Packs',
+    'imap_action'              => 'Opbergen in een e-mailmap :prefix',
+    'imap_title'               => 'Opbergen in e-mailmappen',
+    'imap_label'               => 'Actie "Opbergen in een e-mailmap"',
+    'imap_help'                => 'Voegt aan de Workflows-regels een actie toe die de ontvangen e-mail verplaatst naar een map van het e-mailaccount (IMAP-server), bijvoorbeeld "Facturen/Leveranciers". Ontbrekende mappen worden aangemaakt, altijd onder het voorvoegsel. Het ticket in FreeScout verandert niet. Standaard uit.',
+    'imap_prefix_label'        => 'Voorvoegsel van de mappen',
+    'imap_prefix_help'         => 'Voor elke aangemaakte map gezet ("[WP] Facturen") om te tonen dat Workflow Packs hem beheert. De module maakt of verplaatst niets buiten deze mappen.',
+    'dest_imap'                => 'e-mailmap',
 ];

@@ -2,6 +2,8 @@
 
 namespace Modules\WorkflowPacks\Services\Pack;
 
+use Modules\WorkflowPacks\Services\Imap\FolderPath;
+
 /**
  * One rule of a pack + the variables of one mailbox -> the attributes written to the Workflows table.
  *
@@ -127,6 +129,12 @@ class RuleCompiler
     {
         $type = $action['type'];
         $config = $this->catalog['actions'][$type] ?? null;
+        if ($config === null && $type === FolderPath::ACTION) {
+            // the action of this module, while its option is off
+            $problems->add($path, 'WP-IMAP-01', 'imap_disabled');
+
+            return $action;
+        }
         if ($config === null) {
             $problems->add($path, 'WP-CAT-03', 'cat_action', ['type' => $type, 'types' => implode(', ', array_keys($this->catalog['actions'] ?? []))]);
 
@@ -159,6 +167,12 @@ class RuleCompiler
             return $action;
         }
         $value = $vars->resolveValue($value, $path.'.value', $problems);
+        if ($type === FolderPath::ACTION) {
+            $error = FolderPath::parse($value)['error'];
+            if ($error !== null) {
+                $problems->add($path.'.value', 'WP-IMAP-02', $error);
+            }
+        }
         $this->checkValue('actions', $type, $config, $value, $mailboxId, $path, $problems);
         $action['value'] = $value;
 

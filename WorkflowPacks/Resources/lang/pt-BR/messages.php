@@ -209,4 +209,12 @@ return [
     'dest_assigned'            => 'atribuída a',
     'dest_other_mailbox'       => 'outra caixa',
     'dest_tag'                 => 'etiqueta',
+    'imap_group'               => 'Workflow Packs',
+    'imap_action'              => 'Arquivar em uma pasta de e-mail :prefix',
+    'imap_title'               => 'Arquivamento em pastas de e-mail',
+    'imap_label'               => 'Ação "Arquivar em uma pasta de e-mail"',
+    'imap_help'                => 'Adiciona às regras do Workflows uma ação que move o e-mail recebido para uma pasta da conta de e-mail (servidor IMAP), por exemplo "Faturas/Fornecedores". A pasta é criada se não existir, sempre sob o prefixo. O ticket no FreeScout não muda. Desativado por padrão.',
+    'imap_prefix_label'        => 'Prefixo das pastas',
+    'imap_prefix_help'         => 'Colocado na frente de cada pasta criada ("[WP] Faturas") para mostrar que é gerenciada pelo Workflow Packs. O módulo não cria nem move nada fora dessas pastas.',
+    'dest_imap'                => 'pasta de e-mail',
 ];

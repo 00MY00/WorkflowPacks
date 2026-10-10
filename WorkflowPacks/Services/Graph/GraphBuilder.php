@@ -4,6 +4,8 @@ namespace Modules\WorkflowPacks\Services\Graph;
 
 use Modules\WorkflowPacks\Entities\Link;
 use Modules\WorkflowPacks\Entities\Pack;
+use Modules\WorkflowPacks\Services\Imap\FolderPath;
+use Modules\WorkflowPacks\Services\Imap\ImapFolders;
 use Modules\WorkflowPacks\Services\Pack\Fingerprint;
 use Modules\WorkflowPacks\Services\Workflows\Bridge;
 
@@ -136,6 +138,10 @@ class GraphBuilder
                     $mailbox = \App\Mailbox::find((int) $value);
                     $out[] = ['key' => 'dest:mailbox:'.(int) $value, 'kind' => 'dest', 'dest' => 'mailbox', 'label' => $mailbox ? $mailbox->name : '#'.$value, 'sub' => __('workflowpacks::messages.dest_other_mailbox'), 'action' => $type];
                 }
+            } elseif ($type === FolderPath::ACTION && is_string($value) && FolderPath::parse($value)['error'] === null) {
+                // e-mail folder on the mail server ("[WP] Invoices › Suppliers")
+                $slug = substr(preg_replace('/[^A-Za-z0-9._\/-]+/', '-', $value), 0, 150);
+                $out[] = ['key' => 'dest:imap:'.$slug, 'kind' => 'dest', 'dest' => 'imap', 'label' => FolderPath::label($value, ImapFolders::prefix()), 'sub' => __('workflowpacks::messages.dest_imap'), 'action' => $type];
             } elseif (stripos($type, 'tag') !== false) {
                 foreach ((array) $value as $tag) {
                     if (is_scalar($tag) && trim((string) $tag) !== '') {

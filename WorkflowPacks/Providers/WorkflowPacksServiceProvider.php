@@ -49,6 +49,8 @@ class WorkflowPacksServiceProvider extends ServiceProvider
         $this->registerPhoneMenu();
         $this->registerSchedule();
         $this->registerSettings();
+        // optional action "file into an e-mail folder [WP]" (off by default, Manage › Settings › Workflow Packs)
+        \Modules\WorkflowPacks\Services\Imap\ImapFolders::register();
     }
 
     /**
@@ -70,6 +72,8 @@ class WorkflowPacksServiceProvider extends ServiceProvider
 
             return array_merge($settings, [
                 \Modules\WorkflowPacks\Services\Update\Updater::OPTION => \Modules\WorkflowPacks\Services\Update\Updater::enabled(),
+                \Modules\WorkflowPacks\Services\Imap\ImapFolders::OPTION_ENABLED => \Modules\WorkflowPacks\Services\Imap\ImapFolders::enabled(),
+                \Modules\WorkflowPacks\Services\Imap\ImapFolders::OPTION_PREFIX => \Modules\WorkflowPacks\Services\Imap\ImapFolders::prefix(),
             ]);
         }, 20, 2);
         \Eventy::addFilter('settings.view', function ($view, $section) {

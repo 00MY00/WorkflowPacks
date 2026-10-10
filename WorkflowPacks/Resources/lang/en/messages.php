@@ -213,4 +213,12 @@ return [
     'dest_assigned'            => 'assigned to',
     'dest_other_mailbox'       => 'other mailbox',
     'dest_tag'                 => 'tag',
+    'imap_group'               => 'Workflow Packs',
+    'imap_action'              => 'File into an e-mail folder :prefix',
+    'imap_title'               => 'Filing into e-mail folders',
+    'imap_label'               => 'Action "File into an e-mail folder"',
+    'imap_help'                => 'Adds an action to Workflows rules that moves the received e-mail into a folder of the e-mail account (IMAP server), for example "Invoices/Suppliers". The folder is created when missing, always under the prefix. The ticket in FreeScout does not change. Off by default.',
+    'imap_prefix_label'        => 'Folder prefix',
+    'imap_prefix_help'         => 'Put in front of every folder created ("[WP] Invoices") to show it is managed by Workflow Packs. The module never creates nor moves anything outside these folders.',
+    'dest_imap'                => 'e-mail folder',
 ];

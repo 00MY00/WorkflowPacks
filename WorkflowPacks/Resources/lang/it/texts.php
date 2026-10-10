@@ -187,4 +187,9 @@ return [
     'graph_incomplete'         => 'la regola è incompleta (almeno una condizione e un’azione): completala prima di attivarla.',
     'graph_same_mailbox'       => 'la regola è già in questa casella.',
     'graph_not_applicable'     => 'la regola del pack non può essere applicata a questa casella (:status).',
+    'imap_disabled'            => 'l’azione «Archivia in una cartella e-mail» è disattivata: attivala in Gestisci › Impostazioni › Workflow Packs.',
+    'imap_folder_empty'        => 'cartella e-mail: nome vuoto.',
+    'imap_folder_chars'        => 'cartella e-mail: caratteri vietati (* % " o di controllo, o nome che inizia con un punto).',
+    'imap_folder_long'         => 'cartella e-mail: nome troppo lungo (al massimo 60 caratteri per livello).',
+    'imap_folder_deep'         => 'cartella e-mail: al massimo 4 livelli («A/B/C/D»).',
 ];

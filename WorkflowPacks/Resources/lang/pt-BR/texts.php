@@ -187,4 +187,9 @@ return [
     'graph_incomplete'         => 'a regra está incompleta (pelo menos uma condição e uma ação): complete-a antes de ativá-la.',
     'graph_same_mailbox'       => 'a regra já está nesta caixa.',
     'graph_not_applicable'     => 'a regra do pack não pode ser aplicada a esta caixa (:status).',
+    'imap_disabled'            => 'a ação "Arquivar em uma pasta de e-mail" está desativada: ative-a em Gerenciar › Configurações › Workflow Packs.',
+    'imap_folder_empty'        => 'pasta de e-mail: nome vazio.',
+    'imap_folder_chars'        => 'pasta de e-mail: caracteres proibidos (* % " ou de controle, ou nome começando com ponto).',
+    'imap_folder_long'         => 'pasta de e-mail: nome longo demais (no máximo 60 caracteres por nível).',
+    'imap_folder_deep'         => 'pasta de e-mail: no máximo 4 níveis ("A/B/C/D").',
 ];

@@ -187,4 +187,9 @@ return [
     'graph_incomplete'         => 'the rule is incomplete (at least one condition and one action): complete it before activating it.',
     'graph_same_mailbox'       => 'the rule is already in this mailbox.',
     'graph_not_applicable'     => 'the pack rule cannot be applied to this mailbox (:status).',
+    'imap_disabled'            => 'the action "File into an e-mail folder" is off: turn it on in Manage › Settings › Workflow Packs.',
+    'imap_folder_empty'        => 'e-mail folder: empty name.',
+    'imap_folder_chars'        => 'e-mail folder: forbidden characters (* % " or control characters, or a name starting with a dot).',
+    'imap_folder_long'         => 'e-mail folder: name too long (60 characters at most per level).',
+    'imap_folder_deep'         => 'e-mail folder: 4 levels at most ("A/B/C/D").',
 ];

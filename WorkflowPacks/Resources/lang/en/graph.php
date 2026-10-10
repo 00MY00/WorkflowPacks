@@ -132,4 +132,5 @@ return [
     'saved_rule'       => 'Rule saved.',
     'saved_pack_modified' => 'Rule saved (now "changed locally" compared to the pack).',
     'no_mailbox'       => 'No mailbox available.',
+    'kind_dest_imap' => 'E-mail folder (IMAP server)',
 ];

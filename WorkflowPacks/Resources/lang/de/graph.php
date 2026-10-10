@@ -131,4 +131,5 @@ return [
     'saved_rule'       => 'Regel gespeichert.',
     'saved_pack_modified' => 'Regel gespeichert (jetzt „lokal geändert“ gegenüber dem Pack).',
     'no_mailbox'       => 'Kein Postfach verfügbar.',
+    'kind_dest_imap' => 'E-Mail-Ordner (IMAP-Server)',
 ];

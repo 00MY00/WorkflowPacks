@@ -4,6 +4,28 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [1.4.0] - 2026-10-13
+
+### Ajouté
+- **Rangement des e-mails dans des dossiers de la boîte e-mail** (option désactivée par défaut, Gérer › Paramètres ›
+  Workflow Packs), détaillé dans [docs/dossiers-email.md](docs/dossiers-email.md).
+  - Nouvelle action Workflows **« Ranger dans un dossier e-mail [WP] »**, par exemple `Factures/Fournisseurs`, avec
+    les variables des packs. L'e-mail reçu est déplacé sur le serveur IMAP dans `[WP] Factures/Fournisseurs`, et les
+    dossiers manquants sont créés. Le ticket FreeScout ne change pas.
+  - Préfixe réglable (`[WP]` par défaut). Le module ne crée et ne remplit que des dossiers portant ce préfixe, et ne
+    supprime jamais rien.
+  - Fonctionnement :
+    - ajout par les filtres d'extension de Workflows, sans modifier Workflows ;
+    - déplacement en file d'attente FreeScout, avec 3 tentatives ;
+    - client IMAP de FreeScout (OAuth compris), e-mail retrouvé par son Message-ID ;
+    - délimiteur `/` ou `.` détecté, espace de noms `INBOX` pris en charge, noms accentués (UTF-7 IMAP) ;
+    - commande `MOVE`, ou copie puis original marqué supprimé, sans purge des autres messages.
+  - Import : règle bloquée avec un message clair si l'option est désactivée, et noms de dossier contrôlés.
+  - Schéma : le dossier e-mail apparaît comme une destination.
+  - 7 langues.
+- Tests d'intégration avec un vrai serveur IMAP (GreenMail) : création de dossiers imbriqués, déplacement, e-mail déjà
+  rangé ou introuvable, accents, option désactivée, réglages et filtres Workflows.
+
 ## [1.3.1] - 2026-10-12
 
 ### Modifié
