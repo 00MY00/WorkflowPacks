@@ -38,6 +38,10 @@ jobs:
         with:
           node-version: '24'
       - run: npm install --no-save ajv@8.17.1 && node tests/schema/validate.js
+      - name: Diagram scripts (syntax + automatic layouts)
+        run: |
+          for f in WorkflowPacks/Public/js/graph/*.js WorkflowPacks/Public/js/*.js; do node --check "$f"; done
+          node tests/js/layout.test.js
 
   integration:
     runs-on: ubuntu-24.04

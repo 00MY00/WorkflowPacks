@@ -183,4 +183,8 @@ return [
     'res_module_missing'       => 'resource ":key": type ":type" vereist de module :module.',
     'res_create_unsupported'   => 'resource ":key": een ":type" kan niet automatisch worden aangemaakt (geen betrouwbare API); kies een bestaand record.',
     'not_selected'             => 'mailbox buiten de selector van de regel (:selector).',
+    'graph_name_taken'         => 'er bestaat al een regel ":name" in deze mailbox.',
+    'graph_incomplete'         => 'de regel is onvolledig (minstens één voorwaarde en één actie): vul hem aan voor u hem inschakelt.',
+    'graph_same_mailbox'       => 'de regel staat al in deze mailbox.',
+    'graph_not_applicable'     => 'de regel van het pack kan niet op deze mailbox worden toegepast (:status).',
 ];

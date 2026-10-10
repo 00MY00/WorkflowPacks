@@ -1,0 +1,125 @@
+# Schéma des règles
+
+Onglet **Workflow Packs › Schéma**. Les règles Workflows y apparaissent sous forme de réseau, comme dans draw.io :
+chaque boîte de réception, chaque règle, chaque pack et chaque destination est un bloc ; les liens montrent qui
+utilise quoi et où partent les conversations.
+
+![Flux en colonnes](screenshots/schema-colonnes.png)
+
+## Ce qui est affiché
+
+| Bloc | Signification |
+|---|---|
+| **Boîte** (bleu) | une boîte de réception dont vous pouvez gérer les workflows ; les autres ne sont jamais envoyées au navigateur |
+| **Règle** (violet : issue d'un pack, turquoise : locale) | une règle d'un pack n'a qu'**un** bloc, relié à toutes les boîtes où le pack l'a créée |
+| **Pack** (orange) | pack importé ; ses liens vers ses règles apparaissent quand il est sélectionné |
+| **Destination** | où la règle envoie les conversations, calculé à partir de ses actions |
+
+Destinations reconnues :
+
+| Action de la règle | Bloc |
+|---|---|
+| changer le statut | dossier **Actives**, **En attente**, **Fermées** ou **Spam** |
+| supprimer / supprimer définitivement | dossier **Supprimées** |
+| assigner | la **personne** (ou « Non assignées ») |
+| déplacer vers une autre boîte | la **boîte** cible (son bloc si vous la gérez) |
+| étiquettes (module Tags) | l'**étiquette** |
+
+Liens d'une règle vers une boîte :
+
+| Trait | État |
+|---|---|
+| vert plein | règle active |
+| gris pointillé | règle désactivée |
+| orange | modifiée dans Workflows depuis l'import (le prochain import proposera de la garder ou de la remplacer) |
+| rouge pointillé | supprimée de Workflows depuis l'import |
+
+## Se déplacer
+
+- Faites glisser le fond pour vous déplacer et utilisez la molette pour zoomer. La mini-carte en bas à droite sert à
+  sauter ailleurs.
+- **Vue globale** (`0`) affiche tout. Quand on s'éloigne, le zoom devient sémantique :
+  - les blocs ne gardent qu'un nom court et grand ;
+  - de très loin, seuls les boîtes, les packs et les destinations restent nommés, et les règles deviennent des blocs
+    de couleur (vue macro).
+- **Aller à…** est un raccourci vers une partie du schéma : il zoome sur une boîte, un pack ou une destination et
+  n'affiche que ses liens. **Afficher tout** (`Esc`) revient au schéma complet.
+- La **recherche** trouve un bloc par son nom.
+- Cliquer sur un bloc met en avant ses voisins et estompe le reste. `Maj` + clic sélectionne plusieurs blocs.
+
+## Disposer les blocs
+
+| Disposition | Principe |
+|---|---|
+| **Flux en colonnes** | boîtes → règles → destinations, packs au-dessus ; chaque boîte et chaque destination est placée en face de ses règles pour limiter les croisements |
+| **Boîtes en cercle** | boîtes sur un cercle, règles d'une seule boîte à l'extérieur près d'elle, règles partagées à l'intérieur entre les boîtes concernées, destinations sur un anneau extérieur |
+| **Grille** | grille compacte, par type puis par nom |
+| **Libre** | vos positions seulement |
+
+Chaque bloc déplacé est **enregistré aussitôt** (indicateur « Enregistré ✓ ») pour votre compte. Les autres
+utilisateurs gardent leur propre schéma. Choisir une disposition replace les blocs, et `Ctrl+Z` / `Ctrl+Y` annulent ou
+rétablissent les déplacements. Les liens peuvent être à angles droits, courbes ou droits, et les packs comme les
+destinations peuvent être masqués.
+
+![Boîtes en cercle](screenshots/schema-cercle.png)
+
+## Créer et modifier des règles
+
+- **Nouvelle règle** (`N`) crée une règle dans la boîte sélectionnée. **Double-clic** sur une règle ouvre l'éditeur.
+
+  ![Éditeur](screenshots/schema-editeur.png)
+
+- L'éditeur reprend la logique de Workflows :
+  - **SI** : chaque ligne **ET** doit être vraie, et dans une ligne une seule condition **OU** suffit ;
+  - **ALORS** : les actions sont exécutées dans l'ordre.
+
+  Les listes viennent du catalogue Workflows de la boîte : conditions, opérateurs, valeurs, personnes et boîtes. Le
+  **mode expert** affiche la règle en JSON au format pack.
+- Une nouvelle règle est créée **désactivée**, sauf si vous cochez « Activer la règle tout de suite ».
+- **Appliquer à une autre boîte** : tirez le ● à gauche d'une règle jusqu'à une boîte, ou utilisez « Appliquer aussi
+  à » dans le panneau. La règle y est créée désactivée.
+  - Pour une règle de pack, seule cette règle est importée, avec les variables de la nouvelle boîte, et elle reste
+    suivie par le pack.
+  - Pour une règle locale, c'est une copie, renommée si le nom est déjà pris.
+- L'interrupteur du panneau active ou désactive une règle. Une règle incomplète ne peut pas être activée.
+- Modifier une règle de pack la fait passer en « modifiée localement ». Le prochain import du pack proposera de
+  conserver votre version ou de la remplacer.
+
+![Panneau d'une boîte](screenshots/schema-boite.png)
+
+## Sécurité
+
+- Le serveur vérifie tout, comme pour un import :
+  - format du pack ;
+  - catalogue Workflows de la boîte ;
+  - validation officielle de Workflows ;
+  - nom unique dans la boîte ;
+  - permission « gérer les workflows » pour chaque boîte touchée.
+
+  Une boîte ou une règle d'une boîte non autorisée est refusée, même avec une requête forgée.
+- Les écritures passent par le modèle officiel Workflows, dans une transaction, avec le jeton CSRF de FreeScout.
+- Rien n'est jamais supprimé depuis le schéma.
+- Les positions sont limitées et contrôlées : clés de blocs connues, coordonnées bornées, choix d'affichage dans une
+  liste fixe. Elles sont stockées dans `workflowpacks_layouts`, une ligne par utilisateur.
+
+## Téléphone
+
+La barre d'outils se replie et la mini-carte est masquée. Le panneau latéral occupe toute la largeur. Un doigt
+déplace le schéma ou un bloc, et les boutons + et − zooment.
+
+![Téléphone](screenshots/schema-mobile.png)
+
+## Code
+
+| Fichier | Rôle |
+|---|---|
+| `Services/Graph/GraphBuilder.php` | blocs et liens, limités aux boîtes autorisées ; destinations déduites des actions |
+| `Services/Graph/RuleEditor.php` | détail, catalogue, création / modification, activation, application à une autre boîte |
+| `Services/Graph/RuleCodec.php` | règle Workflows → règle au format pack (partagé avec l'export) |
+| `Services/Graph/LayoutStore.php` | positions et choix d'affichage par utilisateur, mises à jour partielles |
+| `Http/Controllers/GraphController.php` | page + points d'accès JSON |
+| `Public/js/graph/layout.js` | dispositions automatiques (fonctions pures, testées avec Node : `node tests/js/layout.test.js`) |
+| `Public/js/graph/model.js` | état du schéma, annuler / rétablir |
+| `Public/js/graph/view.js` | rendu SVG, déplacement, zoom sémantique, liens à tirer |
+| `Public/js/graph/inspector.js`, `editor.js`, `minimap.js`, `icons.js` | panneau, éditeur, mini-carte, icônes au trait |
+| `Public/js/graph/app.js` | assemblage : chargement, enregistrement en direct, barre d'outils, raccourcis |

@@ -4,6 +4,41 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [1.3.0] - 2026-10-12
+
+### Ajouté
+- **Schéma réseau des règles** (onglet *Schéma*, inspiré de draw.io), détaillé dans [docs/schema.md](docs/schema.md).
+  - Contenu : boîtes → règles → destinations, et packs. Une règle de pack n'a qu'un bloc, relié à toutes ses boîtes.
+    L'état de chaque lien est affiché : active, désactivée, modifiée localement, supprimée.
+  - **Destinations** déduites des actions : dossiers Actives, En attente, Fermées, Spam et Supprimées, personne
+    assignée, autre boîte (déplacement), étiquettes. Les icônes sont des icônes modernes au trait.
+  - **Dispositions** : flux en colonnes (chaque boîte et chaque destination en face de ses règles), boîtes en cercle,
+    grille, libre. Les liens peuvent être à angles droits, courbes ou droits.
+  - **Déplacements enregistrés en direct**, par utilisateur (nouvelle table `workflowpacks_layouts`), avec annuler et
+    rétablir.
+  - **Navigation** :
+    - glisser pour se déplacer, molette pour zoomer, mini-carte ;
+    - zoom sémantique : noms courts de loin, et de très loin une vue macro où seuls les boîtes, les packs et les
+      destinations restent nommés ;
+    - raccourcis **Aller à…** vers une boîte, un pack ou une destination avec ses liens, et recherche ;
+    - raccourcis clavier `+ − 0 F N Esc Ctrl+Z Ctrl+Y`.
+  - **Modifier depuis le schéma** :
+    - éditeur SI / ET / OU / ALORS alimenté par le catalogue Workflows de la boîte, avec un mode expert JSON ;
+    - activation et désactivation des règles ;
+    - application d'une règle à une autre boîte en tirant un lien. Une règle de pack est alors importée seule, avec
+      les variables de la nouvelle boîte ; une règle locale est copiée. Dans les deux cas elle arrive désactivée.
+  - Mêmes contrôles côté serveur qu'un import :
+    - format, catalogue, validation officielle ;
+    - permission par boîte ;
+    - transaction ;
+    - aucune suppression.
+  - Disponible sur téléphone et en 7 langues.
+- CI : vérification de syntaxe des scripts du schéma et tests des dispositions (`node tests/js/layout.test.js`).
+
+### Modifié
+- L'export réutilise le même convertisseur règle Workflows → règle de pack que le schéma (`RuleCodec`).
+- Diagnostic, mise à jour intégrée et `install.sh` : la table `workflowpacks_layouts` est contrôlée et sauvegardée.
+
 ## [1.2.2] - 2026-10-11
 
 ### Modifié

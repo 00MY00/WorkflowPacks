@@ -23,6 +23,16 @@ Route::group([
     Route::post('/export', $users + ['uses' => 'ExportController@preview'])->name('workflowpacks.export.preview');
     Route::post('/export/download', $users + ['uses' => 'ExportController@download'])->name('workflowpacks.export.download');
 
+    // diagram (page + JSON endpoints of Public/js/graph)
+    Route::get('/graph', $users + ['uses' => 'GraphController@show'])->name('workflowpacks.graph');
+    Route::get('/graph/data', $users + ['uses' => 'GraphController@data'])->name('workflowpacks.graph.data');
+    Route::post('/graph/layout', $users + ['uses' => 'GraphController@saveLayout'])->name('workflowpacks.graph.layout');
+    Route::get('/graph/rule/{id}', $users + ['uses' => 'GraphController@rule'])->name('workflowpacks.graph.rule');
+    Route::get('/graph/catalog/{mailbox_id}', $users + ['uses' => 'GraphController@catalog'])->name('workflowpacks.graph.catalog');
+    Route::post('/graph/rule', $users + ['uses' => 'GraphController@saveRule'])->name('workflowpacks.graph.save');
+    Route::post('/graph/rule/{id}/toggle', $users + ['uses' => 'GraphController@toggle'])->name('workflowpacks.graph.toggle');
+    Route::post('/graph/rule/{id}/apply', $users + ['uses' => 'GraphController@apply'])->name('workflowpacks.graph.apply');
+
     Route::get('/diagnostic', $admins + ['uses' => 'DiagnosticController@index'])->name('workflowpacks.diagnostic');
     Route::post('/auto-update', $admins + ['uses' => 'DiagnosticController@autoUpdate'])->name('workflowpacks.auto_update');
     Route::post('/update-now', $admins + ['uses' => 'DiagnosticController@updateNow'])->name('workflowpacks.update_now');

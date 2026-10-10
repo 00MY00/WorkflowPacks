@@ -203,4 +203,8 @@ return [
     'res_module_missing'       => 'ressource « :key » : le type « :type » nécessite le module :module.',
     'res_create_unsupported'   => 'ressource « :key » : création automatique impossible pour le type « :type » (aucune API fiable) ; choisissez un élément existant.',
     'not_selected'             => 'boîte hors du sélecteur de la règle (:selector).',
+    'graph_name_taken'         => 'une règle « :name » existe déjà dans cette boîte.',
+    'graph_incomplete'         => 'la règle est incomplète (au moins une condition et une action) : complétez-la avant de l’activer.',
+    'graph_same_mailbox'       => 'la règle est déjà dans cette boîte.',
+    'graph_not_applicable'     => 'la règle du pack ne peut pas être appliquée à cette boîte (:status).',
 ];

@@ -25,7 +25,7 @@ function wp_placeholders($text)
     return $names;
 }
 
-foreach (['texts.php' => 'fr', 'messages.php' => 'en'] as $file => $reference) {
+foreach (['texts.php' => 'fr', 'messages.php' => 'en', 'graph.php' => 'en'] as $file => $reference) {
     test('Traductions : '.$file.' complet dans les 7 langues (mêmes clés, mêmes paramètres)', function () use ($file, $reference) {
         $all = wp_lang_files($file);
         same(['de', 'en', 'es', 'fr', 'it', 'nl', 'pt-BR'], array_keys($all), 'langues');
