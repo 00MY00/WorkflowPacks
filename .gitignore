@@ -25,3 +25,6 @@ storage/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Prompts de travail locaux (peuvent contenir des données personnelles)
+info.md

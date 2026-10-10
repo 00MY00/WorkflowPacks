@@ -5,6 +5,7 @@ namespace Modules\WorkflowPacks\Console;
 use Illuminate\Console\Command;
 use Modules\WorkflowPacks\Services\Compat\Checker;
 use Modules\WorkflowPacks\Services\Pack\PackValidator;
+use Modules\WorkflowPacks\Services\Pack\Problems;
 
 /**
  * php artisan workflowpacks:check                 state of the Workflows module and of WorkflowPacks
@@ -40,9 +41,9 @@ class CheckCommand extends Command
                 $this->line(sprintf('%-9s %-11s %s%s', strtoupper($check['state']), $check['code'], $check['label'], $check['detail'] !== '' ? ' — '.$check['detail'] : ''));
             }
             $this->line('');
-            $this->line('État : '.strtoupper($result['state']));
+            $this->line(Problems::t('cmd_state', ['state' => strtoupper($result['state'])]));
             if ($packProblems !== null) {
-                $this->line($packProblems ? 'Pack invalide :' : 'Pack valide (structure).');
+                $this->line(Problems::t($packProblems ? 'cmd_pack_invalid' : 'cmd_pack_valid'));
                 foreach ($packProblems as $line) {
                     $this->line('  '.$line);
                 }

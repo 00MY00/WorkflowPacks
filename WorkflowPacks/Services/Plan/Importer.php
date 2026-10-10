@@ -6,6 +6,7 @@ use Modules\WorkflowPacks\Entities\ImportLog;
 use Modules\WorkflowPacks\Entities\Link;
 use Modules\WorkflowPacks\Entities\Pack;
 use Modules\WorkflowPacks\Services\Pack\Fingerprint;
+use Modules\WorkflowPacks\Services\Pack\Problems;
 use Modules\WorkflowPacks\Services\Workflows\Bridge;
 
 /**
@@ -30,11 +31,11 @@ class Importer
     {
         $options += ['activate_new' => false, 'allow_apply_to_prev' => false, 'active_mode' => 'keep', 'ack_blocked' => false];
         if (!$plan['problems']->isEmpty()) {
-            return $this->fail('le plan contient des erreurs : corrigez-les avant de confirmer.');
+            return $this->fail(Problems::t('imp_plan_errors'));
         }
         $blocked = $plan['counts']['blocked'] + $plan['counts']['denied'];
         if ($blocked && !$options['ack_blocked']) {
-            return $this->fail($blocked.' règle(s) bloquée(s) : cochez « ignorer les règles bloquées » pour importer le reste.');
+            return $this->fail(Problems::t('imp_blocked', ['count' => $blocked]));
         }
 
         $pack = $plan['pack'];
@@ -49,11 +50,11 @@ class Importer
                     foreach ($entry['items'] as $mailboxId => $item) {
                         $choice = $decisions[$ruleKey][$mailboxId] ?? $item['default'];
                         if (!in_array($choice, $item['choices'], true)) {
-                            throw new \RuntimeException('choix « '.$choice.' » non permis pour la règle '.$ruleKey.' dans la boîte #'.$mailboxId.'.');
+                            throw new \RuntimeException(Problems::t('imp_choice', ['choice' => $choice, 'rule' => $ruleKey, 'id' => $mailboxId]));
                         }
                         // permission checked again for every mailbox and every operation
                         if ($choice !== 'skip' && !Bridge::canEdit($user, $mailboxId)) {
-                            throw new \RuntimeException('droits insuffisants sur la boîte #'.$mailboxId.'.');
+                            throw new \RuntimeException(Problems::t('imp_rights', ['id' => $mailboxId]));
                         }
                         $outcome = $this->applyOne($pack, $entry['rule'], $item, $choice, $options, $user, $jsonActions, $storedParams);
                         $results[] = ['rule' => $ruleKey, 'mailbox_id' => $mailboxId, 'choice' => $choice, 'outcome' => $outcome['outcome'], 'workflow_id' => $outcome['workflow_id']];
@@ -78,7 +79,7 @@ class Importer
         } catch (\Throwable $e) {
             \Log::error('[WorkflowPacks] [WP-IMP-01] import of pack '.$pack['key'].' cancelled, nothing written: '.$e->getMessage());
 
-            return $this->fail('import annulé, aucune modification enregistrée : '.$e->getMessage());
+            return $this->fail(Problems::t('imp_cancelled', ['error' => $e->getMessage()]));
         }
 
         return ['ok' => true, 'error' => '', 'results' => $results, 'counts' => $counts];
@@ -140,11 +141,11 @@ class Importer
             case 'replace':
                 $workflow = Bridge::query()->where('id', $item['current']['id'])->lockForUpdate()->first();
                 if (!$workflow || (int) $workflow->mailbox_id !== (int) $mailboxId) {
-                    throw new \RuntimeException('la règle #'.($item['current']['id'] ?? '?').' a disparu pendant l\'import.');
+                    throw new \RuntimeException(Problems::t('imp_gone', ['id' => $item['current']['id'] ?? '?']));
                 }
                 $current = Fingerprint::of(Bridge::attributesOf($workflow), $jsonActions);
                 if ($current !== $item['current']['fingerprint']) {
-                    throw new \RuntimeException('la règle #'.$workflow->id.' a été modifiée depuis la prévisualisation.');
+                    throw new \RuntimeException(Problems::t('imp_changed', ['id' => $workflow->id]));
                 }
                 $wasActive = (bool) $workflow->active;
                 $this->fill($workflow, $attributes);
@@ -165,7 +166,7 @@ class Importer
                 return ['outcome' => 'updated', 'workflow_id' => (int) $workflow->id];
         }
 
-        throw new \RuntimeException('choix inconnu « '.$choice.' ».');
+        throw new \RuntimeException(Problems::t('imp_unknown_choice', ['choice' => $choice]));
     }
 
     /** Managed fields only: active, apply_to_prev and sort_order are handled by the caller. */
@@ -201,7 +202,7 @@ class Importer
                 return $candidate;
             }
         }
-        throw new \RuntimeException('aucun nom libre pour « '.$name.' ».');
+        throw new \RuntimeException(Problems::t('imp_no_name', ['name' => $name]));
     }
 
     protected function saveLink($packKey, $ruleKey, $mailboxId, array $data)

@@ -14,6 +14,11 @@ remplacées pour chacune (`{{mailbox.email}}`, `{{mailbox.name}}`, `{{mailbox.id
 - Une vue schématique (SI … ET/OU … ALORS …) présente les règles. Une matrice règles × boîtes permet de choisir, pour
   chaque boîte, ce qui sera appliqué.
 - L'interface suit le style du module **Refresh** s'il est installé, et le style standard de FreeScout sinon.
+- **Téléphone** : la matrice devient une carte par règle. Avec Refresh, l'entrée du module est placée dans le
+  panneau **Profil**, qui sert de menu burger, car la barre d'onglets du bas n'a pas de place libre. Sans Refresh,
+  l'entrée se trouve dans le menu burger de FreeScout (Gérer).
+- **7 langues**, interface et messages (validation, diagnostic, erreurs) : français, anglais, allemand, espagnol,
+  italien, néerlandais, portugais (Brésil). La langue suit le profil FreeScout de l'utilisateur.
 - La mise à jour automatique du module reprend le mécanisme de RefreshGlobal : version publiée, SHA-256, sauvegarde,
   vérification et retour arrière automatique.
 
@@ -39,7 +44,7 @@ Modules facultatifs : **Tags** (règles qui en dépendent) et **Refresh** (style
 
 ```bash
 curl -fsSLO https://raw.githubusercontent.com/00MY00/WorkflowPacks/main/install.sh
-sudo bash install.sh                    # détecte FreeScout (/var/www/html…) ; --path /chemin sinon
+sudo bash install.sh                    # cherche FreeScout dans les dossiers par défaut, sinon demande le chemin
 ```
 
 Le script enchaîne 7 étapes numérotées :
@@ -59,7 +64,10 @@ En cas d'erreur, la version précédente du module est remise en place. Options 
 - `--uninstall` : retire le module (les règles de Workflows restent) ;
 - `--yes` : aucune question.
 
-Le journal est écrit dans `/tmp/workflowpacks-install-*.log` et ne contient aucun mot de passe.
+Si FreeScout n'est pas trouvé dans un dossier par défaut (`/var/www/html`, `/var/www/freescout`…), le script
+**demande son chemin** ; avec `--yes` (sans question), il faut donner `--path`. Messages en français ou en anglais
+selon `$LANG`, ou `--lang fr|en`. Le journal est écrit dans `/tmp/workflowpacks-install-*.log` et ne contient
+aucun mot de passe.
 
 ### Manuelle
 
@@ -228,7 +236,7 @@ Déroulement d'une mise à jour :
 6. Si l'installation échoue ou si l'état est pire qu'avant, **retour arrière automatique** : migrations annulées,
    dossier et tables restaurés. Une version annulée n'est pas retentée automatiquement.
 
-Les numéros de version suivent `module.json` (actuellement **1.0.0**) ; voir [CHANGELOG.md](CHANGELOG.md).
+Les numéros de version suivent `module.json` (actuellement **1.1.0**) ; voir [CHANGELOG.md](CHANGELOG.md).
 
 ## Limites
 
@@ -240,7 +248,8 @@ Les numéros de version suivent `module.json` (actuellement **1.0.0**) ; voir [C
   formulaire, pas Workflow Packs. Ses regex sont sensibles à la casse sans le modificateur `i`.
 - **Noms** : 75 caractères au plus, uniques par boîte (règle de Workflows).
 - **Ordre des règles** : les nouvelles règles sont placées en dernier (`setSortOrderLast()` de Workflows).
-- **Langues de l'interface** : français et anglais. Les messages de validation sont en français.
+- **Langues** : 7 langues (fr, en, de, es, it, nl, pt-BR) ; une langue absente utilise l'anglais. Le script
+  d'installation parle français ou anglais.
 - **Désinstallation** : `--uninstall` supprime les tables de suivi. Les règles créées restent dans Workflows mais ne
   sont plus reconnues comme issues d'un pack ; un nouvel import les signalera en « conflit de nom ».
 
@@ -248,12 +257,16 @@ Les numéros de version suivent `module.json` (actuellement **1.0.0**) ; voir [C
 
 | Série | Commande | Résultat |
 |---|---|---|
-| Unitaires (sans FreeScout) | `php tests/unit/run.php` | 26 tests, 143 assertions, PHP 7.1.33 et 8.4.26 |
+| Unitaires (sans FreeScout) | `php tests/unit/run.php` | 29 tests, 2 311 assertions (dont les 7 langues), PHP 7.1.33 et 8.4.26 |
 | Intégration (FreeScout réel + bouchon Workflows) | `bash tests/integration/run.sh` | 22 tests, 181 assertions |
 | Schéma JSON (Ajv) | `node tests/schema/validate.js` | pack d'exemple valide, 5 cas |
 | Script d'installation | voir [tests/RESULTS.md](tests/RESULTS.md) | installation, mise à jour, retour arrière, désinstallation |
 
 Détails, versions et ce qui reste à vérifier sur une vraie instance : [tests/RESULTS.md](tests/RESULTS.md).
+
+## Contributeurs
+
+- [@00MY00](https://github.com/00MY00) — auteur et mainteneur
 
 ## Licence
 

@@ -98,7 +98,7 @@ class ExportAndPagesTest extends TestCase
         // the newsletter rule is blocked (sender not given): explicit acknowledgement needed
         $refused = $this->actingAs($admin)->post(route('workflowpacks.import.confirm'), $input + ['token' => $m[1]]);
         $this->assertSame(0, Workflow::where('mailbox_id', $a->id)->count());
-        $this->seeIn($refused, 'ignorer');
+        $this->seeIn($refused, e(\Modules\WorkflowPacks\Services\Pack\Problems::t('imp_blocked', ['count' => 1])));
 
         $step4 = $this->actingAs($admin)->post(route('workflowpacks.import.confirm'), $input + ['token' => $m[1], 'ack_blocked' => 1]);
         $step4->assertStatus(200);

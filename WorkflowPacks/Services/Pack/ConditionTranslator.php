@@ -31,7 +31,7 @@ class ConditionTranslator
             return [];
         }
         if (!is_array($tree) || self::isList($tree) || count($tree) !== 1 || !(isset($tree['all']) || isset($tree['any']))) {
-            $problems->add($path, 'WP-COND-01', 'les conditions doivent être un objet avec une seule clé « all » (ET) ou « any » (OU).');
+            $problems->add($path, 'WP-COND-01', 'cond_root');
 
             return null;
         }
@@ -49,12 +49,12 @@ class ConditionTranslator
 
         $items = $tree['all'];
         if (!is_array($items) || !self::isList($items) || !$items) {
-            $problems->add($path.'.all', 'WP-COND-02', '« all » doit être une liste non vide.');
+            $problems->add($path.'.all', 'WP-COND-02', 'cond_all_list');
 
             return null;
         }
         if (count($items) > $maxGroups) {
-            $problems->add($path.'.all', 'WP-COND-03', 'trop de groupes ET ('.count($items).', maximum '.$maxGroups.').');
+            $problems->add($path.'.all', 'WP-COND-03', 'cond_too_many_groups', ['count' => count($items), 'max' => $maxGroups]);
 
             return null;
         }
@@ -68,7 +68,7 @@ class ConditionTranslator
                     $native[] = $group;
                 }
             } elseif (is_array($item) && isset($item['all'])) {
-                $problems->add($p, 'WP-COND-04', 'un « all » dans un « all » n\'est pas accepté : placez ces conditions directement dans la liste « all » principale.');
+                $problems->add($p, 'WP-COND-04', 'cond_all_in_all');
                 $ok = false;
             } else {
                 $condition = self::condition($item, $p, $problems);
@@ -86,12 +86,12 @@ class ConditionTranslator
     protected static function orGroup($items, $path, Problems $problems, $max)
     {
         if (!is_array($items) || !self::isList($items) || !$items) {
-            $problems->add($path, 'WP-COND-02', '« any » doit être une liste non vide.');
+            $problems->add($path, 'WP-COND-02', 'cond_any_list');
 
             return null;
         }
         if (count($items) > $max) {
-            $problems->add($path, 'WP-COND-03', 'trop de conditions dans ce groupe OU ('.count($items).', maximum '.$max.').');
+            $problems->add($path, 'WP-COND-03', 'cond_too_many', ['count' => count($items), 'max' => $max]);
 
             return null;
         }
@@ -99,8 +99,7 @@ class ConditionTranslator
         foreach ($items as $i => $item) {
             $p = $path.'['.$i.']';
             if (is_array($item) && (isset($item['all']) || isset($item['any']))) {
-                $problems->add($p, 'WP-COND-05', 'Workflows ne sait pas évaluer un groupe à l\'intérieur d\'un « any » (OU) : '
-                    .'seule la forme « ET de groupes OU » est représentable. Réécrivez la règle (ou séparez-la en plusieurs règles).');
+                $problems->add($p, 'WP-COND-05', 'cond_group_in_any');
 
                 return null;
             }
@@ -117,23 +116,23 @@ class ConditionTranslator
     protected static function condition($item, $path, Problems $problems)
     {
         if (!is_array($item) || self::isList($item)) {
-            $problems->add($path, 'WP-COND-06', 'une condition doit être un objet {"type", "operator", "value"}.');
+            $problems->add($path, 'WP-COND-06', 'cond_object');
 
             return null;
         }
         $extra = array_diff(array_keys($item), self::CONDITION_KEYS);
         if ($extra) {
-            $problems->add($path, 'WP-COND-07', 'clé(s) non prise(s) en charge : '.implode(', ', $extra).'.');
+            $problems->add($path, 'WP-COND-07', 'cond_unknown_keys', ['keys' => implode(', ', $extra)]);
 
             return null;
         }
         if (!isset($item['type']) || !is_string($item['type']) || $item['type'] === '') {
-            $problems->add($path, 'WP-COND-08', '« type » manquant.');
+            $problems->add($path, 'WP-COND-08', 'cond_no_type');
 
             return null;
         }
         if (!isset($item['operator']) || !is_string($item['operator']) || $item['operator'] === '') {
-            $problems->add($path, 'WP-COND-09', '« operator » manquant (Workflows ignore une condition sans opérateur).');
+            $problems->add($path, 'WP-COND-09', 'cond_no_operator');
 
             return null;
         }

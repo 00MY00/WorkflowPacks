@@ -51,16 +51,16 @@ class Planner
         // ------------------------------------------------------------------------------------ mailboxes
         $mailboxIds = array_values(array_unique(array_map('intval', $mailboxIds)));
         if (!$mailboxIds) {
-            $problems->add('mailboxes', 'WP-MB-01', 'choisissez au moins une boîte.');
+            $problems->add('mailboxes', 'WP-MB-01', 'mb_none');
         }
         if (count($mailboxIds) > (int) ($limits['mailboxes'] ?? 100)) {
-            $problems->add('mailboxes', 'WP-MB-02', 'trop de boîtes sélectionnées.');
+            $problems->add('mailboxes', 'WP-MB-02', 'mb_too_many');
         }
         $mailboxes = [];
         foreach ($mailboxIds as $id) {
             $mailbox = \App\Mailbox::find($id);
             if (!$mailbox) {
-                $problems->add('mailboxes', 'WP-MB-03', 'boîte #'.$id.' introuvable.');
+                $problems->add('mailboxes', 'WP-MB-03', 'mb_not_found', ['id' => $id]);
                 continue;
             }
             $mailboxes[$id] = [
@@ -102,18 +102,17 @@ class Planner
                 ];
                 if (!$mailbox['allowed']) {
                     $item['status'] = 'denied';
-                    $item['reasons'][] = 'vous n\'avez pas le droit de gérer les workflows de cette boîte.';
+                    $item['reasons'][] = Problems::t('denied');
                     $items[$id] = $this->finish($item);
                     continue;
                 }
                 if ($missingModules) {
-                    $item['reasons'][] = 'module(s) requis inactif(s) : '.implode(', ', $missingModules).'. La règle n\'est pas importée '
-                        .'(aucune action n\'est retirée pour la rendre importable).';
+                    $item['reasons'][] = Problems::t('modules_missing', ['modules' => implode(', ', $missingModules)]);
                     $items[$id] = $this->finish($item);
                     continue;
                 }
                 if (!$problems->isEmpty()) {
-                    $item['reasons'][] = 'corrigez d\'abord les erreurs générales (boîtes, paramètres).';
+                    $item['reasons'][] = Problems::t('fix_general_first');
                     $items[$id] = $this->finish($item);
                     continue;
                 }
@@ -132,8 +131,7 @@ class Planner
 
                 $official = Bridge::officialErrors($attributes, $id);
                 if ($official) {
-                    $item['reasons'][] = 'refusée par la validation de Workflows (champs : '.implode(', ', array_keys($official)).') : '
-                        .'une référence (utilisateur, boîte…) ou une valeur est incomplète.';
+                    $item['reasons'][] = Problems::t('official_rejected', ['fields' => implode(', ', array_keys($official))]);
                     $items[$id] = $this->finish($item);
                     continue;
                 }
@@ -166,7 +164,7 @@ class Planner
             $workflow = $link->workflow_id ? Bridge::query()->find($link->workflow_id) : null;
             if (!$workflow || (int) $workflow->mailbox_id !== (int) $id) {
                 $item['status'] = 'missing';
-                $item['reasons'][] = 'la règle créée lors d\'un import précédent n\'existe plus dans cette boîte.';
+                $item['reasons'][] = Problems::t('link_missing');
                 $item = $this->nameCheck($item, $attributes['name'], null, 'create');
 
                 return $item;
@@ -188,7 +186,7 @@ class Planner
                 $item = $this->nameCheck($item, $attributes['name'], $workflow->id, 'update');
             } else {
                 $item['status'] = 'conflict';
-                $item['reasons'][] = 'la règle a été modifiée dans Workflows depuis le dernier import.';
+                $item['reasons'][] = Problems::t('manual_change');
                 $item['diff'] = Fingerprint::diff($current, $attributes, $jsonActions);
                 $item = $this->nameCheck($item, $attributes['name'], $workflow->id, 'conflict');
             }
@@ -214,9 +212,9 @@ class Planner
         }
         if ($mode === 'create' && $item['status'] === 'create') {
             $item['status'] = 'conflict_name';
-            $item['reasons'][] = 'une règle qui n\'appartient pas au pack porte déjà ce nom (#'.$other->id.') : elle ne sera jamais modifiée.';
+            $item['reasons'][] = Problems::t('name_foreign', ['id' => $other->id]);
         } else {
-            $item['reasons'][] = 'le nouveau nom est déjà utilisé par une autre règle de la boîte (#'.$other->id.') : renommage impossible.';
+            $item['reasons'][] = Problems::t('name_taken', ['id' => $other->id]);
             $item['name_taken'] = true;
             if ($item['status'] === 'update') {
                 $item['status'] = 'blocked';
@@ -281,7 +279,7 @@ class Planner
             }
             if ($value === null || $value === '') {
                 if ($param['required']) {
-                    $problems->add('params.'.$key, 'WP-PARAM-10', 'paramètre obligatoire « '.$param['label'].' » non renseigné : import bloqué.');
+                    $problems->add('params.'.$key, 'WP-PARAM-10', 'param_required', ['label' => $param['label']]);
                 }
                 $values[$key] = null;
                 continue;
@@ -291,7 +289,7 @@ class Planner
                 $error = self::referenceError($param['type'], $value, null);
             }
             if ($error !== null) {
-                $problems->add('params.'.$key, 'WP-PARAM-11', '« '.$param['label'].' » : '.$error);
+                $problems->add('params.'.$key, 'WP-PARAM-11', 'param_invalid', ['label' => $param['label'], 'error' => $error]);
                 $values[$key] = null;
                 continue;
             }
@@ -305,17 +303,17 @@ class Planner
     public static function referenceError($kind, $value, $mailboxId)
     {
         if (!is_scalar($value) || !preg_match('/^\d+$/', (string) $value)) {
-            return ($kind === 'user' ? 'utilisateur' : 'boîte').' : identifiant numérique attendu, « '.(is_scalar($value) ? $value : 'liste').' » reçu.';
+            return Problems::t($kind === 'user' ? 'ref_numeric_user' : 'ref_numeric_mailbox', ['value' => is_scalar($value) ? $value : '[…]']);
         }
         if ($kind === 'mailbox') {
-            return \App\Mailbox::find((int) $value) ? null : 'boîte #'.$value.' introuvable sur cette instance.';
+            return \App\Mailbox::find((int) $value) ? null : Problems::t('ref_mailbox_missing', ['id' => $value]);
         }
         $user = \App\User::find((int) $value);
         if (!$user || (int) $user->status === \App\User::STATUS_DELETED) {
-            return 'utilisateur #'.$value.' introuvable sur cette instance.';
+            return Problems::t('ref_user_missing', ['id' => $value]);
         }
         if ($mailboxId && !$user->isAdmin() && !$user->hasAccessToMailbox((int) $mailboxId)) {
-            return 'l\'utilisateur #'.$value.' n\'a pas accès à la boîte #'.$mailboxId.'.';
+            return Problems::t('ref_user_access', ['id' => $value, 'mailbox' => $mailboxId]);
         }
 
         return null;

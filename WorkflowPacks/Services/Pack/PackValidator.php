@@ -39,12 +39,12 @@ class PackValidator
     {
         $problems = new Problems();
         if (is_string($json) && strlen($json) > $this->limits['file_kb'] * 1024) {
-            $problems->add('', 'WP-FILE-02', 'fichier trop volumineux ('.ceil(strlen($json) / 1024).' Ko, maximum '.$this->limits['file_kb'].' Ko).');
+            $problems->add('', 'WP-FILE-02', 'file_too_big', ['size' => ceil(strlen($json) / 1024), 'max' => $this->limits['file_kb']]);
 
             return ['pack' => null, 'problems' => $problems];
         }
         if (!is_string($json) || trim($json) === '') {
-            $problems->add('', 'WP-FILE-01', 'fichier vide.');
+            $problems->add('', 'WP-FILE-01', 'file_empty');
 
             return ['pack' => null, 'problems' => $problems];
         }
@@ -53,7 +53,7 @@ class PackValidator
         }
         $data = json_decode($json, true, (int) $this->limits['json_depth']);
         if (json_last_error() !== JSON_ERROR_NONE) {
-            $problems->add('', 'WP-FILE-03', 'JSON invalide : '.json_last_error_msg().'.');
+            $problems->add('', 'WP-FILE-03', 'file_json', ['error' => json_last_error_msg()]);
 
             return ['pack' => null, 'problems' => $problems];
         }
@@ -65,28 +65,27 @@ class PackValidator
     {
         $problems = new Problems();
         if (!is_array($data) || ConditionTranslator::isList($data)) {
-            $problems->add('', 'WP-PACK-01', 'le fichier doit contenir un objet JSON.');
+            $problems->add('', 'WP-PACK-01', 'pack_object');
 
             return ['pack' => null, 'problems' => $problems];
         }
         foreach (array_keys($data) as $k) {
             if (!in_array($k, self::TOP_KEYS, true) && $k !== '$schema' && strpos((string) $k, 'x-') !== 0) {
-                $problems->add($k, 'WP-PACK-02', 'clé inconnue au premier niveau.');
+                $problems->add($k, 'WP-PACK-02', 'pack_unknown_top');
             }
         }
         if (($data['format'] ?? null) !== self::FORMAT) {
-            $problems->add('format', 'WP-PACK-03', 'doit valoir « '.self::FORMAT.' ».');
+            $problems->add('format', 'WP-PACK-03', 'pack_format', ['format' => self::FORMAT]);
 
             return ['pack' => null, 'problems' => $problems];
         }
         if (!isset($data['version']) || !is_int($data['version'])) {
-            $problems->add('version', 'WP-PACK-04', 'version du schéma manquante (nombre entier).');
+            $problems->add('version', 'WP-PACK-04', 'pack_version_missing');
 
             return ['pack' => null, 'problems' => $problems];
         }
         if (!in_array($data['version'], self::SCHEMA_VERSIONS, true)) {
-            $problems->add('version', 'WP-PACK-05', 'version de schéma '.$data['version'].' non prise en charge par ce module (versions acceptées : '
-                .implode(', ', self::SCHEMA_VERSIONS).'). Mettez à jour Workflow Packs.');
+            $problems->add('version', 'WP-PACK-05', 'pack_version_unsupported', ['version' => $data['version'], 'accepted' => implode(', ', self::SCHEMA_VERSIONS)]);
 
             return ['pack' => null, 'problems' => $problems];
         }
@@ -106,9 +105,9 @@ class PackValidator
 
         $rules = $data['workflows'] ?? null;
         if (!is_array($rules) || !ConditionTranslator::isList($rules) || !$rules) {
-            $problems->add('workflows', 'WP-PACK-06', 'liste de règles manquante ou vide.');
+            $problems->add('workflows', 'WP-PACK-06', 'pack_rules_missing');
         } elseif (count($rules) > $this->limits['rules']) {
-            $problems->add('workflows', 'WP-PACK-07', 'trop de règles ('.count($rules).', maximum '.$this->limits['rules'].').');
+            $problems->add('workflows', 'WP-PACK-07', 'pack_rules_too_many', ['count' => count($rules), 'max' => $this->limits['rules']]);
         } else {
             $keys = [];
             foreach ($rules as $i => $rule) {
@@ -117,7 +116,7 @@ class PackValidator
                     continue;
                 }
                 if (isset($keys[$normalized['key']])) {
-                    $problems->add('workflows['.$i.'].key', 'WP-RULE-02', 'clé « '.$normalized['key'].' » déjà utilisée par une autre règle du pack.');
+                    $problems->add('workflows['.$i.'].key', 'WP-RULE-02', 'rule_duplicate_key', ['key' => $normalized['key']]);
                 }
                 $keys[$normalized['key']] = true;
                 $pack['workflows'][] = $normalized;
@@ -133,7 +132,7 @@ class PackValidator
     {
         $value = $data[$field] ?? null;
         if (!is_string($value) || !preg_match('/^[a-z0-9][a-z0-9._-]{0,99}$/', $value)) {
-            $problems->add(ltrim($path.'.'.$field, '.'), 'WP-PACK-08', 'identifiant invalide : lettres minuscules, chiffres, « . », « _ » ou « - » (100 caractères au plus).');
+            $problems->add(ltrim($path.'.'.$field, '.'), 'WP-PACK-08', 'pack_bad_key');
 
             return '';
         }
@@ -145,18 +144,18 @@ class PackValidator
     {
         if (!array_key_exists($field, $data) || $data[$field] === null) {
             if ($required) {
-                $problems->add($path, 'WP-PACK-09', 'texte obligatoire.');
+                $problems->add($path, 'WP-PACK-09', 'text_required');
             }
 
             return '';
         }
         if (!is_string($data[$field]) || ($required && trim($data[$field]) === '')) {
-            $problems->add($path, 'WP-PACK-09', 'doit être un texte'.($required ? ' non vide' : '').'.');
+            $problems->add($path, 'WP-PACK-09', $required ? 'text_required' : 'text_invalid');
 
             return '';
         }
         if (mb_strlen($data[$field]) > $max) {
-            $problems->add($path, 'WP-PACK-10', 'texte trop long (maximum '.$max.' caractères).');
+            $problems->add($path, 'WP-PACK-10', 'text_too_long', ['max' => $max]);
         }
 
         return $data[$field];
@@ -165,14 +164,14 @@ class PackValidator
     protected function requires($value, $path, Problems $problems)
     {
         if (!is_array($value) || !ConditionTranslator::isList($value)) {
-            $problems->add($path, 'WP-PACK-11', 'doit être une liste d\'alias de modules (ex. ["tags"]).');
+            $problems->add($path, 'WP-PACK-11', 'requires_list');
 
             return [];
         }
         $out = [];
         foreach ($value as $i => $alias) {
             if (!is_string($alias) || !preg_match('/^[a-z0-9_-]{1,50}$/', strtolower($alias))) {
-                $problems->add($path.'['.$i.']', 'WP-PACK-11', 'alias de module invalide.');
+                $problems->add($path.'['.$i.']', 'WP-PACK-11', 'requires_alias');
                 continue;
             }
             $out[] = strtolower($alias);
@@ -184,12 +183,12 @@ class PackValidator
     protected function params($value, Problems $problems)
     {
         if (!is_array($value) || !ConditionTranslator::isList($value)) {
-            $problems->add('params', 'WP-PARAM-01', 'doit être une liste.');
+            $problems->add('params', 'WP-PARAM-01', 'params_list');
 
             return [];
         }
         if (count($value) > $this->limits['params']) {
-            $problems->add('params', 'WP-PARAM-01', 'trop de paramètres (maximum '.$this->limits['params'].').');
+            $problems->add('params', 'WP-PARAM-01', 'params_too_many', ['max' => $this->limits['params']]);
 
             return [];
         }
@@ -198,39 +197,39 @@ class PackValidator
         foreach ($value as $i => $param) {
             $path = 'params['.$i.']';
             if (!is_array($param) || ConditionTranslator::isList($param)) {
-                $problems->add($path, 'WP-PARAM-02', 'un paramètre doit être un objet.');
+                $problems->add($path, 'WP-PARAM-02', 'param_object');
                 continue;
             }
             foreach (array_diff(array_keys($param), self::PARAM_KEYS) as $k) {
-                $problems->add($path.'.'.$k, 'WP-PARAM-03', 'clé inconnue.');
+                $problems->add($path.'.'.$k, 'WP-PARAM-03', 'unknown_key');
             }
             $key = $param['key'] ?? null;
             if (!is_string($key) || !preg_match('/^[a-z][a-z0-9_]{0,49}$/', $key)) {
-                $problems->add($path.'.key', 'WP-PARAM-04', 'nom invalide : minuscules, chiffres et « _ », commence par une lettre.');
+                $problems->add($path.'.key', 'WP-PARAM-04', 'param_bad_key');
                 continue;
             }
             if (isset($seen[$key])) {
-                $problems->add($path.'.key', 'WP-PARAM-05', 'paramètre « '.$key.' » déclaré deux fois.');
+                $problems->add($path.'.key', 'WP-PARAM-05', 'param_duplicate', ['key' => $key]);
                 continue;
             }
             $seen[$key] = true;
             $type = $param['type'] ?? 'string';
             if (!in_array($type, self::PARAM_TYPES, true)) {
-                $problems->add($path.'.type', 'WP-PARAM-06', 'type inconnu (types acceptés : '.implode(', ', self::PARAM_TYPES).').');
+                $problems->add($path.'.type', 'WP-PARAM-06', 'param_bad_type', ['types' => implode(', ', self::PARAM_TYPES)]);
                 continue;
             }
             foreach (['required', 'sensitive'] as $flag) {
                 if (isset($param[$flag]) && !is_bool($param[$flag])) {
-                    $problems->add($path.'.'.$flag, 'WP-PARAM-07', 'doit valoir true ou false.');
+                    $problems->add($path.'.'.$flag, 'WP-PARAM-07', 'bool_expected');
                 }
             }
             $default = $param['default'] ?? null;
             if ($default !== null && self::paramError($type, $default) !== null) {
-                $problems->add($path.'.default', 'WP-PARAM-08', 'valeur par défaut invalide : '.self::paramError($type, $default));
+                $problems->add($path.'.default', 'WP-PARAM-08', 'param_bad_default', ['error' => self::paramError($type, $default)]);
                 $default = null;
             }
             if ($default !== null && in_array($type, ['user', 'mailbox'], true)) {
-                $problems->add($path.'.default', 'WP-PARAM-09', 'un paramètre de type « '.$type.' » désigne un élément local à chaque instance : pas de valeur par défaut.');
+                $problems->add($path.'.default', 'WP-PARAM-09', 'param_local_default', ['type' => $type]);
                 $default = null;
             }
             $out[] = [
@@ -252,44 +251,44 @@ class PackValidator
     {
         switch ($type) {
             case 'email':
-                return is_string($value) && filter_var($value, FILTER_VALIDATE_EMAIL) ? null : 'adresse e-mail invalide.';
+                return is_string($value) && filter_var($value, FILTER_VALIDATE_EMAIL) ? null : Problems::t('value_email');
             case 'integer':
             case 'user':
             case 'mailbox':
-                return (is_int($value) || (is_string($value) && preg_match('/^-?\d{1,10}$/', $value))) ? null : 'nombre entier attendu.';
+                return (is_int($value) || (is_string($value) && preg_match('/^-?\d{1,10}$/', $value))) ? null : Problems::t('value_integer');
             default:
-                return is_string($value) || is_int($value) ? null : 'texte attendu.';
+                return is_string($value) || is_int($value) ? null : Problems::t('value_text');
         }
     }
 
     protected function rule($rule, $path, array $paramKeys, Problems $problems)
     {
         if (!is_array($rule) || ConditionTranslator::isList($rule)) {
-            $problems->add($path, 'WP-RULE-01', 'une règle doit être un objet.');
+            $problems->add($path, 'WP-RULE-01', 'rule_object');
 
             return null;
         }
         $before = $problems->count();
         foreach (array_diff(array_keys($rule), self::RULE_KEYS) as $k) {
-            $problems->add($path.'.'.$k, 'WP-RULE-03', 'clé inconnue.');
+            $problems->add($path.'.'.$k, 'WP-RULE-03', 'unknown_key');
         }
         $key = $this->key($rule, 'key', $path, $problems);
         $type = $rule['type'] ?? 'automatic';
         if (!in_array($type, ['automatic', 'manual'], true)) {
-            $problems->add($path.'.type', 'WP-RULE-04', 'doit valoir « automatic » ou « manual ».');
+            $problems->add($path.'.type', 'WP-RULE-04', 'rule_type');
         }
 
         $settings = $rule['settings'] ?? [];
         $normalizedSettings = ['apply_to_prev' => false, 'max_executions' => 1];
         if (!is_array($settings) || ($settings && ConditionTranslator::isList($settings))) {
-            $problems->add($path.'.settings', 'WP-RULE-05', 'doit être un objet.');
+            $problems->add($path.'.settings', 'WP-RULE-05', 'settings_object');
         } else {
             foreach (array_diff(array_keys($settings), self::SETTINGS_KEYS) as $k) {
-                $problems->add($path.'.settings.'.$k, 'WP-RULE-05', 'paramètre d\'exécution inconnu (acceptés : '.implode(', ', self::SETTINGS_KEYS).').');
+                $problems->add($path.'.settings.'.$k, 'WP-RULE-05', 'settings_unknown', ['accepted' => implode(', ', self::SETTINGS_KEYS)]);
             }
             if (array_key_exists('apply_to_prev', $settings)) {
                 if (!is_bool($settings['apply_to_prev'])) {
-                    $problems->add($path.'.settings.apply_to_prev', 'WP-RULE-06', 'doit valoir true ou false.');
+                    $problems->add($path.'.settings.apply_to_prev', 'WP-RULE-06', 'bool_expected');
                 } else {
                     $normalizedSettings['apply_to_prev'] = $settings['apply_to_prev'];
                 }
@@ -297,7 +296,7 @@ class PackValidator
             if (array_key_exists('max_executions', $settings)) {
                 $max = $settings['max_executions'];
                 if (!is_int($max) || $max < 1 || $max > 1000) {
-                    $problems->add($path.'.settings.max_executions', 'WP-RULE-07', 'nombre entier entre 1 et 1000 attendu.');
+                    $problems->add($path.'.settings.max_executions', 'WP-RULE-07', 'max_executions');
                 } else {
                     $normalizedSettings['max_executions'] = $max;
                 }
@@ -306,24 +305,24 @@ class PackValidator
 
         $conditions = ConditionTranslator::toNative($rule['conditions'] ?? null, $path.'.conditions', $problems, $this->limits);
         if ($conditions === [] && $type === 'automatic') {
-            $problems->add($path.'.conditions', 'WP-RULE-08', 'une règle automatique doit avoir au moins une condition (Workflow::validate()).');
+            $problems->add($path.'.conditions', 'WP-RULE-08', 'rule_no_conditions');
         }
 
         $actions = $rule['actions'] ?? null;
         $normalizedActions = [];
         if (!is_array($actions) || !ConditionTranslator::isList($actions) || !$actions) {
-            $problems->add($path.'.actions', 'WP-RULE-09', 'liste d\'actions manquante ou vide.');
+            $problems->add($path.'.actions', 'WP-RULE-09', 'actions_missing');
         } elseif (count($actions) > $this->limits['actions']) {
-            $problems->add($path.'.actions', 'WP-RULE-10', 'trop d\'actions (maximum '.$this->limits['actions'].').');
+            $problems->add($path.'.actions', 'WP-RULE-10', 'actions_too_many', ['max' => $this->limits['actions']]);
         } else {
             foreach ($actions as $i => $action) {
                 $p = $path.'.actions['.$i.']';
                 if (!is_array($action) || ConditionTranslator::isList($action) || !isset($action['type']) || !is_string($action['type']) || $action['type'] === '') {
-                    $problems->add($p, 'WP-RULE-11', 'une action doit être un objet avec un « type ».');
+                    $problems->add($p, 'WP-RULE-11', 'action_object');
                     continue;
                 }
                 foreach (array_diff(array_keys($action), self::ACTION_KEYS) as $k) {
-                    $problems->add($p.'.'.$k, 'WP-RULE-12', 'clé inconnue.');
+                    $problems->add($p.'.'.$k, 'WP-RULE-12', 'unknown_key');
                 }
                 $normalizedActions[] = array_intersect_key($action, array_flip(self::ACTION_KEYS));
             }
@@ -337,7 +336,7 @@ class PackValidator
         );
         foreach (array_unique($vars) as $name) {
             if (!VariableResolver::knownName($name, $paramKeys)) {
-                $problems->add($path, 'WP-VAR-02', 'variable inconnue {{'.$name.'}} : déclarez-la dans « params » ou utilisez {{mailbox.id}}, {{mailbox.email}}, {{mailbox.name}}.');
+                $problems->add($path, 'WP-VAR-02', 'var_undeclared', ['var' => $name]);
             }
         }
         // regular expressions without variables can be checked now (with variables: after replacement)
@@ -346,7 +345,7 @@ class PackValidator
                 if ($condition['operator'] === 'regex' && is_string($condition['value'] ?? null) && strpos($condition['value'], '{{') === false) {
                     $error = self::regexError($condition['value'], $this->limits['regex']);
                     if ($error !== null) {
-                        $problems->add($path.'.conditions', 'WP-REGEX-01', 'expression régulière « '.$condition['value'].' » : '.$error);
+                        $problems->add($path.'.conditions', 'WP-REGEX-01', 'regex_invalid', ['pattern' => $condition['value'], 'error' => $error]);
                     }
                 }
             }
@@ -375,19 +374,19 @@ class PackValidator
     public static function regexError($pattern, $max = 2000)
     {
         if (!is_string($pattern) || $pattern === '') {
-            return 'motif vide.';
+            return Problems::t('regex_empty');
         }
         if (strlen($pattern) > $max) {
-            return 'motif trop long (maximum '.$max.' caractères).';
+            return Problems::t('regex_too_long', ['max' => $max]);
         }
         $d = $pattern[0];
         if (ctype_alnum($d) || $d === '\\' || ctype_space($d)) {
-            return 'le motif doit commencer et finir par un délimiteur, par exemple /motif/i (Workflows appelle preg_match() sans en ajouter).';
+            return Problems::t('regex_delimiter');
         }
         $close = ['(' => ')', '[' => ']', '{' => '}', '<' => '>'];
         $end = $close[$d] ?? $d;
         if (!preg_match('/'.preg_quote($end, '/').'[imsxuADSUXJ]*$/', substr($pattern, 1))) {
-            return 'délimiteur de fin « '.$end.' » absent ou modificateur inconnu.';
+            return Problems::t('regex_end', ['end' => $end]);
         }
         set_error_handler(function () {
             return true;
@@ -395,7 +394,7 @@ class PackValidator
         $ok = @preg_match($pattern, '');
         restore_error_handler();
         if ($ok === false) {
-            return 'motif invalide ('.(function_exists('preg_last_error_msg') ? preg_last_error_msg() : 'erreur PCRE').').';
+            return Problems::t('regex_pcre', ['error' => function_exists('preg_last_error_msg') ? preg_last_error_msg() : 'PCRE']);
         }
 
         return null;
@@ -404,7 +403,7 @@ class PackValidator
     protected function checkStrings($value, $path, Problems $problems)
     {
         if (is_string($value) && strlen($value) > $this->limits['string']) {
-            $problems->add($path, 'WP-PACK-10', 'texte trop long (maximum '.$this->limits['string'].' octets).');
+            $problems->add($path, 'WP-PACK-10', 'string_too_long', ['max' => $this->limits['string']]);
         } elseif (is_array($value)) {
             foreach ($value as $k => $v) {
                 $this->checkStrings($v, ltrim($path.'.'.$k, '.'), $problems);

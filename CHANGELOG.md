@@ -4,6 +4,22 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [1.1.0] - 2026-10-10
+
+### Ajouté
+- Interface et messages des services en 7 langues : fr, en, de, es, it, nl, pt-BR. La langue suit le profil
+  FreeScout, avec l'anglais par défaut ; les traductions sont vérifiées par un test.
+- Téléphone avec Refresh : entrée « Workflow Packs » dans le panneau Profil (menu burger) au lieu de la barre
+  d'onglets.
+- Téléphone : la matrice règles × boîtes s'affiche en cartes, les différences sont empilées, les onglets défilent.
+- `install.sh` : demande le dossier de FreeScout s'il n'est dans aucun dossier par défaut ; messages en
+  français ou en anglais (`--lang`).
+- Contributeur : @00MY00.
+
+### Corrigé
+- `install.sh` : condition explicite (shellcheck SC2015, signalé par la CI).
+- `tools/build-release.sh` : la version de `install.sh` était lue avec son commentaire.
+
 ## [1.0.0] - 2026-10-10
 
 ### Ajouté

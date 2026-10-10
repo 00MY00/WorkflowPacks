@@ -23,7 +23,7 @@
         @endforeach
 
         {{-- schematic matrix: rules x mailboxes, with the choice for every cell --}}
-        <div class="table-responsive">
+        <div class="table-responsive wp-matrix-wrap">
             <table class="table table-bordered wp-matrix">
                 <thead>
                     <tr>
@@ -38,7 +38,7 @@
                         <tr>
                             <th><a href="#wp-rule-{{ $loop->index }}">{!! \Modules\WorkflowPacks\Services\Ui::value($entry['rule']['name']) !!}</a></th>
                             @foreach ($entry['items'] as $mailboxId => $item)
-                                <td class="wp-cell wp-status-{{ $item['status'] }}">
+                                <td class="wp-cell wp-status-{{ $item['status'] }}" data-label="{{ $plan['mailboxes'][$mailboxId]['name'] }}">
                                     <div class="wp-cell-status">{{ __('workflowpacks::messages.status_'.$item['status']) }}
                                         @foreach ($item['sensitive'] as $kind)<span class="label label-danger" title="{{ __('workflowpacks::messages.sensitive_'.$kind) }}">⚠</span>@endforeach
                                     </div>
@@ -75,7 +75,7 @@
                                 <table class="table table-condensed wp-diff">
                                     <tr><th></th><th>{{ __('workflowpacks::messages.before') }}</th><th>{{ __('workflowpacks::messages.after') }}</th></tr>
                                     @foreach ($item['diff'] as $field => $d)
-                                        <tr><th>{{ $field }}</th><td><pre>{{ $d['before'] }}</pre></td><td><pre>{{ $d['after'] }}</pre></td></tr>
+                                        <tr><th>{{ $field }}</th><td data-label="{{ __('workflowpacks::messages.before') }}"><pre>{{ $d['before'] }}</pre></td><td data-label="{{ __('workflowpacks::messages.after') }}"><pre>{{ $d['after'] }}</pre></td></tr>
                                     @endforeach
                                 </table>
                             @endif

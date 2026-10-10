@@ -48,9 +48,9 @@ class RuleCompiler
         $name = trim((string) $name);
         $max = (int) ($this->config['name_max'] ?? 75);
         if ($name === '') {
-            $problems->add($path.'.name', 'WP-RULE-13', 'nom vide après remplacement des variables.');
+            $problems->add($path.'.name', 'WP-RULE-13', 'name_empty');
         } elseif (mb_strlen($name) > $max) {
-            $problems->add($path.'.name', 'WP-RULE-14', 'nom trop long après remplacement des variables ('.mb_strlen($name).' caractères, Workflows en accepte '.$max.').');
+            $problems->add($path.'.name', 'WP-RULE-14', 'name_too_long', ['length' => mb_strlen($name), 'max' => $max]);
         }
 
         $tree = new Problems();
@@ -98,13 +98,12 @@ class RuleCompiler
         $operator = $condition['operator'];
         $config = $this->catalog['conditions'][$type] ?? null;
         if ($config === null) {
-            $problems->add($path, 'WP-CAT-01', 'type de condition « '.$type.' » absent de Workflows sur cette instance (module manquant ou version différente). '
-                .'Types disponibles : '.implode(', ', array_keys($this->catalog['conditions'] ?? [])).'.');
+            $problems->add($path, 'WP-CAT-01', 'cat_condition', ['type' => $type, 'types' => implode(', ', array_keys($this->catalog['conditions'] ?? []))]);
 
             return $condition;
         }
         if (is_array($config['operators']) && $config['operators'] && !in_array($operator, $config['operators'], true)) {
-            $problems->add($path, 'WP-CAT-02', 'opérateur « '.$operator.' » non proposé pour « '.$type.' » (opérateurs : '.implode(', ', $config['operators']).').');
+            $problems->add($path, 'WP-CAT-02', 'cat_operator', ['operator' => $operator, 'type' => $type, 'operators' => implode(', ', $config['operators'])]);
 
             return $condition;
         }
@@ -115,7 +114,7 @@ class RuleCompiler
         if ($operator === 'regex' && is_string($value) && strpos($value, '{{') === false) {
             $error = PackValidator::regexError($value, $this->limits['regex']);
             if ($error !== null) {
-                $problems->add($path.'.value', 'WP-REGEX-01', 'expression régulière après remplacement des variables : '.$error);
+                $problems->add($path.'.value', 'WP-REGEX-01', 'regex_after_vars', ['error' => $error]);
             }
         }
         $this->checkValue('conditions', $type, $config, $value, $mailboxId, $path, $problems);
@@ -129,13 +128,12 @@ class RuleCompiler
         $type = $action['type'];
         $config = $this->catalog['actions'][$type] ?? null;
         if ($config === null) {
-            $problems->add($path, 'WP-CAT-03', 'type d\'action « '.$type.' » absent de Workflows sur cette instance (module manquant ou version différente). '
-                .'Types disponibles : '.implode(', ', array_keys($this->catalog['actions'] ?? [])).'.');
+            $problems->add($path, 'WP-CAT-03', 'cat_action', ['type' => $type, 'types' => implode(', ', array_keys($this->catalog['actions'] ?? []))]);
 
             return $action;
         }
         if (isset($action['operator']) && is_array($config['operators']) && $config['operators'] && !in_array($action['operator'], $config['operators'], true)) {
-            $problems->add($path, 'WP-CAT-02', 'opérateur « '.$action['operator'].' » non proposé pour « '.$type.' ».');
+            $problems->add($path, 'WP-CAT-02', 'cat_operator', ['operator' => $action['operator'], 'type' => $type, 'operators' => implode(', ', $config['operators'])]);
         }
         if (!array_key_exists('value', $action)) {
             return $action;
@@ -144,7 +142,7 @@ class RuleCompiler
         if (in_array($type, $this->config['json_value_actions'] ?? [], true)) {
             // stored as a JSON string by Workflows; written as an object in the pack
             if (!is_array($value) || ($value && ConditionTranslator::isList($value))) {
-                $problems->add($path.'.value', 'WP-ACT-01', 'pour « '.$type.' » la valeur doit être un objet (ex. {"body": "…"}).');
+                $problems->add($path.'.value', 'WP-ACT-01', 'action_json_object', ['type' => $type]);
 
                 return $action;
             }
@@ -173,7 +171,7 @@ class RuleCompiler
         if (in_array($type, $this->config['strict_values'][$kind] ?? [], true) && is_array($config['values']) && $config['values']) {
             foreach ($values as $v) {
                 if (!is_scalar($v) || !in_array((string) $v, array_map('strval', $config['values']), true)) {
-                    $problems->add($path.'.value', 'WP-CAT-04', 'valeur « '.(is_scalar($v) ? $v : json_encode($v)).' » non proposée pour « '.$type.' » (valeurs : '.implode(', ', $config['values']).').');
+                    $problems->add($path.'.value', 'WP-CAT-04', 'cat_value', ['value' => is_scalar($v) ? $v : json_encode($v), 'type' => $type, 'values' => implode(', ', $config['values'])]);
                 }
             }
         }
@@ -185,7 +183,7 @@ class RuleCompiler
                 }
                 $error = call_user_func($this->refCheck, $ref, $v, $mailboxId);
                 if ($error !== null) {
-                    $problems->add($path.'.value', 'WP-REF-01', $error);
+                    $problems->add($path.'.value', 'WP-REF-01', 'raw', ['text' => $error]);
                 }
             }
         }

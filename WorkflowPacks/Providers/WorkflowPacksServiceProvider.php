@@ -37,8 +37,48 @@ class WorkflowPacksServiceProvider extends ServiceProvider
         $this->loadMigrationsFrom(__DIR__.'/../Database/Migrations');
         $this->loadRoutesFrom(__DIR__.'/../Http/routes.php');
 
+        // messages of the services in the user's language (fallback: English, then the French reference catalogue)
+        \Modules\WorkflowPacks\Services\Pack\Problems::$translator = function ($key, array $params) {
+            $id = 'workflowpacks::texts.'.$key;
+            $text = __($id, $params);
+
+            return is_string($text) && $text !== $id ? $text : null;
+        };
+
         $this->registerMenus();
+        $this->registerPhoneMenu();
         $this->registerSchedule();
+    }
+
+    /**
+     * Phones with the Refresh module: Refresh replaces the left bar by a fixed tab bar (Tickets, Contacts, Dashboard,
+     * Notifications, Profile — Modules/Refresh/Public/js/mobile.js), with no room for a module. The entry is added to
+     * the "Profile" panel instead (Refresh's burger menu), by Public/js/workflowpacks-phone.js, from the settings
+     * written here in <head>. Without Refresh, the entry is in FreeScout's own burger menu (Manage).
+     */
+    protected function registerPhoneMenu()
+    {
+        \Eventy::addFilter('javascripts', function ($scripts) {
+            $scripts[] = \Module::getPublicPath(self::ALIAS).'/js/workflowpacks-phone.js';
+
+            return $scripts;
+        });
+        \Eventy::addAction('layout.head', function () {
+            try {
+                if (!self::userCanUse() || !\App\Module::isActive('refresh')) {
+                    return;
+                }
+                $config = [
+                    'url'    => route('workflowpacks.index'),
+                    'label'  => __('workflowpacks::messages.menu'),
+                    'icon'   => asset(\Module::getPublicPath(self::ALIAS).'/img/module.svg'),
+                    'active' => self::isModulePage(),
+                ];
+                echo '<meta name="workflowpacks" content="'.e(json_encode($config, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)).'">'."\n";
+            } catch (\Throwable $e) {
+                // optional entry
+            }
+        });
     }
 
     /** The user may manage the workflows of at least one mailbox (Workflows' own permission rule). */

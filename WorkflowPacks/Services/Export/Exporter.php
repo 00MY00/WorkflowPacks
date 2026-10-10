@@ -7,6 +7,7 @@ use Modules\WorkflowPacks\Entities\Pack;
 use Modules\WorkflowPacks\Services\Pack\ConditionTranslator;
 use Modules\WorkflowPacks\Services\Pack\Fingerprint;
 use Modules\WorkflowPacks\Services\Pack\PackValidator;
+use Modules\WorkflowPacks\Services\Pack\Problems;
 use Modules\WorkflowPacks\Services\Workflows\Bridge;
 
 /**
@@ -62,7 +63,7 @@ class Exporter
                 }
                 $report['from_packs'][] = $workflow->name.' ← '.$link->pack_key.'/'.$link->workflow_key;
                 if (Fingerprint::of(Bridge::attributesOf($workflow), $jsonActions) !== $link->fingerprint) {
-                    $report['from_packs'][] = '  ⚠ '.$workflow->name.' : modifiée localement depuis l\'import ; c\'est le modèle du pack qui est exporté.';
+                    $report['from_packs'][] = '⚠ '.Problems::t('exp_modified', ['name' => $workflow->name]);
                 }
             } else {
                 $rule = $this->ruleFromWorkflow($workflow, $jsonActions, $replacements, $report);
@@ -153,18 +154,18 @@ class Exporter
         $refs = (array) Bridge::config('local_refs');
         foreach ($this->flatConditions($conditions) as $c) {
             if (isset($refs['conditions'][$c['type']])) {
-                $report['refs'][] = $name.' : condition « '.$c['type'].' » → '.$refs['conditions'][$c['type']].' '.json_encode($c['value'] ?? null).' (identifiant local à remplacer à l\'import)';
+                $report['refs'][] = Problems::t('exp_ref_condition', ['name' => $name, 'type' => $c['type'], 'kind' => $refs['conditions'][$c['type']], 'value' => json_encode($c['value'] ?? null)]);
             }
             if (!in_array($c['type'], self::NATIVE_CONDITIONS, true)) {
-                $report['modules'][] = $name.' : condition « '.$c['type'].' » fournie par un autre module (Tags, Custom Fields…) : déclarez-le dans « requires ».';
+                $report['modules'][] = Problems::t('exp_module_condition', ['name' => $name, 'type' => $c['type']]);
             }
         }
         foreach ($actions as $a) {
             if (isset($refs['actions'][$a['type']])) {
-                $report['refs'][] = $name.' : action « '.$a['type'].' » → '.$refs['actions'][$a['type']].' '.json_encode($a['value'] ?? null).' (identifiant local à remplacer à l\'import)';
+                $report['refs'][] = Problems::t('exp_ref_action', ['name' => $name, 'type' => $a['type'], 'kind' => $refs['actions'][$a['type']], 'value' => json_encode($a['value'] ?? null)]);
             }
             if (!in_array($a['type'], self::NATIVE_ACTIONS, true)) {
-                $report['modules'][] = $name.' : action « '.$a['type'].' » fournie par un autre module (Tags, Custom Fields…) : déclarez-le dans « requires ».';
+                $report['modules'][] = Problems::t('exp_module_action', ['name' => $name, 'type' => $a['type']]);
             }
         }
 
@@ -229,8 +230,8 @@ class Exporter
             $param = 'secret_'.(count(array_filter(array_keys($params), function ($k) {
                 return strpos($k, 'secret_') === 0;
             })) + 1);
-            $params[$param] = ['key' => $param, 'label' => 'Valeur secrète retirée ('.$path.')', 'type' => 'string', 'required' => true, 'sensitive' => true];
-            $report['secrets'][] = $path.' : valeur retirée, remplacée par {{param.'.$param.'}} (à renseigner à l\'import).';
+            $params[$param] = ['key' => $param, 'label' => Problems::t('exp_secret_label', ['path' => $path]), 'type' => 'string', 'required' => true, 'sensitive' => true];
+            $report['secrets'][] = Problems::t('exp_secret', ['path' => $path, 'param' => $param]);
 
             return '{{param.'.$param.'}}';
         }

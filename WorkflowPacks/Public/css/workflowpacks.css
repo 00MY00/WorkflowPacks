@@ -76,7 +76,31 @@
 .wp-state-blocking { background: var(--wp-err); }
 .wp-catalog code { font-size: 11px; }
 
+/* phones: the rules x mailboxes matrix becomes one card per rule (one line per mailbox), diffs are stacked */
 @media (max-width: 767px) {
+  .wp-header h1 { font-size: 19px; margin: 10px 0 8px; }
+  .wp-tabs { display: flex; flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .wp-tabs > li { float: none; flex: none; }
+  .wp-tabs > li > a { padding: 8px 10px; white-space: nowrap; }
+  .wp-toolbar .btn, .wp-toolbar select { flex: 1 1 auto; }
   .wp-flow-label { min-width: 0; width: 100%; }
-  .wp-matrix th, .wp-matrix td { min-width: 120px; }
+  .wp-rule { padding: 8px; }
+  .wp-cond, .wp-action { width: 100%; }
+  .wp-group { width: 100%; }
+  .wp-matrix-wrap { overflow: visible; border: 0; }
+  .wp-matrix, .wp-matrix tbody, .wp-matrix tr, .wp-matrix th, .wp-matrix td { display: block; width: 100%; min-width: 0 !important; }
+  .wp-matrix thead { display: none; }
+  .wp-matrix { border: 0; }
+  .wp-matrix tr { border: 1px solid var(--wp-border); border-radius: 8px; margin-bottom: 10px; overflow: hidden; }
+  .wp-matrix tbody th { background: var(--wp-bg); border: 0 !important; }
+  .wp-matrix td { border: 0 !important; border-top: 1px solid var(--wp-border) !important; }
+  .wp-matrix td::before { content: attr(data-label); display: block; font-weight: 600; font-size: 12px; margin-bottom: 2px; }
+  .wp-diff, .wp-diff tbody, .wp-diff tr, .wp-diff th, .wp-diff td { display: block; width: 100% !important; }
+  .wp-diff tr:first-child { display: none; }
+  .wp-diff td::before { content: attr(data-label); display: block; font-size: 11px; color: var(--wp-muted); }
+  .wp-mailbox { flex: 1 1 100%; }
+  .wp-replacements, .wp-replacements tbody, .wp-replacements tr, .wp-replacements td { display: block; width: 100%; }
+  .wp-replacements tr:first-child { display: none; }
+  .wp-replacements tr { border-bottom: 1px solid var(--wp-border); padding: 6px 0; }
+  .wp-catalog td:nth-child(2) { display: none; }
 }

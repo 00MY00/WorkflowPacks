@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 1.0.0
+# Résultats des tests — Workflow Packs 1.1.0
 
 Date : 2026-10-10. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -24,7 +24,8 @@ Date : 2026-10-10. Environnements Docker jetables, données de test uniquement (
 
 ## 2. Tests unitaires (`php tests/unit/run.php`, sans FreeScout)
 
-**26 tests, 143 assertions, 0 échec**, sous PHP 7.1.33 et 8.4.26.
+**29 tests, 2 311 assertions, 0 échec**, sous PHP 7.1.33 et 8.4.26. Les 3 tests ajoutés en 1.1.0 vérifient que les
+7 langues ont les mêmes clés et les mêmes paramètres, et que le traducteur fonctionne.
 
 | Thème | Tests |
 |---|---|
@@ -63,7 +64,7 @@ FreeScout 1.8.245 + MariaDB 10.11 + bouchon Workflows : **22 tests, 181 assertio
 | Liste des packs | vue schématique SI / ET / OU / ALORS, variables surlignées, transfert signalé, puces par boîte (« conforme », « modifiée localement ») |
 | Prévisualisation | matrice règles × boîtes avec choix par case, conflit détecté sur la règle modifiée, différences avant/après |
 | Avec Refresh 1.4.3 | barre latérale, couleurs et typographie de Refresh, icône du module dans la barre |
-| Téléphone (390 px) | matrice défilante, schéma lisible |
+| Téléphone (390 px) | 1.1.0 : matrice en cartes, une par règle (`mobile-previsualisation.png`) ; avec Refresh, entrée dans le panneau Profil (`mobile-menu-profil.png`) |
 | Diagnostic | contrôles, versions, catalogue Workflows de l'instance |
 
 ## 6. À vérifier sur une instance FreeScout réelle

@@ -64,8 +64,7 @@ class VariableResolver
         preg_match_all(self::PATTERN, $string, $m);
         $rest = preg_replace(self::PATTERN, '', $string);
         if (strpos($rest, '{{') !== false || strpos($rest, '}}') !== false) {
-            $problems->add($path, 'WP-VAR-01', 'syntaxe de variable invalide : seules les formes {{mailbox.id}}, {{mailbox.email}}, '
-                .'{{mailbox.name}} et {{param.nom}} sont acceptées (aucune expression n\'est évaluée).');
+            $problems->add($path, 'WP-VAR-01', 'var_syntax');
         }
 
         return array_values(array_unique($m[1]));
@@ -105,12 +104,12 @@ class VariableResolver
         $names = self::names($string, $path, $problems);
         foreach ($names as $name) {
             if (!array_key_exists($name, $this->vars)) {
-                $problems->add($path, 'WP-VAR-02', 'variable inconnue {{'.$name.'}}.');
+                $problems->add($path, 'WP-VAR-02', 'var_unknown', ['var' => $name]);
 
                 return $string;
             }
             if ($this->vars[$name]['value'] === null) {
-                $problems->add($path, 'WP-VAR-03', 'aucune valeur pour {{'.$name.'}} (paramètre obligatoire non renseigné).');
+                $problems->add($path, 'WP-VAR-03', 'var_missing', ['var' => $name]);
 
                 return $string;
             }
@@ -123,7 +122,7 @@ class VariableResolver
         $delimiter = null;
         if ($context === 'regex') {
             if (strpos($string, '{{') === 0) {
-                $problems->add($path, 'WP-VAR-04', 'une expression régulière ne peut pas commencer par une variable : le délimiteur (ex. « / ») doit être écrit dans le pack.');
+                $problems->add($path, 'WP-VAR-04', 'var_regex_delimiter');
 
                 return $string;
             }
