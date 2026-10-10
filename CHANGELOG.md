@@ -19,7 +19,9 @@ indépendante (champ `version`, actuellement 1).
     - déplacement en file d'attente FreeScout, avec 3 tentatives ;
     - client IMAP de FreeScout (OAuth compris), e-mail retrouvé par son Message-ID ;
     - délimiteur `/` ou `.` détecté, espace de noms `INBOX` pris en charge, noms accentués (UTF-7 IMAP) ;
-    - commande `MOVE`, ou copie puis original marqué supprimé, sans purge des autres messages.
+    - commande `MOVE`, ou copie puis original marqué supprimé, sans purge des autres messages ;
+    - garde-fous : dossier cible vérifié (préfixe), e-mail déjà rangé laissé tel quel (pas de doublon), dossier créé
+      entre-temps réutilisé, nouveaux dossiers abonnés, nouvelle tentative seulement sur erreur temporaire.
   - Import : règle bloquée avec un message clair si l'option est désactivée, et noms de dossier contrôlés.
   - Schéma : le dossier e-mail apparaît comme une destination.
   - 7 langues.

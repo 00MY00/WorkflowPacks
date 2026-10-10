@@ -4,9 +4,17 @@ namespace Modules\WorkflowPacks\Services\Imap;
 
 /**
  * Moves one e-mail of a mailbox into a managed folder on its IMAP server, with FreeScout's own IMAP client (same
- * connection settings, oAuth included). Missing folders are created, level by level, only under the prefix.
+ * connection settings, oAuth included). Standard IMAP commands only: LIST, CREATE, SUBSCRIBE, SEARCH, MOVE (or COPY +
+ * \Deleted flag, without EXPUNGE).
  *
- * Results: moved | already (the e-mail is already in the folder) | not_found | failed (reason given).
+ * Guards:
+ *  - the target is checked to be a managed folder (top level carries the prefix) before anything is written;
+ *  - the e-mail already in the target folder: nothing is done ("already"), so running the rule twice never duplicates;
+ *  - a folder created meanwhile by another job is accepted (creation re-checked by listing);
+ *  - new folders are subscribed, so that mail clients showing subscribed folders only display them.
+ *
+ * Results: moved | already | not_found | failed. "retry" tells whether trying again later may help (server refusal)
+ * or not (invalid name, mailbox without IMAP settings). Connection errors are thrown (the job tries again).
  */
 class ImapMover
 {
@@ -24,6 +32,9 @@ class ImapMover
         if (!$mailbox->in_server || !$mailbox->in_username) {
             return $this->result('failed', '', 'no IMAP settings for this mailbox');
         }
+        if (trim((string) $messageId) === '') {
+            return $this->result('not_found', '');
+        }
 
         $client = \MailHelper::getMailboxClient($mailbox);
         $client->connect();
@@ -34,33 +45,35 @@ class ImapMover
                 $paths[] = (string) $folder->path;
                 $delimiter = (string) ($folder->delimiter ?: $delimiter);
             }
-            $levels = FolderPath::levels($parsed['segments'], $prefix, $delimiter, $this->parent($paths, $delimiter));
+            $parent = $this->parent($paths, $delimiter);
+            $levels = FolderPath::levels($parsed['segments'], $prefix, $delimiter, $parent);
+            $label = end($levels);
+            if (!FolderPath::isManaged($label, $prefix, $delimiter, $parent)) {
+                return $this->result('failed', $label, 'not a managed folder');
+            }
+
             $target = '';
             foreach ($levels as $level) {
                 $target = mb_convert_encoding($level, 'UTF7-IMAP', 'UTF-8');
-                if (!in_array($target, $paths, true)) {
-                    if (!$client->createFolder($target, false)) {
-                        return $this->result('failed', $level, 'cannot create the folder');
-                    }
-                    $paths[] = $target;
+                if (!$this->ensureFolder($client, $target, $paths)) {
+                    return $this->result('failed', $level, 'cannot create the folder', true);
                 }
             }
-            $label = end($levels);
 
+            // already filed (rule applied twice, or moved by hand): nothing to do
+            if ($this->isIn($client, $target, $messageId)) {
+                return $this->result('already', $label);
+            }
             // the e-mail, in the folders FreeScout fetches (INBOX by default)
             $message = \MailHelper::fetchMessage($mailbox, $messageId);
             if (!$message) {
-                return $this->result($this->isIn($client, $target, $messageId) ? 'already' : 'not_found', $label);
-            }
-            $current = $message->getFolder();
-            if ($current && (string) $current->path === $target) {
-                return $this->result('already', $label);
+                return $this->result('not_found', $label);
             }
             if (!$message->move($target)) {
                 // servers without the MOVE command: copy, then mark the original as deleted — without EXPUNGE, which
                 // would also purge the other messages flagged as deleted in that folder
                 if (!$message->copy($target)) {
-                    return $this->result('failed', $label, 'the server refused the move');
+                    return $this->result('failed', $label, 'the server refused the move', true);
                 }
                 $message->delete(false);
             }
@@ -72,6 +85,30 @@ class ImapMover
             } catch (\Throwable $e) {
             }
         }
+    }
+
+    /** The folder exists, or is created (and subscribed). A folder created at the same time elsewhere is accepted. */
+    protected function ensureFolder($client, $path, array &$paths)
+    {
+        if (in_array($path, $paths, true)) {
+            return true;
+        }
+        try {
+            $client->createFolder($path, false);
+        } catch (\Throwable $e) {
+            // already created by another job, or refused: the listing below tells
+        }
+        if (!$client->getFolderByPath($path)) {
+            return false;
+        }
+        $paths[] = $path;
+        try {
+            $client->getConnection()->subscribeFolder($path);
+        } catch (\Throwable $e) {
+            // optional: some servers subscribe on creation or have no subscriptions
+        }
+
+        return true;
     }
 
     /** Servers keeping every folder under INBOX (delimiter "."): the managed folders go there too. */
@@ -106,8 +143,8 @@ class ImapMover
         }
     }
 
-    protected function result($result, $folder, $reason = '')
+    protected function result($result, $folder, $reason = '', $retry = false)
     {
-        return ['result' => $result, 'folder' => $folder, 'reason' => $reason];
+        return ['result' => $result, 'folder' => $folder, 'reason' => $reason, 'retry' => $retry];
     }
 }

@@ -67,6 +67,11 @@ class ImapFolders
         if (!self::enabled() || FolderPath::parse($value)['error'] !== null) {
             return false;
         }
+        // mailbox without IMAP fetching (e.g. e-mails received another way): nothing on a server to file
+        $mailbox = $conversation->mailbox;
+        if (!$mailbox || !$mailbox->in_server || !$mailbox->in_username) {
+            return false;
+        }
         // last e-mail of the customer (FreeScout's own replies are not in the mailbox's inbox)
         $thread = $conversation->threads()
             ->where('type', \App\Thread::TYPE_CUSTOMER)

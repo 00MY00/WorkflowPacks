@@ -49,12 +49,13 @@ class FileIntoImapFolder implements ShouldQueue
         try {
             $r = (new ImapMover())->move($mailbox, $thread->message_id, $this->folder, ImapFolders::prefix());
         } catch (\Throwable $e) {
-            $r = ['result' => 'failed', 'folder' => '', 'reason' => $e->getMessage()];
+            // connection or protocol error: the server may be unreachable for a moment
+            $r = ['result' => 'failed', 'folder' => '', 'reason' => $e->getMessage(), 'retry' => true];
         }
         $this->log($r['result'].($r['folder'] !== '' ? ' "'.$r['folder'].'"' : '').($r['reason'] !== '' ? ': '.$r['reason'] : ''),
             $r['result'] === 'failed' ? 'warning' : 'info');
-        // the server may be unreachable for a moment: try again later
-        if ($r['result'] === 'failed' && $this->job && $this->attempts() < self::ATTEMPTS) {
+        // try again later only when it may help (not for an invalid name or a mailbox without IMAP settings)
+        if ($r['result'] === 'failed' && !empty($r['retry']) && $this->job && $this->attempts() < self::ATTEMPTS) {
             $this->release(self::RETRY_DELAY);
         }
     }

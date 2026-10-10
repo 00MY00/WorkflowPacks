@@ -72,7 +72,17 @@ Si l'option est désactivée sur l'instance qui importe le pack, la prévisualis
 Le délimiteur du serveur (`/` ou `.`) est détecté automatiquement. Les serveurs qui rangent tous les dossiers sous
 `INBOX` (délimiteur `.`, par exemple Courier) reçoivent `INBOX.[WP] Factures`.
 
-## Sécurité
+## Sécurité et garde-fous
+
+- Le module n'utilise que des commandes IMAP standard : `LIST`, `CREATE`, `SUBSCRIBE`, `SEARCH`, `MOVE`, ou à défaut
+  `COPY` puis marquage de l'original comme supprimé.
+- Avant d'écrire quoi que ce soit, il vérifie que le dossier cible porte bien le préfixe.
+- Si l'e-mail est **déjà** dans le dossier, rien n'est fait. Appliquer la règle deux fois ne crée jamais de doublon.
+- Un dossier créé entre-temps (par un autre rangement ou à la main) est réutilisé.
+- Les nouveaux dossiers sont **abonnés**, pour apparaître dans Outlook ou Thunderbird, qui n'affichent souvent que les
+  dossiers abonnés.
+- Une nouvelle tentative n'a lieu qu'en cas d'erreur temporaire (serveur injoignable ou refus). Un nom invalide ou une
+  boîte sans réglages IMAP n'est jamais réessayé, et une boîte sans réception IMAP ne met rien en file.
 
 - Désactivé par défaut, réservé aux administrateurs (réglage), et le préfixe est nettoyé à la lecture.
 - Le module ne crée et ne remplit **que** des dossiers qui portent le préfixe. Il ne supprime, ne renomme et ne vide

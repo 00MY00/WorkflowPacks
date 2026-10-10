@@ -141,6 +141,14 @@ class ImapFolderTest extends TestCase
         \Queue::fake();
         $a = $this->mailbox('A');
         list($conversation, $thread) = $this->conversation($a, 'wp-'.self::uid().'@example.test');
+        // mailbox without IMAP settings: nothing to file on a server, nothing queued
+        $this->assertFalse(\Eventy::filter('workflow.perform_action', false, FolderPath::ACTION, '', 'Factures', $conversation, null));
+        \Queue::assertNotPushed(FileIntoImapFolder::class);
+
+        $a->in_server = 'imap.example.test';
+        $a->in_username = 'box@example.test';
+        $a->save();
+        $conversation->load('mailbox');
         $performed = \Eventy::filter('workflow.perform_action', false, FolderPath::ACTION, '', 'Factures/Fournisseurs', $conversation, null);
         $this->assertTrue($performed);
         \Queue::assertPushed(FileIntoImapFolder::class, function ($job) use ($a, $thread) {
@@ -180,6 +188,43 @@ class ImapFolderTest extends TestCase
         $this->assertSame([$id], $this->idsIn($mailbox, '[WP] Reçus/Société'), 'UTF-7 IMAP names');
 
         $this->assertSame('not_found', (new ImapMover())->move($mailbox, 'missing-'.self::uid().'@example.test', 'Factures', '[WP]')['result']);
+    }
+
+    public function testAFolderAlreadyCreatedIsReusedAndNewFoldersAreSubscribed()
+    {
+        $mailbox = $this->imapMailbox();
+        $client = \MailHelper::getMailboxClient($mailbox);
+        $client->connect();
+        $delimiter = (string) ($client->getFolders(false)->first()->delimiter ?? '/');
+        // created meanwhile by another job (or by hand)
+        $client->createFolder('[WP] Factures', false);
+        $client->disconnect();
+
+        $id = $this->deliver($mailbox);
+        $r = (new ImapMover())->move($mailbox, $id, 'Factures/Fournisseurs', '[WP]');
+        $this->assertSame('moved', $r['result'], $r['reason']);
+        $this->assertSame([$id], $this->idsIn($mailbox, '[WP] Factures/Fournisseurs'));
+
+        $client = \MailHelper::getMailboxClient($mailbox);
+        $client->connect();
+        // subscribed folders (standard LSUB command): what mail clients display
+        $lsub = $client->getConnection()->requestAndResponse('LSUB', ['""', '"*"']);
+        $client->disconnect();
+        $subscribed = [];
+        foreach (is_array($lsub) ? $lsub : [] as $item) {
+            if (is_array($item) && ($item[0] ?? '') === 'LSUB' && isset($item[3])) {
+                $subscribed[] = $item[3];
+            }
+        }
+        $this->assertContains('[WP] Factures'.$delimiter.'Fournisseurs', $subscribed, 'new folder subscribed');
+    }
+
+    public function testInvalidValuesNeverReachTheServer()
+    {
+        $mailbox = $this->mailbox('No IMAP');
+        $this->assertSame(['result' => 'failed', 'folder' => '', 'reason' => 'imap_folder_chars', 'retry' => false],
+            (new ImapMover())->move($mailbox, 'x@example.test', 'Fact*', '[WP]'));
+        $this->assertFalse((new ImapMover())->move($mailbox, 'x@example.test', 'Factures', '[WP]')['retry'], 'no IMAP settings: no retry');
     }
 
     public function testNothingHappensWhenTheOptionIsTurnedOffBeforeTheJobRuns()
