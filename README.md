@@ -13,6 +13,14 @@ remplacées pour chacune (`{{mailbox.email}}`, `{{mailbox.name}}`, `{{mailbox.id
   version locale, la remplacer ou ignorer la règle.
 - Une vue schématique (SI … ET/OU … ALORS …) présente les règles. Une matrice règles × boîtes permet de choisir, pour
   chaque boîte, ce qui sera appliqué.
+- **Schéma réseau** (onglet Schéma, inspiré de draw.io) : boîtes → règles → destinations (dossiers Fermées, En
+  attente, Spam, Supprimées, personnes, étiquettes, autres boîtes), avec :
+  - plusieurs dispositions (colonnes, cercle, grille, libre), les déplacements étant **enregistrés en direct** ;
+  - zoom sémantique et raccourcis « Aller à… » vers une partie du schéma ;
+  - création et modification simples des règles (SI / ET / OU / ALORS) ;
+  - application d'une règle à une autre boîte en tirant un lien.
+
+  Voir [docs/schema.md](docs/schema.md).
 - **Packs portables (format 2)** :
   - **sélecteurs de boîtes** (« toutes les boîtes », « adresse contient @example.com »…) évalués sur chaque
     installation ;
@@ -29,8 +37,10 @@ remplacées pour chacune (`{{mailbox.email}}`, `{{mailbox.name}}`, `{{mailbox.id
 - La mise à jour automatique du module reprend le mécanisme de RefreshGlobal : version publiée, SHA-256, sauvegarde,
   vérification et retour arrière automatique.
 
-| Liste des packs (vue schématique) | Prévisualisation (matrice règles × boîtes) |
+| Schéma : flux boîtes → règles → destinations | Schéma : éditeur de règle |
 |---|---|
+| ![Schéma](docs/screenshots/schema-colonnes.png) | ![Éditeur](docs/screenshots/schema-editeur.png) |
+| Liste des packs (vue schématique) | Prévisualisation (matrice règles × boîtes) |
 | ![Liste](docs/screenshots/liste-packs.png) | ![Prévisualisation](docs/screenshots/import-previsualisation.png) |
 | Avec le module Refresh | Diagnostic et catalogue Workflows |
 | ![Refresh](docs/screenshots/liste-packs-refresh.png) | ![Diagnostic](docs/screenshots/diagnostic.png) |
@@ -286,9 +296,10 @@ Les numéros de version suivent `module.json` (actuellement **1.2.2**) ; voir [C
 
 | Série | Commande | Résultat |
 |---|---|---|
-| Unitaires (sans FreeScout) | `php tests/unit/run.php` | 29 tests, 2 311 assertions (dont les 7 langues), PHP 7.1.33 et 8.4.26 |
-| Intégration (FreeScout réel + bouchon Workflows) | `bash tests/integration/run.sh` | 22 tests, 181 assertions |
-| Schéma JSON (Ajv) | `node tests/schema/validate.js` | pack d'exemple valide, 5 cas |
+| Unitaires (sans FreeScout) | `php tests/unit/run.php` | 37 tests, 3 909 assertions (dont les 7 langues), PHP 7.1, 8.2 et 8.4 en CI |
+| Intégration (FreeScout réel + bouchon Workflows) | `bash tests/integration/run.sh` | 44 tests, 337 assertions (dont 7 pour le schéma réseau) |
+| Schéma JSON (Ajv) | `node tests/schema/validate.js` | packs v1 et v2 valides, 11 variantes |
+| Dispositions du schéma réseau | `node tests/js/layout.test.js` | 7 tests (ordre, alignement, aucun chevauchement) |
 | Script d'installation | voir [tests/RESULTS.md](tests/RESULTS.md) | installation, mise à jour, retour arrière, désinstallation |
 
 Détails, versions et ce qui reste à vérifier sur une vraie instance : [tests/RESULTS.md](tests/RESULTS.md).

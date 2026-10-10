@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 1.2.0
+# Résultats des tests — Workflow Packs 1.3.0
 
 Date : 2026-10-10. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,23 @@ Date : 2026-10-10. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 1.3.0 — schéma réseau
+
+| Série | Résultat |
+|---|---|
+| Unitaires (`php tests/unit/run.php`, PHP 8.4.26 local) | **37 tests, 3 909 assertions, 0 échec**, dont `graph.php` complet dans les 7 langues (mêmes clés, mêmes paramètres) |
+| Intégration (Docker local : FreeScout 1.8.245 + MariaDB 10.11 + bouchon Workflows, PHP 8.2.34) | **44 tests, 337 assertions, 0 échec**. `GraphTest` (7) : données limitées aux boîtes autorisées, avec destinations ; règle de pack = un bloc relié à deux boîtes (synchronisée / modifiée) ; positions enregistrées, fusionnées, validées (clé, coordonnées, choix) et propres à chaque utilisateur ; règle créée désactivée, variables résolues, nom en double / type inconnu / boîte falsifiée refusés ; activation et détail soumis à la permission ; copie d'une règle locale (nom libre, désactivée) ; règle de pack appliquée seule à une autre boîte, avec son lien |
+| Dispositions (`node tests/js/layout.test.js`) | **7 tests** : flux en colonnes, ordre par barycentre, boîte et destination alignées sur leurs règles, cercle et grille sans chevauchement (y compris 7 règles partagées par 2 boîtes), placement des nouveaux blocs, cadre |
+| Navigateur (Chrome sans interface, données de démonstration : 4 boîtes, 1 pack sur 2 boîtes, 5 règles locales) | aucune erreur JavaScript ni réponse HTTP en erreur ; colonnes, cercle, panneau d'une boîte, éditeur (double-clic), vue macro, téléphone 390 px vérifiés à l'image ; un bloc déplacé garde sa place après rechargement |
+
+Corrigé pendant ces vérifications :
+- le double-clic n'ouvrait pas l'éditeur, car avec la capture du pointeur le navigateur adresse `dblclick` au canevas ;
+  le double-clic est désormais détecté dans `pointerup` ;
+- en disposition cercle, des blocs se chevauchaient : le rayon s'adapte maintenant à la plus haute colonne de règles
+  partagées, et la séparation des blocs est symétrique ;
+- en colonnes, les boîtes et les destinations sont placées en face de leurs règles ;
+- le résumé d'une règle affiche le nom de la personne ou de la boîte au lieu de son identifiant.
 
 ## Mise à jour directe vers la dernière version (`tests/update/run.sh`)
 

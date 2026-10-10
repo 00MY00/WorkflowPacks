@@ -183,4 +183,8 @@ return [
     'res_module_missing'       => 'Ressource „:key“: Typ „:type“ benötigt das Modul :module.',
     'res_create_unsupported'   => 'Ressource „:key“: „:type“ kann nicht automatisch erstellt werden (keine zuverlässige API); wählen Sie einen bestehenden Datensatz.',
     'not_selected'             => 'Postfach außerhalb des Selektors der Regel (:selector).',
+    'graph_name_taken'         => 'eine Regel „:name“ existiert in diesem Postfach bereits.',
+    'graph_incomplete'         => 'die Regel ist unvollständig (mindestens eine Bedingung und eine Aktion): vervollständigen Sie sie vor dem Aktivieren.',
+    'graph_same_mailbox'       => 'die Regel ist bereits in diesem Postfach.',
+    'graph_not_applicable'     => 'die Regel des Packs kann nicht auf dieses Postfach angewendet werden (:status).',
 ];

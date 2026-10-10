@@ -13,7 +13,7 @@
 #   install-local:<ref>  sudo bash install.sh of this working copy (downloads the latest release, SHA-256 checked)
 #
 # Checks after each update: installed version = latest release, no rollback, workflowpacks:check not blocking,
-# table workflowpacks_resources (1.2) present, data of the previous version kept (packs, links, workflows).
+# tables workflowpacks_resources (1.2) and workflowpacks_layouts (1.3) present, data of the previous version kept (packs, links, workflows).
 # Results: tests/update/last-run.md
 #
 set -Eeuo pipefail
@@ -30,7 +30,7 @@ APP="wp-upd-app"
 RESULTS="$ROOT/tests/update/last-run.md"
 LATEST_URL="https://github.com/00MY00/WorkflowPacks/releases/latest/download"
 SCENARIOS=("$@")
-[ "${#SCENARIOS[@]}" -gt 0 ] || SCENARIOS=(cli:e875b74 cli:8cae637 button:v1.2.0 install:e875b74 install-local:8cae637)
+[ "${#SCENARIOS[@]}" -gt 0 ] || SCENARIOS=(cli:e875b74 cli:8cae637 button:v1.2.0 cli:v1.2.2 install:e875b74 install-local:8cae637)
 PASS=0; FAILED=0
 WORK="$(mktemp -d)"
 # host path for "docker cp" (Git Bash on Windows: /tmp/... -> C:/Users/.../Temp/...)
@@ -113,6 +113,7 @@ verify() {
     expect "$name" "workflowpacks:check" "ok" "${state:-?}"
     resources="$(php_eval 'echo Schema::hasTable("workflowpacks_resources") ? "yes" : "no";')"
     expect "$name" "migration 1.2 (workflowpacks_resources)" "yes" "$resources"
+    expect "$name" "migration 1.3 (workflowpacks_layouts)" "yes" "$(php_eval 'echo Schema::hasTable("workflowpacks_layouts") ? "yes" : "no";')"
     after="$(counts)"
     expect "$name" "données conservées (packs/liens/règles)" "$before" "$after" "$before → $after"
     expect "$name" "FreeScout répond (HTTP 200)" "200" "$(www 'curl -s -o /dev/null -w "%{http_code}" http://localhost/login')"

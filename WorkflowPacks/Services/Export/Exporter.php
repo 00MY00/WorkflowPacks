@@ -132,39 +132,11 @@ class Exporter
 
     protected function ruleFromWorkflow($workflow, array $jsonActions, array $replacements, array &$report)
     {
-        $attrs = Bridge::attributesOf($workflow);
-        $conditions = ConditionTranslator::fromNative($attrs['conditions']);
-        $actions = [];
-        foreach (Fingerprint::decodeActions($attrs['actions'], []) as $action) {
-            if (!is_array($action) || empty($action['type'])) {
-                continue;
-            }
-            $a = ['type' => (string) $action['type']];
-            if (isset($action['operator']) && $action['operator'] !== '') {
-                $a['operator'] = $action['operator'];
-            }
-            if (array_key_exists('value', $action)) {
-                $value = $action['value'];
-                if (in_array($a['type'], $jsonActions, true) && is_string($value)) {
-                    $decoded = json_decode($value, true);
-                    $value = is_array($decoded) ? $decoded : $value;
-                }
-                $a['value'] = $value;
-            }
-            $actions[] = $a;
-        }
-
-        $name = (string) $workflow->name;
-        $rule = [
-            'key'      => $this->slug($name),
-            'name'     => $name,
-            'type'     => Bridge::typeName($attrs['type']),
-            'settings' => ['apply_to_prev' => (bool) $attrs['apply_to_prev'], 'max_executions' => max(1, (int) $attrs['max_executions'])],
-        ];
-        if ($conditions !== null) {
-            $rule['conditions'] = $conditions;
-        }
-        $rule['actions'] = $actions;
+        // same reading of a stored rule as the editor of the diagram
+        $rule = \Modules\WorkflowPacks\Services\Graph\RuleCodec::fromWorkflow($workflow);
+        $name = $rule['name'];
+        $conditions = $rule['conditions'] ?? null;
+        $actions = $rule['actions'];
 
         // references to this instance + types brought by other modules
         $refs = (array) Bridge::config('local_refs');

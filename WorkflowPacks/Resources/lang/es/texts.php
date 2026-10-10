@@ -183,4 +183,8 @@ return [
     'res_module_missing'       => 'recurso «:key»: el tipo «:type» necesita el módulo :module.',
     'res_create_unsupported'   => 'recurso «:key»: no se puede crear un «:type» automáticamente (sin API fiable); elija un registro existente.',
     'not_selected'             => 'buzón fuera del selector de la regla (:selector).',
+    'graph_name_taken'         => 'ya existe una regla «:name» en este buzón.',
+    'graph_incomplete'         => 'la regla está incompleta (al menos una condición y una acción): complétela antes de activarla.',
+    'graph_same_mailbox'       => 'la regla ya está en este buzón.',
+    'graph_not_applicable'     => 'la regla del pack no se puede aplicar a este buzón (:status).',
 ];

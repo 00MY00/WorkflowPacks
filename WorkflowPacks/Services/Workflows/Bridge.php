@@ -124,8 +124,22 @@ class Bridge
                     'group'     => strip_tags((string) ($group['title'] ?? $groupKey)),
                     'operators' => isset($item['operators']) && is_array($item['operators']) ? array_map('strval', array_keys($item['operators'])) : null,
                     'values'    => array_key_exists('values', $item) && is_array($item['values']) ? array_map('strval', array_keys($item['values'])) : null,
+                    // readable labels for the editor of the diagram (keys above stay the reference)
+                    'operator_labels' => self::labels($item['operators'] ?? null),
+                    'value_labels'    => self::labels($item['values'] ?? null),
                 ];
             }
+        }
+
+        return $out;
+    }
+
+    /** key => label (text only), or [] */
+    protected static function labels($list)
+    {
+        $out = [];
+        foreach (is_array($list) ? $list : [] as $key => $label) {
+            $out[(string) $key] = is_scalar($label) ? strip_tags((string) $label) : (string) $key;
         }
 
         return $out;

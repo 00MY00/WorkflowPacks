@@ -183,4 +183,8 @@ return [
     'res_module_missing'       => 'recurso ":key": o tipo ":type" precisa do módulo :module.',
     'res_create_unsupported'   => 'recurso ":key": impossível criar um ":type" automaticamente (nenhuma API confiável); escolha um registro existente.',
     'not_selected'             => 'caixa fora do seletor da regra (:selector).',
+    'graph_name_taken'         => 'já existe uma regra ":name" nesta caixa.',
+    'graph_incomplete'         => 'a regra está incompleta (pelo menos uma condição e uma ação): complete-a antes de ativá-la.',
+    'graph_same_mailbox'       => 'a regra já está nesta caixa.',
+    'graph_not_applicable'     => 'a regra do pack não pode ser aplicada a esta caixa (:status).',
 ];

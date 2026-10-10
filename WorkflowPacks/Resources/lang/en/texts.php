@@ -183,4 +183,8 @@ return [
     'res_module_missing'       => 'resource ":key": type ":type" needs the module :module.',
     'res_create_unsupported'   => 'resource ":key": cannot create a ":type" automatically (no reliable API); choose an existing record.',
     'not_selected'             => 'mailbox outside the selector of the rule (:selector).',
+    'graph_name_taken'         => 'a rule ":name" already exists in this mailbox.',
+    'graph_incomplete'         => 'the rule is incomplete (at least one condition and one action): complete it before activating it.',
+    'graph_same_mailbox'       => 'the rule is already in this mailbox.',
+    'graph_not_applicable'     => 'the pack rule cannot be applied to this mailbox (:status).',
 ];
