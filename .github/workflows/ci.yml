@@ -16,7 +16,7 @@ jobs:
       matrix:
         php: ['7.1', '8.2', '8.4']
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
@@ -33,16 +33,16 @@ jobs:
   schema:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          node-version: '24'
       - run: npm install --no-save ajv@8.17.1 && node tests/schema/validate.js
 
   integration:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: FreeScout + Workflows test stub + PHPUnit (Docker)
         run: bash tests/integration/run.sh
 
@@ -53,7 +53,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Check the tag matches module.json
         run: |
           v="$(sed -n 's/^[[:space:]]*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' WorkflowPacks/module.json | head -n 1)"

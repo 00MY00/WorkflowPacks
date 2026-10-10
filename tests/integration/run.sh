@@ -26,6 +26,20 @@ log() { printf '\n== %s\n' "$*" >&2; }
 cleanup() { docker rm -f "$APP" "$DB" >/dev/null 2>&1 || true; docker network rm "$NET" >/dev/null 2>&1 || true; }
 trap '[ -n "${KEEP:-}" ] || cleanup' EXIT   # KEEP=1: leave the containers running (debugging)
 
+# On failure: state of the containers and the useful logs, so that the CI log shows the cause directly
+debug() {
+    trap - ERR
+    log "Debug: containers"
+    docker ps -a --filter "name=wp-test-" || true
+    log "Debug: database container (last lines)"
+    docker logs --tail 40 "$DB" 2>&1 || true
+    log "Debug: FreeScout container (last lines)"
+    docker logs --tail 40 "$APP" 2>&1 || true
+    log "Debug: FreeScout setup and Laravel log"
+    docker exec "$APP" sh -c 'cat /tmp/setup.log 2>/dev/null | tail -n 60; tail -n 80 /var/www/html/storage/logs/*.log 2>/dev/null' || true
+}
+trap debug ERR
+
 FREESCOUT_REF="${FREESCOUT_REF:-dist}"
 
 log "Image and containers"
@@ -87,6 +101,7 @@ set +e
 docker exec -u www-data -w /var/www/html "$APP" php /tmp/phpunit.phar -c Modules/WorkflowPacks/Tests/phpunit.xml --do-not-cache-result --testdox "$@"
 code=$?
 set -e
+[ "$code" -eq 0 ] || debug
 
 log "Versions"
 docker exec -w /var/www/html "$APP" sh -c 'php -r "echo \"PHP \".PHP_VERSION.PHP_EOL;"; php artisan --version; php /tmp/phpunit.phar --version | head -n 1'
