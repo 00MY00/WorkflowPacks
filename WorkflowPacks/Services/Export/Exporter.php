@@ -41,13 +41,19 @@ class Exporter
         $jsonActions = (array) Bridge::config('json_value_actions');
         $report = ['refs' => [], 'modules' => [], 'secrets' => [], 'replaced' => [], 'from_packs' => []];
         $params = [];
+        $resources = [];
         foreach ($replacements as $r) {
             $report['replaced'][$r['text']] = 0;
             if (strpos($r['variable'], 'param.') === 0) {
                 $key = substr($r['variable'], 6);
                 $params[$key] = ['key' => $key, 'label' => $r['label'] ?? $key, 'type' => $r['type'] ?? 'string', 'required' => true];
+            } elseif (strpos($r['variable'], 'resource.') === 0) {
+                // a local identifier (user, mailbox, tag) becomes a logical resource, mapped again at each import
+                $key = substr($r['variable'], 9);
+                $resources[$key] = ['key' => $key, 'type' => $r['type'], 'name' => $r['label'] ?? $key, 'on_missing' => 'ask', 'use' => $r['use'] ?? 'id'];
             }
         }
+        $selectors = false;
 
         $rules = [];
         $keys = [];
@@ -61,6 +67,13 @@ class Exporter
                 foreach ((array) ($source['params'] ?? []) as $p) {
                     $params[$p['key']] = $params[$p['key']] ?? $p;
                 }
+                // portable intention kept: resources of the pack and its mailbox selector (never a frozen list)
+                foreach ((array) ($source['resources'] ?? []) as $res) {
+                    $resources[$res['key']] = $resources[$res['key']] ?? $res;
+                }
+                if (!isset($rule['mailboxes']) && !empty($source['mailboxes'])) {
+                    $rule['mailboxes'] = $source['mailboxes'];
+                }
                 $report['from_packs'][] = $workflow->name.' ← '.$link->pack_key.'/'.$link->workflow_key;
                 if (Fingerprint::of(Bridge::attributesOf($workflow), $jsonActions) !== $link->fingerprint) {
                     $report['from_packs'][] = '⚠ '.Problems::t('exp_modified', ['name' => $workflow->name]);
@@ -69,6 +82,7 @@ class Exporter
                 $rule = $this->ruleFromWorkflow($workflow, $jsonActions, $replacements, $report);
             }
             $rule['key'] = $this->uniqueKey($rule['key'] ?? $this->slug($workflow->name), $keys);
+            $selectors = $selectors || !empty($rule['mailboxes']);
             $rules[] = $rule;
         }
 
@@ -79,16 +93,18 @@ class Exporter
 
         $pack = [
             'format'       => PackValidator::FORMAT,
-            'version'      => 1,
+            // v2 only when a v2 function is used (resources, selectors), so that older versions keep reading the file
+            'version'      => ($resources || $selectors) ? 2 : 1,
             'key'          => $meta['key'],
             'name'         => $meta['name'],
             'description'  => $meta['description'] ?? '',
             'pack_version' => $meta['pack_version'] ?? '1.0.0',
             'requires'     => array_values(array_unique($meta['requires'] ?? [])),
             'params'       => array_values($params),
+            'resources'    => array_values($resources),
             'workflows'    => $rules,
         ];
-        foreach (['description', 'requires', 'params'] as $k) {
+        foreach (['description', 'requires', 'params', 'resources'] as $k) {
             if ($pack[$k] === '' || $pack[$k] === []) {
                 unset($pack[$k]);
             }
@@ -178,10 +194,22 @@ class Exporter
         if (is_array($value)) {
             $isRegex = isset($value['operator']) && $value['operator'] === 'regex';
             foreach ($value as $k => $v) {
-                if ($k === 'key' || $k === 'type' || $k === 'operator') {
+                if ($k === 'key' || $k === 'type' || $k === 'operator' || $k === 'mailboxes' || strpos((string) $k, 'x-') === 0) {
                     continue;
                 }
                 $value[$k] = $this->replace($v, $replacements, $report, $regex || ($isRegex && $k === 'value'), $k);
+            }
+
+            return $value;
+        }
+        if (is_int($value) || is_float($value)) {
+            // an identifier stored as a number (assign, move…): replaced only when it is exactly the text given
+            foreach ($replacements as $r) {
+                if ((string) $r['text'] !== '' && (string) $value === (string) $r['text']) {
+                    $report['replaced'][$r['text']]++;
+
+                    return '{{'.$r['variable'].'}}';
+                }
             }
 
             return $value;
@@ -190,6 +218,11 @@ class Exporter
             return $value;
         }
         foreach ($replacements as $r) {
+            if ($value === (string) $r['text'] && strpos($r['variable'], 'resource.') === 0) {
+                $report['replaced'][$r['text']]++;
+
+                return '{{'.$r['variable'].'}}';
+            }
             $text = (string) $r['text'];
             if ($text === '') {
                 continue;
@@ -215,7 +248,7 @@ class Exporter
     {
         if (is_array($value)) {
             foreach ($value as $k => $v) {
-                if (in_array($k, ['key', 'type', 'operator'], true)) {
+                if (in_array($k, ['key', 'type', 'operator', 'mailboxes'], true) || strpos((string) $k, 'x-') === 0) {
                     continue;
                 }
                 $value[$k] = $this->stripSecrets($v, $path.'.'.$k, $params, $report, (string) $k);

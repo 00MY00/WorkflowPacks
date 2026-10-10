@@ -43,6 +43,18 @@ return [
         ],
     ],
 
+    // ------------------------------------------------------------------------------- logical resources (pack v2)
+    // A resource of a pack ({{resource.key}}) is mapped to a LOCAL record by the user; the mapping is stored in
+    // workflowpacks_resources and the key, never the name, is the identity. Automatic creation is only offered for a
+    // type whose model offers a verified way to create it: none so far (see docs/resources.md).
+    'resources' => [
+        'mailbox' => ['source' => 'freescout', 'create' => false],
+        'user'    => ['source' => 'freescout', 'create' => false],
+        // Tags module: model and column checked at runtime; the value given to actions ("id" or "name") is declared
+        // by each resource of the pack ("use"), since the format of the Tags actions is not known in advance
+        'tag'     => ['source' => 'model', 'module' => 'tags', 'model' => 'Modules\\Tags\\Entities\\Tag', 'label' => 'name', 'create' => false],
+    ],
+
     // ------------------------------------------------------------------------------------------- import limits
     'limits' => [
         'file_kb'          => 512,

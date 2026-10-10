@@ -1,0 +1,58 @@
+{
+    "$schema": "../../../schema/freescout-workflow-pack.schema.json",
+    "format": "freescout-workflow-pack",
+    "version": 2,
+    "key": "demo-portable",
+    "name": "Démo portable (sélecteurs et ressources)",
+    "description": "Exemple du format 2 : les boîtes visées sont décrites par une intention (« adresse contient @example.com », « toutes les boîtes ») évaluée sur chaque installation, et les personnes à notifier ou à assigner sont des ressources logiques associées localement à l'import. Uniquement des actions natives de Workflows ; règles importées désactivées.",
+    "pack_version": "1.0.0",
+    "mailboxes": {
+        "select": "match",
+        "combine": "any",
+        "rules": [ { "field": "email", "operator": "contains", "value": "@example.com" } ]
+    },
+    "resources": [
+        { "key": "billing-user", "type": "user", "name": "Comptabilité", "description": "Personne qui traite les factures.", "on_missing": "ask" },
+        { "key": "security-user", "type": "user", "name": "Responsable sécurité", "description": "Personne prévenue des alertes de sécurité.", "on_missing": "block" }
+    ],
+    "workflows": [
+        {
+            "key": "factures",
+            "name": "[Démo] Factures",
+            "description": "Boîtes dont l'adresse contient @example.com : sujet contenant « invoice » OU « facture ».",
+            "type": "automatic",
+            "conditions": {
+                "all": [
+                    { "type": "new_or_reply", "operator": "new" },
+                    { "any": [
+                        { "type": "subject", "operator": "contains", "value": "invoice" },
+                        { "type": "subject", "operator": "contains", "value": "facture" }
+                    ] }
+                ]
+            },
+            "actions": [
+                { "type": "note", "value": { "body": "[Démo] Facture reçue sur {{mailbox.name}}." } },
+                { "type": "assign", "value": "{{resource.billing-user}}" }
+            ],
+            "x-visual": { "layout": "columns" }
+        },
+        {
+            "key": "alertes-securite",
+            "name": "[Démo] Alertes de sécurité (toutes les boîtes)",
+            "description": "Toutes les boîtes : sujet contenant « Security alert » et corps client ne contenant pas « this is a test ».",
+            "type": "automatic",
+            "mailboxes": { "select": "all" },
+            "conditions": {
+                "all": [
+                    { "type": "new_or_reply", "operator": "new" },
+                    { "type": "subject", "operator": "contains", "value": "Security alert" },
+                    { "type": "body", "operator": "regex", "value": "/^(?![\\s\\S]*this is a test)/i" }
+                ]
+            },
+            "actions": [
+                { "type": "note", "value": { "body": "[Démo] Alerte de sécurité : à vérifier." } },
+                { "type": "notification", "value": [ "{{resource.security-user}}" ] }
+            ]
+        }
+    ]
+}

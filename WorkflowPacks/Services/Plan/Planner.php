@@ -4,6 +4,8 @@ namespace Modules\WorkflowPacks\Services\Plan;
 
 use Modules\WorkflowPacks\Entities\Link;
 use Modules\WorkflowPacks\Services\Pack\Fingerprint;
+use Modules\WorkflowPacks\Services\Pack\MailboxSelector;
+use Modules\WorkflowPacks\Services\Resources\ResourceResolver;
 use Modules\WorkflowPacks\Services\Pack\PackValidator;
 use Modules\WorkflowPacks\Services\Pack\Problems;
 use Modules\WorkflowPacks\Services\Pack\RuleCompiler;
@@ -34,6 +36,7 @@ class Planner
         'missing'       => ['skip', 'recreate'],
         'blocked'       => ['skip'],
         'denied'        => ['skip'],
+        'not_selected'  => ['skip'],
     ];
 
     /**
@@ -41,8 +44,9 @@ class Planner
      * @param int[] $mailboxIds  target mailboxes
      * @param array $paramValues key => raw value entered in the form
      * @param \App\User $user
+     * @param array $resourceInput resource key => local id chosen in the form (pack v2)
      */
-    public function plan(array $pack, array $mailboxIds, array $paramValues, $user)
+    public function plan(array $pack, array $mailboxIds, array $paramValues, $user, array $resourceInput = [])
     {
         $problems = new Problems();
         $config = Bridge::config();
@@ -74,6 +78,13 @@ class Planner
         // ----------------------------------------------------------------------------------- parameters
         $params = $this->checkParams($pack['params'], $paramValues, $problems);
 
+        // ------------------------------------------------------------------------- logical resources (v2)
+        $resources = ResourceResolver::resolve($pack, $resourceInput, $user, $problems);
+        $resourceVars = [];
+        foreach ($resources as $key => $resolved) {
+            $resourceVars[$key] = ['value' => $resolved['value'], 'int' => $resolved['int']];
+        }
+
         // ------------------------------------------------------------------------------------------ rules
         $types = Bridge::types();
         $jsonActions = (array) $config['json_value_actions'];
@@ -82,6 +93,16 @@ class Planner
         };
         $rules = [];
         foreach ($pack['workflows'] as $index => $rule) {
+            // rule selector, else pack selector (v2); none = every chosen mailbox (v1)
+            $selector = $rule['mailboxes'] ?? $pack['mailboxes'] ?? null;
+            // resources used by the rule and not mapped to a local record: the rule is blocked, never altered
+            $unmapped = [];
+            foreach (VariableResolver::namesIn([$rule['name'], $rule['conditions'], $rule['actions']], '', new Problems()) as $name) {
+                if (strpos($name, 'resource.') === 0 && isset($resources[substr($name, 9)]) && $resources[substr($name, 9)]['status'] !== 'mapped') {
+                    $r = $resources[substr($name, 9)];
+                    $unmapped[] = $r['status'] === 'unavailable' ? implode(' ', $r['notes']) : Problems::t('res_unmapped', ['key' => $r['decl']['key'], 'type' => $r['decl']['type']]);
+                }
+            }
             $requires = array_values(array_unique(array_merge($pack['requires'], $rule['requires'])));
             $missingModules = array_values(array_filter($requires, function ($alias) {
                 return !Bridge::moduleActive($alias);
@@ -106,6 +127,17 @@ class Planner
                     $items[$id] = $this->finish($item);
                     continue;
                 }
+                if (!MailboxSelector::matches($selector, $mailbox['email'], $mailbox['name'])) {
+                    $item['status'] = 'not_selected';
+                    $item['reasons'][] = Problems::t('not_selected', ['selector' => MailboxSelector::describe($selector)]);
+                    $items[$id] = $this->finish($item);
+                    continue;
+                }
+                if ($unmapped) {
+                    $item['reasons'] = array_merge($item['reasons'], array_values(array_unique($unmapped)));
+                    $items[$id] = $this->finish($item);
+                    continue;
+                }
                 if ($missingModules) {
                     $item['reasons'][] = Problems::t('modules_missing', ['modules' => implode(', ', $missingModules)]);
                     $items[$id] = $this->finish($item);
@@ -116,7 +148,7 @@ class Planner
                     $items[$id] = $this->finish($item);
                     continue;
                 }
-                $vars = VariableResolver::forMailbox($id, $mailbox['email'], $mailbox['name'], $pack['params'], $params);
+                $vars = VariableResolver::forMailbox($id, $mailbox['email'], $mailbox['name'], $pack['params'], $params)->withResources($resourceVars);
                 $compiler = new RuleCompiler(Bridge::catalog($id), $config, $types, $refCheck, $limits);
                 $compiled = $compiler->compile($rule, $vars, $id, 'workflows['.$index.']');
                 $item['sensitive'] = $compiled['sensitive'];
@@ -147,6 +179,7 @@ class Planner
             'params'    => $params,
             'problems'  => $problems,
             'rules'     => $rules,
+            'resources' => $resources,
             'counts'    => $this->counts($rules),
         ];
         $plan['token'] = $this->token($plan);
@@ -232,6 +265,8 @@ class Planner
         }
         $item['choices'] = $choices;
         $item['default'] = $choices[0];
+        // shown next to every cell of the preview: deleting = danger; sending, forwarding, moving = warning
+        $item['risk'] = in_array('delete', $item['sensitive'], true) ? 'danger' : ($item['sensitive'] ? 'warning' : 'safe');
 
         return $item;
     }
@@ -255,6 +290,9 @@ class Planner
             'pack'      => hash('sha256', json_encode($plan['pack'])),
             'mailboxes' => array_keys($plan['mailboxes']),
             'params'    => $plan['params'],
+            'resources' => array_map(function ($r) {
+                return [$r['status'], $r['local_id']];
+            }, $plan['resources']),
             'items'     => [],
         ];
         foreach ($plan['rules'] as $key => $rule) {

@@ -29,8 +29,16 @@ const base = JSON.parse(fs.readFileSync(path.join(packsDir, 'tri-emails-multilin
 const variant = (fn) => { const copy = JSON.parse(JSON.stringify(base)); fn(copy); return copy; };
 check('ET dans un OU refusé', variant((p) => { p.workflows[0].conditions = { any: [{ all: [{ type: 'subject', operator: 'contains', value: 'x' }] }] }; }), false);
 check('clé inconnue refusée', variant((p) => { p.workflows[0].enabled = true; }), false);
-check('version 2 refusée', variant((p) => { p.version = 2; }), false);
+check('version 3 refusée', variant((p) => { p.version = 3; }), false);
+check('pack v1 relu en version 2 accepté', variant((p) => { p.version = 2; }), true);
 check('règle automatique sans conditions refusée', variant((p) => { delete p.workflows[0].conditions; }), false);
+const demo = JSON.parse(fs.readFileSync(path.join(packsDir, 'demo-portable-v2.json'), 'utf8'));
+const variant2 = (fn) => { const copy = JSON.parse(JSON.stringify(demo)); fn(copy); return copy; };
+check('v1 avec sélecteur refusé', variant((p) => { p.mailboxes = { select: 'all' }; }), false);
+check('v1 avec sélecteur de règle refusé', variant((p) => { p.workflows[0].mailboxes = { select: 'all' }; }), false);
+check('v2 : ressource de type dossier refusée', variant2((p) => { p.resources[0].type = 'folder'; }), false);
+check('v2 : variable dans un sélecteur refusée', variant2((p) => { p.mailboxes.rules[0].value = '{{mailbox.email}}'; }), false);
+check('v2 : extension x-visual acceptée', variant2((p) => { p.workflows[1]['x-visual'] = { nodes: {} }; }), true);
 check('règle manuelle sans conditions acceptée', variant((p) => { p.workflows[0].type = 'manual'; delete p.workflows[0].conditions; }), true);
 
 console.log(failed ? `${failed} échec(s)` : 'Schéma OK');

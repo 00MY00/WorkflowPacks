@@ -69,6 +69,17 @@
 .wp-ack { font-weight: 600; }
 .wp-json { margin-top: 14px; }
 
+/* v2: selectors, resources, risk */
+.wp-selector { margin: 4px 0; font-size: 13px; }
+.wp-sel-yes { color: var(--wp-ok); font-weight: 700; }
+.wp-sel-no { color: var(--wp-err); font-weight: 700; }
+.wp-mailbox-out { opacity: .65; }
+.wp-risk { display: inline-block; font-size: 10px; font-weight: 700; padding: 0 5px; border-radius: 8px; color: #fff; margin-left: 4px; }
+.wp-risk-safe { background: var(--wp-ok); }
+.wp-risk-warning { background: var(--wp-warn); }
+.wp-risk-danger { background: var(--wp-err); }
+.wp-status-not_selected { background: transparent; opacity: .6; }
+
 /* diagnostic */
 .wp-state { font-size: 11px; font-weight: 700; padding: 1px 6px; border-radius: 8px; color: #fff; background: var(--wp-muted); }
 .wp-state-ok { background: var(--wp-ok); }

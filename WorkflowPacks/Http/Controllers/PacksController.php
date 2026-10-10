@@ -7,6 +7,9 @@ use Modules\WorkflowPacks\Entities\Link;
 use Modules\WorkflowPacks\Entities\Pack;
 use Modules\WorkflowPacks\Services\Compat\Checker;
 use Modules\WorkflowPacks\Services\Pack\Fingerprint;
+use Modules\WorkflowPacks\Services\Pack\MailboxSelector;
+use Modules\WorkflowPacks\Services\Pack\Problems;
+use Modules\WorkflowPacks\Services\Resources\ResourceResolver;
 use Modules\WorkflowPacks\Services\Pack\PackValidator;
 use Modules\WorkflowPacks\Services\Plan\Importer;
 use Modules\WorkflowPacks\Services\Plan\Planner;
@@ -88,7 +91,7 @@ class PacksController extends Controller
             return $this->page('import.upload', ['problems' => $result['problems']->all(), 'mailbox_id' => (int) $request->input('mailbox_id')]);
         }
 
-        return $this->configurePage($json, $result['pack'], (array) $request->input('mailboxes', []), (array) $request->input('params', []), (int) $request->input('mailbox_id'));
+        return $this->configurePage($json, $result['pack'], (array) $request->input('mailboxes', []), (array) $request->input('params', []), (int) $request->input('mailbox_id'), [], (array) $request->input('resources', []));
     }
 
     /** Update of an imported pack: same path, starting from the stored template. */
@@ -118,12 +121,12 @@ class PacksController extends Controller
         if ($result['pack'] === null) {
             return $this->page('import.upload', ['problems' => $result['problems']->all(), 'mailbox_id' => 0]);
         }
-        $plan = (new Planner())->plan($result['pack'], (array) $request->input('mailboxes', []), (array) $request->input('params', []), auth()->user());
+        $plan = (new Planner())->plan($result['pack'], (array) $request->input('mailboxes', []), (array) $request->input('params', []), auth()->user(), (array) $request->input('resources', []));
         if (!$plan['problems']->isEmpty()) {
-            return $this->configurePage($json, $result['pack'], (array) $request->input('mailboxes', []), (array) $request->input('params', []), 0, $plan['problems']->all());
+            return $this->configurePage($json, $result['pack'], (array) $request->input('mailboxes', []), (array) $request->input('params', []), 0, $plan['problems']->all(), (array) $request->input('resources', []));
         }
 
-        return $this->page('import.preview', ['plan' => $plan, 'json' => $json, 'input' => $request->only(['mailboxes', 'params']), 'warning' => '']);
+        return $this->page('import.preview', ['plan' => $plan, 'json' => $json, 'input' => $request->only(['mailboxes', 'params', 'resources']), 'warning' => '']);
     }
 
     /** Step 4: the plan is computed again; it must be the one that was previewed. */
@@ -138,8 +141,8 @@ class PacksController extends Controller
             return $this->page('import.upload', ['problems' => $result['problems']->all(), 'mailbox_id' => 0]);
         }
         $user = auth()->user();
-        $plan = (new Planner())->plan($result['pack'], (array) $request->input('mailboxes', []), (array) $request->input('params', []), $user);
-        $input = $request->only(['mailboxes', 'params']);
+        $plan = (new Planner())->plan($result['pack'], (array) $request->input('mailboxes', []), (array) $request->input('params', []), $user, (array) $request->input('resources', []));
+        $input = $request->only(['mailboxes', 'params', 'resources']);
         if (!hash_equals($plan['token'], (string) $request->input('token'))) {
             return $this->page('import.preview', ['plan' => $plan, 'json' => $json, 'input' => $input,
                 'warning' => __('workflowpacks::messages.plan_changed')]);
@@ -166,13 +169,40 @@ class PacksController extends Controller
         return $this->page('import.result', ['plan' => $plan, 'outcome' => $outcome]);
     }
 
-    protected function configurePage($json, array $pack, array $selected, array $params, $mailboxId, array $problems = [])
+    protected function configurePage($json, array $pack, array $selected, array $params, $mailboxId, array $problems = [], array $resourceInput = [])
     {
         $user = auth()->user();
         $mailboxes = Bridge::editableMailboxes($user);
         $previous = Link::where('pack_key', $pack['key'])->whereIn('mailbox_id', $mailboxes->pluck('id')->all() ?: [0])->get();
+
+        // v2 selectors, evaluated here on the mailboxes the user may manage (and nowhere else)
+        $selectors = [];
+        if ($pack['mailboxes'] !== null) {
+            $selectors['*'] = $pack['mailboxes'];
+        }
+        foreach ($pack['workflows'] as $rule) {
+            if ($rule['mailboxes'] !== null) {
+                $selectors[$rule['key']] = $rule['mailboxes'];
+            }
+        }
+        $selectorPreview = [];
+        foreach ($selectors as $ruleKey => $selector) {
+            $matches = [];
+            foreach ($mailboxes as $mailbox) {
+                $matches[(int) $mailbox->id] = MailboxSelector::matches($selector, $mailbox->email, $mailbox->name);
+            }
+            $selectorPreview[$ruleKey] = ['text' => MailboxSelector::describe($selector), 'matches' => $matches];
+        }
+
         if (!$selected) {
             $selected = $previous->pluck('mailbox_id')->unique()->values()->all();
+            if (!$selected && $selectorPreview) {
+                // first import: the mailboxes matching at least one selector are ticked; the user can untick them
+                foreach ($selectorPreview as $preview) {
+                    $selected = array_merge($selected, array_keys(array_filter($preview['matches'])));
+                }
+                $selected = array_values(array_unique($selected));
+            }
             if (!$selected && $mailboxId) {
                 $selected = [$mailboxId];
             }
@@ -199,6 +229,8 @@ class PacksController extends Controller
             'modules'   => $modules,
             'problems'  => $problems,
             'existing'  => Pack::where('pack_key', $pack['key'])->first(),
+            'selectors' => $selectorPreview,
+            'resources' => ResourceResolver::resolve($pack, $resourceInput, $user, new Problems()),
         ]);
     }
 
