@@ -4,6 +4,15 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [1.4.1] - 2026-10-13
+
+### Corrigé
+- **« Mettre à jour maintenant » absent alors que « Rechercher » annonçait une nouvelle version.** Le résultat de la
+  recherche était enregistré dans un fichier de `storage/app/workflowpacks`. Sur les serveurs où le planificateur
+  (cron) tourne sous un autre utilisateur système que le serveur web, ce dossier n'était pas modifiable par le site :
+  le résultat était perdu, et la page restait sur « Pas encore vérifié ». Il est désormais enregistré dans la base de
+  données de FreeScout (table des options), accessible aux deux. L'ancien fichier est encore lu une fois.
+
 ## [1.4.0] - 2026-10-13
 
 ### Ajouté

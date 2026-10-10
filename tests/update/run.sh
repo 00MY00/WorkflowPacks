@@ -139,7 +139,7 @@ for scenario in "${SCENARIOS[@]}"; do
             # next minute's run skips it (withoutOverlapping) and runs the requested update
             docker exec -d -u www-data -w /var/www/html "$APP" php artisan schedule:run
             sleep 8
-            out="$(www 'timeout 900 php artisan schedule:run 2>&1; cat storage/app/workflowpacks/update-status.json' || true)"
+            out="$(www 'timeout 900 php artisan schedule:run 2>&1' || true)"
             pending="$(php_eval 'echo Modules\WorkflowPacks\Services\Update\Updater::pendingRequest() === "" ? "cleared" : "pending";' || true)"
             expect "$name" "demande traitée par le planificateur" "cleared" "$pending"
             ;;
