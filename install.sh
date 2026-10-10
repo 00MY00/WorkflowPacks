@@ -258,6 +258,8 @@ verify() {
     else
         ok "$(t "Workflow Packs est opérationnel : menu Gérer › Workflow Packs." "Workflow Packs is ready: menu Manage › Workflow Packs.")"
     fi
+    # latest published version recorded now, so that the settings page shows "up to date" instead of "not checked yet"
+    (cd "$FS_PATH" && sudo -u "$WEB_USER" php artisan workflowpacks:update --check) >>"$LOG" 2>&1 || true
 }
 
 uninstall() {

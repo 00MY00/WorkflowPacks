@@ -12,6 +12,8 @@ indépendante (champ `version`, actuellement 1).
   recherche datait d'avant une publication, seul « Rechercher une mise à jour » était visible. La mise à jour vérifie
   d'abord GitHub et ne fait rien si la version installée est déjà la dernière. Le bouton est mis en avant quand une
   version plus récente est connue, et désactivé pendant une mise à jour.
+- `install.sh` enregistre la dernière version publiée à la fin de l'installation : la page des réglages affiche « À
+  jour » au lieu de « Pas encore vérifié ».
 
 ## [1.3.0] - 2026-10-12
 
