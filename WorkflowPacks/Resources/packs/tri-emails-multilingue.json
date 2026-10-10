@@ -1,0 +1,155 @@
+{
+    "$schema": "../../../schema/freescout-workflow-pack.schema.json",
+    "format": "freescout-workflow-pack",
+    "version": 1,
+    "key": "tri-emails-multilingue",
+    "name": "Tri des e-mails (multilingue)",
+    "description": "Classe les nouveaux messages : alertes de sécurité, codes de connexion, factures et reçus, échecs de paiement, demandes d'action, alertes techniques, newsletters d'expéditeurs choisis et tests FreeScout. Chaque règle ajoute une note interne « [Tri] … ». Aucune règle ne supprime de message ; les règles sont importées désactivées.",
+    "pack_version": "1.0.0",
+    "params": [
+        {
+            "key": "security_email",
+            "label": "Adresse qui reçoit les alertes de sécurité",
+            "description": "Les alertes de sécurité y sont transférées (action sensible : envoi d'un e-mail).",
+            "type": "email",
+            "required": true
+        },
+        {
+            "key": "newsletter_sender",
+            "label": "Expéditeur de newsletter à classer",
+            "description": "Adresse exacte d'un expéditeur de newsletter. Vide : la règle « Newsletters » est bloquée et peut être ignorée explicitement. Aucun autre critère (noreply, désabonnement, « cadeau ») ne suffit à fermer un message.",
+            "type": "email",
+            "required": false
+        }
+    ],
+    "workflows": [
+        {
+            "key": "alertes-securite",
+            "name": "[Tri] Alertes de sécurité",
+            "description": "Alertes de compte, nouvelle connexion, validation en deux étapes activée ou désactivée, mot de passe modifié.",
+            "type": "automatic",
+            "settings": { "apply_to_prev": false, "max_executions": 1 },
+            "conditions": {
+                "all": [
+                    { "type": "new_or_reply", "operator": "new" },
+                    { "type": "subject", "operator": "regex", "value": "/(security alert|alerte de s[ée]curit[ée]|sicherheitswarnung|alerta de seguridad|avviso di sicurezza|оповещение (системы )?безопасности|предупреждение (системы )?безопасности|2-step verification|two-step verification|validation en deux [ée]tapes|2-schritt-verifizierung|verificaci[óo]n en dos pasos|двухэтапн|new sign-in|nouvelle connexion|neue anmeldung|password (was )?(changed|reset)|mot de passe (a [ée]t[ée] )?modifi[ée])/iu" }
+                ]
+            },
+            "actions": [
+                { "type": "note", "value": { "body": "[Tri] Alerte de sécurité reçue sur {{mailbox.name}} : vérifier qu'elle est légitime." } },
+                { "type": "forward", "value": { "to": "{{param.security_email}}", "cc": "", "bcc": "", "body": "Alerte de sécurité reçue sur {{mailbox.email}}." } }
+            ]
+        },
+        {
+            "key": "codes-connexion",
+            "name": "[Tri] Codes de connexion",
+            "description": "Codes à usage unique et codes de vérification (pas les alertes de validation en deux étapes).",
+            "type": "automatic",
+            "conditions": {
+                "all": [
+                    { "type": "new_or_reply", "operator": "new" },
+                    { "type": "subject", "operator": "regex", "value": "/(verification code|code de v[ée]rification|best[äa]tigungscode|verifizierungscode|c[óo]digo de verificaci[óo]n|codice di verifica|код подтверждения|проверочный код|one-time (pass)?code|login code|sign-in code|code de connexion|anmeldecode|security code|code de s[ée]curit[ée])/iu" }
+                ]
+            },
+            "actions": [
+                { "type": "note", "value": { "body": "[Tri] Code de connexion : valable peu de temps, ne jamais le transmettre." } }
+            ]
+        },
+        {
+            "key": "factures-recus",
+            "name": "[Tri] Factures et reçus",
+            "description": "Documents comptables, y compris quand ils contiennent une promotion (ex. un reçu russe « Чек + (1) подарок »).",
+            "type": "automatic",
+            "conditions": {
+                "all": [
+                    { "type": "new_or_reply", "operator": "new" },
+                    {
+                        "any": [
+                            { "type": "subject", "operator": "regex", "value": "/(\\b(invoices?|factures?|receipts?|re[çc]us?|quittances?|rechnung(en)?|quittung(en)?|belege?|facturas?|recibos?|fattur[ae]|ricevut[ae])\\b|чек|сч[её]т|квитанци|накладн)/iu" },
+                            { "type": "subject", "operator": "regex", "value": "/\\d[\\d\\s\\x{00A0}\\x{202F}.]*[.,]\\d{2}\\s?(₽|€|\\$|£|chf|руб)/iu" }
+                        ]
+                    }
+                ]
+            },
+            "actions": [
+                { "type": "note", "value": { "body": "[Tri] Document comptable (facture / reçu) : à conserver pour la comptabilité." } }
+            ]
+        },
+        {
+            "key": "echecs-paiement",
+            "name": "[Tri] Échecs de paiement",
+            "type": "automatic",
+            "conditions": {
+                "all": [
+                    { "type": "new_or_reply", "operator": "new" },
+                    { "type": "subject", "operator": "regex", "value": "/(payment (has )?failed|failed payment|payment declined|card (was )?declined|unable to (process|charge)|past due|[ée]chec (du |de )?paiement|paiement (refus[ée]|[ée]chou[ée]|rejet[ée])|carte refus[ée]e|impay[ée]|zahlung (fehlgeschlagen|abgelehnt)|pago (fallido|rechazado)|pagamento (non riuscito|rifiutato)|платеж не (прош[её]л|выполнен)|оплата не прошла)/iu" }
+                ]
+            },
+            "actions": [
+                { "type": "note", "value": { "body": "[Tri] Échec de paiement : action nécessaire pour éviter une interruption de service." } }
+            ]
+        },
+        {
+            "key": "action-requise",
+            "name": "[Tri] Action demandée",
+            "description": "Messages qui demandent une action ou une vérification (ex. « [Action Advised] Review … »).",
+            "type": "automatic",
+            "conditions": {
+                "all": [
+                    { "type": "new_or_reply", "operator": "new" },
+                    { "type": "subject", "operator": "regex", "value": "/(\\[action (required|advised|needed)\\]|action (required|needed|advised)|action requise|action recommand[ée]e|intervention requise|handlung erforderlich|aktion erforderlich|acci[óo]n (requerida|necesaria)|azione richiesta|требуется действие|please (review|confirm|verify)|veuillez (v[ée]rifier|confirmer))/iu" }
+                ]
+            },
+            "actions": [
+                { "type": "note", "value": { "body": "[Tri] Action demandée : lire le message et traiter la demande." } }
+            ]
+        },
+        {
+            "key": "alertes-techniques",
+            "name": "[Tri] Alertes techniques",
+            "description": "Supervision, panne, sauvegarde, disque, certificat, tâches planifiées.",
+            "type": "automatic",
+            "conditions": {
+                "all": [
+                    { "type": "new_or_reply", "operator": "new" },
+                    { "type": "subject", "operator": "regex", "value": "/\\b((is )?down\\b|outage|incident|panne|monitor(ing)?|uptime|downtime|cron|backup (failed|error)|sauvegarde (en )?[ée]chec|[ée]chec de (la )?sauvegarde|disk (space|full)|disque (plein|satur[ée])|ssl certificate|certificat (ssl|tls)|certificate (expir|will expire)|expiration du certificat|server (error|alert)|erreur (du )?serveur|alerte serveur|5\\d\\d error|high (cpu|load|memory))/iu" }
+                ]
+            },
+            "actions": [
+                { "type": "note", "value": { "body": "[Tri] Alerte technique : vérifier le service concerné." } }
+            ]
+        },
+        {
+            "key": "newsletters",
+            "name": "[Tri] Newsletters (expéditeur choisi)",
+            "description": "Ferme uniquement les messages de l'expéditeur renseigné à l'import. « noreply », « cadeau » ou un lien de désabonnement ne suffisent jamais.",
+            "type": "automatic",
+            "conditions": {
+                "all": [
+                    { "type": "new_or_reply", "operator": "new" },
+                    { "type": "customer_email", "operator": "equal", "value": "{{param.newsletter_sender}}" }
+                ]
+            },
+            "actions": [
+                { "type": "note", "value": { "body": "[Tri] Newsletter d'un expéditeur choisi : fermée automatiquement." } },
+                { "type": "status", "value": "3" }
+            ]
+        },
+        {
+            "key": "tests-freescout",
+            "name": "[Tri] Tests FreeScout",
+            "description": "Messages de test envoyés depuis FreeScout (paramètres de la boîte).",
+            "type": "automatic",
+            "conditions": {
+                "all": [
+                    { "type": "new_or_reply", "operator": "new" },
+                    { "type": "subject", "operator": "regex", "value": "/freescout.{0,3}(e-?mail de test|test e-?mail|testmail|test-e-?mail|correo de prueba|email di prova|тестовое письмо)/iu" }
+                ]
+            },
+            "actions": [
+                { "type": "note", "value": { "body": "[Tri] Message de test FreeScout : fermé automatiquement." } },
+                { "type": "status", "value": "3" }
+            ]
+        }
+    ]
+}

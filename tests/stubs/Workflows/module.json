@@ -1,0 +1,12 @@
+{
+    "name": "Workflows",
+    "alias": "workflows",
+    "description": "TEST STUB ONLY - not the official Workflows module. Reproduces the public interface used by WorkflowPacks.",
+    "version": "0.0.0-stub",
+    "active": 0,
+    "order": 0,
+    "providers": ["Modules\\Workflows\\Providers\\WorkflowsServiceProvider"],
+    "aliases": {},
+    "files": [],
+    "requires": []
+}

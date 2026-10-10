@@ -1,0 +1,20 @@
+{
+    "name": "WorkflowPacks",
+    "alias": "workflowpacks",
+    "description": "Import, export and update sets of rules of the official Workflows module, with per-mailbox variables, previews, conflict detection and no duplicates.",
+    "version": "1.0.0",
+    "detailsUrl": "https://github.com/00MY00/WorkflowPacks",
+    "author": "WorkflowPacks contributors",
+    "img": "../modules/workflowpacks/img/module.svg",
+    "requiredAppVersion": "1.8.0",
+    "license": "AGPL-3.0",
+    "keywords": ["workflows", "import", "export", "rules", "templates"],
+    "active": 0,
+    "order": 110,
+    "providers": [
+        "Modules\\WorkflowPacks\\Providers\\WorkflowPacksServiceProvider"
+    ],
+    "aliases": {},
+    "files": [],
+    "requires": []
+}

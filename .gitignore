@@ -1,0 +1,27 @@
+# Fichiers générés
+dist/
+vendor/
+node_modules/
+*.phar
+.phpunit.result.cache
+
+# Configuration locale et secrets
+.env
+.env.*
+*.pem
+*.key
+
+# Journaux, sauvegardes, exports, données
+*.log
+*.sql
+*.sql.gz
+backups/
+storage/
+
+# Éditeurs et système
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini
