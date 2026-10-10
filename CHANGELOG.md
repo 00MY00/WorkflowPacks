@@ -4,6 +4,25 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [1.2.0] - 2026-10-11
+
+### Ajouté
+- **Format de pack version 2**. La v1 est toujours importée telle quelle, et l'export reste en v1 sans fonction
+  v2 :
+  - **sélecteurs de boîtes** `mailboxes`, pour le pack ou une règle (« toutes les boîtes », adresse ou nom
+    contient / ne contient pas / est égal / commence / finit par…), évalués localement sur les boîtes autorisées,
+    avec ✓/✗ et des cases à décocher ;
+  - **ressources logiques** `resources` + `{{resource.<clé>}}` (user, mailbox, tag), associées par clé à un
+    élément local et mémorisées dans la nouvelle table `workflowpacks_resources`. Un élément de même nom n'est
+    jamais adopté automatiquement, et une ressource locale n'est jamais créée, modifiée ni supprimée ;
+  - extensions `x-…` (par exemple `x-visual`) conservées à l'aller-retour, jamais compilées.
+- Prévisualisation : tableau des ressources (action prévue, risque) et niveau de risque SÛR / ATTENTION / DANGER
+  dans chaque case.
+- Export : sélecteurs et ressources des packs conservés. Un identifiant local peut être remplacé par une
+  ressource (« nouvelle ressource… »).
+- Pack de démonstration `demo-portable-v2.json`. Schéma JSON étendu à la v2 (les clés v2 sont refusées en v1).
+- Documentation : `docs/format.md` (v2), `docs/resources.md`, `docs/visual-builder-architecture.md`.
+
 ## [1.1.0] - 2026-10-10
 
 ### Ajouté

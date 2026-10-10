@@ -11,6 +11,9 @@
         @foreach (($rule['requires'] ?? []) as $module)
             <span class="label label-warning">{{ __('workflowpacks::messages.requires') }} {{ $module }}</span>
         @endforeach
+        @if (!empty($rule['mailboxes']))
+            <span class="label label-primary">{{ \Modules\WorkflowPacks\Services\Pack\MailboxSelector::describe($rule['mailboxes']) }}</span>
+        @endif
         @if (!empty($rule['settings']['apply_to_prev']))
             <span class="label label-default">{{ __('workflowpacks::messages.apply_to_prev') }}</span>
         @endif

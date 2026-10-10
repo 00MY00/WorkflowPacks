@@ -15,7 +15,7 @@ namespace Modules\WorkflowPacks\Services\Pack;
  */
 class VariableResolver
 {
-    const PATTERN = '/\{\{\s*([a-z][a-z0-9_]*(?:\.[a-z0-9_]+)*)\s*\}\}/';
+    const PATTERN = '/\{\{\s*([a-z][a-z0-9_]*(?:\.[a-z0-9_-]+)*)\s*\}\}/';
 
     /** @var array name => ['value' => mixed, 'int' => bool] (value null = not provided) */
     protected $vars;
@@ -86,13 +86,29 @@ class VariableResolver
         return array_values(array_unique($names));
     }
 
-    public static function knownName($name, array $paramKeys)
+    public static function knownName($name, array $paramKeys, array $resourceKeys = [])
     {
         if (in_array($name, ['mailbox.id', 'mailbox.email', 'mailbox.name'], true)) {
             return true;
         }
+        if (strpos($name, 'resource.') === 0) {
+            return in_array(substr($name, 9), $resourceKeys, true);
+        }
 
         return strpos($name, 'param.') === 0 && in_array(substr($name, 6), $paramKeys, true);
+    }
+
+    /**
+     * Adds the logical resources mapped at import ({{resource.key}}): key => ['value' => local id or name, 'int' => bool]
+     * (value null = not mapped: the rules that use it are blocked).
+     */
+    public function withResources(array $resources)
+    {
+        foreach ($resources as $key => $resolved) {
+            $this->vars['resource.'.$key] = ['value' => $resolved['value'], 'int' => (bool) $resolved['int']];
+        }
+
+        return $this;
     }
 
     /** Resolves a string in a context; returns an int when the string is exactly one integer variable (text context). */

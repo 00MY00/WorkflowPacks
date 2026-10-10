@@ -12,12 +12,16 @@ namespace Modules\WorkflowPacks\Services\Pack;
 class PackValidator
 {
     const FORMAT = 'freescout-workflow-pack';
-    const SCHEMA_VERSIONS = [1];
+    const SCHEMA_VERSIONS = [1, 2];
+    const RESOURCE_TYPES = ['mailbox', 'user', 'tag'];
+    const RESOURCE_KEYS = ['key', 'type', 'name', 'description', 'on_missing', 'use'];
     const PARAM_TYPES = ['string', 'email', 'integer', 'user', 'mailbox'];
 
-    const TOP_KEYS = ['format', 'version', 'key', 'name', 'description', 'pack_version', 'requires', 'params', 'workflows'];
+    const TOP_KEYS = ['format', 'version', 'key', 'name', 'description', 'pack_version', 'requires', 'params', 'workflows', 'mailboxes', 'resources'];
+    /** keys that only exist in the schema version 2 */
+    const V2_KEYS = ['mailboxes', 'resources'];
     const PARAM_KEYS = ['key', 'label', 'description', 'type', 'required', 'default', 'sensitive'];
-    const RULE_KEYS = ['key', 'name', 'description', 'type', 'settings', 'requires', 'conditions', 'actions'];
+    const RULE_KEYS = ['key', 'name', 'description', 'type', 'settings', 'requires', 'conditions', 'actions', 'mailboxes'];
     const SETTINGS_KEYS = ['apply_to_prev', 'max_executions'];
     const ACTION_KEYS = ['type', 'operator', 'value'];
 
@@ -89,6 +93,13 @@ class PackValidator
 
             return ['pack' => null, 'problems' => $problems];
         }
+        if ($data['version'] === 1) {
+            foreach (self::V2_KEYS as $k) {
+                if (array_key_exists($k, $data)) {
+                    $problems->add($k, 'WP-PACK-12', 'pack_v2_only', ['key' => $k]);
+                }
+            }
+        }
 
         $pack = [
             'format'       => self::FORMAT,
@@ -99,9 +110,14 @@ class PackValidator
             'pack_version' => $this->text($data, 'pack_version', 'pack_version', $problems, false, 50),
             'requires'     => $this->requires($data['requires'] ?? [], 'requires', $problems),
             'params'       => $this->params($data['params'] ?? [], $problems),
+            // v2: mailbox selector for every rule (portable intention, evaluated locally at import)
+            'mailboxes'    => MailboxSelector::validate($data['mailboxes'] ?? null, 'mailboxes', $problems),
+            // v2: logical resources ({{resource.key}}), mapped to local records at import
+            'resources'    => $this->resources($data['resources'] ?? [], $problems),
             'workflows'    => [],
         ];
         $paramKeys = array_column($pack['params'], 'key');
+        $resourceKeys = array_column($pack['resources'], 'key');
 
         $rules = $data['workflows'] ?? null;
         if (!is_array($rules) || !ConditionTranslator::isList($rules) || !$rules) {
@@ -111,7 +127,7 @@ class PackValidator
         } else {
             $keys = [];
             foreach ($rules as $i => $rule) {
-                $normalized = $this->rule($rule, 'workflows['.$i.']', $paramKeys, $problems);
+                $normalized = $this->rule($rule, 'workflows['.$i.']', $paramKeys, $problems, $resourceKeys, $data['version']);
                 if ($normalized === null) {
                     continue;
                 }
@@ -261,7 +277,7 @@ class PackValidator
         }
     }
 
-    protected function rule($rule, $path, array $paramKeys, Problems $problems)
+    protected function rule($rule, $path, array $paramKeys, Problems $problems, array $resourceKeys = [], $version = 1)
     {
         if (!is_array($rule) || ConditionTranslator::isList($rule)) {
             $problems->add($path, 'WP-RULE-01', 'rule_object');
@@ -269,9 +285,19 @@ class PackValidator
             return null;
         }
         $before = $problems->count();
+        $extensions = [];
         foreach (array_diff(array_keys($rule), self::RULE_KEYS) as $k) {
+            // "x-…": extensions of tools (e.g. x-visual for the positions of the Visual Builder), kept, never compiled
+            if (strpos((string) $k, 'x-') === 0) {
+                $extensions[$k] = $rule[$k];
+                continue;
+            }
             $problems->add($path.'.'.$k, 'WP-RULE-03', 'unknown_key');
         }
+        if ($version === 1 && array_key_exists('mailboxes', $rule)) {
+            $problems->add($path.'.mailboxes', 'WP-PACK-12', 'pack_v2_only', ['key' => 'mailboxes']);
+        }
+        $selector = MailboxSelector::validate($rule['mailboxes'] ?? null, $path.'.mailboxes', $problems);
         $key = $this->key($rule, 'key', $path, $problems);
         $type = $rule['type'] ?? 'automatic';
         if (!in_array($type, ['automatic', 'manual'], true)) {
@@ -335,7 +361,7 @@ class PackValidator
             VariableResolver::namesIn($rule['actions'] ?? [], $path.'.actions', $problems)
         );
         foreach (array_unique($vars) as $name) {
-            if (!VariableResolver::knownName($name, $paramKeys)) {
+            if (!VariableResolver::knownName($name, $paramKeys, $resourceKeys)) {
                 $problems->add($path, 'WP-VAR-02', 'var_undeclared', ['var' => $name]);
             }
         }
@@ -367,7 +393,66 @@ class PackValidator
             'requires'    => $requires,
             'conditions'  => $rule['conditions'] ?? null,
             'actions'     => $normalizedActions,
+            'mailboxes'   => $selector,
+            'extensions'  => $extensions,
         ];
+    }
+
+    /** Logical resources of a pack v2: key (identity), type, display name, behaviour when not mapped. */
+    protected function resources($value, Problems $problems)
+    {
+        if (!is_array($value) || !ConditionTranslator::isList($value) || count($value) > 50) {
+            $problems->add('resources', 'WP-RES-01', 'res_list');
+
+            return [];
+        }
+        $out = [];
+        $seen = [];
+        foreach ($value as $i => $resource) {
+            $path = 'resources['.$i.']';
+            if (!is_array($resource) || ConditionTranslator::isList($resource)) {
+                $problems->add($path, 'WP-RES-02', 'res_object');
+                continue;
+            }
+            foreach (array_diff(array_keys($resource), self::RESOURCE_KEYS) as $k) {
+                $problems->add($path.'.'.$k, 'WP-RES-03', 'unknown_key');
+            }
+            $key = $resource['key'] ?? null;
+            if (!is_string($key) || !preg_match('/^[a-z0-9][a-z0-9_-]{0,99}$/', $key)) {
+                $problems->add($path.'.key', 'WP-RES-04', 'res_bad_key');
+                continue;
+            }
+            if (isset($seen[$key])) {
+                $problems->add($path.'.key', 'WP-RES-05', 'res_duplicate', ['key' => $key]);
+                continue;
+            }
+            $seen[$key] = true;
+            $type = $resource['type'] ?? null;
+            if (!in_array($type, self::RESOURCE_TYPES, true)) {
+                $problems->add($path.'.type', 'WP-RES-06', 'res_bad_type', ['type' => is_scalar($type) ? $type : '?', 'types' => implode(', ', self::RESOURCE_TYPES)]);
+                continue;
+            }
+            $onMissing = $resource['on_missing'] ?? 'ask';
+            if (!in_array($onMissing, ['block', 'ask', 'create'], true)) {
+                $problems->add($path.'.on_missing', 'WP-RES-07', 'res_on_missing');
+                continue;
+            }
+            $use = $resource['use'] ?? 'id';
+            if (!in_array($use, ['id', 'name'], true)) {
+                $problems->add($path.'.use', 'WP-RES-08', 'res_use');
+                continue;
+            }
+            $out[] = [
+                'key'         => $key,
+                'type'        => $type,
+                'name'        => is_string($resource['name'] ?? null) && $resource['name'] !== '' ? $resource['name'] : $key,
+                'description' => is_string($resource['description'] ?? null) ? $resource['description'] : '',
+                'on_missing'  => $onMissing,
+                'use'         => $use,
+            ];
+        }
+
+        return $out;
     }
 
     /** Why a PCRE pattern cannot be used by Workflows (preg_match($pattern, $text)), or null. */

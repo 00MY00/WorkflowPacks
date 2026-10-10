@@ -148,6 +148,14 @@ class ExportController extends Controller
                         continue;
                     }
                     $replacements[] = ['text' => $text, 'variable' => 'param.'.$pkey, 'type' => $ptype, 'label' => $pkey];
+                } elseif ($target === 'resource') {
+                    $rkey = (string) ($request->input('replace_param')[$i] ?? '');
+                    $rtype = (string) ($request->input('replace_type')[$i] ?? '');
+                    if (!preg_match('/^[a-z0-9][a-z0-9_-]{0,99}$/', $rkey) || !in_array($rtype, PackValidator::RESOURCE_TYPES, true)) {
+                        $errors[] = __('workflowpacks::messages.export_bad_param', ['text' => $text]);
+                        continue;
+                    }
+                    $replacements[] = ['text' => $text, 'variable' => 'resource.'.$rkey, 'type' => $rtype, 'label' => $rkey];
                 }
             }
             if ($errors) {

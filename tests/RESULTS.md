@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 1.1.0
+# Résultats des tests — Workflow Packs 1.2.0
 
 Date : 2026-10-10. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,16 @@ Date : 2026-10-10. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 1.2.0 — format v2 (sélecteurs, ressources)
+
+| Série | Résultat |
+|---|---|
+| Unitaires (`php tests/unit/run.php`, PHP 8.4.26 local, 7.1 / 8.2 / 8.4 en CI) | **36 tests, 2 739 assertions, 0 échec**. Ajouts : sélecteurs (toutes les boîtes, adresse contient / ne contient pas, nom, ET/OU, formes refusées), v2 (pack de démonstration, clés v2 refusées en v1, ressources : dossier refusé, clés, doublons, variables), `{{resource.clé}}` résolu en entier, aller-retour v1/v2 → modèle → JSON sans perte |
+| Intégration (CI GitHub : FreeScout officiel + MariaDB + bouchon Workflows) | **31 tests, 245 assertions, 0 échec**. `PortableTest` (9) : sélecteur évalué localement (✓ pré-coché, « hors sélecteur »), aucune boîte sans permission, ressource associée par clé et réutilisée, homonyme seulement suggéré, identifiants falsifiés ou interdits refusés, Tags absent bloquant, associations annulées avec l'import, export portable, prévisualisation (ressources, risques) |
+| Schéma (Ajv) | pack v1, pack v2 et 11 variantes (dont les clés v2 refusées en v1, le type dossier refusé et `x-visual` accepté) |
+
+Les tests d'intégration de la 1.2.0 ont tourné dans la CI GitHub, car le Docker local était indisponible.
 
 ## 1. Analyse statique
 

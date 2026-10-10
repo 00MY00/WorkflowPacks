@@ -13,6 +13,13 @@ remplacées pour chacune (`{{mailbox.email}}`, `{{mailbox.name}}`, `{{mailbox.id
   version locale, la remplacer ou ignorer la règle.
 - Une vue schématique (SI … ET/OU … ALORS …) présente les règles. Une matrice règles × boîtes permet de choisir, pour
   chaque boîte, ce qui sera appliqué.
+- **Packs portables (format 2)** :
+  - **sélecteurs de boîtes** (« toutes les boîtes », « adresse contient @example.com »…) évalués sur chaque
+    installation ;
+  - **ressources logiques** (`{{resource.billing-user}}`) associées par leur clé à un élément local, jamais par
+    leur nom.
+
+  Voir [docs/format.md](docs/format.md) et [docs/resources.md](docs/resources.md).
 - L'interface suit le style du module **Refresh** s'il est installé, et le style standard de FreeScout sinon.
 - **Téléphone** : la matrice devient une carte par règle. Avec Refresh, l'entrée du module est placée dans le
   panneau **Profil**, qui sert de menu burger, car la barre d'onglets du bas n'a pas de place libre. Sans Refresh,
@@ -148,6 +155,10 @@ Les boîtes et les paramètres du dernier import sont repris. Les paramètres «
 
 ## Format et variables
 
+Deux versions de schéma : **1** (inchangée) et **2**. La v2 ajoute `mailboxes`, `resources` et les extensions
+`x-…` dans les règles. Les packs v1 restent importés tels quels, et l'export reste en v1 tant qu'aucune fonction v2
+n'est utilisée.
+
 Le format est décrit dans [docs/format.md](docs/format.md) et le schéma JSON dans
 [schema/freescout-workflow-pack.schema.json](schema/freescout-workflow-pack.schema.json). En résumé :
 
@@ -236,7 +247,7 @@ Déroulement d'une mise à jour :
 6. Si l'installation échoue ou si l'état est pire qu'avant, **retour arrière automatique** : migrations annulées,
    dossier et tables restaurés. Une version annulée n'est pas retentée automatiquement.
 
-Les numéros de version suivent `module.json` (actuellement **1.1.0**) ; voir [CHANGELOG.md](CHANGELOG.md).
+Les numéros de version suivent `module.json` (actuellement **1.2.0**) ; voir [CHANGELOG.md](CHANGELOG.md).
 
 ## Limites
 

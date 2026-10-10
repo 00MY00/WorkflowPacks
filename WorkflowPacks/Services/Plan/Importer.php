@@ -5,6 +5,7 @@ namespace Modules\WorkflowPacks\Services\Plan;
 use Modules\WorkflowPacks\Entities\ImportLog;
 use Modules\WorkflowPacks\Entities\Link;
 use Modules\WorkflowPacks\Entities\Pack;
+use Modules\WorkflowPacks\Entities\Resource;
 use Modules\WorkflowPacks\Services\Pack\Fingerprint;
 use Modules\WorkflowPacks\Services\Pack\Problems;
 use Modules\WorkflowPacks\Services\Workflows\Bridge;
@@ -62,6 +63,21 @@ class Importer
                     }
                 }
 
+                // mappings of the logical resources chosen for this import (never a creation, rename or deletion)
+                foreach ((array) ($plan['resources'] ?? []) as $key => $resolved) {
+                    if ($resolved['status'] !== 'mapped') {
+                        continue;
+                    }
+                    Resource::updateOrCreate(
+                        ['pack_key' => $pack['key'], 'resource_key' => $key, 'resource_type' => $resolved['decl']['type']],
+                        [
+                            'local_id'       => $resolved['local_id'],
+                            'last_seen_name' => mb_substr($resolved['label'], 0, 191),
+                            'fingerprint'    => hash('sha256', $resolved['decl']['type'].'#'.$resolved['local_id']),
+                        ]
+                    );
+                }
+
                 Pack::updateOrCreate(['pack_key' => $pack['key']], [
                     'name'           => $pack['name'],
                     'description'    => $pack['description'],
@@ -90,7 +106,7 @@ class Importer
         $attributes = $item['attributes'];
         $mailboxId = $item['mailbox_id'];
         $linkData = [
-            'template'     => json_encode($rule, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+            'template'     => json_encode(self::ruleTemplate($rule), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
             'params'       => $storedParams,
             'pack_version' => $pack['pack_version'],
             'imported_by'  => $user ? $user->id : null,
@@ -239,12 +255,16 @@ class Importer
                     return !($v === null || ($v === '' && $k === 'description') || ($v === false && in_array($k, ['required', 'sensitive'], true)));
                 }, ARRAY_FILTER_USE_BOTH);
             }, $pack['params']),
-            'workflows'    => array_map(function ($rule) {
-                return array_filter($rule, function ($v, $k) {
-                    return !(in_array($k, ['description', 'requires'], true) && ($v === '' || $v === []));
-                }, ARRAY_FILTER_USE_BOTH);
-            }, $pack['workflows']),
+            'mailboxes'    => $pack['mailboxes'] ?? null,
+            'resources'    => $pack['resources'] ?? [],
+            'workflows'    => array_map([self::class, 'ruleTemplate'], $pack['workflows']),
         ];
+        if ($out['mailboxes'] === null) {
+            unset($out['mailboxes']);
+        }
+        if (!$out['resources']) {
+            unset($out['resources']);
+        }
         foreach (['description', 'pack_version'] as $k) {
             if ($out[$k] === '') {
                 unset($out[$k]);
@@ -255,6 +275,29 @@ class Importer
         }
         if (!$out['params']) {
             unset($out['params']);
+        }
+
+        return $out;
+    }
+
+    /** A normalized rule back in the pack format (extensions "x-…" restored, empty optional keys removed). */
+    public static function ruleTemplate(array $rule)
+    {
+        $out = [];
+        foreach ($rule as $k => $v) {
+            if ($k === 'extensions') {
+                continue;
+            }
+            if (in_array($k, ['description', 'requires'], true) && ($v === '' || $v === [])) {
+                continue;
+            }
+            if ($k === 'mailboxes' && $v === null) {
+                continue;
+            }
+            $out[$k] = $v;
+        }
+        foreach ((array) ($rule['extensions'] ?? []) as $k => $v) {
+            $out[$k] = $v;
         }
 
         return $out;

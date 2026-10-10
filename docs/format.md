@@ -100,3 +100,50 @@ Le contexte détermine l'échappement :
 
 Aucune expression n'est évaluée. `{{ 1+1 }}`, `{{mailbox.email|upper}}` ou du PHP sont refusés. Le modèle d'origine,
 avec ses variables, est conservé : un nouvel import ou un export repart de ce modèle.
+
+---
+
+# Version 2 du schéma (Workflow Packs ≥ 1.2.0)
+
+La v2 reprend **tout** le format v1 et ajoute trois éléments. Un pack v1 reste importé tel quel. Une version de Workflow
+Packs antérieure à 1.2.0 refuse un pack v2 (« version de schéma non prise en charge ») au lieu de l'importer de travers.
+L'export produit un pack v1 tant qu'aucune fonction v2 n'est utilisée.
+
+| Ajout | Où | Rôle |
+|---|---|---|
+| `mailboxes` | pack, ou règle (qui remplace celui du pack) | **sélecteur de boîtes** : intention portable évaluée sur chaque installation |
+| `resources` | pack | **ressources logiques** `{{resource.<clé>}}`, associées à des éléments locaux par leur clé (voir [resources.md](resources.md)) |
+| `x-…` | règle | extensions d'outils, par exemple `x-visual` (positions du Visual Builder). Conservées à l'aller-retour, jamais compilées ni envoyées à Workflows |
+
+Dans un pack v1, `mailboxes` et `resources` sont refusés avec le code `WP-PACK-12`.
+
+## Sélecteur de boîtes
+
+```json
+{ "select": "all" }
+{ "select": "match", "combine": "any", "rules": [
+    { "field": "email", "operator": "contains", "value": "@example.com" },
+    { "field": "name",  "operator": "not_contains", "value": "test" } ] }
+```
+
+- **Champs** : `email`, `name`. **Opérateurs** : `contains`, `not_contains`, `equal`, `not_equal`, `starts`, `ends`.
+  `combine` vaut `any` (OU, par défaut) ou `all` (ET).
+- La comparaison est littérale et insensible à la casse. Aucune variable ni regex n'est permise : le sélecteur décrit
+  des boîtes, il ne dépend pas d'une boîte.
+- À l'import, à l'étape 2, le sélecteur est affiché en clair (« Boîtes dont l'adresse contient « @example.com » »).
+  Chaque boîte que vous pouvez gérer porte ✓ ou ✗, et les boîtes ✓ sont pré-cochées ; vous pouvez en décocher.
+  Une boîte sans la permission Workflows n'est jamais proposée, même si elle correspond.
+- Une boîte cochée mais hors du sélecteur d'une règle a le statut « hors sélecteur ». Rien n'y est créé, et aucun
+  accord n'est demandé.
+- L'export conserve le sélecteur, jamais la liste des adresses de l'installation.
+
+## Exemple complet
+
+Voir [`WorkflowPacks/Resources/packs/demo-portable-v2.json`](../WorkflowPacks/Resources/packs/demo-portable-v2.json) :
+
+- boîtes dont l'adresse contient `@example.com` ;
+- « invoice » OU « facture » → note, puis assignation à `{{resource.billing-user}}` ;
+- règle « toutes les boîtes » sur « Security alert », sauf si le corps contient « this is a test ».
+
+L'opérateur « ne contient pas » n'existe pas pour le corps dans Workflows : seuls `customer`, `note` et `regex` sont
+proposés. Le pack utilise donc une regex négative explicite (`/^(?![\s\S]*this is a test)/i`).

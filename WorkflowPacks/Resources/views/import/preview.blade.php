@@ -21,6 +21,27 @@
         @foreach ((array) ($input['params'] ?? []) as $k => $v)
             @if (is_scalar($v))<input type="hidden" name="params[{{ $k }}]" value="{{ $v }}">@endif
         @endforeach
+        @foreach ((array) ($input['resources'] ?? []) as $k => $v)
+            @if (is_scalar($v))<input type="hidden" name="resources[{{ $k }}]" value="{{ $v }}">@endif
+        @endforeach
+
+        @if (!empty($plan['resources']))
+            <table class="table table-condensed wp-resources">
+                <tr><th>{{ __('workflowpacks::messages.resources') }}</th><th></th><th></th><th>{{ __('workflowpacks::messages.risk') }}</th></tr>
+                @foreach ($plan['resources'] as $key => $r)
+                    <tr>
+                        <td><code>{{ $key }}</code> {{ $r['decl']['name'] }}</td>
+                        <td><span class="label label-default">{{ $r['decl']['type'] }}</span></td>
+                        <td>
+                            @if ($r['status'] === 'mapped'){{ __('workflowpacks::messages.res_use_existing', ['label' => '#'.$r['local_id'].' '.$r['label']]) }}
+                            @else{{ __('workflowpacks::messages.res_blocked') }} @foreach ($r['notes'] as $note)<div class="wp-muted">{{ $note }}</div>@endforeach
+                            @endif
+                        </td>
+                        <td><span class="wp-risk wp-risk-{{ $r['status'] === 'mapped' ? 'safe' : 'warning' }}">{{ __('workflowpacks::messages.risk_'.($r['status'] === 'mapped' ? 'safe' : 'warning')) }}</span></td>
+                    </tr>
+                @endforeach
+            </table>
+        @endif
 
         {{-- schematic matrix: rules x mailboxes, with the choice for every cell --}}
         <div class="table-responsive wp-matrix-wrap">
@@ -40,6 +61,7 @@
                             @foreach ($entry['items'] as $mailboxId => $item)
                                 <td class="wp-cell wp-status-{{ $item['status'] }}" data-label="{{ $plan['mailboxes'][$mailboxId]['name'] }}">
                                     <div class="wp-cell-status">{{ __('workflowpacks::messages.status_'.$item['status']) }}
+                                        @if (!in_array($item['status'], ['not_selected', 'denied', 'unchanged'], true))<span class="wp-risk wp-risk-{{ $item['risk'] }}">{{ __('workflowpacks::messages.risk_'.$item['risk']) }}</span>@endif
                                         @foreach ($item['sensitive'] as $kind)<span class="label label-danger" title="{{ __('workflowpacks::messages.sensitive_'.$kind) }}">⚠</span>@endforeach
                                     </div>
                                     <select name="decision[{{ $ruleKey }}][{{ $mailboxId }}]" class="form-control input-sm">

@@ -137,7 +137,7 @@ test('Validation : format, version de schéma, JSON, taille', function () use ($
     $pack['format'] = 'autre';
     same(['WP-PACK-03'], codes($v->validate($pack)['problems']));
     $pack = $minimal();
-    $pack['version'] = 2;
+    $pack['version'] = 3;
     same(['WP-PACK-05'], codes($v->validate($pack)['problems']));
     $deep = str_repeat('[', 40).str_repeat(']', 40);
     same(['WP-FILE-03'], codes($v->validateJson($deep)['problems']), 'profondeur JSON limitée');

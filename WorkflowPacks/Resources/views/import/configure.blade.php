@@ -27,10 +27,30 @@
 
         <h4>{{ __('workflowpacks::messages.mailboxes') }}</h4>
         <p class="wp-muted">{{ __('workflowpacks::messages.mailboxes_help') }}</p>
+        @foreach ($selectors as $ruleKey => $sel)
+            <div class="wp-selector">
+                <strong>{{ __('workflowpacks::messages.selector') }}</strong>
+                @if ($ruleKey !== '*')<code>{{ $ruleKey }}</code>@endif
+                : {{ $sel['text'] }}
+            </div>
+        @endforeach
+        @if ($selectors)
+            @php
+                $anyMatch = false;
+                foreach ($selectors as $sel) { if (array_filter($sel['matches'])) { $anyMatch = true; } }
+            @endphp
+            <p class="wp-muted">{{ __('workflowpacks::messages.selector_result') }}</p>
+            @if (!$anyMatch)<div class="alert alert-warning">{{ __('workflowpacks::messages.selector_none_match') }}</div>@endif
+        @endif
         <div class="wp-mailboxes">
             @foreach ($mailboxes as $mailbox)
-                <label class="wp-mailbox">
+                @php
+                    $hit = null;
+                    foreach ($selectors as $sel) { $hit = $hit || !empty($sel['matches'][(int) $mailbox->id]); }
+                @endphp
+                <label class="wp-mailbox @if ($hit === false) wp-mailbox-out @endif">
                     <input type="checkbox" name="mailboxes[]" value="{{ $mailbox->id }}" @if (in_array((int) $mailbox->id, $selected, true)) checked @endif>
+                    @if ($hit !== null)<span class="wp-sel-{{ $hit ? 'yes' : 'no' }}">{{ $hit ? '✓' : '✗' }}</span>@endif
                     <span>{{ $mailbox->name }}</span> <small class="wp-muted">{{ $mailbox->email }}</small>
                 </label>
             @endforeach
@@ -51,6 +71,27 @@
         @empty
             <p class="wp-muted">{{ __('workflowpacks::messages.no_params') }}</p>
         @endforelse
+
+        @if ($resources)
+            <h4>{{ __('workflowpacks::messages.resources') }}</h4>
+            <p class="wp-muted">{{ __('workflowpacks::messages.resources_help') }}</p>
+            @foreach ($resources as $key => $r)
+                <div class="form-group wp-resource">
+                    <label>{{ $r['decl']['name'] }} <code>{{ '{'.'{resource.'.$key.'}'.'}' }}</code> <span class="label label-default">{{ $r['decl']['type'] }}</span></label>
+                    @if ($r['status'] === 'unavailable')
+                        <div class="text-danger">{{ implode(' ', $r['notes']) }}</div>
+                    @else
+                        <select name="resources[{{ $key }}]" class="form-control">
+                            <option value="">{{ __('workflowpacks::messages.resource_choose') }}</option>
+                            @foreach ($r['candidates'] as $id => $label)
+                                <option value="{{ $id }}" @if ((string) $r['local_id'] === (string) $id) selected @endif>#{{ $id }} {{ $label }}@if (in_array($id, $r['suggested'], true)) — {{ __('workflowpacks::messages.resource_same_name') }}@endif @if ($r['previous'] === $id) — {{ __('workflowpacks::messages.resource_mapped') }}@endif</option>
+                            @endforeach
+                        </select>
+                        @foreach ($r['notes'] as $note)<p class="help-block">{{ $note }}</p>@endforeach
+                    @endif
+                </div>
+            @endforeach
+        @endif
 
         <button type="submit" class="btn btn-primary">{{ __('workflowpacks::messages.preview_btn') }}</button>
     </form>

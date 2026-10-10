@@ -69,17 +69,24 @@
                             <td><input name="replace_text[{{ $i }}]" class="form-control input-sm" value="{{ $old['replace_text'][$i] ?? '' }}" placeholder="{{ $i === 0 && $mailbox ? $mailbox->email : '' }}"></td>
                             <td>
                                 <select name="replace_var[{{ $i }}]" class="form-control input-sm">
-                                    @foreach (['mailbox.email', 'mailbox.name', 'mailbox.id', 'param'] as $v)
-                                        <option value="{{ $v }}" @if (($old['replace_var'][$i] ?? '') === $v) selected @endif>{{ $v === 'param' ? __('workflowpacks::messages.new_param') : '{'.'{'.$v.'}'.'}' }}</option>
+                                    @foreach (['mailbox.email', 'mailbox.name', 'mailbox.id', 'param', 'resource'] as $v)
+                                        <option value="{{ $v }}" @if (($old['replace_var'][$i] ?? '') === $v) selected @endif>{{ $v === 'param' ? __('workflowpacks::messages.new_param') : ($v === 'resource' ? __('workflowpacks::messages.new_resource') : '{'.'{'.$v.'}'.'}') }}</option>
                                     @endforeach
                                 </select>
                             </td>
                             <td><input name="replace_param[{{ $i }}]" class="form-control input-sm" placeholder="{{ __('workflowpacks::messages.param_key') }}" value="{{ $old['replace_param'][$i] ?? '' }}"></td>
                             <td>
                                 <select name="replace_type[{{ $i }}]" class="form-control input-sm">
-                                    @foreach (\Modules\WorkflowPacks\Services\Pack\PackValidator::PARAM_TYPES as $t)
-                                        <option value="{{ $t }}" @if (($old['replace_type'][$i] ?? '') === $t) selected @endif>{{ $t }}</option>
-                                    @endforeach
+                                    <optgroup label="{{ __('workflowpacks::messages.params') }}">
+                                        @foreach (\Modules\WorkflowPacks\Services\Pack\PackValidator::PARAM_TYPES as $t)
+                                            <option value="{{ $t }}" @if (($old['replace_type'][$i] ?? '') === $t) selected @endif>{{ $t }}</option>
+                                        @endforeach
+                                    </optgroup>
+                                    <optgroup label="{{ __('workflowpacks::messages.resources') }}">
+                                        @foreach (\Modules\WorkflowPacks\Services\Pack\PackValidator::RESOURCE_TYPES as $t)
+                                            @if (!in_array($t, \Modules\WorkflowPacks\Services\Pack\PackValidator::PARAM_TYPES, true))<option value="{{ $t }}" @if (($old['replace_type'][$i] ?? '') === $t) selected @endif>{{ $t }}</option>@endif
+                                        @endforeach
+                                    </optgroup>
                                 </select>
                             </td>
                         </tr>

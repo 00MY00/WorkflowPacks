@@ -1,129 +1,485 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "$id": "https://github.com/00MY00/WorkflowPacks/schema/freescout-workflow-pack.schema.json",
-    "title": "FreeScout Workflow Pack — schéma version 1",
-    "description": "Ensemble de règles du module Workflows de FreeScout, importable par le module Workflow Packs. Les types, opérateurs et valeurs des conditions et actions sont vérifiés à l'import contre le catalogue réel du module Workflows de l'instance (Gérer › Workflow Packs › Diagnostic). Les valeurs peuvent contenir {{mailbox.id}}, {{mailbox.email}}, {{mailbox.name}} et {{param.<clé>}}, remplacées à l'import (jamais évaluées).",
+    "title": "FreeScout Workflow Pack — schéma versions 1 et 2",
+    "description": "Ensemble de règles du module Workflows de FreeScout, importable par le module Workflow Packs. Les types, opérateurs et valeurs des conditions et actions sont vérifiés à l'import contre le catalogue réel du module Workflows de l'instance (Gérer › Workflow Packs › Diagnostic). Les valeurs peuvent contenir {{mailbox.id}}, {{mailbox.email}}, {{mailbox.name}} et {{param.<clé>}}, remplacées à l'import (jamais évaluées). Version 2 : sélecteurs de boîtes (« mailboxes », évalués localement à l'import), ressources logiques (« resources », {{resource.<clé>}}, associées à des éléments locaux par leur clé) et extensions « x-… » dans les règles (ex. x-visual), jamais compilées.",
     "type": "object",
-    "required": ["format", "version", "key", "name", "workflows"],
+    "required": [
+        "format",
+        "version",
+        "key",
+        "name",
+        "workflows"
+    ],
     "additionalProperties": false,
-    "patternProperties": { "^x-": {} },
+    "patternProperties": {
+        "^x-": {}
+    },
     "properties": {
-        "$schema": { "type": "string" },
-        "format": { "const": "freescout-workflow-pack" },
-        "version": { "const": 1, "description": "Version du schéma du fichier (pas la version du pack)." },
-        "key": { "$ref": "#/$defs/key", "description": "Identifiant stable du pack : sert à reconnaître ses règles lors des mises à jour." },
-        "name": { "type": "string", "minLength": 1, "maxLength": 191 },
-        "description": { "type": "string", "maxLength": 5000 },
-        "pack_version": { "type": "string", "maxLength": 50, "description": "Version du contenu du pack (ex. 1.2.0)." },
-        "requires": { "$ref": "#/$defs/requires", "description": "Modules requis par toutes les règles." },
+        "$schema": {
+            "type": "string"
+        },
+        "format": {
+            "const": "freescout-workflow-pack"
+        },
+        "version": {
+            "enum": [
+                1,
+                2
+            ],
+            "description": "Version du schéma du fichier (pas la version du pack). 2 : mailboxes, resources."
+        },
+        "key": {
+            "$ref": "#/$defs/key",
+            "description": "Identifiant stable du pack : sert à reconnaître ses règles lors des mises à jour."
+        },
+        "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 191
+        },
+        "description": {
+            "type": "string",
+            "maxLength": 5000
+        },
+        "pack_version": {
+            "type": "string",
+            "maxLength": 50,
+            "description": "Version du contenu du pack (ex. 1.2.0)."
+        },
+        "requires": {
+            "$ref": "#/$defs/requires",
+            "description": "Modules requis par toutes les règles."
+        },
         "params": {
             "type": "array",
             "maxItems": 50,
-            "items": { "$ref": "#/$defs/param" }
+            "items": {
+                "$ref": "#/$defs/param"
+            }
         },
         "workflows": {
             "type": "array",
             "minItems": 1,
             "maxItems": 200,
-            "items": { "$ref": "#/$defs/workflow" }
+            "items": {
+                "$ref": "#/$defs/workflow"
+            }
+        },
+        "mailboxes": {
+            "$ref": "#/$defs/selector",
+            "description": "v2 : boîtes visées par toutes les règles (intention portable)."
+        },
+        "resources": {
+            "type": "array",
+            "maxItems": 50,
+            "items": {
+                "$ref": "#/$defs/resource"
+            }
         }
     },
     "$defs": {
-        "key": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{0,99}$" },
+        "key": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9._-]{0,99}$"
+        },
         "requires": {
             "type": "array",
-            "items": { "type": "string", "pattern": "^[A-Za-z0-9_-]{1,50}$" },
+            "items": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_-]{1,50}$"
+            },
             "description": "Alias de modules FreeScout (ex. \"tags\"). Module inactif : règle bloquée, jamais modifiée pour la rendre importable."
         },
         "param": {
             "type": "object",
-            "required": ["key"],
+            "required": [
+                "key"
+            ],
             "additionalProperties": false,
             "properties": {
-                "key": { "type": "string", "pattern": "^[a-z][a-z0-9_]{0,49}$" },
-                "label": { "type": "string" },
-                "description": { "type": "string" },
-                "type": { "enum": ["string", "email", "integer", "user", "mailbox"], "default": "string", "description": "user / mailbox : identifiant local vérifié à l'import, sans valeur par défaut." },
-                "required": { "type": "boolean", "default": false },
-                "default": { "type": ["string", "integer"] },
-                "sensitive": { "type": "boolean", "default": false, "description": "Valeur jamais conservée par Workflow Packs ni exportée." }
+                "key": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9_]{0,49}$"
+                },
+                "label": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "type": {
+                    "enum": [
+                        "string",
+                        "email",
+                        "integer",
+                        "user",
+                        "mailbox"
+                    ],
+                    "default": "string",
+                    "description": "user / mailbox : identifiant local vérifié à l'import, sans valeur par défaut."
+                },
+                "required": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "default": {
+                    "type": [
+                        "string",
+                        "integer"
+                    ]
+                },
+                "sensitive": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Valeur jamais conservée par Workflow Packs ni exportée."
+                }
             }
         },
         "workflow": {
             "type": "object",
-            "required": ["key", "name", "actions"],
+            "required": [
+                "key",
+                "name",
+                "actions"
+            ],
             "additionalProperties": false,
             "properties": {
-                "key": { "$ref": "#/$defs/key", "description": "Identifiant stable de la règle dans le pack." },
-                "name": { "type": "string", "minLength": 1, "description": "75 caractères au plus après remplacement des variables (limite de Workflows), unique dans la boîte." },
-                "description": { "type": "string" },
-                "type": { "enum": ["automatic", "manual"], "default": "automatic" },
+                "key": {
+                    "$ref": "#/$defs/key",
+                    "description": "Identifiant stable de la règle dans le pack."
+                },
+                "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "75 caractères au plus après remplacement des variables (limite de Workflows), unique dans la boîte."
+                },
+                "description": {
+                    "type": "string"
+                },
+                "type": {
+                    "enum": [
+                        "automatic",
+                        "manual"
+                    ],
+                    "default": "automatic"
+                },
                 "settings": {
                     "type": "object",
                     "additionalProperties": false,
                     "properties": {
-                        "apply_to_prev": { "type": "boolean", "default": false, "description": "Appliquer aux conversations précédentes. Ignoré à l'import sauf option explicite." },
-                        "max_executions": { "type": "integer", "minimum": 1, "maximum": 1000, "default": 1 }
+                        "apply_to_prev": {
+                            "type": "boolean",
+                            "default": false,
+                            "description": "Appliquer aux conversations précédentes. Ignoré à l'import sauf option explicite."
+                        },
+                        "max_executions": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 1000,
+                            "default": 1
+                        }
                     }
                 },
-                "requires": { "$ref": "#/$defs/requires" },
-                "conditions": { "$ref": "#/$defs/conditions" },
+                "requires": {
+                    "$ref": "#/$defs/requires"
+                },
+                "conditions": {
+                    "$ref": "#/$defs/conditions"
+                },
                 "actions": {
                     "type": "array",
                     "minItems": 1,
                     "maxItems": 50,
-                    "items": { "$ref": "#/$defs/action" }
+                    "items": {
+                        "$ref": "#/$defs/action"
+                    }
+                },
+                "mailboxes": {
+                    "$ref": "#/$defs/selector",
+                    "description": "v2 : boîtes visées par cette règle (remplace le sélecteur du pack)."
                 }
             },
-            "if": { "properties": { "type": { "const": "manual" } }, "required": ["type"] },
-            "else": { "required": ["conditions"] }
+            "if": {
+                "properties": {
+                    "type": {
+                        "const": "manual"
+                    }
+                },
+                "required": [
+                    "type"
+                ]
+            },
+            "else": {
+                "required": [
+                    "conditions"
+                ]
+            },
+            "patternProperties": {
+                "^x-": {
+                    "description": "Extension d'outil (ex. x-visual : positions du Visual Builder), conservée, jamais compilée."
+                }
+            }
         },
         "conditions": {
             "description": "Seules les formes représentables par Workflows : {\"all\": [condition | {\"any\": [condition…]}…]} (ET de groupes OU) ou {\"any\": [condition…]} (un seul groupe OU).",
             "oneOf": [
                 {
                     "type": "object",
-                    "required": ["all"],
+                    "required": [
+                        "all"
+                    ],
                     "additionalProperties": false,
                     "properties": {
                         "all": {
                             "type": "array",
                             "minItems": 1,
                             "maxItems": 20,
-                            "items": { "oneOf": [{ "$ref": "#/$defs/condition" }, { "$ref": "#/$defs/anyGroup" }] }
+                            "items": {
+                                "oneOf": [
+                                    {
+                                        "$ref": "#/$defs/condition"
+                                    },
+                                    {
+                                        "$ref": "#/$defs/anyGroup"
+                                    }
+                                ]
+                            }
                         }
                     }
                 },
-                { "$ref": "#/$defs/anyGroup" }
+                {
+                    "$ref": "#/$defs/anyGroup"
+                }
             ]
         },
         "anyGroup": {
             "type": "object",
-            "required": ["any"],
+            "required": [
+                "any"
+            ],
             "additionalProperties": false,
             "properties": {
-                "any": { "type": "array", "minItems": 1, "maxItems": 50, "items": { "$ref": "#/$defs/condition" } }
+                "any": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 50,
+                    "items": {
+                        "$ref": "#/$defs/condition"
+                    }
+                }
             }
         },
         "condition": {
             "type": "object",
-            "required": ["type", "operator"],
+            "required": [
+                "type",
+                "operator"
+            ],
             "additionalProperties": false,
             "properties": {
-                "type": { "type": "string", "minLength": 1, "description": "Identifiant de Workflow::conditionsConfig() (ex. subject, customer_email, new_or_reply)." },
-                "operator": { "type": "string", "minLength": 1, "description": "Opérateur proposé pour ce type (ex. contains, equal, regex)." },
-                "value": { "description": "Avec l'opérateur regex : motif PCRE avec délimiteurs (ex. \"/facture/iu\") ; les variables y sont insérées comme texte littéral." }
+                "type": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Identifiant de Workflow::conditionsConfig() (ex. subject, customer_email, new_or_reply)."
+                },
+                "operator": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Opérateur proposé pour ce type (ex. contains, equal, regex)."
+                },
+                "value": {
+                    "description": "Avec l'opérateur regex : motif PCRE avec délimiteurs (ex. \"/facture/iu\") ; les variables y sont insérées comme texte littéral."
+                }
             }
         },
         "action": {
             "type": "object",
-            "required": ["type"],
+            "required": [
+                "type"
+            ],
             "additionalProperties": false,
             "properties": {
-                "type": { "type": "string", "minLength": 1, "description": "Identifiant de Workflow::actionsConfig() (ex. note, status, forward)." },
-                "operator": { "type": "string" },
-                "value": { "description": "Pour note, reply, email_customer et forward : objet (body, to, cc, bcc, subject), stocké en JSON par Workflows ; « body » est du HTML (variables échappées)." }
+                "type": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Identifiant de Workflow::actionsConfig() (ex. note, status, forward)."
+                },
+                "operator": {
+                    "type": "string"
+                },
+                "value": {
+                    "description": "Pour note, reply, email_customer et forward : objet (body, to, cc, bcc, subject), stocké en JSON par Workflows ; « body » est du HTML (variables échappées)."
+                }
+            }
+        },
+        "selector": {
+            "description": "Toutes les boîtes, ou les boîtes dont l'adresse / le nom répond à des critères (texte littéral, sans variable).",
+            "oneOf": [
+                {
+                    "type": "object",
+                    "required": [
+                        "select"
+                    ],
+                    "additionalProperties": false,
+                    "properties": {
+                        "select": {
+                            "const": "all"
+                        }
+                    }
+                },
+                {
+                    "type": "object",
+                    "required": [
+                        "select",
+                        "rules"
+                    ],
+                    "additionalProperties": false,
+                    "properties": {
+                        "select": {
+                            "const": "match"
+                        },
+                        "combine": {
+                            "enum": [
+                                "any",
+                                "all"
+                            ],
+                            "default": "any"
+                        },
+                        "rules": {
+                            "type": "array",
+                            "minItems": 1,
+                            "maxItems": 20,
+                            "items": {
+                                "type": "object",
+                                "required": [
+                                    "field",
+                                    "operator",
+                                    "value"
+                                ],
+                                "additionalProperties": false,
+                                "properties": {
+                                    "field": {
+                                        "enum": [
+                                            "email",
+                                            "name"
+                                        ]
+                                    },
+                                    "operator": {
+                                        "enum": [
+                                            "contains",
+                                            "not_contains",
+                                            "equal",
+                                            "not_equal",
+                                            "starts",
+                                            "ends"
+                                        ]
+                                    },
+                                    "value": {
+                                        "type": "string",
+                                        "minLength": 1,
+                                        "maxLength": 191,
+                                        "not": {
+                                            "pattern": "\\{\\{"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "resource": {
+            "type": "object",
+            "required": [
+                "key",
+                "type"
+            ],
+            "additionalProperties": false,
+            "properties": {
+                "key": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9][a-z0-9_-]{0,99}$",
+                    "description": "Identité de la ressource dans le pack (jamais le nom)."
+                },
+                "type": {
+                    "enum": [
+                        "mailbox",
+                        "user",
+                        "tag"
+                    ],
+                    "description": "tag : nécessite le module Tags."
+                },
+                "name": {
+                    "type": "string",
+                    "description": "Nom affiché, proposé comme suggestion (jamais utilisé pour associer)."
+                },
+                "description": {
+                    "type": "string"
+                },
+                "on_missing": {
+                    "enum": [
+                        "block",
+                        "ask",
+                        "create"
+                    ],
+                    "default": "ask",
+                    "description": "create : seulement pour un type dont la création est vérifiée (aucun pour l'instant : « ask » est appliqué)."
+                },
+                "use": {
+                    "enum": [
+                        "id",
+                        "name"
+                    ],
+                    "default": "id",
+                    "description": "Valeur insérée par {{resource.<clé>}} : identifiant local ou nom."
+                }
             }
         }
-    }
+    },
+    "allOf": [
+        {
+            "if": {
+                "properties": {
+                    "version": {
+                        "const": 1
+                    }
+                },
+                "required": [
+                    "version"
+                ]
+            },
+            "then": {
+                "not": {
+                    "anyOf": [
+                        {
+                            "required": [
+                                "mailboxes"
+                            ]
+                        },
+                        {
+                            "required": [
+                                "resources"
+                            ]
+                        },
+                        {
+                            "properties": {
+                                "workflows": {
+                                    "contains": {
+                                        "required": [
+                                            "mailboxes"
+                                        ]
+                                    }
+                                }
+                            },
+                            "required": [
+                                "workflows"
+                            ]
+                        }
+                    ]
+                }
+            }
+        }
+    ]
 }
