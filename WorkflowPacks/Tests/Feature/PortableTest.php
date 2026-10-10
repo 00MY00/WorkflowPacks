@@ -37,8 +37,8 @@ class PortableTest extends TestCase
         // step 2: the matching mailbox is ticked, the other one shown as not matching
         $page = $this->actingAs($admin)->post(route('workflowpacks.import.configure'), ['pack_json' => json_encode($pack)]);
         $page->assertStatus(200);
-        $this->assertSame(1, preg_match('/value="'.$a->id.'" checked/', $page->getContent()), 'matching mailbox ticked');
-        $this->assertSame(0, preg_match('/value="'.$b->id.'" checked/', $page->getContent()), 'other mailbox not ticked');
+        $this->assertSame(1, preg_match('/value="'.$a->id.'"\s+checked/', $page->getContent()), 'matching mailbox ticked');
+        $this->assertSame(0, preg_match('/value="'.$b->id.'"\s+checked/', $page->getContent()), 'other mailbox not ticked');
         $this->seeIn($page, '@example.com');
 
         // forced anyway: "outside the selector", nothing created there, no acknowledgement needed
