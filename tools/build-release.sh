@@ -11,7 +11,7 @@ STAGE="$(mktemp -d)"
 trap 'rm -rf "$STAGE"' EXIT
 
 version="$(sed -n 's/^[[:space:]]*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$ROOT/WorkflowPacks/module.json" | head -n 1)"
-script_version="$(sed -n 's/^SCRIPT_VERSION="\([^"]*\)"/\1/p' "$ROOT/install.sh")"
+script_version="$(sed -n 's/^SCRIPT_VERSION="\([^"]*\)".*/\1/p' "$ROOT/install.sh")"
 if [ "$version" != "$script_version" ]; then
     printf 'module.json (%s) et install.sh (%s) n'"'"'ont pas la même version.\n' "$version" "$script_version" >&2
     exit 1
