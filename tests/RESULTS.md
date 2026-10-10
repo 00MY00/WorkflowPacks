@@ -13,6 +13,23 @@ Date : 2026-10-10. Environnements Docker jetables, données de test uniquement (
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
 
+## Mise à jour directe vers la dernière version (`tests/update/run.sh`)
+
+Release v1.2.1 publiée sur GitHub, téléchargée par chaque scénario ; FreeScout officiel + MariaDB 10.11 + bouchon
+Workflows, avec les données de démonstration. **37 vérifications, 0 échec.**
+
+| Départ | Chemin | Résultat |
+|---|---|---|
+| 1.0.0 | `php artisan workflowpacks:update` | 1.2.1 installée, migration 1.2 faite, 1 pack / 8 liens / 8 règles conservés, check OK |
+| 1.1.0 | `php artisan workflowpacks:update` | idem |
+| 1.2.0 | bouton « Mettre à jour maintenant » puis `schedule:run` | demande traitée au passage suivant du planificateur, 1.2.1 installée, données conservées |
+| 1.0.0 | `install.sh` de la release | idem, aucun retour arrière |
+| 1.1.0 | nouvel `install.sh` (1.2.2) | archive de la release vérifiée (SHA-256), 1.2.1 installée, données conservées |
+
+Point relevé : le premier `schedule:run` peut rester occupé par la file d'e-mails de FreeScout (`queue:work`, qui ne
+s'arrête jamais). La mise à jour demandée part donc au passage suivant, une minute plus tard, comme sur un serveur
+réel.
+
 ## 1.2.0 — format v2 (sélecteurs, ressources)
 
 | Série | Résultat |

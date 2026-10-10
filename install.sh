@@ -15,7 +15,7 @@
 #
 set -Eeuo pipefail
 
-SCRIPT_VERSION="1.2.1"   # same as WorkflowPacks/module.json (checked by tools/build-release.sh)
+SCRIPT_VERSION="1.2.2"   # same as WorkflowPacks/module.json (checked by tools/build-release.sh)
 REPO_URL="${WP_REPO_URL:-https://github.com/00MY00/WorkflowPacks}"
 MODULE="WorkflowPacks"
 ALIAS="workflowpacks"
@@ -187,10 +187,25 @@ fetch_module() {
     WORK="$(mktemp -d)"
     local src="$SOURCE"
     if [ -z "$src" ]; then
-        src="$WORK/main.zip"
-        info "$(t "Téléchargement de ${REPO_URL} (branche main)…" "Downloading ${REPO_URL} (main branch)…")"
         if [ "$DRY_RUN" -eq 1 ]; then printf '  (dry-run) download\n'; return 0; fi
-        curl -fsSL "${REPO_URL}/archive/refs/heads/main.zip" -o "$src" || die "$(t "Téléchargement impossible." "Download failed.")"
+        # latest published release, checked against its SHA256SUMS (same source as the in-app update)
+        src="$WORK/WorkflowPacks.zip"
+        if curl -fsSL "${REPO_URL}/releases/latest/download/WorkflowPacks.zip" -o "$src" 2>>"$LOG" \
+            && curl -fsSL "${REPO_URL}/releases/latest/download/SHA256SUMS" -o "$WORK/SHA256SUMS" 2>>"$LOG"; then
+            info "$(t "Dernière version publiée téléchargée depuis ${REPO_URL}/releases." "Latest published release downloaded from ${REPO_URL}/releases.")"
+            local expected actual
+            expected="$(sed -n 's/^\([a-f0-9]\{64\}\)[[:space:]]\{1,\}\*\{0,1\}WorkflowPacks\.zip[[:space:]]*$/\1/p' "$WORK/SHA256SUMS" | head -n 1)"
+            actual="$(sha256sum "$src" | cut -d' ' -f1)"
+            if [ -z "$expected" ] || [ "$expected" != "$actual" ]; then
+                die "$(t "Empreinte SHA-256 de l'archive incorrecte : rien n'est installé." "Wrong SHA-256 of the archive: nothing is installed.")"
+            fi
+            ok "$(t "Empreinte SHA-256 vérifiée." "SHA-256 checked.")"
+        else
+            # no release published yet: current version of the main branch
+            src="$WORK/main.zip"
+            warn "$(t "Aucune version publiée : téléchargement de la branche main (sans fichier SHA256SUMS)." "No published release: downloading the main branch (no SHA256SUMS file).")"
+            curl -fsSL "${REPO_URL}/archive/refs/heads/main.zip" -o "$src" || die "$(t "Téléchargement impossible." "Download failed.")"
+        fi
     fi
     if [ -d "$src" ]; then
         if [ -f "$src/module.json" ]; then cp -a "$src" "$WORK/$MODULE"; else cp -a "$src/$MODULE" "$WORK/$MODULE"; fi

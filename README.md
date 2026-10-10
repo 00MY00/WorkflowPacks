@@ -240,6 +240,12 @@ les pages du module et dans les réglages.
 
 ![Réglages](docs/screenshots/reglages-mise-a-jour.png)
 
+Le bouton est traité par le planificateur de FreeScout (cron `schedule:run` chaque minute). Comptez **1 à 2
+minutes**, car le premier passage peut être occupé par la file d'e-mails de FreeScout.
+
+La mise à jour directe vers la dernière version est testée depuis 1.0.0, 1.1.0 et 1.2.0, par la commande, le bouton
+et `install.sh`. Ce test est relancé automatiquement après chaque release ; voir `tests/update/last-run.md`.
+
 Trois actions :
 
 - « Rechercher une mise à jour » ;
@@ -259,7 +265,7 @@ Déroulement d'une mise à jour :
 6. Si l'installation échoue ou si l'état est pire qu'avant, **retour arrière automatique** : migrations annulées,
    dossier et tables restaurés. Une version annulée n'est pas retentée automatiquement.
 
-Les numéros de version suivent `module.json` (actuellement **1.2.1**) ; voir [CHANGELOG.md](CHANGELOG.md).
+Les numéros de version suivent `module.json` (actuellement **1.2.2**) ; voir [CHANGELOG.md](CHANGELOG.md).
 
 ## Limites
 

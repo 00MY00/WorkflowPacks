@@ -28,7 +28,7 @@ jobs:
         run: php tests/unit/run.php
       - name: shellcheck
         if: matrix.php == '8.2'
-        run: shellcheck install.sh tools/build-release.sh tests/integration/run.sh
+        run: shellcheck install.sh tools/build-release.sh tests/integration/run.sh tests/update/run.sh
 
   schema:
     runs-on: ubuntu-24.04
@@ -67,3 +67,19 @@ jobs:
             dist/install.sh
             dist/module.json
             dist/SHA256SUMS
+
+  # After each release: update from older versions to the release just published (CLI, "Update now" button through
+  # the scheduler, install.sh), with checks of version, rollback, migrations, data kept (tests/update/run.sh)
+  update-e2e:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [release]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Update from older versions to the latest release
+        run: bash tests/update/run.sh
+      - name: Results
+        if: always()
+        run: cat tests/update/last-run.md

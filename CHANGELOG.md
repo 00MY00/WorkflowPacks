@@ -4,6 +4,18 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [1.2.2] - 2026-10-11
+
+### Modifié
+- `install.sh` installe la **dernière version publiée** (release GitHub), après vérification de son empreinte SHA-256,
+  comme la mise à jour intégrée. La branche `main` n'est utilisée que si aucune release n'existe.
+
+### Ajouté
+- Test de bout en bout de la mise à jour vers la dernière release (`tests/update/run.sh`), relancé automatiquement par
+  la CI après chaque release. Il part de 1.0.0, 1.1.0 et 1.2.0, et passe par la commande, le bouton « Mettre à jour
+  maintenant » (planificateur) et `install.sh`. Il vérifie la version installée, l'absence de retour arrière, les
+  migrations, les données conservées et la réponse HTTP. 37 vérifications sur 37 réussies.
+
 ## [1.2.1] - 2026-10-11
 
 ### Ajouté
