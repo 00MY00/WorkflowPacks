@@ -22,25 +22,11 @@
     </ul>
 
     <h4>{{ __('workflowpacks::messages.update') }}</h4>
+    @include('workflowpacks::partials.update_state', ['back' => ''])
     <p>
-        {{ __('workflowpacks::messages.update_installed') }} : <strong>{{ \Modules\WorkflowPacks\Services\Update\Updater::currentVersion() }}</strong>
-        @if (!empty($update['latest'])) — {{ __('workflowpacks::messages.update_latest') }} : <strong>{{ $update['latest'] }}</strong>@endif
-        — {{ __('workflowpacks::messages.update_state_'.$updateState) }}
-        @if (!empty($update['last_result']))<br><span class="wp-muted">{{ __('workflowpacks::messages.last_result') }} : {{ $update['last_result'] }} {{ $update['last_reason'] ?? '' }}</span>@endif
+        {{ __('workflowpacks::messages.auto_update') }} : <strong>{{ $autoUpdate ? 'ON' : 'OFF' }}</strong> —
+        <a href="{{ route('settings', ['section' => 'workflowpacks']) }}">{{ __('workflowpacks::messages.open_settings') }}</a>
     </p>
-    <div class="wp-toolbar">
-        <form method="POST" action="{{ route('workflowpacks.check_update') }}" class="wp-inline">{{ csrf_field() }}<button class="btn btn-default btn-sm">{{ __('workflowpacks::messages.check_update') }}</button></form>
-        @if ($updateState === 'available')
-            <form method="POST" action="{{ route('workflowpacks.update_now') }}" class="wp-inline">{{ csrf_field() }}<button class="btn btn-primary btn-sm">{{ __('workflowpacks::messages.update_now') }}</button></form>
-        @endif
-        <form method="POST" action="{{ route('workflowpacks.auto_update') }}" class="wp-inline">
-            {{ csrf_field() }}
-            <input type="hidden" name="enabled" value="{{ $autoUpdate ? 0 : 1 }}">
-            {{ __('workflowpacks::messages.auto_update') }} :
-            <strong>{{ $autoUpdate ? 'ON' : 'OFF' }}</strong>
-            <button class="btn btn-default btn-xs">{{ __('workflowpacks::messages.'.($autoUpdate ? 'disable' : 'enable')) }}</button>
-        </form>
-    </div>
 
     @if ($catalog)
         <h4 class="wp-section">{{ __('workflowpacks::messages.catalog') }}</h4>

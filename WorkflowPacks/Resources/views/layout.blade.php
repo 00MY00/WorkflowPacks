@@ -17,6 +17,7 @@
             <li class="{{ Route::is('workflowpacks.export*') ? 'active' : '' }}"><a href="{{ route('workflowpacks.export') }}">{{ __('workflowpacks::messages.export') }}</a></li>
             @if (Auth::user()->isAdmin())
                 <li class="{{ Route::is('workflowpacks.diagnostic') ? 'active' : '' }}"><a href="{{ route('workflowpacks.diagnostic') }}">{{ __('workflowpacks::messages.diagnostic') }}</a></li>
+                <li><a href="{{ route('settings', ['section' => 'workflowpacks']) }}">{{ __('workflowpacks::messages.settings') }}</a></li>
             @endif
         </ul>
     </div>
