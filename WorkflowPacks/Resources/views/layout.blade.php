@@ -13,8 +13,8 @@
         <h1>{{ __('workflowpacks::messages.title') }}</h1>
         <ul class="nav nav-tabs wp-tabs">
             <li class="{{ Route::is('workflowpacks.index') ? 'active' : '' }}"><a href="{{ route('workflowpacks.index') }}">{{ __('workflowpacks::messages.menu') }}</a></li>
-            <li class="{{ Route::is('workflowpacks.graph') ? 'active' : '' }}"><a href="{{ route('workflowpacks.graph') }}">{{ __('workflowpacks::graph.title') }}</a></li>
             <li class="{{ Route::is('workflowpacks.import*') || Route::is('workflowpacks.reimport') ? 'active' : '' }}"><a href="{{ route('workflowpacks.import') }}">{{ __('workflowpacks::messages.import') }}</a></li>
+            <li class="{{ Route::is('workflowpacks.graph') ? 'active' : '' }}"><a href="{{ route('workflowpacks.graph') }}">{{ __('workflowpacks::graph.title') }}</a></li>
             <li class="{{ Route::is('workflowpacks.export*') ? 'active' : '' }}"><a href="{{ route('workflowpacks.export') }}">{{ __('workflowpacks::messages.export') }}</a></li>
             @if (Auth::user()->isAdmin())
                 <li class="{{ Route::is('workflowpacks.diagnostic') ? 'active' : '' }}"><a href="{{ route('workflowpacks.diagnostic') }}">{{ __('workflowpacks::messages.diagnostic') }}</a></li>
