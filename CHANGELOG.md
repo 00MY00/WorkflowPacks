@@ -4,6 +4,15 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [1.3.1] - 2026-10-12
+
+### Modifié
+- Le bouton **Mettre à jour maintenant** est toujours affiché dans Gérer › Paramètres › Workflow Packs et sur la page
+  Diagnostic. Avant, il n'apparaissait que si la dernière recherche avait trouvé une version plus récente : si cette
+  recherche datait d'avant une publication, seul « Rechercher une mise à jour » était visible. La mise à jour vérifie
+  d'abord GitHub et ne fait rien si la version installée est déjà la dernière. Le bouton est mis en avant quand une
+  version plus récente est connue, et désactivé pendant une mise à jour.
+
 ## [1.3.0] - 2026-10-12
 
 ### Ajouté

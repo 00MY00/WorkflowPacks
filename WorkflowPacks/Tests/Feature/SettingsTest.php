@@ -42,14 +42,14 @@ class SettingsTest extends TestCase
         parent::tearDown();
     }
 
-    public function testUpdateNowButtonOnlyWhenANewVersionIsAvailable()
+    public function testUpdateNowButtonIsAlwaysThereAndTheBannerOnlyWhenANewVersionIsKnown()
     {
         $admin = $this->user([], true);
 
-        // up to date: no "Update now", no banner
+        // up to date (or last check older than the release): "Update now" still offered, no banner
         $this->latest(Updater::currentVersion());
         $page = $this->actingAs($admin)->get(route('settings', ['section' => 'workflowpacks']));
-        $this->assertStringNotContainsString(route('workflowpacks.update_now'), $page->getContent());
+        $this->seeIn($page, route('workflowpacks.update_now'));
         $this->assertStringNotContainsString('wp-update-banner', $this->actingAs($admin)->get(route('workflowpacks.index'))->getContent());
 
         // newer version: banner + button on the settings page and on the module pages
