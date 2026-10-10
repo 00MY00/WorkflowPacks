@@ -46,19 +46,19 @@ class DiagnosticController extends Controller
     {
         Updater::setEnabled((bool) $request->input('enabled'));
 
-        return redirect()->route('workflowpacks.diagnostic')->with('flash_success_floating', $request->input('enabled')
+        return $this->back($request)->with('flash_success_floating', $request->input('enabled')
             ? __('workflowpacks::messages.auto_update_on') : __('workflowpacks::messages.auto_update_off'));
     }
 
     /** Runs from the scheduler within a minute (never inside a web request). */
-    public function updateNow()
+    public function updateNow(Request $request)
     {
         Updater::requestUpdate();
 
-        return redirect()->route('workflowpacks.diagnostic')->with('flash_success_floating', __('workflowpacks::messages.update_requested'));
+        return $this->back($request)->with('flash_success_floating', __('workflowpacks::messages.update_requested'));
     }
 
-    public function checkUpdate()
+    public function checkUpdate(Request $request)
     {
         try {
             $info = (new Updater())->setTimeout(15)->check();
@@ -66,9 +66,17 @@ class DiagnosticController extends Controller
                 ? __('workflowpacks::messages.update_available', ['version' => $info['latest']])
                 : __('workflowpacks::messages.up_to_date', ['version' => $info['current']]);
 
-            return redirect()->route('workflowpacks.diagnostic')->with('flash_success_floating', $message);
+            return $this->back($request)->with('flash_success_floating', $message);
         } catch (\Throwable $e) {
-            return redirect()->route('workflowpacks.diagnostic')->with('flash_error_floating', __('workflowpacks::messages.update_check_failed'));
+            return $this->back($request)->with('flash_error_floating', __('workflowpacks::messages.update_check_failed'));
         }
+    }
+
+    /** Back to Manage › Settings › Workflow Packs when the button was there, else to the diagnostic page. */
+    protected function back(Request $request)
+    {
+        return $request->input('back') === 'settings'
+            ? redirect()->route('settings', ['section' => 'workflowpacks'])
+            : redirect()->route('workflowpacks.diagnostic');
     }
 }

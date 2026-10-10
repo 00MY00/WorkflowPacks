@@ -48,6 +48,33 @@ class WorkflowPacksServiceProvider extends ServiceProvider
         $this->registerMenus();
         $this->registerPhoneMenu();
         $this->registerSchedule();
+        $this->registerSettings();
+    }
+
+    /**
+     * Manage › Settings › Workflow Packs (administrators): module update options. Same filters as RefreshGlobal and
+     * Refresh: "settings.sections", "settings.section_settings" (the keys FreeScout saves itself in its options
+     * table, SettingsController::processSave) and "settings.view".
+     */
+    protected function registerSettings()
+    {
+        \Eventy::addFilter('settings.sections', function ($sections) {
+            $sections[self::ALIAS] = ['title' => 'Workflow Packs', 'icon' => 'transfer', 'order' => 170];
+
+            return $sections;
+        }, 40);
+        \Eventy::addFilter('settings.section_settings', function ($settings, $section) {
+            if ($section !== self::ALIAS) {
+                return $settings;
+            }
+
+            return array_merge($settings, [
+                \Modules\WorkflowPacks\Services\Update\Updater::OPTION => \Modules\WorkflowPacks\Services\Update\Updater::enabled(),
+            ]);
+        }, 20, 2);
+        \Eventy::addFilter('settings.view', function ($view, $section) {
+            return $section === self::ALIAS ? 'workflowpacks::settings' : $view;
+        }, 20, 2);
     }
 
     /**

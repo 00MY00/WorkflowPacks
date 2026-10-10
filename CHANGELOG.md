@@ -22,6 +22,10 @@ indépendante (champ `version`, actuellement 1).
   ressource (« nouvelle ressource… »).
 - Pack de démonstration `demo-portable-v2.json`. Schéma JSON étendu à la v2 (les clés v2 sont refusées en v1).
 - Documentation : `docs/format.md` (v2), `docs/resources.md`, `docs/visual-builder-architecture.md`.
+- Section **Gérer › Paramètres › Workflow Packs**, présentée comme RefreshGlobal :
+  - « Mise à jour automatique » : interrupteur, enregistré par FreeScout ;
+  - « Mise à jour du module » : version, état, « Rechercher une mise à jour », « Mettre à jour maintenant ».
+  Le même bloc est sur la page Diagnostic, et un onglet « Réglages » est ajouté dans le module.
 
 ## [1.1.0] - 2026-10-10
 

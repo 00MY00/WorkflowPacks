@@ -228,7 +228,13 @@ publique analysée ne contient pas : pour classer par étiquettes, consultez le 
 
 ## Mise à jour du module
 
-Les mises à jour se font depuis **Gérer › Workflow Packs › Diagnostic** (réservé aux administrateurs). Trois actions :
+Les mises à jour se font depuis **Gérer › Paramètres › Workflow Packs**, réservé aux administrateurs. La page a la même
+présentation que RefreshGlobal :
+
+- la section « Mise à jour automatique » avec son interrupteur et le bouton Enregistrer ;
+- la section « Mise à jour du module » avec la version, l'état et les boutons.
+
+Le même bloc apparaît dans **Diagnostic**. Trois actions :
 
 - « Rechercher une mise à jour » ;
 - « Mettre à jour maintenant » : exécuté par le planificateur de FreeScout dans la minute, jamais pendant une requête
