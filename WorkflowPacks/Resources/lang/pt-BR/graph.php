@@ -131,4 +131,5 @@ return [
     'saved_rule'       => 'Regra salva.',
     'saved_pack_modified' => 'Regra salva (agora "modificada localmente" em relação ao pack).',
     'no_mailbox'       => 'Nenhuma caixa disponível.',
+    'kind_dest_imap' => 'Pasta de e-mail (servidor IMAP)',
 ];

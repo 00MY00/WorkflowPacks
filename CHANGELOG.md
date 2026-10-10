@@ -4,6 +4,41 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [1.4.0] - 2026-10-13
+
+### Ajouté
+- **Rangement des e-mails dans des dossiers de la boîte e-mail** (option désactivée par défaut, Gérer › Paramètres ›
+  Workflow Packs), détaillé dans [docs/dossiers-email.md](docs/dossiers-email.md).
+  - Nouvelle action Workflows **« Ranger dans un dossier e-mail [WP] »**, par exemple `Factures/Fournisseurs`, avec
+    les variables des packs. L'e-mail reçu est déplacé sur le serveur IMAP dans `[WP] Factures/Fournisseurs`, et les
+    dossiers manquants sont créés. Le ticket FreeScout ne change pas.
+  - Préfixe réglable (`[WP]` par défaut). Le module ne crée et ne remplit que des dossiers portant ce préfixe, et ne
+    supprime jamais rien.
+  - Fonctionnement :
+    - ajout par les filtres d'extension de Workflows, sans modifier Workflows ;
+    - déplacement en file d'attente FreeScout, avec 3 tentatives ;
+    - client IMAP de FreeScout (OAuth compris), e-mail retrouvé par son Message-ID ;
+    - délimiteur `/` ou `.` détecté, espace de noms `INBOX` pris en charge, noms accentués (UTF-7 IMAP) ;
+    - commande `MOVE`, ou copie puis original marqué supprimé, sans purge des autres messages ;
+    - garde-fous : dossier cible vérifié (préfixe), e-mail déjà rangé laissé tel quel (pas de doublon), dossier créé
+      entre-temps réutilisé, nouveaux dossiers abonnés, nouvelle tentative seulement sur erreur temporaire.
+  - Import : règle bloquée avec un message clair si l'option est désactivée, et noms de dossier contrôlés.
+  - Schéma : le dossier e-mail apparaît comme une destination.
+  - 7 langues.
+- Tests d'intégration avec un vrai serveur IMAP (GreenMail) : création de dossiers imbriqués, déplacement, e-mail déjà
+  rangé ou introuvable, accents, option désactivée, réglages et filtres Workflows.
+
+## [1.3.1] - 2026-10-12
+
+### Modifié
+- Le bouton **Mettre à jour maintenant** est toujours affiché dans Gérer › Paramètres › Workflow Packs et sur la page
+  Diagnostic. Avant, il n'apparaissait que si la dernière recherche avait trouvé une version plus récente : si cette
+  recherche datait d'avant une publication, seul « Rechercher une mise à jour » était visible. La mise à jour vérifie
+  d'abord GitHub et ne fait rien si la version installée est déjà la dernière. Le bouton est mis en avant quand une
+  version plus récente est connue, et désactivé pendant une mise à jour.
+- `install.sh` enregistre la dernière version publiée à la fin de l'installation : la page des réglages affiche « À
+  jour » au lieu de « Pas encore vérifié ».
+
 ## [1.3.0] - 2026-10-12
 
 ### Ajouté

@@ -131,4 +131,5 @@ return [
     'saved_rule'       => 'Regla guardada.',
     'saved_pack_modified' => 'Regla guardada (ahora «modificada localmente» respecto al pack).',
     'no_mailbox'       => 'Ningún buzón disponible.',
+    'kind_dest_imap' => 'Carpeta de correo (servidor IMAP)',
 ];

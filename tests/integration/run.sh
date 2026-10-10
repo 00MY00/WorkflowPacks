@@ -6,7 +6,8 @@
 #   FREESCOUT_SRC=/path/to/freescout bash tests/integration/run.sh   # or FREESCOUT_REF=<tag or branch>
 #
 # The official Workflows module is paid and is NOT used here: tests/stubs/Workflows (test stub reproducing its public
-# interface) is installed instead. Only test data is created (addresses in .test); the containers are removed at the end.
+# interface) is installed instead. A GreenMail container is the IMAP server of the "file into an e-mail folder" tests.
+# Only test data is created (addresses in .test); the containers are removed at the end.
 #
 set -Eeuo pipefail
 
@@ -20,10 +21,12 @@ IMAGE="wp-freescout-test"
 NET="wptest"
 DB="wp-test-db"
 APP="wp-test-app"
+MAIL="wp-test-mail"   # IMAP test server (GreenMail) for the "file into an e-mail folder" action
+MAIL_IMAGE="greenmail/standalone:2.1.13"
 PHPUNIT_URL="https://phar.phpunit.de/phpunit-11.phar"
 
 log() { printf '\n== %s\n' "$*" >&2; }
-cleanup() { docker rm -f "$APP" "$DB" >/dev/null 2>&1 || true; docker network rm "$NET" >/dev/null 2>&1 || true; }
+cleanup() { docker rm -f "$APP" "$DB" "$MAIL" >/dev/null 2>&1 || true; docker network rm "$NET" >/dev/null 2>&1 || true; }
 trap '[ -n "${KEEP:-}" ] || cleanup' EXIT   # KEEP=1: leave the containers running (debugging)
 
 # On failure: state of the containers and the useful logs, so that the CI log shows the cause directly
@@ -50,6 +53,7 @@ docker run -d --name "$DB" --network "$NET" \
     -e MARIADB_ROOT_PASSWORD=test-root -e MARIADB_DATABASE=freescout -e MARIADB_USER=freescout -e MARIADB_PASSWORD=test-only \
     mariadb:10.11 --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci >/dev/null
 docker run -d --name "$APP" --network "$NET" "$IMAGE" >/dev/null
+docker run -d --name "$MAIL" --network "$NET" "$MAIL_IMAGE" >/dev/null
 
 log "FreeScout + modules"
 if [ -n "${FREESCOUT_SRC:-}" ]; then
@@ -98,7 +102,7 @@ docker exec -u www-data -w /var/www/html "$APP" php artisan workflowpacks:check 
 log "PHPUnit"
 docker exec "$APP" sh -c "curl -sSL -o /tmp/phpunit.phar $PHPUNIT_URL"
 set +e
-docker exec -u www-data -w /var/www/html "$APP" php /tmp/phpunit.phar -c Modules/WorkflowPacks/Tests/phpunit.xml --do-not-cache-result --testdox "$@"
+docker exec -u www-data -w /var/www/html -e WP_TEST_IMAP_HOST="$MAIL" "$APP" php /tmp/phpunit.phar -c Modules/WorkflowPacks/Tests/phpunit.xml --do-not-cache-result --testdox "$@"
 code=$?
 set -e
 [ "$code" -eq 0 ] || debug

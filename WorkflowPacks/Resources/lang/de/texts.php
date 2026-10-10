@@ -187,4 +187,9 @@ return [
     'graph_incomplete'         => 'die Regel ist unvollständig (mindestens eine Bedingung und eine Aktion): vervollständigen Sie sie vor dem Aktivieren.',
     'graph_same_mailbox'       => 'die Regel ist bereits in diesem Postfach.',
     'graph_not_applicable'     => 'die Regel des Packs kann nicht auf dieses Postfach angewendet werden (:status).',
+    'imap_disabled'            => 'die Aktion „In einen E-Mail-Ordner ablegen“ ist aus: aktivieren Sie sie unter Verwalten › Einstellungen › Workflow Packs.',
+    'imap_folder_empty'        => 'E-Mail-Ordner: leerer Name.',
+    'imap_folder_chars'        => 'E-Mail-Ordner: unzulässige Zeichen (* % " oder Steuerzeichen, oder Name beginnt mit einem Punkt).',
+    'imap_folder_long'         => 'E-Mail-Ordner: Name zu lang (höchstens 60 Zeichen pro Ebene).',
+    'imap_folder_deep'         => 'E-Mail-Ordner: höchstens 4 Ebenen („A/B/C/D“).',
 ];

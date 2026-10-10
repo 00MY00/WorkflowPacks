@@ -207,4 +207,9 @@ return [
     'graph_incomplete'         => 'la règle est incomplète (au moins une condition et une action) : complétez-la avant de l’activer.',
     'graph_same_mailbox'       => 'la règle est déjà dans cette boîte.',
     'graph_not_applicable'     => 'la règle du pack ne peut pas être appliquée à cette boîte (:status).',
+    'imap_disabled'            => 'l\'action « Ranger dans un dossier e-mail » est désactivée : activez-la dans Gérer › Paramètres › Workflow Packs.',
+    'imap_folder_empty'        => 'dossier e-mail : nom vide.',
+    'imap_folder_chars'        => 'dossier e-mail : caractères interdits (* % " ou contrôle, ou nom commençant par un point).',
+    'imap_folder_long'         => 'dossier e-mail : nom trop long (60 caractères au plus par niveau).',
+    'imap_folder_deep'         => 'dossier e-mail : 4 niveaux au plus (« A/B/C/D »).',
 ];

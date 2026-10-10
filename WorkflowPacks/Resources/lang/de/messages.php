@@ -209,4 +209,12 @@ return [
     'dest_assigned'            => 'zugewiesen an',
     'dest_other_mailbox'       => 'anderes Postfach',
     'dest_tag'                 => 'Tag',
+    'imap_group'               => 'Workflow Packs',
+    'imap_action'              => 'In einen E-Mail-Ordner ablegen :prefix',
+    'imap_title'               => 'Ablage in E-Mail-Ordnern',
+    'imap_label'               => 'Aktion „In einen E-Mail-Ordner ablegen“',
+    'imap_help'                => 'Fügt den Workflows-Regeln eine Aktion hinzu, die die empfangene E-Mail in einen Ordner des E-Mail-Kontos (IMAP-Server) verschiebt, zum Beispiel „Rechnungen/Lieferanten“. Fehlende Ordner werden angelegt, immer unter dem Präfix. Das Ticket in FreeScout ändert sich nicht. Standardmäßig aus.',
+    'imap_prefix_label'        => 'Ordner-Präfix',
+    'imap_prefix_help'         => 'Wird jedem angelegten Ordner vorangestellt („[WP] Rechnungen“), um zu zeigen, dass Workflow Packs ihn verwaltet. Das Modul legt außerhalb dieser Ordner nichts an und verschiebt nichts.',
+    'dest_imap'                => 'E-Mail-Ordner',
 ];

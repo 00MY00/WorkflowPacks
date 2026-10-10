@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 1.3.0
+# Résultats des tests — Workflow Packs 1.4.0
 
 Date : 2026-10-10. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,16 @@ Date : 2026-10-10. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 1.4.0 — rangement dans les dossiers e-mail (IMAP)
+
+| Série | Résultat |
+|---|---|
+| Unitaires (`php tests/unit/run.php`, PHP 8.4.26 local) | **41 tests, 4 035 assertions, 0 échec**. `ImapFolderTest` (4) : chemin → niveaux sous le préfixe (délimiteurs `/` et `.`, espace de noms `INBOX`), noms refusés (vide, `*`, `%`, `"`, `\`, contrôle, point initial, longueur, profondeur), préfixe nettoyé, action compilée avec variables, message clair si l'option est désactivée |
+| Intégration (Docker local : FreeScout 1.8.247 + MariaDB 10.11 + bouchon Workflows + **GreenMail 2.1.13**, PHP 8.2.34) | **52 tests, 369 assertions, 0 échec**. `ImapFolderTest` (8) : action présente dans le catalogue seulement si l'option est activée, validation par `workflow.validate_action` ; réglages enregistrés par FreeScout ; `workflow.perform_action` met en file le dernier e-mail du client ; **sur le serveur IMAP** : `[WP] Factures` et `[WP] Factures.Fournisseurs` créés, e-mail déplacé (commande `MOVE`), les autres e-mails restent dans la boîte de réception, deuxième passage « déjà rangé » ; noms accentués (UTF-7 IMAP) ; e-mail introuvable ; dossier déjà créé réutilisé et nouveaux dossiers abonnés (`LSUB`) ; valeurs invalides jamais envoyées au serveur, sans nouvelle tentative ; boîte sans IMAP : rien en file ; option désactivée avant l'exécution : rien n'est créé ni déplacé |
+
+À vérifier sur une vraie instance : l'appel de l'action par le module Workflows officiel (filtre `workflow.perform_action`,
+vu dans sa copie publique) et le serveur IMAP réel (Gmail, Microsoft 365, Dovecot…).
 
 ## 1.3.0 — schéma réseau
 

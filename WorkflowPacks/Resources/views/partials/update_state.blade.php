@@ -1,6 +1,7 @@
 {{--
     Version and update state, same block on Manage › Settings › Workflow Packs and on the diagnostic page.
     States (Updater::state()): running | requested | available | up_to_date | unknown. Parameter: back ('settings' or '').
+    "Update now" is always there (highlighted when a newer version is known), disabled while an update is pending.
     Works on FreeScout's settings page too, where the module's stylesheet is not loaded (Bootstrap classes only).
 --}}
 @php
@@ -45,9 +46,8 @@
         {{ csrf_field() }}
         @if (!empty($back))<input type="hidden" name="back" value="{{ $back }}">@endif
         <button type="submit" class="btn btn-default btn-sm" @if ($wp_busy) disabled @endif><i class="glyphicon glyphicon-search"></i> {{ __('workflowpacks::messages.check_update') }}</button>
-        @if ($wp_state === 'available')
-            <button type="submit" formaction="{{ route('workflowpacks.update_now') }}" class="btn btn-sm btn-primary"><i class="glyphicon glyphicon-download-alt"></i> {{ __('workflowpacks::messages.update_now') }}</button>
-        @endif
+        {{-- always offered: the update checks GitHub first and does nothing when the installed version is the latest --}}
+        <button type="submit" formaction="{{ route('workflowpacks.update_now') }}" class="btn btn-sm {{ $wp_state === 'available' ? 'btn-primary' : 'btn-default' }}" @if ($wp_busy) disabled @endif><i class="glyphicon glyphicon-download-alt"></i> {{ __('workflowpacks::messages.update_now') }}</button>
     </form>
     <p class="form-help text-muted">{{ __('workflowpacks::messages.update_help') }}</p>
 </div>

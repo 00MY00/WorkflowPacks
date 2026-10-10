@@ -187,4 +187,9 @@ return [
     'graph_incomplete'         => 'la regla está incompleta (al menos una condición y una acción): complétela antes de activarla.',
     'graph_same_mailbox'       => 'la regla ya está en este buzón.',
     'graph_not_applicable'     => 'la regla del pack no se puede aplicar a este buzón (:status).',
+    'imap_disabled'            => 'la acción «Archivar en una carpeta de correo» está desactivada: actívela en Gestionar › Ajustes › Workflow Packs.',
+    'imap_folder_empty'        => 'carpeta de correo: nombre vacío.',
+    'imap_folder_chars'        => 'carpeta de correo: caracteres prohibidos (* % " o de control, o nombre que empieza por un punto).',
+    'imap_folder_long'         => 'carpeta de correo: nombre demasiado largo (60 caracteres como máximo por nivel).',
+    'imap_folder_deep'         => 'carpeta de correo: 4 niveles como máximo («A/B/C/D»).',
 ];

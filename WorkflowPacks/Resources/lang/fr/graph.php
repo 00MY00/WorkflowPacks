@@ -132,4 +132,5 @@ return [
     'saved_rule'       => 'Règle enregistrée.',
     'saved_pack_modified' => 'Règle enregistrée (désormais « modifiée localement » par rapport au pack).',
     'no_mailbox'       => 'Aucune boîte disponible.',
+    'kind_dest_imap' => 'Dossier e-mail (serveur IMAP)',
 ];

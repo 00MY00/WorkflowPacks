@@ -3,7 +3,7 @@
   --g-bg: var(--fd-bg, #f6f7fb); --g-card: #fff; --g-border: var(--fd-border, #e3e7ee); --g-text: var(--fd-text, #1e293b);
   --g-muted: var(--fd-muted, #8a94a6); --g-brand: var(--fd-primary, #4f46e5);
   --c-mailbox: #2563eb; --c-rule: #7c3aed; --c-local: #0891b2; --c-pack: #d97706; --c-dest: #059669;
-  --c-closed: #16a34a; --c-pending: #f59e0b; --c-spam: #dc2626; --c-deleted: #64748b; --c-person: #db2777; --c-tag: #0d9488;
+  --c-closed: #16a34a; --c-pending: #f59e0b; --c-spam: #dc2626; --c-deleted: #64748b; --c-person: #db2777; --c-tag: #0d9488; --c-imap: #4f46e5;
   --c-ok: #16a34a; --c-warn: #f59e0b; --c-err: #dc2626;
   position: relative; color: var(--g-text); font-family: var(--fd-font, inherit);
 }
@@ -56,6 +56,7 @@
 .wpg-node.dest-person { --c: var(--c-person); }
 .wpg-node.dest-tag { --c: var(--c-tag); }
 .wpg-node.dest-mailbox { --c: var(--c-mailbox); }
+.wpg-node.dest-imap { --c: var(--c-imap); }
 .wpg-box { fill: var(--g-card); stroke: var(--g-border); stroke-width: 1.2; filter: drop-shadow(0 1px 2px rgba(15, 23, 42, .08)); }
 .wpg-node.kind-dest .wpg-box, .wpg-node.kind-pack .wpg-box { stroke-dasharray: 0; }
 .wpg-stripe { fill: var(--c); }

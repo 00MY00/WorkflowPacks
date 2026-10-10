@@ -187,4 +187,9 @@ return [
     'graph_incomplete'         => 'de regel is onvolledig (minstens één voorwaarde en één actie): vul hem aan voor u hem inschakelt.',
     'graph_same_mailbox'       => 'de regel staat al in deze mailbox.',
     'graph_not_applicable'     => 'de regel van het pack kan niet op deze mailbox worden toegepast (:status).',
+    'imap_disabled'            => 'de actie "Opbergen in een e-mailmap" staat uit: schakel haar in via Beheren › Instellingen › Workflow Packs.',
+    'imap_folder_empty'        => 'e-mailmap: lege naam.',
+    'imap_folder_chars'        => 'e-mailmap: verboden tekens (* % " of stuurtekens, of een naam die met een punt begint).',
+    'imap_folder_long'         => 'e-mailmap: naam te lang (hoogstens 60 tekens per niveau).',
+    'imap_folder_deep'         => 'e-mailmap: hoogstens 4 niveaus ("A/B/C/D").',
 ];

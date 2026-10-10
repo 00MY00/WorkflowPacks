@@ -217,4 +217,12 @@ return [
     'dest_assigned'            => 'assignée à',
     'dest_other_mailbox'       => 'autre boîte',
     'dest_tag'                 => 'étiquette',
+    'imap_group'               => 'Workflow Packs',
+    'imap_action'              => 'Ranger dans un dossier e-mail :prefix',
+    'imap_title'               => 'Rangement dans les dossiers e-mail',
+    'imap_label'               => 'Action « Ranger dans un dossier e-mail »',
+    'imap_help'                => 'Ajoute aux règles Workflows une action qui déplace l\'e-mail reçu dans un dossier de la boîte e-mail (serveur IMAP), par exemple « Factures/Fournisseurs ». Le dossier est créé s\'il n\'existe pas, toujours sous le préfixe. Le ticket dans FreeScout ne change pas. Désactivé par défaut.',
+    'imap_prefix_label'        => 'Préfixe des dossiers',
+    'imap_prefix_help'         => 'Ajouté devant chaque dossier créé (« [WP] Factures ») pour montrer qu\'il est géré par Workflow Packs. Le module ne crée ni ne déplace rien en dehors de ces dossiers.',
+    'dest_imap'                => 'dossier e-mail',
 ];

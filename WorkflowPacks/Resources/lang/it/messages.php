@@ -209,4 +209,12 @@ return [
     'dest_assigned'            => 'assegnata a',
     'dest_other_mailbox'       => 'altra casella',
     'dest_tag'                 => 'etichetta',
+    'imap_group'               => 'Workflow Packs',
+    'imap_action'              => 'Archivia in una cartella e-mail :prefix',
+    'imap_title'               => 'Archiviazione nelle cartelle e-mail',
+    'imap_label'               => 'Azione «Archivia in una cartella e-mail»',
+    'imap_help'                => 'Aggiunge alle regole di Workflows un’azione che sposta l’e-mail ricevuta in una cartella dell’account e-mail (server IMAP), per esempio «Fatture/Fornitori». La cartella viene creata se manca, sempre sotto il prefisso. Il ticket in FreeScout non cambia. Disattivato per impostazione predefinita.',
+    'imap_prefix_label'        => 'Prefisso delle cartelle',
+    'imap_prefix_help'         => 'Aggiunto davanti a ogni cartella creata («[WP] Fatture») per mostrare che è gestita da Workflow Packs. Il modulo non crea né sposta nulla fuori da queste cartelle.',
+    'dest_imap'                => 'cartella e-mail',
 ];

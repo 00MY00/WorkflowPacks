@@ -131,4 +131,5 @@ return [
     'saved_rule'       => 'Regola salvata.',
     'saved_pack_modified' => 'Regola salvata (ora «modificata localmente» rispetto al pack).',
     'no_mailbox'       => 'Nessuna casella disponibile.',
+    'kind_dest_imap' => 'Cartella e-mail (server IMAP)',
 ];

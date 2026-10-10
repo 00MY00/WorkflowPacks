@@ -33,6 +33,31 @@
         </div>
     </div>
 
+    @php $wp_I = '\Modules\WorkflowPacks\Services\Imap\ImapFolders'; @endphp
+    <h3 class="subheader">{{ __('workflowpacks::messages.imap_title') }}</h3>
+    <div class="form-group">
+        <label for="wp-imap" class="col-sm-2 control-label">{{ __('workflowpacks::messages.imap_label') }}</label>
+        <div class="col-sm-6">
+            <input type="hidden" name="settings[{{ $wp_I::OPTION_ENABLED }}]" value="0">
+            <div class="controls">
+                <div class="onoffswitch-wrap">
+                    <div class="onoffswitch">
+                        <input type="checkbox" name="settings[{{ $wp_I::OPTION_ENABLED }}]" value="1" id="wp-imap" class="onoffswitch-checkbox" @if (!empty($settings[$wp_I::OPTION_ENABLED])) checked="checked" @endif>
+                        <label class="onoffswitch-label" for="wp-imap"></label>
+                    </div>
+                </div>
+            </div>
+            <p class="form-help">{{ __('workflowpacks::messages.imap_help') }}</p>
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="wp-imap-prefix" class="col-sm-2 control-label">{{ __('workflowpacks::messages.imap_prefix_label') }}</label>
+        <div class="col-sm-6">
+            <input type="text" name="settings[{{ $wp_I::OPTION_PREFIX }}]" id="wp-imap-prefix" class="form-control input-sized" maxlength="20" value="{{ $settings[$wp_I::OPTION_PREFIX] ?? $wp_I::prefix() }}">
+            <p class="form-help">{{ __('workflowpacks::messages.imap_prefix_help') }}</p>
+        </div>
+    </div>
+
     <div class="form-group">
         <div class="col-sm-6 col-sm-offset-2">
             <button type="submit" class="btn btn-primary">{{ __('workflowpacks::messages.save') }}</button>

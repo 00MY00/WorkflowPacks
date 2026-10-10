@@ -15,7 +15,7 @@
 #
 set -Eeuo pipefail
 
-SCRIPT_VERSION="1.3.0"   # same as WorkflowPacks/module.json (checked by tools/build-release.sh)
+SCRIPT_VERSION="1.4.0"   # same as WorkflowPacks/module.json (checked by tools/build-release.sh)
 REPO_URL="${WP_REPO_URL:-https://github.com/00MY00/WorkflowPacks}"
 MODULE="WorkflowPacks"
 ALIAS="workflowpacks"
@@ -258,6 +258,8 @@ verify() {
     else
         ok "$(t "Workflow Packs est opérationnel : menu Gérer › Workflow Packs." "Workflow Packs is ready: menu Manage › Workflow Packs.")"
     fi
+    # latest published version recorded now, so that the settings page shows "up to date" instead of "not checked yet"
+    (cd "$FS_PATH" && sudo -u "$WEB_USER" php artisan workflowpacks:update --check) >>"$LOG" 2>&1 || true
 }
 
 uninstall() {
