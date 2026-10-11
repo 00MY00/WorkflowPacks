@@ -103,27 +103,40 @@ Le délimiteur du serveur (`/` ou `.`) est détecté automatiquement. Les serveu
   Workflows officiel, payant, avec une action ajoutée par filtre suit sa copie publique analysée
   ([analyse.md](analyse.md)) : à vérifier sur ton instance avec une règle de test.
 
-## Ranger à nouveau les e-mails déjà rangés
+## Ranger les e-mails des tickets existants
 
-Des e-mails ont quitté leur dossier `[WP]` après coup, par exemple déplacés à la main, par un client e-mail ou par un
-filtre du serveur. Workflows ne relance pas une règle sur un ticket qu'elle a déjà traité. Pour remettre ces e-mails
-dans leur dossier :
+Une règle ne range que les tickets sur lesquels Workflows l'a exécutée. Les e-mails arrivés **avant** la règle, ou
+pendant qu'elle était **inactive**, restent donc où ils sont. Il en va de même pour ceux **déplacés après coup** (à
+la main, par un client e-mail, par un filtre du serveur). Workflows ne relance pas non plus une règle sur un ticket
+déjà traité, et la condition « Nouveau » n'est jamais vraie pour un ticket qui existe déjà, même avec « tickets
+existants ».
+
+Pour ranger ces e-mails :
 - dans la liste **Workflow Packs**, cocher les règles, puis **« Ranger à nouveau dans les dossiers e-mail »** ;
 - ou, dans le **schéma**, sélectionner les règles, puis clic droit › **« Ranger à nouveau dans les dossiers »** (aussi
   dans le panneau de la sélection).
 
-Ce qui se passe :
-- **Tickets repris :** ceux que la règle a déjà traités, connus par l'historique du module et, si Workflows la
-  garde, par sa table d'exécutions.
-- **Seul le rangement est refait.** Les autres actions de la règle (statut, assignation, transfert…) ne sont pas
-  relancées, et les compteurs de Workflows ne changent pas.
+« Tout sélectionner » est possible : les règles sans action « Ranger dans un dossier e-mail » sont simplement
+comptées et ignorées.
+
+Ce qui se passe, en arrière-plan, boîte par boîte (100 tickets à la fois) :
+- **Tickets pris :**
+  - ceux qui **remplissent les conditions** d'une règle, vérifiées par Workflows lui-même. La condition « Nouveau »
+    compte comme remplie, puisque chaque ticket a été nouveau un jour ; « Réponse » reste un événement ;
+  - ceux que la règle **a déjà traités** (exécutions gardées par Workflows, historique du module), même si ses
+    conditions ne correspondent plus, par exemple parce que la règle a fermé le ticket.
+- **Plusieurs règles pour un ticket :** la dernière dans l'ordre de Workflows l'emporte, comme quand elles
+  s'exécutent l'une après l'autre.
+- **Seul le rangement est fait.** Les autres actions des règles (statut, assignation, transfert…) ne sont pas
+  exécutées, et les compteurs de Workflows ne changent pas.
 - **Recherche de l'e-mail :**
   - déjà dans son dossier : « déjà rangé », rien ne bouge ;
   - sinon, il est cherché dans la boîte de réception, puis **dans les autres dossiers** du compte ;
   - **jamais dans la corbeille** : un e-mail supprimé reste supprimé (« introuvable »).
-- **Suivi dans l'onglet Historique :** chaque e-mail y apparaît avec « rangement relancé » et, s'il a été retrouvé
-  ailleurs, le dossier où il était.
-- **Volume :** 2000 tickets au plus par clic. S'il en reste, le message le dit : il suffit de relancer.
+- **Suivi dans l'onglet Historique :**
+  - une ligne par boîte montre l'avancement, puis le résultat (tickets examinés, e-mails envoyés au rangement,
+    ignorés) ;
+  - chaque e-mail a sa ligne « rangement relancé » et, s'il a été retrouvé ailleurs, le dossier où il était.
 
 ## Suivre ce qui se passe : l'onglet Historique
 

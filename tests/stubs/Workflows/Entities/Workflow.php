@@ -76,6 +76,49 @@ class Workflow extends Model
         return $user->isAdmin() || $user->hasPermission(self::PERM_EDIT_WORKFLOWS);
     }
 
+    /**
+     * Subset of the real checkConditions(): every AND group needs a true OR condition. Like the real module, "New /
+     * Reply / Moved" is only true for the event given in $action: without one (background processing) it is skipped.
+     */
+    public function checkConditions($conversation, $action = '')
+    {
+        foreach ((array) $this->conditions as $ands) {
+            $or_true = false;
+            foreach ((array) $ands as $row) {
+                $operator = $row['operator'] ?? '';
+                $value = (string) ($row['value'] ?? '');
+                switch ($row['type'] ?? '') {
+                    case 'subject':
+                        $text = mb_strtolower((string) $conversation->subject);
+                        $or_true = $operator === 'equal' ? $text === mb_strtolower($value) : mb_strpos($text, mb_strtolower($value)) !== false;
+                        break;
+                    case 'status':
+                        $or_true = ((string) $conversation->status === $value) === ($operator !== 'not_equal');
+                        break;
+                    case 'new_or_reply':
+                        if (!in_array($action, ['conversation.created_by_customer', 'conversation.created_by_user', 'conversation.customer_replied', 'conversation.user_replied', 'conversation.moved'])) {
+                            continue 2;
+                        }
+                        $or_true = $operator === 'new' && strpos($action, 'created') !== false;
+                        break;
+                }
+                if ($or_true) {
+                    break;
+                }
+            }
+            if (!$or_true) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public function markProcessed($conversation_id)
+    {
+        \DB::table('conversation_workflow')->insert(['conversation_id' => $conversation_id, 'workflow_id' => $this->id, 'counter' => 1]);
+    }
+
     public function setSortOrderLast()
     {
         $this->sort_order = (int) self::max('sort_order') + 1;

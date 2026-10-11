@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 1.12.0
+# Résultats des tests — Workflow Packs 1.13.0
 
 Date : 2026-10-11. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,12 @@ Date : 2026-10-11. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 1.13.0 — ranger les tickets existants selon les conditions des règles
+
+| Série | Résultat |
+|---|---|
+| Intégration (82 tests, 614 assertions) | `ImapFolderTest` (réécrits, **serveur IMAP réel**) : facture jamais traitée rangée selon les conditions ; ticket ordinaire rangé par la règle « Nouveau » ; la dernière règle l'emporte ; règle « Réponse » jamais appliquée ; ticket déjà traité dont le sujet ne correspond plus, déplacé à la main dans « Archive », remis en place ; corbeille jamais reprise ; statut non retouché ; avancement puis résultat dans l'historique (4 examinés, 4 envoyés) ; deuxième passage « déjà rangé ». Règles sans dossier comptées, boîte sans IMAP signalée une fois, boîtes d'autres refusées, option désactivée. Bouchon Workflows complété : `checkConditions()` (« Nouveau » sauté hors événement, comme le module réel) et table `conversation_workflow` |
 
 ## 1.12.0 — ranger à nouveau, schéma sans superposition, option « tickets existants » plus claire
 

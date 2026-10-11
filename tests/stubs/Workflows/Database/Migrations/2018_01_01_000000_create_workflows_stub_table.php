@@ -24,10 +24,19 @@ class CreateWorkflowsStubTable extends Migration
             $table->timestamps();
             $table->unique(['mailbox_id', 'name']);
         });
+        // tickets a rule has run on (markProcessed() of the real module)
+        Schema::create('conversation_workflow', function (Blueprint $table) {
+            $table->increments('id');
+            $table->unsignedInteger('conversation_id');
+            $table->unsignedInteger('workflow_id');
+            $table->unsignedInteger('counter')->default(1);
+            $table->unique(['conversation_id', 'workflow_id']);
+        });
     }
 
     public function down()
     {
+        Schema::dropIfExists('conversation_workflow');
         Schema::dropIfExists('workflows');
     }
 }

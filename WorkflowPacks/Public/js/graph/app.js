@@ -412,14 +412,14 @@
         }).catch(function (e) { self.toast(e.message, 'error'); });
     };
 
-    /** "File again": the e-mails of the tickets these rules already handled go back into their folder (queued). */
+    /** "File again": the e-mails of the existing tickets go into the folder of these rules (in the background). */
     App.prototype.refileMany = function (ids) {
         var self = this, t = this.texts;
         if (!window.confirm(t.refile_confirm)) { return; }
         this.api.refileMany(ids).then(function (r) {
-            if (!r.ok) { self.toast(r.error || t.status_error, 'error'); return; }
-            self.toast(t.refile_done.replace(':count', r.queued).replace(':rules', r.rules) + (r.more ? ' ' + t.refile_more : ''), 'ok');
-            if (r.refused && r.refused.length) { self.toast(r.refused.slice(0, 5).join('\n'), 'error'); }
+            // texts written by the server (same as in the list)
+            if (r.message) { self.toast(r.message, 'ok'); }
+            if (r.warning) { self.toast(r.warning, 'error'); }
         }).catch(function (e) { self.toast(e.message, 'error'); });
     };
 

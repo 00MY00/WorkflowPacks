@@ -185,7 +185,5 @@ return [
     'export_one_mailbox' => 'A exportação é feita caixa por caixa: abre-se a caixa com mais regras selecionadas.',
     'focus_selection' => 'Visão parcial: :count blocos selecionados e suas ligações',
     'menu_refile'              => 'Arquivar novamente nas pastas (:count)',
-    'refile_confirm'           => 'Os e-mails dos tickets já tratados por estas regras serão colocados de volta na sua pasta de e-mail, mesmo se foram movidos para outra pasta (nunca a partir da lixeira). Só o arquivamento é refeito: status, atribuição, encaminhamento… não são alterados. Continuar?',
-    'refile_done'              => ':count e-mail(s) na fila para arquivar novamente (:rules regra(s)). Resultado na aba Histórico.',
-    'refile_more'              => 'Ainda restam: execute de novo para os próximos.',
+    'refile_confirm'           => 'Os tickets existentes destas caixas serão examinados: os que cumprem as condições de uma regra ("Novo" conta como cumprido) ou que ela já tratou têm o e-mail arquivado na sua pasta, mesmo se ele foi movido para outra pasta (nunca a partir da lixeira). Se várias regras servirem, vence a última na ordem do Workflows. Só o arquivamento é feito: status, atribuição, encaminhamento… não são alterados. Continuar?',
 ];

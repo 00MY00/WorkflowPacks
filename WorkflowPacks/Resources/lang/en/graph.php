@@ -186,7 +186,5 @@ return [
     'export_one_mailbox' => 'The export works mailbox by mailbox: the mailbox holding most of the selected rules is opened.',
     'focus_selection' => 'Partial view: :count selected blocks and their links',
     'menu_refile'              => 'File again into the folders (:count)',
-    'refile_confirm'           => 'The e-mails of the tickets these rules have already handled will be put back into their e-mail folder, even when they were moved into another folder (never from the trash). Only the filing is done again: status, assignment, forward… are not touched. Continue?',
-    'refile_done'              => ':count e-mail(s) queued for filing again (:rules rule(s)). Result in the History tab.',
-    'refile_more'              => 'Some are left: run it again for the next ones.',
+    'refile_confirm'           => 'The existing tickets of these mailboxes will be looked at: those matching the conditions of a rule ("New" counts as matched) or that it has already handled get their e-mail filed into its folder, even when it was moved into another folder (never from the trash). When several rules match, the last one in the order of Workflows wins. Only the filing is done: status, assignment, forward… are not touched. Continue?',
 ];

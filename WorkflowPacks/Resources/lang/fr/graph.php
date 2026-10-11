@@ -186,7 +186,5 @@ return [
     'export_one_mailbox' => 'L\'export se fait boîte par boîte : la boîte qui contient le plus de règles sélectionnées est ouverte.',
     'focus_selection' => 'Vue partielle : :count blocs sélectionnés et leurs liens',
     'menu_refile'              => 'Ranger à nouveau dans les dossiers (:count)',
-    'refile_confirm'           => 'Les e-mails des tickets déjà traités par ces règles vont être remis dans leur dossier e-mail, même s\'ils ont été déplacés dans un autre dossier (jamais depuis la corbeille). Seul le rangement est refait : statut, assignation, transfert… ne sont pas touchés. Continuer ?',
-    'refile_done'              => ':count e-mail(s) remis dans la file de rangement (:rules règle(s)). Résultat dans l\'onglet Historique.',
-    'refile_more'              => 'Il en reste : relancez pour les suivants.',
+    'refile_confirm'           => 'Les tickets existants des boîtes concernées vont être examinés : ceux qui remplissent les conditions d\'une règle (« Nouveau » compte comme rempli) ou qu\'elle a déjà traités ont leur e-mail rangé dans son dossier, même s\'il a été déplacé dans un autre dossier (jamais depuis la corbeille). Si plusieurs règles conviennent, la dernière dans l\'ordre de Workflows l\'emporte. Seul le rangement est fait : statut, assignation, transfert… ne sont pas touchés. Continuer ?',
 ];
