@@ -133,4 +133,6 @@ return [
     'saved_pack_modified' => 'Rule saved (now "changed locally" compared to the pack).',
     'no_mailbox'       => 'No mailbox available.',
     'kind_dest_imap' => 'E-mail folder (IMAP server)',
+    'filed_rules'    => 'Rules filing here or in a sub-folder (:count)',
+    'resize_hint'    => 'Drag to enlarge the block · double click: automatic size',
 ];

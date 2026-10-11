@@ -132,4 +132,6 @@ return [
     'saved_pack_modified' => 'Regola salvata (ora «modificata localmente» rispetto al pack).',
     'no_mailbox'       => 'Nessuna casella disponibile.',
     'kind_dest_imap' => 'Cartella e-mail (server IMAP)',
+    'filed_rules'    => 'Regole che archiviano qui o in una sottocartella (:count)',
+    'resize_hint'    => 'Trascina per ingrandire il blocco · doppio clic: dimensione automatica',
 ];

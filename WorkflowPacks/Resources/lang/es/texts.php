@@ -192,4 +192,6 @@ return [
     'imap_folder_chars'        => 'carpeta de correo: caracteres prohibidos (* % " o de control, o nombre que empieza por un punto).',
     'imap_folder_long'         => 'carpeta de correo: nombre demasiado largo (60 caracteres como máximo por nivel).',
     'imap_folder_deep'         => 'carpeta de correo: 4 niveles como máximo («A/B/C/D»).',
+    'upd_workdir'              => 'la actualización se ejecuta como el usuario «:user», que no puede escribir en su carpeta de trabajo :path (propietario: :owner).',
+    'upd_not_writable'         => 'la actualización se ejecuta como el usuario «:user», que no puede modificar: :paths. No se ha cambiado nada. Corríjalo con: :command',
 ];

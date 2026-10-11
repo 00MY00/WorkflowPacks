@@ -100,7 +100,7 @@
 
 @section('javascripts')
     @parent
-    @foreach (['icons', 'layout', 'model', 'api', 'view', 'minimap', 'inspector', 'editor', 'app'] as $wpg_js)
+    @foreach (['icons', 'layout', 'textfit', 'model', 'api', 'view', 'minimap', 'inspector', 'editor', 'app'] as $wpg_js)
         <script src="{{ asset(\Module::getPublicPath('workflowpacks').'/js/graph/'.$wpg_js.'.js') }}?v={{ \Modules\WorkflowPacks\Services\Update\Updater::currentVersion() }}" {!! \Helper::cspNonceAttr() !!}></script>
     @endforeach
     <script {!! \Helper::cspNonceAttr() !!}>WPGraph.icons.define(document.getElementById('wpg-toolbar-defs'));</script>

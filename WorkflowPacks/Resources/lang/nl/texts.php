@@ -192,4 +192,6 @@ return [
     'imap_folder_chars'        => 'e-mailmap: verboden tekens (* % " of stuurtekens, of een naam die met een punt begint).',
     'imap_folder_long'         => 'e-mailmap: naam te lang (hoogstens 60 tekens per niveau).',
     'imap_folder_deep'         => 'e-mailmap: hoogstens 4 niveaus ("A/B/C/D").',
+    'upd_workdir'              => 'de update draait als gebruiker ":user", die niet in zijn werkmap :path kan schrijven (eigenaar: :owner).',
+    'upd_not_writable'         => 'de update draait als gebruiker ":user", die het volgende niet kan wijzigen: :paths. Er is niets gewijzigd. Herstel met: :command',
 ];

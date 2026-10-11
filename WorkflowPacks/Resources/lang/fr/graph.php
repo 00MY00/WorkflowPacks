@@ -133,4 +133,6 @@ return [
     'saved_pack_modified' => 'Règle enregistrée (désormais « modifiée localement » par rapport au pack).',
     'no_mailbox'       => 'Aucune boîte disponible.',
     'kind_dest_imap' => 'Dossier e-mail (serveur IMAP)',
+    'filed_rules'    => 'Règles qui rangent ici ou dans un sous-dossier (:count)',
+    'resize_hint'    => 'Tirer pour agrandir le bloc · double-clic : taille automatique',
 ];

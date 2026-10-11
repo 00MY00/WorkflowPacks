@@ -242,4 +242,5 @@ return [
     'backup_pack'              => 'Baixar o pack original',
     'backup_full'              => 'Baixar o backup completo',
     'backup_help'              => 'O pack original pode ser importado de novo como está (Importar um pack). O backup completo contém também cada regra excluída como estava, com as alterações.',
+    'dest_imap_off'            => 'opção "Arquivar em uma pasta de e-mail" desativada: nada será arquivado (Gerenciar › Configurações › Workflow Packs).',
 ];

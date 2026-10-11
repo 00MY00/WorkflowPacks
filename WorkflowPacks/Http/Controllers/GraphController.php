@@ -40,10 +40,11 @@ class GraphController extends Controller
         $this->guard();
         $positions = $request->input('positions', []);
         $settings = $request->input('settings', []);
-        if (!is_array($positions) || !is_array($settings)) {
+        $sizes = $request->input('sizes', []);
+        if (!is_array($positions) || !is_array($settings) || !is_array($sizes)) {
             return response()->json(['error' => 'invalid'], 422);
         }
-        $saved = (new LayoutStore())->save(auth()->user(), 'main', $positions, $settings, (bool) $request->input('replace'));
+        $saved = (new LayoutStore())->save(auth()->user(), 'main', $positions, $settings, (bool) $request->input('replace'), $sizes);
 
         return is_array($saved) ? response()->json(['ok' => true]) : response()->json(['error' => $saved], 422);
     }

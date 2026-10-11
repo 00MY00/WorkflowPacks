@@ -132,4 +132,6 @@ return [
     'saved_pack_modified' => 'Regel gespeichert (jetzt „lokal geändert“ gegenüber dem Pack).',
     'no_mailbox'       => 'Kein Postfach verfügbar.',
     'kind_dest_imap' => 'E-Mail-Ordner (IMAP-Server)',
+    'filed_rules'    => 'Regeln, die hier oder in einem Unterordner ablegen (:count)',
+    'resize_hint'    => 'Ziehen, um den Block zu vergrößern · Doppelklick: automatische Größe',
 ];

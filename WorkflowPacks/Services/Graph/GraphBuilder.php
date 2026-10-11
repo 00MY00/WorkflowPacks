@@ -7,6 +7,7 @@ use Modules\WorkflowPacks\Entities\Pack;
 use Modules\WorkflowPacks\Services\Imap\FolderPath;
 use Modules\WorkflowPacks\Services\Imap\ImapFolders;
 use Modules\WorkflowPacks\Services\Pack\Fingerprint;
+use Modules\WorkflowPacks\Services\Pack\Problems;
 use Modules\WorkflowPacks\Services\Workflows\Bridge;
 
 /**
@@ -17,11 +18,12 @@ use Modules\WorkflowPacks\Services\Workflows\Bridge;
  *         wf:<id>           rule created outside any pack (linked to its own mailbox)
  *         pack:<key>        pack (contains its rules)
  *         dest:<kind>:<id>  where a rule sends the conversations: folder of a status (closed, pending, spam…),
- *                           Deleted, a person (assignment), a tag (Tags module); moving to another mailbox links the
- *                           rule to that mailbox
+ *                           Deleted, a person (assignment), a tag (Tags module), an e-mail folder on the mail server
+ *                           (one block per level); moving to another mailbox links the rule to that mailbox
  *   link  rule -> mailbox   one Workflows rule; state synced | modified | local | missing, active true/false
  *         pack -> rule      "contains"
  *         rule -> dest      "sends": derived from the actions of the rule (display only)
+ *         folder -> folder  "folder": e-mail folder -> its sub-folder ("[WP] Invoices" -> "Suppliers")
  *
  * Only identifiers, names and short summaries are sent: the full rule is loaded when a node is opened.
  */
@@ -71,8 +73,24 @@ class GraphBuilder
             $edges[] = ['from' => $ruleKey, 'to' => 'mb:'.$wf->mailbox_id, 'kind' => 'applies', 'workflow_id' => (int) $wf->id,
                 'active' => (bool) $wf->active, 'state' => $state, 'name' => (string) $wf->name];
             foreach ($this->destinations($attributes, $jsonActions, $nodes) as $dest) {
+                $chain = $dest['chain'] ?? [];
+                unset($dest['chain']);
                 $nodes[$dest['key']] = $nodes[$dest['key']] ?? $dest;
                 $sends[$ruleKey.'>'.$dest['key']] = ['from' => $ruleKey, 'to' => $dest['key'], 'kind' => 'sends', 'action' => $dest['action']];
+                // e-mail folders: the flow goes on, level by level ("[WP] Invoices" -> "Suppliers")
+                $parent = $dest['key'];
+                foreach ($chain as $child) {
+                    $nodes[$child['key']] = $nodes[$child['key']] ?? $child;
+                    $sends[$parent.'>'.$child['key']] = ['from' => $parent, 'to' => $child['key'], 'kind' => 'folder'];
+                    $parent = $child['key'];
+                }
+                if (($dest['dest'] ?? '') === 'imap') {
+                    // every level knows the rules filing into it or below (side panel, highlight)
+                    foreach (array_merge([$dest], $chain) as $folder) {
+                        $filed = $nodes[$folder['key']]['filed_by'] ?? [];
+                        $nodes[$folder['key']]['filed_by'] = array_values(array_unique(array_merge($filed, [$ruleKey])));
+                    }
+                }
             }
         }
         foreach ($sends as $edge) {
@@ -138,10 +156,8 @@ class GraphBuilder
                     $mailbox = \App\Mailbox::find((int) $value);
                     $out[] = ['key' => 'dest:mailbox:'.(int) $value, 'kind' => 'dest', 'dest' => 'mailbox', 'label' => $mailbox ? $mailbox->name : '#'.$value, 'sub' => __('workflowpacks::messages.dest_other_mailbox'), 'action' => $type];
                 }
-            } elseif ($type === FolderPath::ACTION && is_string($value) && FolderPath::parse($value)['error'] === null) {
-                // e-mail folder on the mail server ("[WP] Invoices › Suppliers")
-                $slug = substr(preg_replace('/[^A-Za-z0-9._\/-]+/', '-', $value), 0, 150);
-                $out[] = ['key' => 'dest:imap:'.$slug, 'kind' => 'dest', 'dest' => 'imap', 'label' => FolderPath::label($value, ImapFolders::prefix()), 'sub' => __('workflowpacks::messages.dest_imap'), 'action' => $type];
+            } elseif ($type === FolderPath::ACTION) {
+                $out[] = $this->imapDestination($value, $type);
             } elseif (stripos($type, 'tag') !== false) {
                 foreach ((array) $value as $tag) {
                     if (is_scalar($tag) && trim((string) $tag) !== '') {
@@ -153,6 +169,43 @@ class GraphBuilder
         }
 
         return $out;
+    }
+
+    /**
+     * E-mail folder (action "file into an e-mail folder"): one block per level, as a flow
+     * "[WP] Invoices" -> "Suppliers". Returns the top level, with the deeper levels in "chain". Shown even when the
+     * option is off or the name is invalid, with a warning, so that such a rule never goes unnoticed.
+     */
+    protected function imapDestination($value, $type)
+    {
+        $prefix = ImapFolders::prefix();
+        $warn = ImapFolders::enabled() ? '' : __('workflowpacks::messages.dest_imap_off');
+        $parsed = FolderPath::parse($value);
+        if ($parsed['error'] !== null) {
+            $raw = is_scalar($value) ? (string) $value : json_encode($value);
+
+            return ['key' => 'dest:imap:invalid-'.substr(md5($raw), 0, 10), 'kind' => 'dest', 'dest' => 'imap', 'label' => $raw !== '' ? $raw : '?',
+                'sub' => __('workflowpacks::messages.dest_imap'), 'warn' => Problems::t($parsed['error']), 'action' => $type, 'chain' => []];
+        }
+        $levels = [];
+        $path = '';
+        foreach ($parsed['segments'] as $i => $segment) {
+            $path .= ($i ? '/' : '').$segment;
+            $levels[] = [
+                'key'    => 'dest:imap:'.substr(preg_replace('/[^A-Za-z0-9._\/-]+/', '-', $path), 0, 140).'-'.substr(md5($path), 0, 6),
+                'kind'   => 'dest',
+                'dest'   => 'imap',
+                'label'  => $i ? $segment : $prefix.' '.$segment,
+                'sub'    => $i ? FolderPath::label($path, $prefix) : __('workflowpacks::messages.dest_imap'),
+                'depth'  => $i,
+                'warn'   => $warn,
+                'action' => $type,
+            ];
+        }
+        $top = array_shift($levels);
+        $top['chain'] = $levels;
+
+        return $top;
     }
 
     /** Short sentence: number of conditions / actions + sensitive actions (full detail when the node is opened). */

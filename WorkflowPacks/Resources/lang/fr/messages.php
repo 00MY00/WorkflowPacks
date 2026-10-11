@@ -250,4 +250,5 @@ return [
     'backup_pack'              => 'Télécharger le pack d\'origine',
     'backup_full'              => 'Télécharger la sauvegarde complète',
     'backup_help'              => 'Le pack d\'origine se réimporte tel quel (Importer un pack). La sauvegarde complète contient aussi chaque règle supprimée telle qu\'elle était, modifications comprises.',
+    'dest_imap_off'            => 'option « Ranger dans un dossier e-mail » désactivée : rien ne sera rangé (Gérer › Paramètres › Workflow Packs).',
 ];

@@ -192,4 +192,6 @@ return [
     'imap_folder_chars'        => 'pasta de e-mail: caracteres proibidos (* % " ou de controle, ou nome começando com ponto).',
     'imap_folder_long'         => 'pasta de e-mail: nome longo demais (no máximo 60 caracteres por nível).',
     'imap_folder_deep'         => 'pasta de e-mail: no máximo 4 níveis ("A/B/C/D").',
+    'upd_workdir'              => 'a atualização roda como o usuário ":user", que não pode gravar na sua pasta de trabalho :path (proprietário: :owner).',
+    'upd_not_writable'         => 'a atualização roda como o usuário ":user", que não pode alterar: :paths. Nada foi alterado. Corrija com: :command',
 ];

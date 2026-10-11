@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 1.5.0
+# Résultats des tests — Workflow Packs 1.6.0
 
 Date : 2026-10-10. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,14 @@ Date : 2026-10-10. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 1.6.0 — dossiers e-mail dans le schéma, blocs à la taille du texte
+
+| Série | Résultat |
+|---|---|
+| Intégration (62 tests, 453 assertions) | `GraphTest` : dossiers en flux (un bloc par niveau, dossier du haut partagé, liens dossier → sous-dossier, règles de chaque dossier), avertissement si l'option est désactivée ou si le nom est invalide ; tailles enregistrées, contrôlées (bornes, clés), conservées en réorganisant, remises en automatique ; `UpdatePermissionsTest` (1.5.1) |
+| Node (`tests/js`) | `textfit` (5) : largeur selon le texte, retour à la ligne sans texte perdu, mot trop long coupé, taille manuelle bornée et jamais plus petite que le texte, place pour l'avertissement ; `layout` (8) : sous-dossiers en colonnes successives face à leur parent, blocs larges sans chevauchement |
+| Navigateur (Chrome sans interface, données de démonstration) | flux `[WP] Factures` → `Clients` → `2026` et `Fournisseurs`, panneau d'un dossier, vue partielle avec les sous-dossiers ; aucun texte plus large que son bloc ; bloc agrandi à la poignée, taille conservée après rechargement ; aucune erreur |
 
 ## 1.5.0 — retirer un pack
 

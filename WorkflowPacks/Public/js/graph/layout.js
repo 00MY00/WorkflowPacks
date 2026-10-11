@@ -14,9 +14,18 @@
 
     var SIZE = { mailbox: [230, 64], rule: [260, 64], pack: [210, 56], dest: [210, 56] };
     var GAP_Y = 28;
+    var GAP_X = 170;
 
+    /** Size of a block: fitted to its text by textfit.js (node.box), else the default size of its kind. */
     function size(node) {
+        if (node.box) {
+            return [node.box.w, node.box.h];
+        }
         return SIZE[node.kind] || [220, 60];
+    }
+
+    function widest(list) {
+        return list.reduce(function (m, n) { return Math.max(m, size(n)[0]); }, 0);
     }
 
     function byLabel(a, b) {
@@ -93,6 +102,9 @@
         var k = byKind(nodes);
         var adj = adjacency(edges);
         var rank = {};
+        // sub-folders of an e-mail folder get their own columns, after their parent ("[WP] Invoices" -> "Suppliers")
+        var deep = k.dest.filter(function (n) { return (n.depth || 0) > 0; });
+        k.dest = k.dest.filter(function (n) { return !((n.depth || 0) > 0); });
         k.mailbox.sort(byLabel);
         k.mailbox.forEach(function (n, i) { rank[n.key] = i; });
         orderBy(k.rule, adj, rank);
@@ -103,12 +115,18 @@
         orderBy(k.rule, adj, rank);
         orderBy(k.dest, adj, rank);
 
-        var x = { mailbox: 0, rule: 400, dest: 820 };
+        // columns as wide as their widest block (blocks fit their text)
+        var x = { mailbox: 0 };
+        x.rule = Math.max(400, widest(k.mailbox) + GAP_X);
+        x.dest = x.rule + Math.max(260, widest(k.rule)) + GAP_X;
         var height = function (list) { return list.reduce(function (s, n) { return s + size(n)[1] + GAP_Y; }, -GAP_Y); };
         var top = k.pack.length ? 110 : 0;
         var pos = {};
+        var byKey = {};
+        nodes.forEach(function (n) { byKey[n.key] = n; });
         var isRule = {};
         k.rule.forEach(function (n) { isRule[n.key] = true; });
+        var middle = function (key) { return pos[key][1] + size(byKey[key])[1] / 2; };
         // the rules column is the spine; when there are more mailboxes than rules, they are spread like the rules
         var y = top + Math.max(0, (height(k.mailbox) - height(k.rule)) / 2);
         k.rule.forEach(function (n) {
@@ -120,29 +138,57 @@
             var wanted = {};
             var fallback = top;
             k[kind].forEach(function (n) {
-                var ys = (adj[n.key] || []).filter(function (key) { return isRule[key]; })
-                    .map(function (key) { return pos[key][1] + size({ kind: 'rule' })[1] / 2; });
+                var ys = (adj[n.key] || []).filter(function (key) { return isRule[key]; }).map(middle);
                 wanted[n.key] = mean(ys, fallback + size(n)[1] / 2) - size(n)[1] / 2;
                 fallback = wanted[n.key] + size(n)[1] + GAP_Y;
             });
             var ys = stack(k[kind], wanted);
             k[kind].forEach(function (n) { pos[n.key] = [x[kind], Math.max(top, ys[n.key])]; });
+            settle(k[kind], pos);
         });
-        // a column pushed below `top` by Math.max may overlap again: settle it
-        ['mailbox', 'dest'].forEach(function (kind) {
-            for (var i = 1; i < k[kind].length; i++) {
-                var prev = pos[k[kind][i - 1].key], cur = pos[k[kind][i].key];
-                cur[1] = Math.max(cur[1], prev[1] + size(k[kind][i - 1])[1] + GAP_Y);
+        // sub-folders, level by level, each one facing its parent folder
+        var colX = x.dest + Math.max(210, widest(k.dest)) + GAP_X;
+        for (var depth = 1; deep.length; depth++) {
+            var level = deep.filter(function (n) { return n.depth === depth; });
+            deep = deep.filter(function (n) { return n.depth !== depth; });
+            if (!level.length) {
+                if (depth > 10) { break; }
+                continue;
             }
-        });
+            var parentOf = {};
+            level.forEach(function (n) {
+                parentOf[n.key] = (adj[n.key] || []).filter(function (key) { return pos[key] && byKey[key] && byKey[key].kind === 'dest'; })[0];
+            });
+            level.sort(function (a, b) {
+                var pa = parentOf[a.key], pb = parentOf[b.key];
+                return ((pa ? pos[pa][1] : 0) - (pb ? pos[pb][1] : 0)) || byLabel(a, b);
+            });
+            var want = {};
+            level.forEach(function (n) {
+                var p = parentOf[n.key];
+                want[n.key] = p ? middle(p) - size(n)[1] / 2 : top;
+            });
+            var ly = stack(level, want);
+            level.forEach(function (n) { pos[n.key] = [colX, Math.max(top, ly[n.key])]; });
+            settle(level, pos);
+            colX += widest(level) + GAP_X;
+        }
         // packs: one row above the rules column, centered on it
         var rowWidth = k.pack.reduce(function (s, n) { return s + size(n)[0] + 30; }, -30);
-        var px = x.rule + size({ kind: 'rule' })[0] / 2 - rowWidth / 2;
+        var px = x.rule + Math.max(260, widest(k.rule)) / 2 - rowWidth / 2;
         k.pack.forEach(function (n) {
             pos[n.key] = [Math.round(px), 0];
             px += size(n)[0] + 30;
         });
         return pos;
+    }
+
+    /** A column pushed below its top may overlap again: each block starts after the previous one. */
+    function settle(list, pos) {
+        for (var i = 1; i < list.length; i++) {
+            var prev = pos[list[i - 1].key], cur = pos[list[i].key];
+            cur[1] = Math.max(cur[1], prev[1] + size(list[i - 1])[1] + GAP_Y);
+        }
     }
 
     function radial(nodes, edges) {
@@ -220,8 +266,11 @@
         var list = nodes.slice().sort(function (a, b) { return (order[a.kind] - order[b.kind]) || byLabel(a, b); });
         var cols = Math.max(1, Math.ceil(Math.sqrt(list.length)));
         var pos = {};
+        // cells as large as the largest block (blocks fit their text)
+        var cellW = Math.max(300, widest(list) + 40);
+        var cellH = Math.max(110, list.reduce(function (m, n) { return Math.max(m, size(n)[1]); }, 0) + 46);
         list.forEach(function (n, i) {
-            pos[n.key] = [(i % cols) * 300, Math.floor(i / cols) * 110];
+            pos[n.key] = [(i % cols) * cellW, Math.floor(i / cols) * cellH];
         });
         return pos;
     }
@@ -301,7 +350,7 @@
         return separate(pos, nodes, 40, fresh);
     }
 
-    var api = { columns: columns, radial: radial, grid: grid, separate: separate, bounds: bounds, placeNew: placeNew, size: size, adjacency: adjacency };
+    var api = { SIZE: SIZE, columns: columns, radial: radial, grid: grid, separate: separate, bounds: bounds, placeNew: placeNew, size: size, adjacency: adjacency };
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = api;
     } else {

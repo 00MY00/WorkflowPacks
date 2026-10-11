@@ -132,4 +132,6 @@ return [
     'saved_pack_modified' => 'Regel opgeslagen (nu "lokaal gewijzigd" ten opzichte van het pack).',
     'no_mailbox'       => 'Geen mailbox beschikbaar.',
     'kind_dest_imap' => 'E-mailmap (IMAP-server)',
+    'filed_rules'    => 'Regels die hier of in een submap opbergen (:count)',
+    'resize_hint'    => 'Sleep om het blok te vergroten · dubbelklik: automatische grootte',
 ];

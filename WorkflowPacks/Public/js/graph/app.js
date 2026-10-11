@@ -20,6 +20,8 @@
         this.settings = { layout: 'columns', edges: 'orthogonal', packs: true, dests: true };
         this.catalogs = {};
         this.queue = {};
+        this.sizes = {};        // key -> [w, h] chosen by hand (resize grip); others fit their text
+        this.sizeQueue = {};
         this.timer = null;
         var self = this;
         this.view = new WPGraph.View(root.querySelector('.wpg-canvas'), this.model, {
@@ -30,6 +32,7 @@
             onConnect: function (from, to) { self.connect(from, to); },
             onRefused: function () { self.toast(self.texts.connect_refused, 'error'); },
             onOpen: function (key) { self.open(key); },
+            onResize: function (key, size, done) { self.resize(key, size, done); },
             onView: function () { if (self.minimap) { self.minimap.update(); } }
         });
         this.minimap = new WPGraph.Minimap(root.querySelector('.wpg-minimap svg'), this.view);
@@ -47,10 +50,12 @@
         return this.api.data().then(function (data) {
             if (first) {
                 self.model.pos = data.layout.positions || {};
+                self.sizes = data.layout.sizes || {};
                 self.settings = data.layout.settings;
                 self.syncToolbar();
             }
             self.model.load(data);
+            self.fitBoxes();
             var nodes = self.model.list();
             if (first && !Object.keys(self.model.pos).length) {
                 // first visit: automatic layout, saved
@@ -77,6 +82,49 @@
 
     App.prototype.reload = function () { return this.load(false); };
 
+    /** Size of every block from its text (textfit.js), or the size chosen by hand. */
+    App.prototype.fitBoxes = function () {
+        var measure = this.measure || (this.measure = this.measurer());
+        this.model.list().forEach(this.fitBox.bind(this, measure));
+    };
+
+    App.prototype.fitBox = function (measure, n) {
+        // room on the right for the warning icon of sensitive rules and of folders with a problem
+        var extra = (n.kind === 'rule' && (n.sensitive || []).length) || n.warn ? 20 : 0;
+        n.box = WPGraph.textfit.fit(n, L.SIZE[n.kind] || [220, 60], measure, this.sizes[n.key] || null, extra);
+    };
+
+    /** Width of a text with the fonts of the diagram (canvas; results kept). */
+    App.prototype.measurer = function () {
+        var ctx = document.createElement('canvas').getContext('2d');
+        var family = window.getComputedStyle(this.view.svg).fontFamily || 'sans-serif';
+        var fonts = { t1: '600 14px ' + family, t2: '12px ' + family };
+        var cache = {};
+        return function (text, kind) {
+            var key = kind + '|' + text;
+            if (cache[key] === undefined) {
+                ctx.font = fonts[kind] || fonts.t1;
+                cache[key] = ctx.measureText(String(text)).width;
+            }
+            return cache[key];
+        };
+    };
+
+    /** Resize grip: live while dragging, saved when released; null = back to the automatic size. */
+    App.prototype.resize = function (key, size, done) {
+        var n = this.model.nodes[key];
+        if (!n) { return; }
+        if (size) { this.sizes[key] = size; } else { delete this.sizes[key]; }
+        this.fitBox(this.measure || (this.measure = this.measurer()), n);
+        this.view.render();
+        if (done) {
+            this.sizeQueue[key] = size ? [n.box.w, n.box.h] : null;
+            if (size) { this.sizes[key] = [n.box.w, n.box.h]; }
+            this.savePositions({});
+            this.minimap.update();
+        }
+    };
+
     App.prototype.catalogOf = function (mailboxId) {
         if (!this.catalogs[mailboxId]) { this.catalogs[mailboxId] = this.api.catalog(mailboxId); }
         return this.catalogs[mailboxId];
@@ -102,11 +150,12 @@
 
     App.prototype.flush = function () {
         var self = this;
-        var positions = this.queue, settings = this.pendingSettings || {}, replace = this.replace;
+        var positions = this.queue, settings = this.pendingSettings || {}, replace = this.replace, sizes = this.sizeQueue;
         this.queue = {};
+        this.sizeQueue = {};
         this.pendingSettings = null;
         this.replace = false;
-        this.api.saveLayout(positions, settings, replace).then(function () { self.status('saved'); })
+        this.api.saveLayout(positions, settings, replace, sizes).then(function () { self.status('saved'); })
             .catch(function () { self.status('error'); });
     };
 
@@ -226,6 +275,11 @@
                 if (this.model.nodes[k] && this.model.nodes[k].kind === 'rule') { this.model.neighbors(k).forEach(add); }
             }, this);
         }
+        // e-mail folders: the whole path of the rules shown, sub-folders included; and the rules of a folder
+        var shown = keys.slice();
+        this.model.list(function (n) { return (n.filed_by || []).some(function (r) { return shown.indexOf(r) >= 0; }); })
+            .forEach(function (n) { add(n.key); });
+        (node.filed_by || []).forEach(add);
         this.view.focus = { keys: keys };
         this.view.render();
         this.view.select([key]);

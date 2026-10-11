@@ -242,4 +242,5 @@ return [
     'backup_pack'              => 'Ursprüngliches Pack herunterladen',
     'backup_full'              => 'Vollständige Sicherung herunterladen',
     'backup_help'              => 'Das ursprüngliche Pack lässt sich unverändert wieder importieren (Pack importieren). Die vollständige Sicherung enthält zusätzlich jede gelöschte Regel, wie sie war, mit Änderungen.',
+    'dest_imap_off'            => 'Option „In einen E-Mail-Ordner ablegen“ ist aus: nichts wird abgelegt (Verwalten › Einstellungen › Workflow Packs).',
 ];

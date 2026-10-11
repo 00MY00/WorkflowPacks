@@ -41,7 +41,7 @@ jobs:
       - name: Diagram scripts (syntax + automatic layouts)
         run: |
           for f in WorkflowPacks/Public/js/graph/*.js WorkflowPacks/Public/js/*.js; do node --check "$f"; done
-          node tests/js/layout.test.js
+          for t in tests/js/*.test.js; do node "$t"; done
 
   integration:
     runs-on: ubuntu-24.04

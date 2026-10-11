@@ -86,12 +86,23 @@
         el('rect', { class: 'wpg-stripe', width: 6, height: s[1], rx: 3 }, g);
         el('rect', { class: 'wpg-pill', x: 14, y: s[1] / 2 - 17, width: 34, height: 34, rx: 10 }, g);
         el('use', { class: 'wpg-icon', href: '#wpg-i-' + WPGraph.icons.of(n), x: 20, y: s[1] / 2 - 11, width: 22, height: 22 }, g);
-        el('text', { class: 'wpg-t1', x: 58, y: n.sub ? s[1] / 2 - 3 : s[1] / 2 + 5 }, g).textContent = cut(n.label, 26);
-        if (n.sub) {
-            el('text', { class: 'wpg-t2', x: 58, y: s[1] / 2 + 15 }, g).textContent = cut(n.sub, 30);
+        // whole text, wrapped on as many lines as needed (textfit.js); vertically centered in the block
+        var lines1 = n.box ? n.box.t1 : [cut(n.label, 26)];
+        var lines2 = n.box ? n.box.t2 : (n.sub ? [cut(n.sub, 30)] : []);
+        var top = s[1] / 2 - (lines1.length * 17 + lines2.length * 15) / 2;
+        var t1 = el('text', { class: 'wpg-t1' }, g);
+        lines1.forEach(function (line, i) { el('tspan', { x: 58, y: top + 13 + i * 17 }, t1).textContent = line; });
+        if (lines2.length) {
+            var t2 = el('text', { class: 'wpg-t2' }, g);
+            lines2.forEach(function (line, i) { el('tspan', { x: 58, y: top + lines1.length * 17 + 12 + i * 15 }, t2).textContent = line; });
         }
-        // short and bigger label, shown instead of the two lines when zoomed out (semantic zoom)
-        el('text', { class: 'wpg-t1s', x: 58, y: s[1] / 2 + 7 }, g).textContent = cut(n.label, 16);
+        if (n.warn) {
+            var warning = el('use', { class: 'wpg-warn', href: '#wpg-i-warn', x: s[0] - 24, y: 6, width: 16, height: 16 }, g);
+            el('title', {}, warning).textContent = n.warn;
+        }
+        // resize grip (bottom right corner): drag to enlarge the block, double click for the automatic size
+        var grip = el('path', { class: 'wpg-grip', d: 'M' + (s[0] - 3) + ',' + (s[1] - 15) + 'L' + (s[0] - 3) + ',' + (s[1] - 3) + 'L' + (s[0] - 15) + ',' + (s[1] - 3) + 'Z' }, g);
+        el('title', {}, grip).textContent = this.opts.texts.resize_hint || '';
         if (n.kind === 'rule') {
             if ((n.sensitive || []).length) {
                 var warn = el('use', { class: 'wpg-warn', href: '#wpg-i-warn', x: s[0] - 24, y: 6, width: 16, height: 16 }, g);
@@ -161,6 +172,10 @@
         keys.forEach(function (k) {
             near[k] = true;
             this.model.neighbors(k).forEach(function (n) { near[n] = true; });
+            // e-mail folders: the whole path of a rule ("[WP] Invoices" -> "Suppliers"), and the rules of a folder
+            var node = this.model.nodes[k];
+            this.model.list(function (n) { return (n.filed_by || []).indexOf(k) >= 0; }).forEach(function (n) { near[n.key] = true; });
+            ((node && node.filed_by) || []).forEach(function (r) { near[r] = true; });
         }, this);
         var dim = keys.length > 0;
         Array.prototype.forEach.call(this.nodeLayer.children, function (g) {
@@ -169,7 +184,9 @@
             g.classList.toggle('dim', dim && !near[k]);
         }, this);
         Array.prototype.forEach.call(this.edgeLayer.children, function (g) {
-            var on = keys.indexOf(g.getAttribute('data-from')) >= 0 || keys.indexOf(g.getAttribute('data-to')) >= 0;
+            var from = g.getAttribute('data-from'), to = g.getAttribute('data-to');
+            var on = keys.indexOf(from) >= 0 || keys.indexOf(to) >= 0
+                || (g.classList.contains('kind-folder') && near[from] && near[to]);
             g.classList.toggle('dim', dim && !on);
             g.classList.toggle('lit', on);
             g.classList.toggle('selected', this.selectedEdge !== null && String(this.selectedEdge) === g.getAttribute('data-edge'));
@@ -258,6 +275,7 @@
     View.prototype.down = function (e) {
         if (e.button !== 0) { return; }
         var handle = e.target.closest('.wpg-handle');
+        var grip = e.target.closest('.wpg-grip');
         var node = e.target.closest('.wpg-node');
         var edge = e.target.closest('.wpg-edge-hit');
         var w = this.world(e.clientX, e.clientY);
@@ -265,6 +283,11 @@
         if (handle && node) {
             this.mode = { type: 'connect', from: node.getAttribute('data-key') };
             this.svg.classList.add('connecting');
+            return;
+        }
+        if (grip && node) {
+            var rk = node.getAttribute('data-key');
+            this.mode = { type: 'resize', key: rk, start: w, origin: L.size(this.model.nodes[rk]), moved: false, size: null };
             return;
         }
         if (node) {
@@ -309,6 +332,13 @@
                 this.model.pos[k] = [Math.round((o[0] + ox) / snap) * snap, Math.round((o[1] + oy) / snap) * snap];
             }, this);
             this.moveNodes(m.keys);
+        } else if (m.type === 'resize') {
+            var r = this.world(e.clientX, e.clientY);
+            var rx = r[0] - m.start[0], ry = r[1] - m.start[1];
+            if (!m.moved && Math.abs(rx) + Math.abs(ry) < 3) { return; }
+            m.moved = true;
+            m.size = [Math.round((m.origin[0] + rx) / 10) * 10, Math.round((m.origin[1] + ry) / 10) * 10];
+            if (this.opts.onResize) { this.opts.onResize(m.key, m.size, false); }
         } else if (m.type === 'connect') {
             var from = this.model.nodes[m.from], p = this.model.pos[m.from], s = L.size(from);
             var to = this.world(e.clientX, e.clientY);
@@ -345,6 +375,16 @@
                 } else if (this.opts.onSelect) {
                     this.opts.onSelect(m.key);
                 }
+            }
+        } else if (m.type === 'resize') {
+            if (m.moved) {
+                if (this.opts.onResize) { this.opts.onResize(m.key, m.size, true); }
+            } else {
+                // double click on the grip: back to the automatic size
+                var now2 = Date.now();
+                var twice = this.lastGrip && this.lastGrip.key === m.key && now2 - this.lastGrip.at < 400;
+                this.lastGrip = twice ? null : { key: m.key, at: now2 };
+                if (twice && this.opts.onResize) { this.opts.onResize(m.key, null, true); }
             }
         } else if (m.type === 'edge') {
             this.select([], m.index);

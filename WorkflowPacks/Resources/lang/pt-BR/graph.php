@@ -132,4 +132,6 @@ return [
     'saved_pack_modified' => 'Regra salva (agora "modificada localmente" em relação ao pack).',
     'no_mailbox'       => 'Nenhuma caixa disponível.',
     'kind_dest_imap' => 'Pasta de e-mail (servidor IMAP)',
+    'filed_rules'    => 'Regras que arquivam aqui ou em uma subpasta (:count)',
+    'resize_hint'    => 'Arraste para aumentar o bloco · clique duplo: tamanho automático',
 ];

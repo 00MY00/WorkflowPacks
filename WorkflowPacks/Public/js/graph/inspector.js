@@ -157,10 +157,14 @@
     Inspector.prototype.show_dest = function (node) {
         var app = this.app, t = this.t;
         var body = this.frame(node, t['kind_dest_' + node.dest] || t.kind_dest);
-        var from = app.model.edges.filter(function (e) { return e.kind === 'sends' && e.to === node.key; });
-        this.section(body, t.dest_rules.replace(':count', from.length));
-        from.forEach(function (e) {
-            var r = app.model.nodes[e.from];
+        if (node.warn) { body.appendChild(h('p', { class: 'wpg-warn-text' }, [icon('warn'), ' ' + node.warn])); }
+        // e-mail folders: the rules filing into this folder or one of its sub-folders
+        var ruleKeys = node.filed_by || app.model.edges.filter(function (e) { return e.kind === 'sends' && e.to === node.key; })
+            .map(function (e) { return e.from; });
+        this.section(body, (node.filed_by ? t.filed_rules : t.dest_rules).replace(':count', ruleKeys.length));
+        ruleKeys.forEach(function (key) {
+            var r = app.model.nodes[key];
+            if (!r) { return; }
             body.appendChild(h('button', { type: 'button', class: 'wpg-inst wpg-link', on: { click: function () { app.select(r.key); } } }, [icon(I.of(r)), h('span', { class: 'wpg-inst-name', text: r.label })]));
         });
         body.appendChild(h('p', { class: 'wpg-hint', text: t.dest_hint }));
