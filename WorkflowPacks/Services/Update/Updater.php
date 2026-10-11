@@ -2,6 +2,8 @@
 
 namespace Modules\WorkflowPacks\Services\Update;
 
+use Modules\WorkflowPacks\Services\Pack\Problems;
+
 /**
  * Same mechanism as the RefreshGlobal module (github.com/00MY00/RefreshGlobal).
  *
@@ -87,6 +89,12 @@ class Updater
     /** An update is running now: another process holds the update lock (see update()). */
     public static function isRunning()
     {
+        // recorded in the database by the running update (seen whatever system user runs this page); a run killed
+        // before its end is not taken into account after 30 minutes
+        $since = (string) (self::status()['running_since'] ?? '');
+        if ($since !== '' && strtotime($since) > time() - 1800) {
+            return true;
+        }
         $file = self::dir('update.lock');
         if (!is_file($file)) {
             return false;
@@ -124,9 +132,80 @@ class Updater
         return version_compare($latest, self::currentVersion(), '>') ? 'available' : 'up_to_date';
     }
 
+    /**
+     * Work folder (lock, downloads, backups): storage/app/workflowpacks, or storage/app/workflowpacks-<user> when the
+     * first one belongs to another system user (e.g. created by a "sudo" run while cron runs as the web server user).
+     */
     public static function dir($sub = '')
     {
-        return storage_path('app/workflowpacks'.($sub !== '' ? '/'.$sub : ''));
+        return self::base().($sub !== '' ? '/'.$sub : '');
+    }
+
+    public static function base()
+    {
+        $main = storage_path('app/workflowpacks');
+        if (self::usable($main)) {
+            return $main;
+        }
+        $fallback = storage_path('app/workflowpacks-'.(preg_replace('/[^A-Za-z0-9_-]/', '', self::processUser()) ?: 'run'));
+
+        return self::usable($fallback) ? $fallback : $main;
+    }
+
+    /** The folder exists (or could be created) and this process may write in it, lock file included. */
+    protected static function usable($dir)
+    {
+        if (!is_dir($dir) && !@mkdir($dir, 0775, true) && !is_dir($dir)) {
+            return false;
+        }
+        $lock = $dir.'/update.lock';
+
+        return is_writable($dir) && (!file_exists($lock) || is_writable($lock));
+    }
+
+    /** System user running this process (shown in the messages about permissions). */
+    public static function processUser()
+    {
+        if (function_exists('posix_geteuid') && function_exists('posix_getpwuid')) {
+            $info = @posix_getpwuid(posix_geteuid());
+            if (!empty($info['name'])) {
+                return (string) $info['name'];
+            }
+        }
+
+        return (string) (getenv('USER') ?: get_current_user());
+    }
+
+    protected static function owner($path)
+    {
+        $uid = @fileowner($path);
+        if ($uid === false) {
+            return '?';
+        }
+        if (function_exists('posix_getpwuid')) {
+            $info = @posix_getpwuid($uid);
+            if (!empty($info['name'])) {
+                return (string) $info['name'];
+            }
+        }
+
+        return (string) $uid;
+    }
+
+    /**
+     * Folders an update has to change (module folder and its parent, public link of the modules, configuration cache)
+     * that the user running it cannot write: path => owner. Checked before anything is downloaded or moved.
+     */
+    public static function unwritable()
+    {
+        $out = [];
+        foreach ([base_path('Modules'), base_path('Modules/'.self::MODULE), public_path('modules'), base_path('bootstrap/cache')] as $path) {
+            if (file_exists($path) && !is_writable($path)) {
+                $out[$path] = self::owner($path);
+            }
+        }
+
+        return $out;
     }
 
     /** Last check / last update, kept in FreeScout's options table (before 1.4.1: a file, still read once). */
@@ -291,7 +370,16 @@ class Updater
     {
         @mkdir(self::dir(), 0775, true);
         $lock = @fopen(self::dir('update.lock'), 'c') ?: null;
-        if (!$lock || !flock($lock, LOCK_EX | LOCK_NB)) {
+        if (!$lock) {
+            // not "another update": this user may not write the work folder (owned by someone else)
+            $reason = Problems::t('upd_workdir', ['path' => self::dir(), 'owner' => self::owner(self::dir()), 'user' => self::processUser()]);
+            $this->say($reason, 'error');
+
+            return $this->finish('failed', self::currentVersion(), '', $reason);
+        }
+        if (!flock($lock, LOCK_EX | LOCK_NB)) {
+            fclose($lock);
+
             return $this->finish('skipped', '', '', 'another update is running');
         }
         $this->saveStatus(['running_since' => date('c'), 'running_to' => '']);
@@ -328,6 +416,22 @@ class Updater
             $this->say('WorkflowPacks '.$to.' was rolled back before: not retried automatically (use --force).', 'warning');
 
             return $this->finish('skipped', $from, $to, 'version '.$to.' was rolled back before');
+        }
+
+        // folders this user cannot write: stop before downloading anything, with the command that fixes it
+        $blocked = self::unwritable();
+        if ($blocked) {
+            $user = self::processUser();
+            $reason = Problems::t('upd_not_writable', [
+                'user'    => $user,
+                'paths'   => implode(', ', array_map(function ($path, $owner) {
+                    return $path.' ('.$owner.')';
+                }, array_keys($blocked), $blocked)),
+                'command' => 'chown -R '.$user.': '.implode(' ', array_map('escapeshellarg', array_keys($blocked))),
+            ]);
+            $this->say($reason, 'error');
+
+            return $this->finish('failed', $from, $to, $reason);
         }
 
         // shown as "update to X in progress" on the settings / diagnostic pages

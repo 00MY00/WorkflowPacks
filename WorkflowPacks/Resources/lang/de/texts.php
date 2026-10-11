@@ -192,4 +192,6 @@ return [
     'imap_folder_chars'        => 'E-Mail-Ordner: unzulässige Zeichen (* % " oder Steuerzeichen, oder Name beginnt mit einem Punkt).',
     'imap_folder_long'         => 'E-Mail-Ordner: Name zu lang (höchstens 60 Zeichen pro Ebene).',
     'imap_folder_deep'         => 'E-Mail-Ordner: höchstens 4 Ebenen („A/B/C/D“).',
+    'upd_workdir'              => 'die Aktualisierung läuft als Benutzer „:user“, der nicht in seinen Arbeitsordner :path schreiben kann (Eigentümer: :owner).',
+    'upd_not_writable'         => 'die Aktualisierung läuft als Benutzer „:user“, der Folgendes nicht ändern kann: :paths. Nichts wurde geändert. Beheben mit: :command',
 ];

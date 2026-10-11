@@ -192,4 +192,6 @@ return [
     'imap_folder_chars'        => 'e-mail folder: forbidden characters (* % " or control characters, or a name starting with a dot).',
     'imap_folder_long'         => 'e-mail folder: name too long (60 characters at most per level).',
     'imap_folder_deep'         => 'e-mail folder: 4 levels at most ("A/B/C/D").',
+    'upd_workdir'              => 'the update runs as the user ":user", who cannot write its work folder :path (owner: :owner).',
+    'upd_not_writable'         => 'the update runs as the user ":user", who cannot change: :paths. Nothing was changed. Fix it with: :command',
 ];

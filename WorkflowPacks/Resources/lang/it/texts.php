@@ -192,4 +192,6 @@ return [
     'imap_folder_chars'        => 'cartella e-mail: caratteri vietati (* % " o di controllo, o nome che inizia con un punto).',
     'imap_folder_long'         => 'cartella e-mail: nome troppo lungo (al massimo 60 caratteri per livello).',
     'imap_folder_deep'         => 'cartella e-mail: al massimo 4 livelli («A/B/C/D»).',
+    'upd_workdir'              => 'l’aggiornamento gira con l’utente «:user», che non può scrivere nella sua cartella di lavoro :path (proprietario: :owner).',
+    'upd_not_writable'         => 'l’aggiornamento gira con l’utente «:user», che non può modificare: :paths. Non è stato cambiato nulla. Correggi con: :command',
 ];

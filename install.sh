@@ -15,7 +15,7 @@
 #
 set -Eeuo pipefail
 
-SCRIPT_VERSION="1.5.0"   # same as WorkflowPacks/module.json (checked by tools/build-release.sh)
+SCRIPT_VERSION="1.5.1"   # same as WorkflowPacks/module.json (checked by tools/build-release.sh)
 REPO_URL="${WP_REPO_URL:-https://github.com/00MY00/WorkflowPacks}"
 MODULE="WorkflowPacks"
 ALIAS="workflowpacks"
@@ -178,7 +178,8 @@ backup() {
         }
         echo json_encode($out);
     ') >"$BACKUP/tables.json" 2>>"$LOG" || warn "$(t "Sauvegarde des tables impossible (base inaccessible ?) : voir le journal." "Cannot save the tables (database unreachable?): see the log.")"
-    chown -R "$WEB_USER" "$(dirname "$BACKUP")"
+    # the whole work folder, not only backups/: the in-app update (cron, web server user) writes its lock there
+    chown -R "$WEB_USER":"$WEB_USER" "${FS_PATH}/storage/app/workflowpacks"
     ok "$(t "Sauvegarde : $BACKUP" "Backup: $BACKUP")"
 }
 
@@ -249,6 +250,11 @@ install_module() {
 verify() {
     step "$(t "Vérification" "Verification")"
     if [ "$DRY_RUN" -eq 1 ]; then printf '  (dry-run) php artisan workflowpacks:check\n'; return 0; fi
+    # repairs installations made by earlier versions of this script (work folder left to root): the in-app update
+    # runs as the web server user and must be able to write there
+    if [ -d "${FS_PATH}/storage/app/workflowpacks" ]; then
+        chown -R "$WEB_USER":"$WEB_USER" "${FS_PATH}/storage/app/workflowpacks" 2>>"$LOG" || true
+    fi
     local code=0
     (cd "$FS_PATH" && sudo -u "$WEB_USER" php artisan workflowpacks:check) || code=$?
     if [ "$code" -eq 2 ]; then

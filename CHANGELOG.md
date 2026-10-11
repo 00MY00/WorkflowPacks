@@ -4,6 +4,24 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [1.5.1] - 2026-10-14
+
+### Corrigé
+- **« Mettre à jour maintenant » restait sans effet, avec le message « another update is running ».**
+  - Cause : `install.sh` créait le dossier de travail `storage/app/workflowpacks` en tant que `root` et ne rendait à
+    l'utilisateur web que son sous-dossier `backups`. La mise à jour intégrée, lancée par le planificateur sous
+    l'utilisateur web, ne pouvait donc pas y créer son verrou, et ce refus était présenté à tort comme « une autre mise
+    à jour est en cours ».
+  - `install.sh` rend désormais tout le dossier à l'utilisateur web, et répare au passage les installations
+    existantes.
+  - Si le dossier appartient malgré tout à un autre utilisateur, la mise à jour utilise un dossier de travail de
+    secours (`storage/app/workflowpacks-<utilisateur>`).
+  - Avant de télécharger quoi que ce soit, la mise à jour vérifie qu'elle peut modifier le dossier du module, son
+    dossier parent, le lien public des modules et le cache de configuration. Sinon elle s'arrête sans rien changer,
+    avec un message qui nomme l'utilisateur, les dossiers concernés et la commande `chown` qui corrige.
+  - L'état « mise à jour en cours » est aussi lu en base de données, quel que soit l'utilisateur système qui affiche
+    la page.
+
 ## [1.5.0] - 2026-10-14
 
 ### Ajouté

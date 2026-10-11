@@ -212,4 +212,6 @@ return [
     'imap_folder_chars'        => 'dossier e-mail : caractères interdits (* % " ou contrôle, ou nom commençant par un point).',
     'imap_folder_long'         => 'dossier e-mail : nom trop long (60 caractères au plus par niveau).',
     'imap_folder_deep'         => 'dossier e-mail : 4 niveaux au plus (« A/B/C/D »).',
+    'upd_workdir'              => 'la mise à jour tourne sous l\'utilisateur « :user », qui ne peut pas écrire dans son dossier de travail :path (propriétaire : :owner).',
+    'upd_not_writable'         => 'la mise à jour tourne sous l\'utilisateur « :user », qui ne peut pas modifier : :paths. Rien n\'a été changé. Corrigez avec : :command',
 ];
