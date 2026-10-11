@@ -98,6 +98,9 @@ class Importer
             return $this->fail(Problems::t('imp_cancelled', ['error' => $e->getMessage()]));
         }
 
+        \Modules\WorkflowPacks\Services\History::add('import', 'ok', ['user_id' => $user ? $user->id : null, 'subject' => (string) $pack['name'],
+            'message' => json_encode(['counts' => $counts, 'version' => (string) $pack['pack_version']])]);
+
         return ['ok' => true, 'error' => '', 'results' => $results, 'counts' => $counts];
     }
 

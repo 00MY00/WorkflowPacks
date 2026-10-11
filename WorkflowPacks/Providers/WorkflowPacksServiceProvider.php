@@ -75,6 +75,7 @@ class WorkflowPacksServiceProvider extends ServiceProvider
                 \Modules\WorkflowPacks\Services\Update\Updater::OPTION => \Modules\WorkflowPacks\Services\Update\Updater::enabled(),
                 \Modules\WorkflowPacks\Services\Imap\ImapFolders::OPTION_ENABLED => \Modules\WorkflowPacks\Services\Imap\ImapFolders::enabled(),
                 \Modules\WorkflowPacks\Services\Imap\ImapFolders::OPTION_PREFIX => \Modules\WorkflowPacks\Services\Imap\ImapFolders::prefix(),
+                \Modules\WorkflowPacks\Services\Imap\ImapFolders::OPTION_PARENT => \Modules\WorkflowPacks\Services\Imap\ImapFolders::parentMode(),
             ]);
         }, 20, 2);
         \Eventy::addFilter('settings.view', function ($view, $section) {

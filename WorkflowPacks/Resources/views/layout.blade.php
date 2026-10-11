@@ -16,6 +16,7 @@
             <li class="{{ Route::is('workflowpacks.import*') || Route::is('workflowpacks.reimport') ? 'active' : '' }}"><a href="{{ route('workflowpacks.import') }}">{{ __('workflowpacks::messages.import') }}</a></li>
             <li class="{{ Route::is('workflowpacks.graph') ? 'active' : '' }}"><a href="{{ route('workflowpacks.graph') }}">{{ __('workflowpacks::graph.title') }}</a></li>
             <li class="{{ Route::is('workflowpacks.export*') ? 'active' : '' }}"><a href="{{ route('workflowpacks.export') }}">{{ __('workflowpacks::messages.export') }}</a></li>
+            <li class="{{ Route::is('workflowpacks.history*') ? 'active' : '' }}"><a href="{{ route('workflowpacks.history') }}">{{ __('workflowpacks::messages.history') }}</a></li>
             @if (Auth::user()->isAdmin())
                 <li class="{{ Route::is('workflowpacks.diagnostic') ? 'active' : '' }}"><a href="{{ route('workflowpacks.diagnostic') }}">{{ __('workflowpacks::messages.diagnostic') }}</a></li>
                 <li><a href="{{ route('settings', ['section' => 'workflowpacks']) }}">{{ __('workflowpacks::messages.settings') }}</a></li>

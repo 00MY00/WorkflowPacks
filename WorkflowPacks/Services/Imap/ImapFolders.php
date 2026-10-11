@@ -19,6 +19,9 @@ class ImapFolders
 {
     const OPTION_ENABLED = 'workflowpacks.imap_folders';
     const OPTION_PREFIX = 'workflowpacks.imap_prefix';
+    /** where the managed folders are created: auto (what the server says) | root | inbox */
+    const OPTION_PARENT = 'workflowpacks.imap_parent';
+    const PARENT_MODES = ['auto', 'root', 'inbox'];
 
     // read without Option's in-memory cache: Option::set() does not refresh it (app/Option.php)
     public static function enabled()
@@ -44,6 +47,13 @@ class ImapFolders
         }
 
         return false;
+    }
+
+    public static function parentMode()
+    {
+        $mode = (string) \App\Option::get(self::OPTION_PARENT, 'auto', true, false);
+
+        return in_array($mode, self::PARENT_MODES, true) ? $mode : 'auto';
     }
 
     public static function prefix()
@@ -77,20 +87,38 @@ class ImapFolders
                 return $performed;
             }
 
-            return self::queue($conversation, $value) || $performed;
+            return self::queue($conversation, $value, $workflow) || $performed;
         }, 20, 6);
     }
 
-    /** Queues the move of the last e-mail received in the conversation. False when there is nothing to move. */
-    public static function queue($conversation, $value)
+    /**
+     * Queues the move of the last e-mail received in the conversation. False when there is nothing to move. Every call
+     * is written in the history (Workflow Packs › History), with the reason when nothing is queued.
+     */
+    public static function queue($conversation, $value, $workflow = null)
     {
-        if (!self::enabled() || FolderPath::parse($value)['error'] !== null) {
+        $entry = [
+            'mailbox_id'      => $conversation->mailbox_id,
+            'conversation_id' => $conversation->id,
+            'workflow_id'     => $workflow && isset($workflow->id) ? $workflow->id : null,
+            'subject'         => is_string($value) ? FolderPath::label($value, self::prefix()) : '',
+        ];
+        $skip = function ($reason) use ($entry) {
+            \Modules\WorkflowPacks\Services\History::add('imap_file', 'skipped', $entry + ['message' => $reason]);
+
             return false;
+        };
+        if (!self::enabled()) {
+            return $skip(__('workflowpacks::messages.history_reason_option_off'));
+        }
+        $parsed = FolderPath::parse($value);
+        if ($parsed['error'] !== null) {
+            return $skip(\Modules\WorkflowPacks\Services\Pack\Problems::t($parsed['error']));
         }
         // mailbox without IMAP fetching (e.g. e-mails received another way): nothing on a server to file
         $mailbox = $conversation->mailbox;
         if (!$mailbox || !$mailbox->in_server || !$mailbox->in_username) {
-            return false;
+            return $skip(__('workflowpacks::messages.history_reason_no_imap'));
         }
         // last e-mail of the customer (FreeScout's own replies are not in the mailbox's inbox)
         $thread = $conversation->threads()
@@ -98,9 +126,10 @@ class ImapFolders
             ->whereNotNull('message_id')->where('message_id', '!=', '')
             ->orderBy('id', 'desc')->first();
         if (!$thread) {
-            return false;
+            return $skip(__('workflowpacks::messages.history_reason_no_email'));
         }
-        FileIntoImapFolder::dispatch((int) $conversation->mailbox_id, (int) $thread->id, (string) $value);
+        $activity = \Modules\WorkflowPacks\Services\History::add('imap_file', 'queued', $entry);
+        FileIntoImapFolder::dispatch((int) $conversation->mailbox_id, (int) $thread->id, (string) $value, $activity);
 
         return true;
     }

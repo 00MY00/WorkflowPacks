@@ -127,3 +127,10 @@
 .wp-bulk-all { font-weight: normal; margin: 0; }
 .wp-bulk-pack { margin: 0 6px 0 0 !important; vertical-align: -1px; }
 .wp-prev-on { font-weight: 600; }
+
+/* history */
+.wp-history td { vertical-align: top; font-size: 13px; }
+.wp-diag { padding-left: 18px; margin-bottom: 10px; }
+.wp-folders { list-style: none; padding-left: 0; max-height: 320px; overflow: auto; font-size: 13px; }
+.wp-folders li { padding: 2px 0; }
+.wp-folder-managed { font-weight: 600; }

@@ -9,6 +9,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Modules\WorkflowPacks\Services\Imap\ImapFolders;
 use Modules\WorkflowPacks\Services\Imap\ImapMover;
+use Modules\WorkflowPacks\Services\History;
 
 /**
  * "File into an e-mail folder [WP]": moves the e-mail of a thread on the mail server (queued by ImapFolders when
@@ -28,22 +29,29 @@ class FileIntoImapFolder implements ShouldQueue
     public $mailboxId;
     public $threadId;
     public $folder;
+    /** entry of the history to complete with the result */
+    public $activityId;
 
-    public function __construct($mailboxId, $threadId, $folder)
+    public function __construct($mailboxId, $threadId, $folder, $activityId = null)
     {
         $this->mailboxId = (int) $mailboxId;
         $this->threadId = (int) $threadId;
         $this->folder = (string) $folder;
+        $this->activityId = $activityId ? (int) $activityId : null;
     }
 
     public function handle()
     {
         if (!ImapFolders::enabled()) {
+            History::update($this->activityId, 'skipped', ['message' => __('workflowpacks::messages.history_reason_turned_off')]);
+
             return $this->log('skipped: the option is off');
         }
         $mailbox = \App\Mailbox::find($this->mailboxId);
         $thread = \App\Thread::find($this->threadId);
         if (!$mailbox || !$thread || !$thread->message_id) {
+            History::update($this->activityId, 'skipped', ['message' => __('workflowpacks::messages.history_reason_gone')]);
+
             return $this->log('skipped: mailbox or e-mail no longer exists');
         }
         try {
@@ -54,10 +62,34 @@ class FileIntoImapFolder implements ShouldQueue
         }
         $this->log($r['result'].($r['folder'] !== '' ? ' "'.$r['folder'].'"' : '').($r['reason'] !== '' ? ': '.$r['reason'] : ''),
             $r['result'] === 'failed' ? 'warning' : 'info');
+        $retry = $r['result'] === 'failed' && !empty($r['retry']) && $this->job && $this->attempts() < self::ATTEMPTS;
+        History::update($this->activityId, $r['result'], [
+            'subject' => $r['folder'] !== '' ? $r['folder'] : null,
+            'message' => trim(self::reason($r['reason']).($retry ? ' — '.__('workflowpacks::messages.history_reason_retry', ['n' => $this->attempts(), 'max' => self::ATTEMPTS]) : '')) ?: null,
+        ]);
         // try again later only when it may help (not for an invalid name or a mailbox without IMAP settings)
-        if ($r['result'] === 'failed' && !empty($r['retry']) && $this->job && $this->attempts() < self::ATTEMPTS) {
+        if ($retry) {
             $this->release(self::RETRY_DELAY);
         }
+    }
+
+    /** Reason of the mail server step, in the language of the interface when it is a known one. */
+    protected static function reason($reason)
+    {
+        $known = [
+            'the server refused the move' => 'refused_move',
+            'cannot create the folder'    => 'cannot_create',
+            'not a managed folder'        => 'not_managed',
+            'no IMAP settings for this mailbox' => 'no_imap',
+        ];
+        if (isset($known[$reason])) {
+            return __('workflowpacks::messages.history_reason_'.$known[$reason]);
+        }
+        if (strpos($reason, 'refused: this place is inside the trash folder') === 0) {
+            return __('workflowpacks::messages.history_reason_trash', ['folder' => trim(substr($reason, strlen('refused: this place is inside the trash folder')), ' "')]);
+        }
+
+        return $reason;
     }
 
     protected function log($text, $level = 'info')

@@ -363,6 +363,74 @@ class ImapFolderTest extends TestCase
         $this->assertSame(0, $total['errors']);
     }
 
+    public function testEveryFilingIsInTheHistoryWithItsResult()
+    {
+        $mailbox = $this->imapMailbox();
+        $id = $this->deliver($mailbox);
+        list($conversation, $thread) = $this->conversation($mailbox, $id);
+
+        // Workflows calls the action: "requested", then the job completes the same entry
+        \Queue::fake();
+        $this->assertTrue(ImapFolders::queue($conversation, 'Factures/Fournisseurs'));
+        $entry = \Modules\WorkflowPacks\Entities\Activity::where('kind', 'imap_file')->orderBy('id', 'desc')->first();
+        $this->assertSame(['queued', (int) $conversation->id], [$entry->status, (int) $entry->conversation_id]);
+        $job = null;
+        \Queue::assertPushed(FileIntoImapFolder::class, function ($j) use (&$job) {
+            $job = $j;
+
+            return true;
+        });
+        $job->handle();
+        $entry = $entry->fresh();
+        $this->assertSame('moved', $entry->status);
+        $this->assertStringContainsString('Fournisseurs', $entry->subject, 'folder on the server');
+
+        // nothing queued: the reason is written
+        $plain = $this->mailbox('No IMAP');
+        list($other) = $this->conversation($plain, 'x-'.self::uid().'@example.test');
+        $this->assertFalse(ImapFolders::queue($other, 'Factures'));
+        $skipped = \Modules\WorkflowPacks\Entities\Activity::orderBy('id', 'desc')->first();
+        $this->assertSame('skipped', $skipped->status);
+        $this->assertSame(__('workflowpacks::messages.history_reason_no_imap'), $skipped->message);
+    }
+
+    public function testTheMailServerFoldersCanBeLookedAtByAdministrators()
+    {
+        $mailbox = $this->imapMailbox();
+        $this->appendTo($mailbox, '[WP] Factures', 1);
+        $this->appendTo($mailbox, 'Trash', 1);
+        $admin = $this->user([], true);
+
+        $page = $this->actingAs($admin)->get(route('workflowpacks.history.inspect', ['imap_mailbox' => $mailbox->id]))->assertStatus(200);
+        $this->seeIn($page, '[WP] Factures');
+        $this->seeIn($page, e(__('workflowpacks::messages.history_inspect_managed')));
+        $this->seeIn($page, 'glyphicon-trash');
+        $this->seeIn($page, e(__('workflowpacks::messages.history_inspect_delimiter')));
+    }
+
+    public function testFoldersAreNeverCreatedInsideTheTrash()
+    {
+        $mailbox = $this->imapMailbox();
+        $id = $this->deliver($mailbox);
+        $this->appendTo($mailbox, 'Trash', 1);
+        // "under INBOX" while the trash of this test account is INBOX itself? Simulated: the parent is the trash folder
+        \Option::set(ImapFolders::OPTION_PARENT, 'inbox');
+        $mover = new class() extends ImapMover {
+            public function layout($client)
+            {
+                $layout = parent::layout($client);
+                $layout['parent'] = $layout['trash'][0];
+
+                return $layout;
+            }
+        };
+        $r = $mover->move($mailbox, $id, 'Factures', '[WP]');
+        $this->assertSame('failed', $r['result']);
+        $this->assertStringContainsString('trash', $r['reason']);
+        $this->assertSame([$id], $this->idsIn($mailbox, 'INBOX'), 'nothing moved');
+        \Option::set(ImapFolders::OPTION_PARENT, 'auto');
+    }
+
     public function testNothingHappensWhenTheOptionIsTurnedOffBeforeTheJobRuns()
     {
         $mailbox = $this->imapMailbox();

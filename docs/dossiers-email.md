@@ -102,3 +102,28 @@ Le délimiteur du serveur (`/` ou `.`) est détecté automatiquement. Les serveu
 - Testé avec un vrai serveur IMAP (GreenMail, délimiteur `.`) dans les tests d'intégration. Le comportement du module
   Workflows officiel, payant, avec une action ajoutée par filtre suit sa copie publique analysée
   ([analyse.md](analyse.md)) : à vérifier sur ton instance avec une règle de test.
+
+## Suivre ce qui se passe : l'onglet Historique
+
+**Workflow Packs › Historique** liste chaque rangement :
+- « demandé » quand Workflows appelle l'action ;
+- puis « rangé », « déjà rangé », « introuvable » ou « échec », avec la raison ;
+- ou « ignoré » avec la raison : option désactivée, boîte sans réception IMAP, aucun e-mail du client…
+
+En haut de la page, un **diagnostic** réservé aux administrateurs montre :
+- l'état de l'option ;
+- le dernier appel de Workflows ;
+- les rangements en attente ou en échec dans la file de FreeScout ;
+- avec **« Voir les dossiers »**, les dossiers présents sur le serveur e-mail d'une boîte (lecture seule).
+
+| Ce que montre l'historique | Que vérifier |
+|---|---|
+| aucune ligne « Rangement d'un e-mail » | la règle est-elle activée, ses conditions correspondent-elles, contient-elle l'action ? |
+| « ignoré » | la raison affichée (option, boîte sans IMAP…) |
+| « demandé » qui ne change jamais | la tâche planifiée (cron) de FreeScout, qui traite la file d'attente |
+| « échec » | la raison du serveur ; un nouvel essai est fait automatiquement |
+
+Le réglage **« Créer les dossiers »** (automatique, à la racine, sous INBOX) ne sert que si « Voir les dossiers »
+montre les dossiers `[WP]` au mauvais endroit. Un dossier `[WP]` n'est jamais créé dans la corbeille.
+
+![Historique](screenshots/historique.png)

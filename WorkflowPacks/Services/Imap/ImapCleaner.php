@@ -12,11 +12,6 @@ namespace Modules\WorkflowPacks\Services\Imap;
  */
 class ImapCleaner extends ImapMover
 {
-    /** Usual names of the trash folder (last level, lower case), when the server does not flag it. */
-    const TRASH_NAMES = ['trash', 'deleted', 'deleted items', 'deleted messages', 'corbeille', 'éléments supprimés',
-        'papierkorb', 'gelöschte elemente', 'papelera', 'elementos eliminados', 'cestino', 'posta eliminata', 'prullenbak',
-        'verwijderde items', 'lixeira', 'itens excluídos', 'bin'];
-
     /**
      * @param int    $cutoff e-mails dated before this time (Unix timestamp) are removed
      * @param string $mode   trash | delete
@@ -32,22 +27,19 @@ class ImapCleaner extends ImapMover
         $client = \MailHelper::getMailboxClient($mailbox);
         $client->connect();
         try {
-            $paths = [];
-            $delimiter = '/';
-            $trash = null;
-            foreach ($client->getFolders(false) as $f) {
-                $paths[] = (string) $f->path;
-                $delimiter = (string) ($f->delimiter ?: $delimiter);
-                if ($trash === null && $this->isTrash($f, $delimiter)) {
-                    $trash = (string) $f->path;
-                }
-            }
-            $parent = $this->parent($paths, $delimiter);
+            $layout = $this->layout($client);
+            $paths = $layout['paths'];
+            $delimiter = $layout['delimiter'];
+            $parent = $layout['parent'];
+            $trash = $layout['trash'] ? $layout['trash'][0] : null;
             $levels = FolderPath::levels($parsed['segments'], $prefix, $delimiter, $parent);
             $label = end($levels);
             $out['folder'] = $label;
             if (!FolderPath::isManaged($label, $prefix, $delimiter, $parent)) {
                 return ['error' => 'not a managed folder'] + $out;
+            }
+            if ($this->insideTrash($levels[0], $layout) !== null) {
+                return ['error' => 'refused: inside the trash folder'] + $out;
             }
             $target = mb_convert_encoding($label, 'UTF7-IMAP', 'UTF-8');
             if (!in_array($target, $paths, true)) {
@@ -88,22 +80,6 @@ class ImapCleaner extends ImapMover
             } catch (\Throwable $e) {
             }
         }
-    }
-
-    protected function isTrash($folder, $delimiter)
-    {
-        foreach (['attributes', 'flags'] as $property) {
-            $flags = isset($folder->$property) ? (array) $folder->$property : [];
-            foreach ($flags as $flag) {
-                if (is_string($flag) && strcasecmp($flag, '\Trash') === 0) {
-                    return true;
-                }
-            }
-        }
-        $path = mb_convert_encoding((string) $folder->path, 'UTF-8', 'UTF7-IMAP');
-        $parts = explode($delimiter ?: '/', $path);
-
-        return in_array(mb_strtolower(trim((string) end($parts))), self::TRASH_NAMES, true);
     }
 
     /** Date of the e-mail (Unix timestamp), or null when it cannot be read. */

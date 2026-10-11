@@ -28,6 +28,9 @@ remplacées pour chacune (`{{mailbox.email}}`, `{{mailbox.name}}`, `{{mailbox.id
   de Workflows, en minutes, heures ou jours, avec « Ajouter un délai » dans l'éditeur), et « les e-mails de
   `[WP] Newsletters` vont à la corbeille après 7 jours » (réglé dans le Schéma, appliqué toutes les 15 minutes). Voir
   [docs/minuteurs.md](docs/minuteurs.md).
+- **Historique** : chaque rangement d'e-mail (demandé, rangé, ignoré ou en échec, avec la raison), les nettoyages,
+  les imports et les changements de règles, plus un diagnostic (file d'attente, dossiers réellement présents sur le
+  serveur e-mail).
 - **Packs portables (format 2)** :
   - **sélecteurs de boîtes** (« toutes les boîtes », « adresse contient @example.com »…) évalués sur chaque
     installation ;
