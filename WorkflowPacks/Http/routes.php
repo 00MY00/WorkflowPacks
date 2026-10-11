@@ -45,6 +45,7 @@ Route::group([
     // history of what the module did (+ diagnostic of the e-mail filing for administrators)
     Route::get('/history', $users + ['uses' => 'HistoryController@index'])->name('workflowpacks.history');
     Route::get('/history/inspect', $admins + ['uses' => 'HistoryController@inspect'])->name('workflowpacks.history.inspect');
+    Route::get('/history/trace', $admins + ['uses' => 'HistoryController@trace'])->name('workflowpacks.history.trace');
     Route::get('/diagnostic', $admins + ['uses' => 'DiagnosticController@index'])->name('workflowpacks.diagnostic');
     // automatic clean-up of a managed e-mail folder (diagram: side panel of the folder; settings: list)
     Route::post('/retention', $admins + ['uses' => 'RetentionController@save'])->name('workflowpacks.retention.save');
