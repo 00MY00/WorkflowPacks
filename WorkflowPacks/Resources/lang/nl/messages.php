@@ -269,4 +269,12 @@ return [
     'retention_remove_btn'     => 'Verwijderen',
     'timer_prefix'             => 'Na :delay',
     'retention_short'          => 'opgeschoond na :delay',
+    'previous_on'              => 'Bestaande tickets: ja',
+    'previous_off'             => 'Bestaande tickets: nee',
+    'previous_help'            => 'De regel ook toepassen op tickets die vóór hem zijn aangemaakt (alleen die hij nog niet verwerkt heeft). Workflows neemt ze mee bij zijn regelmatige rondes.',
+    'previous_confirm'         => 'De regel verwerkt ook de tickets die al bestaan (alleen die hij nog niet verwerkt heeft). Controleer zijn acties (verwijderen, doorsturen, versturen) voor u verdergaat. Doorgaan?',
+    'previous_selected_on'     => 'Op bestaande tickets toepassen',
+    'previous_selected_off'    => 'Niet meer op bestaande toepassen',
+    'rules_previous_on'        => ':count regel(s) ook op bestaande tickets toegepast.',
+    'rules_previous_off'       => ':count regel(s) beperkt tot nieuwe tickets.',
 ];

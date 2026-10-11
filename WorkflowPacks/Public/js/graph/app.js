@@ -48,11 +48,14 @@
             onRefused: function () { self.toast(self.texts.connect_refused, 'error'); },
             onOpen: function (key) { self.open(key); },
             onResize: function (key, size, done) { self.resize(key, size, done); },
+            onMenu: function (x, y, keys) { self.menu.show(x, y, keys); },
+            onMenuClose: function () { if (self.menu) { self.menu.close(); } },
             onView: function () { if (self.minimap) { self.minimap.update(); } }
         });
         this.minimap = new WPGraph.Minimap(root.querySelector('.wpg-minimap svg'), this.view);
         this.inspector = new WPGraph.Inspector(root.querySelector('.wpg-inspector'), this);
         this.editor = new WPGraph.Editor(root.querySelector('.wpg-overlay'), this);
+        this.menu = new WPGraph.Menu(this);
         this.bindToolbar();
         this.bindKeys();
         this.load(true);
@@ -397,6 +400,111 @@
             var keys = Object.keys(self.view.selected);
             if (keys.length > 1) { self.inspector.showMulti(keys); }
         }).catch(function (e) { self.toast(e.message, 'error'); });
+    };
+
+    /** "Apply to previous conversations" on / off for several rules (only the ones they have not handled yet). */
+    App.prototype.previousMany = function (ids, on) {
+        var self = this, t = this.texts;
+        this.api.previousMany(ids, on).then(function (r) {
+            self.toast(t[on ? 'prev_done_on' : 'prev_done_off'].replace(':count', r.changed), 'ok');
+            if (r.refused && r.refused.length) { self.toast(r.refused.slice(0, 5).join('\n'), 'error'); }
+            return self.reload();
+        }).catch(function (e) { self.toast(e.message, 'error'); });
+    };
+
+    /** The selected rules applied to another mailbox (created there inactive), one after the other. */
+    App.prototype.applyMany = function (ruleKeys, mailbox) {
+        var self = this, t = this.texts, model = this.model;
+        var todo = ruleKeys.map(function (key) {
+            return model.edges.filter(function (e) { return e.kind === 'applies' && e.from === key && e.workflow_id; })[0];
+        }).filter(function (edge) { return edge && !model.linked(edge.from, mailbox.key); });
+        if (!todo.length) { this.toast(t.apply_many_none, 'error'); return; }
+        if (!window.confirm(t.apply_many_confirm.replace(':count', todo.length).replace(':mailbox', mailbox.label))) { return; }
+        var done = 0, errors = [];
+        todo.reduce(function (chain, edge) {
+            return chain.then(function () {
+                return self.api.apply(edge.workflow_id, mailbox.id).then(function () { done++; }, function (e) { errors.push(e.message); });
+            });
+        }, Promise.resolve()).then(function () {
+            self.toast(t.apply_many_done.replace(':count', done).replace(':mailbox', mailbox.label), done ? 'ok' : 'error');
+            if (errors.length) { self.toast(errors.slice(0, 5).join('\n'), 'error'); }
+            return self.reload();
+        });
+    };
+
+    /** Export page with the selected rules ticked (the export works mailbox by mailbox: the one holding most of them). */
+    App.prototype.exportRules = function (instances) {
+        var by = {};
+        instances.forEach(function (e) { (by[e.to] = by[e.to] || []).push(e.workflow_id); });
+        var best = Object.keys(by).sort(function (a, b) { return by[b].length - by[a].length; })[0];
+        if (!best) { return; }
+        if (Object.keys(by).length > 1) { this.toast(this.texts.export_one_mailbox, 'ok'); }
+        var url = this.cfg.urls.export + '?mailbox_id=' + encodeURIComponent(this.model.nodes[best].id)
+            + by[best].map(function (id) { return '&workflows%5B%5D=' + encodeURIComponent(id); }).join('');
+        window.location.href = url;
+    };
+
+    /** Only the selected blocks and their links on screen ("Show all" to come back). */
+    App.prototype.focusKeys = function (keys) {
+        if (keys.length === 1) { this.focusOn(keys[0]); return; }
+        var all = keys.slice();
+        keys.forEach(function (k) { this.model.neighbors(k).forEach(function (n) { if (all.indexOf(n) < 0) { all.push(n); } }); }, this);
+        this.view.focus = { keys: all };
+        this.view.render();
+        this.view.select(keys);
+        this.view.fit(all);
+        var banner = this.root.querySelector('.wpg-focus');
+        banner.querySelector('.wpg-focus-label').textContent = this.texts.focus_selection.replace(':count', keys.length);
+        banner.classList.add('open');
+    };
+
+    /** Align / distribute the selected blocks (one undo step); the blocks they would cover step aside. */
+    App.prototype.arrangeSelection = function (keys, how) {
+        var model = this.model;
+        var list = keys.filter(function (k) { return model.pos[k] && model.nodes[k]; }).map(function (k) {
+            var size = L.size(model.nodes[k]);
+            return { key: k, x: model.pos[k][0], y: model.pos[k][1], w: size[0], h: size[1] };
+        });
+        if (list.length < 2) { return; }
+        var before = model.snapshot(list.map(function (n) { return n.key; }));
+        var after = {};
+        if (how === 'left' || how === 'top') {
+            var axis = how === 'left' ? 'x' : 'y';
+            var min = Math.min.apply(null, list.map(function (n) { return n[axis]; }));
+            list.forEach(function (n) { after[n.key] = axis === 'x' ? [min, n.y] : [n.x, min]; });
+        } else {
+            var vertical = how === 'vertical', pos = vertical ? 'y' : 'x', len = vertical ? 'h' : 'w';
+            list.sort(function (a, b) { return a[pos] - b[pos]; });
+            var first = list[0], last = list[list.length - 1];
+            var used = list.reduce(function (sum, n) { return sum + n[len]; }, 0);
+            var gap = Math.max(24, ((last[pos] + last[len]) - first[pos] - used) / (list.length - 1));
+            var at = first[pos];
+            list.forEach(function (n) {
+                after[n.key] = vertical ? [n.x, Math.round(at)] : [Math.round(at), n.y];
+                at += n[len] + gap;
+            });
+        }
+        var pushed;
+        model.apply(after);
+        pushed = this.unoverlap(Object.keys(after));
+        Object.keys(pushed.before).forEach(function (k) { before[k] = pushed.before[k]; after[k] = pushed.after[k]; });
+        model.commit(before, after);
+        this.savePositions(after);
+        this.view.render();
+        this.minimap.update();
+    };
+
+    /** Back to the size of their text for the selected blocks. */
+    App.prototype.autoSize = function (keys) {
+        var measure = this.measure || (this.measure = this.measurer());
+        keys.forEach(function (k) {
+            if (this.sizes[k]) { delete this.sizes[k]; this.sizeQueue[k] = null; }
+            if (this.model.nodes[k]) { this.fitBox(measure, this.model.nodes[k]); }
+        }, this);
+        this.unoverlap(keys);
+        this.savePositions({});
+        this.view.render();
+        this.minimap.update();
     };
 
     /** Link drawn from a rule to a mailbox: the rule is applied there (inactive), after confirmation. */

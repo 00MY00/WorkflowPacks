@@ -220,3 +220,22 @@
 .wpg-w-num { width: 90px !important; }
 .wpg-w-unit { width: auto !important; }
 .wpg-timer-ic { font-size: 15px; }
+
+/* quick actions where the mouse is (right click, end of a selection rectangle) */
+.wpg-menu { position: fixed; z-index: 1050; min-width: 240px; max-width: 340px; background: var(--g-card); border: 1px solid var(--g-border);
+  border-radius: 10px; box-shadow: 0 12px 32px rgba(15, 23, 42, .18); padding: 6px; font-size: 13px; }
+.wpg-menu-head { padding: 4px 8px 6px; color: var(--g-muted); font-size: 12px; font-weight: 600; }
+.wpg-menu-sep { height: 1px; background: var(--g-border); margin: 4px 2px; }
+.wpg-menu-item { display: flex; align-items: center; gap: 8px; width: 100%; padding: 6px 8px; border: 0; border-radius: 6px; background: none;
+  color: var(--g-text); text-align: left; cursor: pointer; }
+.wpg-menu-item:hover, .wpg-menu-item:focus { background: rgba(99, 102, 241, .1); outline: none; }
+.wpg-menu-item .wpg-svg-icon, .wpg-menu-item .wpg-ic svg { width: 16px; height: 16px; flex: none; }
+.wpg-menu-more { margin-left: auto; color: var(--g-muted); }
+.wpg-menu-parent { position: relative; }
+.wpg-menu-sub { display: none; position: static; box-shadow: none; border: 0; padding: 0 0 0 18px; max-height: 240px; overflow: auto; }
+.wpg-menu-parent.open .wpg-menu-sub { display: block; }
+/* left button on the background = selection rectangle; the view moves with the right / middle button or Space */
+.wpg-canvas { cursor: default; }
+.wpg-canvas.space-pan { cursor: grab; }
+.wpg-canvas.panning { cursor: grabbing; }
+.wpg-lasso { fill: rgba(37, 99, 235, .10); stroke: #2563eb; stroke-width: 1.5; stroke-dasharray: none; }

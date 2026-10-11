@@ -76,6 +76,18 @@
                             @if (!empty($filter))<input type="hidden" name="mailbox_id" value="{{ $filter }}">@endif
                             <button type="submit" class="btn btn-link btn-xs">{{ __('workflowpacks::messages.'.($s['active'] ? 'disable' : 'enable')) }}</button>
                         </form>
+                        {{-- also the conversations created before the rule (only those it has not handled yet) --}}
+                        <form method="POST" action="{{ route('workflowpacks.rules.toggle') }}" class="wp-inline wp-chip-toggle">
+                            {{ csrf_field() }}
+                            <input type="hidden" name="workflow_ids[]" value="{{ $s['workflow_id'] }}">
+                            <input type="hidden" name="previous" value="{{ !empty($s['previous']) ? 0 : 1 }}">
+                            @if (!empty($filter))<input type="hidden" name="mailbox_id" value="{{ $filter }}">@endif
+                            <button type="submit" class="btn btn-link btn-xs {{ !empty($s['previous']) ? 'wp-prev-on' : '' }}"
+                                title="{{ __('workflowpacks::messages.previous_help') }}"
+                                @if (empty($s['previous'])) data-wp-confirm="{{ __('workflowpacks::messages.previous_confirm') }}" @endif>
+                                {{ __('workflowpacks::messages.'.(!empty($s['previous']) ? 'previous_on' : 'previous_off')) }}
+                            </button>
+                        </form>
                     @endif
                 </span>
             @empty

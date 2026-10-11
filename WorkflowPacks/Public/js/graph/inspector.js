@@ -205,8 +205,13 @@
         if (keys.length > 15) { body.appendChild(h('p', { class: 'wpg-muted', text: '… +' + (keys.length - 15) })); }
         var actions = h('div', { class: 'wpg-ins-actions' });
         if (list.length) {
-            actions.appendChild(this.button(t.enable_all.replace(':count', list.length - active), 'zap', function () { app.toggleMany(list, true); }, true));
-            actions.appendChild(this.button(t.disable_all.replace(':count', active), 'hand', function () { app.toggleMany(list, false); }));
+            // only the buttons that would change something
+            if (active < list.length) { actions.appendChild(this.button(t.enable_all.replace(':count', list.length - active), 'zap', function () { app.toggleMany(list, true); }, true)); }
+            if (active) { actions.appendChild(this.button(t.disable_all.replace(':count', active), 'hand', function () { app.toggleMany(list, false); })); }
+            actions.appendChild(this.button(t.menu_prev_on.replace(':count', list.length), 'undo', function () {
+                if (window.confirm(t.prev_confirm)) { app.previousMany(list, true); }
+            }));
+            actions.appendChild(this.button(t.menu_prev_off.replace(':count', list.length), 'redo', function () { app.previousMany(list, false); }));
         } else {
             body.appendChild(h('p', { class: 'wpg-hint', text: t.multi_none }));
         }

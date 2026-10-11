@@ -200,6 +200,33 @@ class RuleEditor
     }
 
     /**
+     * "Apply to previous conversations" (apply_to_prev of Workflows) for several rules: Workflows then also goes through
+     * the conversations created before the rule, only those this rule has not handled yet. Permission checked per rule.
+     *
+     * @return array ['ok' => true, 'changed' => int, 'unchanged' => int, 'refused' => string[]]
+     */
+    public function applyToPreviousMany($user, array $workflowIds, $on)
+    {
+        $out = ['ok' => true, 'changed' => 0, 'unchanged' => 0, 'refused' => []];
+        foreach (array_slice(array_values(array_unique(array_map('intval', $workflowIds))), 0, 1000) as $id) {
+            $wf = $id ? Bridge::query()->find($id) : null;
+            if (!$wf || !Bridge::canEdit($user, $wf->mailbox_id)) {
+                $out['refused'][] = '#'.$id.' : '.Problems::t('denied');
+                continue;
+            }
+            if ((bool) $wf->apply_to_prev === (bool) $on) {
+                $out['unchanged']++;
+                continue;
+            }
+            $wf->apply_to_prev = (bool) $on;
+            $wf->save();
+            $out['changed']++;
+        }
+
+        return $out;
+    }
+
+    /**
      * Applies the rule of a node to another mailbox (link drawn in the diagram). Rule of a pack: the pack is imported
      * for this rule only, through the normal plan / import (variables, resources, links). Other rule: copied, inactive.
      */

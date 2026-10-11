@@ -29,6 +29,9 @@
             <span class="wp-bulk-count"><b data-wp-bulk-count>0</b> {{ __('workflowpacks::messages.selected_rules') }}</span>
             <button type="submit" name="active" value="1" class="btn btn-success btn-xs" data-wp-bulk-action>{{ __('workflowpacks::messages.enable_selected') }}</button>
             <button type="submit" name="active" value="0" class="btn btn-default btn-xs" data-wp-bulk-action>{{ __('workflowpacks::messages.disable_selected') }}</button>
+            <button type="submit" name="previous" value="1" class="btn btn-default btn-xs" data-wp-bulk-action title="{{ __('workflowpacks::messages.previous_help') }}"
+                data-wp-confirm="{{ __('workflowpacks::messages.previous_confirm') }}">{{ __('workflowpacks::messages.previous_selected_on') }}</button>
+            <button type="submit" name="previous" value="0" class="btn btn-default btn-xs" data-wp-bulk-action>{{ __('workflowpacks::messages.previous_selected_off') }}</button>
         </form>
     @endif
 

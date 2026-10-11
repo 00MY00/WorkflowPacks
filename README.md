@@ -158,8 +158,12 @@ Les boîtes et les paramètres du dernier import sont repris. Les paramètres «
 
 Dans la liste des packs, chaque règle affiche son état dans chaque boîte, avec un lien **Activer / Désactiver**. Pour
 en changer plusieurs, cochez-les (une case par règle et par boîte, une par pack, ou « Tout sélectionner »), puis
-cliquez sur **Activer la sélection** ou **Désactiver la sélection**. Le Schéma permet la même chose sur une sélection
-de blocs.
+cliquez sur **Activer la sélection** ou **Désactiver la sélection**.
+
+**Tickets existants** : « Tickets existants : oui / non » sur chaque règle, et « Appliquer aux tickets existants » pour
+la sélection. La règle traite alors aussi les tickets créés avant elle, seulement ceux qu'elle n'a pas encore traités.
+Workflows les reprend lors de ses passages réguliers. Le Schéma permet tout cela sur une sélection de blocs,
+rectangle au clic gauche puis menu d'actions rapides.
 
 ![Activer ou désactiver](docs/screenshots/liste-activer.png)
 

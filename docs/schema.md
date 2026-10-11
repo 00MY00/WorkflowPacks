@@ -53,8 +53,23 @@ Liens d'une règle vers une boîte :
 
 ## Se déplacer
 
-- Faites glisser le fond pour vous déplacer et utilisez la molette pour zoomer. La mini-carte en bas à droite sert à
-  sauter ailleurs.
+- **Se déplacer** : clic droit ou molette maintenus, ou Espace + glisser, ou un doigt sur écran tactile. La molette
+  sert à zoomer. La mini-carte en bas à droite sert à sauter ailleurs.
+- **Sélectionner** : glissez sur le fond avec le clic gauche pour tracer un **rectangle bleu** (Maj : ajouter à la
+  sélection), ou cliquez sur un bloc (Maj + clic : en ajouter un).
+- **Actions rapides** : au relâchement du rectangle, ou avec un clic droit, un menu s'ouvre à l'endroit de la souris.
+  Il propose :
+  - modifier ;
+  - activer / désactiver ;
+  - appliquer ou ne plus appliquer **aux tickets existants** ;
+  - appliquer à une boîte ;
+  - exporter en pack ;
+  - isoler ;
+  - aligner, répartir ;
+  - taille automatique ;
+  - désélectionner.
+
+  ![Actions rapides](screenshots/schema-actions-rapides.png)
 - **Vue globale** (`0`) affiche tout. Quand on s'éloigne, le zoom devient sémantique :
   - les blocs ne gardent qu'un nom court et grand ;
   - de très loin, seuls les boîtes, les packs et les destinations restent nommés, et les règles deviennent des blocs
@@ -103,7 +118,7 @@ destinations peuvent être masqués.
     suivie par le pack.
   - Pour une règle locale, c'est une copie, renommée si le nom est déjà pris.
 - L'interrupteur du panneau active ou désactive une règle. Une règle incomplète ne peut pas être activée.
-- **Plusieurs à la fois** : sélectionnez plusieurs blocs avec Maj + clic ou Maj + glisser sur le fond. Le panneau
+- **Plusieurs à la fois** : sélectionnez plusieurs blocs avec le rectangle (glisser sur le fond) ou Maj + clic. Le panneau
   propose alors **Activer (n)** et **Désactiver (n)** pour toutes les règles concernées : une règle sélectionnée dans
   toutes ses boîtes, une boîte sélectionnée avec toutes ses règles.
 
