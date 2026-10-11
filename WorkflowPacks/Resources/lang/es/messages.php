@@ -269,4 +269,12 @@ return [
     'retention_remove_btn'     => 'Quitar',
     'timer_prefix'             => 'Después de :delay',
     'retention_short'          => 'limpiada después de :delay',
+    'previous_on'              => 'Tickets existentes: sí',
+    'previous_off'             => 'Tickets existentes: no',
+    'previous_help'            => 'Aplicar también la regla a los tickets creados antes que ella (solo los que aún no ha tratado). Workflows los retoma en sus pasadas regulares.',
+    'previous_confirm'         => 'La regla también tratará los tickets que ya existen (solo los que aún no ha tratado). Compruebe sus acciones (eliminar, reenviar, enviar) antes de continuar. ¿Continuar?',
+    'previous_selected_on'     => 'Aplicar a los tickets existentes',
+    'previous_selected_off'    => 'Dejar de aplicar a los existentes',
+    'rules_previous_on'        => ':count regla(s) aplicada(s) también a los tickets existentes.',
+    'rules_previous_off'       => ':count regla(s) limitada(s) a los tickets nuevos.',
 ];

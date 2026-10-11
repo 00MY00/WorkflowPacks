@@ -289,6 +289,18 @@
         this.svg.addEventListener('pointermove', function (e) { self.move(e); });
         this.svg.addEventListener('pointerup', function (e) { self.up(e); });
         this.svg.addEventListener('pointercancel', function () { self.cancel(); });
+        // right click: our quick actions instead of the browser's menu
+        this.svg.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+        // Space held: the left button moves the view (like draw.io)
+        window.addEventListener('keydown', function (e) {
+            if (e.code === 'Space' && !/^(INPUT|TEXTAREA|SELECT)$/.test((e.target.tagName || '')) && !e.target.isContentEditable) {
+                if (!self.spaceDown) { self.spaceDown = true; self.svg.classList.add('space-pan'); }
+                if (e.target === document.body || self.svg.contains(e.target)) { e.preventDefault(); }
+            }
+        });
+        window.addEventListener('keyup', function (e) {
+            if (e.code === 'Space') { self.spaceDown = false; self.svg.classList.remove('space-pan'); }
+        });
         this.svg.addEventListener('wheel', function (e) {
             e.preventDefault();
             self.zoomAt(Math.exp(-e.deltaY * 0.0015), e.clientX, e.clientY);
@@ -296,12 +308,21 @@
     };
 
     View.prototype.down = function (e) {
-        if (e.button !== 0) { return; }
         var handle = e.target.closest('.wpg-handle');
         var grip = e.target.closest('.wpg-grip');
         var node = e.target.closest('.wpg-node');
         var edge = e.target.closest('.wpg-edge-hit');
         var w = this.world(e.clientX, e.clientY);
+        if (this.opts.onMenuClose) { this.opts.onMenuClose(); }
+        // moving the view: right or middle button, Space + left button, or a finger
+        if (e.button === 1 || e.button === 2 || (e.button === 0 && (this.spaceDown || e.pointerType === 'touch') && !node)) {
+            this.svg.setPointerCapture(e.pointerId);
+            this.mode = { type: 'pan', start: [e.clientX, e.clientY], t0: { x: this.t.x, y: this.t.y }, moved: false, button: e.button,
+                node: node ? node.getAttribute('data-key') : null };
+            this.svg.classList.add('panning');
+            return;
+        }
+        if (e.button !== 0) { return; }
         this.svg.setPointerCapture(e.pointerId);
         if (handle && node) {
             this.mode = { type: 'connect', from: node.getAttribute('data-key') };
@@ -331,13 +352,8 @@
             this.mode = { type: 'edge', index: parseInt(edge.getAttribute('data-edge'), 10) };
             return;
         }
-        if (e.shiftKey) {
-            // Shift + drag on the background: selection rectangle (adds to the current selection)
-            this.mode = { type: 'lasso', start: w, rect: el('rect', { class: 'wpg-lasso', x: w[0], y: w[1], width: 0, height: 0 }, this.vp) };
-            return;
-        }
-        this.mode = { type: 'pan', start: [e.clientX, e.clientY], t0: { x: this.t.x, y: this.t.y }, moved: false };
-        this.svg.classList.add('panning');
+        // left button on the background: blue selection rectangle (Shift: added to the current selection)
+        this.mode = { type: 'lasso', start: w, add: e.shiftKey, rect: el('rect', { class: 'wpg-lasso', x: w[0], y: w[1], width: 0, height: 0 }, this.vp) };
     };
 
     View.prototype.move = function (e) {
@@ -394,9 +410,16 @@
         this.mode = null;
         this.svg.classList.remove('panning', 'connecting');
         if (!m) { return; }
-        if (m.type === 'pan' && !m.moved) {
-            this.select([]);
-            if (this.opts.onSelect) { this.opts.onSelect(null); }
+        if (m.type === 'pan' && !m.moved && m.button === 2) {
+            // right click: quick actions where the mouse is (on a block outside the selection: that block only)
+            if (m.node && !this.selected[m.node]) {
+                this.selected = {};
+                this.selected[m.node] = true;
+                this.selectedEdge = null;
+                this.highlight();
+                if (this.opts.onSelect) { this.opts.onSelect(m.node); }
+            }
+            if (this.opts.onMenu) { this.opts.onMenu(e.clientX, e.clientY, Object.keys(this.selected)); }
         } else if (m.type === 'drag') {
             if (m.moved && this.opts.onMoved) {
                 this.opts.onMoved(m.origin, this.model.snapshot(m.keys));
@@ -413,7 +436,14 @@
             }
         } else if (m.type === 'lasso') {
             m.rect.parentNode.removeChild(m.rect);
-            if (m.box && m.box[2] > 3 && m.box[3] > 3) {
+            if (!m.box || m.box[2] <= 3 || m.box[3] <= 3) {
+                // simple click on the background: nothing selected any more
+                this.select([]);
+                if (this.opts.onSelect) { this.opts.onSelect(null); }
+                return;
+            }
+            if (!m.add) { this.selected = {}; }
+            if (m.box) {
                 // every visible block touching the rectangle joins the selection
                 this.model.list(this.visible.bind(this)).forEach(function (n) {
                     var p = this.model.pos[n.key], s = L.size(n);
@@ -424,6 +454,8 @@
                 this.selectedEdge = null;
                 this.highlight();
                 if (this.opts.onSelect) { this.opts.onSelect(Object.keys(this.selected)[0] || null); }
+                // quick actions for the blocks just selected, where the mouse was released
+                if (Object.keys(this.selected).length && this.opts.onMenu) { this.opts.onMenu(e.clientX, e.clientY, Object.keys(this.selected)); }
             }
         } else if (m.type === 'resize') {
             if (m.moved) {

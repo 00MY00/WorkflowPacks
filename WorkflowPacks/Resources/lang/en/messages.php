@@ -273,4 +273,12 @@ return [
     'retention_remove_btn'     => 'Remove',
     'timer_prefix'             => 'After :delay',
     'retention_short'          => 'cleaned after :delay',
+    'previous_on'              => 'Existing tickets: yes',
+    'previous_off'             => 'Existing tickets: no',
+    'previous_help'            => 'Also apply the rule to the tickets created before it (only those it has not handled yet). Workflows picks them up in its regular runs.',
+    'previous_confirm'         => 'The rule will also handle the tickets that already exist (only those it has not handled yet). Check its actions (delete, forward, send) before going on. Continue?',
+    'previous_selected_on'     => 'Apply to existing tickets',
+    'previous_selected_off'    => 'Stop applying to existing ones',
+    'rules_previous_on'        => ':count rule(s) also applied to existing tickets.',
+    'rules_previous_off'       => ':count rule(s) limited to new tickets.',
 ];

@@ -98,6 +98,18 @@ class GraphController extends Controller
         return response()->json((new RuleEditor())->toggleMany(auth()->user(), $ids, (bool) $request->input('active')));
     }
 
+    /** "Apply to previous conversations" on / off for several rules (selection of the diagram). */
+    public function previousMany(Request $request)
+    {
+        $this->guard();
+        $ids = $request->input('ids', []);
+        if (!is_array($ids)) {
+            return response()->json(['ok' => false, 'errors' => ['invalid']], 422);
+        }
+
+        return response()->json((new RuleEditor())->applyToPreviousMany(auth()->user(), $ids, (bool) $request->input('on')));
+    }
+
     public function apply(Request $request, $id)
     {
         $this->guard();

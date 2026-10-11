@@ -58,6 +58,7 @@ class PacksController extends Controller
                         'mailbox'  => optional($mailboxes->firstWhere('id', $link->mailbox_id))->name ?: '#'.$link->mailbox_id,
                         'state'    => $state,
                         'active'   => $wf ? (bool) $wf->active : false,
+                        'previous' => $wf ? (bool) $wf->apply_to_prev : false,
                         'workflow_id' => $state !== 'missing' ? (int) $wf->id : null,
                         'url'      => $wf && \Route::has('mailboxes.workflows.update') ? route('mailboxes.workflows.update', ['mailbox_id' => $wf->mailbox_id, 'id' => $wf->id]) : '',
                         'version'  => $link->pack_version,
@@ -81,8 +82,16 @@ class PacksController extends Controller
         if (!$ids) {
             return $back->with('flash_error_floating', __('workflowpacks::messages.rules_none_selected'));
         }
-        $result = (new \Modules\WorkflowPacks\Services\Graph\RuleEditor())->toggleMany(auth()->user(), $ids, $active);
-        $back = $back->with('flash_success_floating', __('workflowpacks::messages.'.($active ? 'rules_enabled' : 'rules_disabled'), ['count' => $result['changed']]));
+        $editor = new \Modules\WorkflowPacks\Services\Graph\RuleEditor();
+        if ($request->has('previous')) {
+            // "apply to previous conversations" on / off instead of enabled / disabled
+            $on = (bool) $request->input('previous');
+            $result = $editor->applyToPreviousMany(auth()->user(), $ids, $on);
+            $back = $back->with('flash_success_floating', __('workflowpacks::messages.'.($on ? 'rules_previous_on' : 'rules_previous_off'), ['count' => $result['changed']]));
+        } else {
+            $result = $editor->toggleMany(auth()->user(), $ids, $active);
+            $back = $back->with('flash_success_floating', __('workflowpacks::messages.'.($active ? 'rules_enabled' : 'rules_disabled'), ['count' => $result['changed']]));
+        }
         if ($result['refused']) {
             $back = $back->with('flash_error_floating', __('workflowpacks::messages.rules_refused', ['list' => implode(' · ', array_slice($result['refused'], 0, 10))]));
         }

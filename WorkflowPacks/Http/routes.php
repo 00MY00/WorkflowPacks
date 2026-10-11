@@ -38,6 +38,7 @@ Route::group([
     Route::post('/graph/rule', $users + ['uses' => 'GraphController@saveRule'])->name('workflowpacks.graph.save');
     Route::post('/graph/rule/{id}/toggle', $users + ['uses' => 'GraphController@toggle'])->name('workflowpacks.graph.toggle');
     Route::post('/graph/rules/toggle', $users + ['uses' => 'GraphController@toggleMany'])->name('workflowpacks.graph.toggle_many');
+    Route::post('/graph/rules/previous', $users + ['uses' => 'GraphController@previousMany'])->name('workflowpacks.graph.previous_many');
     Route::post('/graph/rule/{id}/apply', $users + ['uses' => 'GraphController@apply'])->name('workflowpacks.graph.apply');
 
     Route::get('/diagnostic', $admins + ['uses' => 'DiagnosticController@index'])->name('workflowpacks.diagnostic');

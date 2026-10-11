@@ -269,4 +269,12 @@ return [
     'retention_remove_btn'     => 'Entfernen',
     'timer_prefix'             => 'Nach :delay',
     'retention_short'          => 'bereinigt nach :delay',
+    'previous_on'              => 'Bestehende Tickets: ja',
+    'previous_off'             => 'Bestehende Tickets: nein',
+    'previous_help'            => 'Die Regel auch auf Tickets anwenden, die vor ihr erstellt wurden (nur die, die sie noch nicht bearbeitet hat). Workflows nimmt sie bei seinen regelmäßigen Durchläufen auf.',
+    'previous_confirm'         => 'Die Regel bearbeitet auch bereits bestehende Tickets (nur die, die sie noch nicht bearbeitet hat). Prüfen Sie ihre Aktionen (Löschen, Weiterleiten, Senden). Fortfahren?',
+    'previous_selected_on'     => 'Auf bestehende Tickets anwenden',
+    'previous_selected_off'    => 'Nicht mehr auf bestehende anwenden',
+    'rules_previous_on'        => ':count Regel(n) auch auf bestehende Tickets angewendet.',
+    'rules_previous_off'       => ':count Regel(n) auf neue Tickets beschränkt.',
 ];

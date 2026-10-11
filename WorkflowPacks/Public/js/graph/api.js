@@ -57,6 +57,7 @@
     Api.prototype.saveRule = function (payload) { return this.request('POST', this.urls.save, payload); };
     Api.prototype.toggle = function (id, active) { return this.request('POST', this.url('toggle', id), { active: !!active }); };
     Api.prototype.toggleMany = function (ids, active) { return this.request('POST', this.urls.toggleMany, { ids: ids, active: !!active }); };
+    Api.prototype.previousMany = function (ids, on) { return this.request('POST', this.urls.previousMany, { ids: ids, on: !!on }); };
     Api.prototype.saveRetention = function (folder, number, metric, mode) {
         return this.request('POST', this.urls.retention, { folder: folder, number: number, metric: metric, mode: mode });
     };

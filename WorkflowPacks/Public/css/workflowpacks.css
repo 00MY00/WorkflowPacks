@@ -126,3 +126,4 @@
 .wp-bulk { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 10px 0; padding: 6px 10px; border: 1px solid var(--wp-border); border-radius: 8px; position: sticky; top: 0; z-index: 3; background: var(--fd-card, #fff); }
 .wp-bulk-all { font-weight: normal; margin: 0; }
 .wp-bulk-pack { margin: 0 6px 0 0 !important; vertical-align: -1px; }
+.wp-prev-on { font-weight: 600; }

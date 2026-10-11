@@ -75,7 +75,8 @@ class GraphBuilder
                 $state = 'local';
             }
             $edges[] = ['from' => $ruleKey, 'to' => 'mb:'.$wf->mailbox_id, 'kind' => 'applies', 'workflow_id' => (int) $wf->id,
-                'active' => (bool) $wf->active, 'state' => $state, 'name' => (string) $wf->name];
+                'active' => (bool) $wf->active, 'previous' => (bool) $wf->apply_to_prev, 'state' => $state, 'name' => (string) $wf->name,
+                'sensitive' => $summary['sensitive']];
             foreach ($this->destinations($attributes, $jsonActions, $nodes) as $dest) {
                 $chain = $dest['chain'] ?? [];
                 unset($dest['chain']);

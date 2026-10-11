@@ -4,6 +4,31 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [1.10.0] - 2026-10-19
+
+### Ajouté
+- **Appliquer les règles aux tickets déjà existants** (option `apply_to_prev` de Workflows : les tickets créés avant
+  la règle, **seulement ceux qu'elle n'a pas encore traités**).
+  - Vue générale : repère « Tickets existants : oui / non » cliquable sur chaque règle et chaque boîte, et boutons
+    « Appliquer aux tickets existants » / « Ne plus appliquer aux existants » dans la barre de sélection.
+  - Schéma : depuis le menu d'actions rapides et le panneau d'une sélection.
+  - Une confirmation est demandée, avec un avertissement renforcé si une règle supprime, transfère ou envoie.
+- **Schéma : sélection au rectangle bleu avec le clic gauche**, comme dans draw.io. On glisse sur le fond ; Maj
+  ajoute à la sélection. Pour se déplacer : clic droit ou molette maintenus, Espace + glisser, ou un doigt sur
+  écran tactile. La molette sert toujours à zoomer.
+- **Schéma : menu d'actions rapides** à l'endroit de la souris, au relâchement du rectangle et au clic droit. Il
+  ne propose que ce qui a du sens pour la sélection :
+  - modifier la règle ;
+  - activer / désactiver ;
+  - appliquer ou ne plus appliquer aux tickets existants ;
+  - appliquer à une boîte (les règles y sont créées désactivées) ;
+  - exporter en pack (la page d'export s'ouvre avec les règles cochées) ;
+  - isoler la sélection ;
+  - aligner à gauche ou en haut, répartir verticalement ou horizontalement (annulable) ;
+  - taille automatique ;
+  - tout désélectionner.
+- Le panneau d'une sélection ne montre plus que les boutons qui changent quelque chose.
+
 ## [1.9.0] - 2026-10-18
 
 ### Ajouté

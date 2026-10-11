@@ -62,6 +62,46 @@ class BulkToggleTest extends TestCase
         $this->assertSame(0, $this->workflows($a)->where('active', true)->count() + $this->workflows($b)->where('active', true)->count());
     }
 
+    public function testRulesCanBeAppliedToExistingTicketsFromTheListAndTheDiagram()
+    {
+        $a = $this->mailbox('A');
+        $b = $this->mailbox('B');
+        $admin = $this->user([], true);
+        $agent = $this->user([$a], false, true);
+        $this->installed([$a, $b], $admin);
+        $ida = $this->workflows($a)->pluck('id')->all();
+        $idb = $this->workflows($b)->pluck('id')->all();
+        $previous = function ($mailbox) {
+            return $this->workflows($mailbox)->pluck('apply_to_prev')->map(function ($v) {
+                return (bool) $v;
+            })->all();
+        };
+
+        // list: state and switch per rule, then the ticked ones
+        $page = $this->actingAs($admin)->get(route('workflowpacks.index'));
+        $this->seeIn($page, e(__('workflowpacks::messages.previous_off')));
+        $this->seeIn($page, 'name="previous" value="1"');
+        $this->actingAs($admin)->post(route('workflowpacks.rules.toggle'), ['workflow_ids' => [$ida[0]], 'previous' => '1'])
+            ->assertSessionHas('flash_success_floating', __('workflowpacks::messages.rules_previous_on', ['count' => 1]));
+        $this->assertSame([true, false], $previous($a), 'that rule only; "enabled" untouched');
+        $this->assertFalse((bool) $this->workflows($a)->first()->active);
+        $this->seeIn($this->actingAs($admin)->get(route('workflowpacks.index')), e(__('workflowpacks::messages.previous_on')));
+
+        // diagram: a selection, the mailboxes of others refused
+        $json = $this->actingAs($agent)->postJson(route('workflowpacks.graph.previous_many'), ['ids' => array_merge($ida, $idb), 'on' => true])->json();
+        $this->assertSame(1, $json['changed']);
+        $this->assertSame(1, $json['unchanged']);
+        $this->assertCount(2, $json['refused']);
+        $this->assertSame([true, true], $previous($a));
+        $this->assertSame([false, false], $previous($b));
+        $edge = collect($this->actingAs($agent)->getJson(route('workflowpacks.graph.data'))->json()['edges'])->firstWhere('workflow_id', $ida[0]);
+        $this->assertTrue($edge['previous']);
+
+        $this->actingAs($agent)->postJson(route('workflowpacks.graph.previous_many'), ['ids' => $ida, 'on' => false])->assertStatus(200);
+        $this->assertSame([false, false], $previous($a));
+        $this->actingAs($agent)->postJson(route('workflowpacks.graph.previous_many'), ['ids' => 'x', 'on' => true])->assertStatus(422);
+    }
+
     public function testASelectionOfTheDiagramIsEnabledOrDisabledAtOnce()
     {
         $a = $this->mailbox('A');

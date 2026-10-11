@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 1.9.0
+# Résultats des tests — Workflow Packs 1.10.0
 
 Date : 2026-10-10. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,13 @@ Date : 2026-10-10. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 1.10.0 — tickets existants, rectangle de sélection, actions rapides
+
+| Série | Résultat |
+|---|---|
+| Intégration (73 tests, 545 assertions) | `BulkToggleTest` (+1) : « Tickets existants » par règle (seulement `apply_to_prev`, l'activation n'est pas touchée), cochées ensemble, sélection du schéma, boîtes d'autres refusées, état transmis au schéma, demande invalide refusée |
+| Navigateur (Chrome sans interface) | rectangle bleu au clic gauche glissé (5 blocs), menu d'actions rapides à l'endroit de la souris, désactivation depuis le menu, alignement à gauche, clic droit sur une règle hors sélection : elle seule, clic droit glissé : la vue se déplace sans menu, export de la sélection : page d'export avec les règles cochées ; menu opaque, panneau sans bouton inutile ; aucune erreur |
 
 ## 1.9.0 — règles minuteur, nettoyage automatique des dossiers e-mail
 
