@@ -28,6 +28,7 @@
                 @if ($entry['pack']->pack_version !== '')<span class="label label-default">{{ __('workflowpacks::messages.version') }} {{ $entry['pack']->pack_version }}</span>@endif
                 <span class="wp-muted">{{ count($entry['rules']) }} {{ __('workflowpacks::messages.rules') }}</span>
                 @if ($compat['state'] !== 'blocking')
+                    <a class="btn btn-link btn-xs pull-right text-danger" href="{{ route('workflowpacks.remove', ['key' => $entry['pack']->pack_key]) }}">{{ __('workflowpacks::messages.remove') }}</a>
                     <a class="btn btn-default btn-xs pull-right" href="{{ route('workflowpacks.reimport', ['key' => $entry['pack']->pack_key]) }}">{{ __('workflowpacks::messages.reimport') }}</a>
                 @endif
             </div>

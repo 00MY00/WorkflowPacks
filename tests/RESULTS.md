@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 1.4.0
+# Résultats des tests — Workflow Packs 1.5.0
 
 Date : 2026-10-10. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,13 @@ Date : 2026-10-10. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 1.5.0 — retirer un pack
+
+| Série | Résultat |
+|---|---|
+| Intégration (`RemoveTest`, 4 tests ; 57 tests, 419 assertions au total) | règles inchangées supprimées, règle modifiée conservée (puis supprimée avec la case), règle déjà supprimée : lien nettoyé, règle faite à la main jamais touchée, pack retiré de la liste quand il ne reste rien ; boîte d'un autre utilisateur ni touchée ni nommée ; « aucune boîte cochée » ne supprime rien ; changement après la prévisualisation ou jeton falsifié : rien n'est supprimé ni sauvegardé ; sauvegarde téléchargeable (pack d'origine et règles supprimées), refusée à un autre utilisateur, pack d'origine réimporté : règles recréées |
+| Navigateur (Chrome sans interface, données de démonstration) | bouton dans la liste, prévisualisation (14 suppressions, 1 règle modifiée conservée), confirmation affichée, résultat avec les deux téléchargements ; aucune erreur |
 
 ## 1.4.0 — rangement dans les dossiers e-mail (IMAP)
 

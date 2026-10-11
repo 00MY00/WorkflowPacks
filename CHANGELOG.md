@@ -4,6 +4,26 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [1.5.0] - 2026-10-14
+
+### Ajouté
+- **Retirer un pack** : bouton « Retirer le pack » dans la liste des packs.
+  - **Prévisualisation** : règle par règle et boîte par boîte, ce qui sera supprimé, conservé ou nettoyé. On peut
+    choisir les boîtes.
+  - Seules les règles **créées par le pack** sont supprimées. Les règles faites à la main et les boîtes que
+    l'utilisateur ne gère pas ne sont jamais touchées.
+  - Les règles **modifiées** depuis l'import sont conservées par défaut. Une case permet de les supprimer aussi.
+  - **Sauvegarde automatique** avant toute suppression, en base de données (table `workflowpacks_backups`) : le pack
+    d'origine, réimportable tel quel, et chaque règle supprimée telle qu'elle était. Les deux se téléchargent depuis la
+    page de résultat.
+  - Garde-fous :
+    - une seule transaction, avec la sauvegarde ;
+    - suppression annulée si les règles ont changé depuis la prévisualisation ;
+    - « aucune boîte cochée » ne veut jamais dire « toutes » ;
+    - confirmation avant de supprimer ;
+    - suppression par le modèle officiel de Workflows, comme son propre bouton « Supprimer ».
+  - Le pack disparaît de la liste quand il ne lui reste aucune règle. 7 langues.
+
 ## [1.4.1] - 2026-10-13
 
 ### Corrigé

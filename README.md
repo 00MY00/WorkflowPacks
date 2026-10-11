@@ -150,6 +150,18 @@ Les boîtes et les paramètres du dernier import sont repris. Les paramètres «
 - La détection compare une empreinte du nom, du type, du nombre maximal d'exécutions, des conditions et des actions.
   L'état actif, « conversations précédentes » et l'ordre restent sous votre contrôle.
 
+## Retirer un pack
+
+**Retirer le pack**, dans la liste des packs, supprime de Workflows les règles créées par ce pack.
+
+- Une prévisualisation montre ce qui sera supprimé, boîte par boîte, et on peut choisir les boîtes.
+- Les règles faites à la main et les boîtes que vous ne gérez pas ne sont jamais touchées.
+- Les règles modifiées depuis l'import sont conservées, sauf si vous cochez la case prévue.
+- Une **sauvegarde** est faite avant la suppression : le pack d'origine, réimportable tel quel, et chaque règle
+  supprimée telle qu'elle était. Les deux se téléchargent à la fin.
+
+![Retirer un pack](docs/screenshots/retirer-pack.png)
+
 ## Exporter
 
 - **Un pack importé** : le modèle d'origine est exporté tel quel, avec ses variables.
