@@ -4,6 +4,21 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [1.13.0] - 2026-10-11
+
+### Modifié
+- **« Ranger à nouveau dans les dossiers e-mail » range aussi les tickets existants jamais traités.** En 1.12.0, le
+  bouton ne reprenait que les tickets déjà traités par les règles : les e-mails arrivés avant les règles, ou pendant
+  qu'elles étaient inactives, n'étaient jamais rangés (« 0 e-mail(s) »).
+  - Les tickets de chaque boîte sont maintenant examinés en arrière-plan, 100 à la fois. Ceux qui remplissent les
+    conditions d'une règle, vérifiées par Workflows lui-même, ou qu'elle a déjà traités sont rangés dans son dossier.
+  - « Nouveau » compte comme rempli pour un ticket existant.
+  - Si plusieurs règles conviennent, la dernière dans l'ordre de Workflows l'emporte.
+  - Seul le rangement est fait.
+  - Une ligne par boîte dans l'historique montre l'avancement et le résultat.
+- Avec « Tout sélectionner », les règles sans dossier e-mail ne sont plus listées comme des erreurs : elles sont
+  comptées dans le message. Les boîtes sans réception IMAP sont signalées une seule fois.
+
 ## [1.12.0] - 2026-10-11
 
 ### Ajouté

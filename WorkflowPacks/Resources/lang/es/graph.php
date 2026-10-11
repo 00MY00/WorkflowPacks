@@ -185,7 +185,5 @@ return [
     'export_one_mailbox' => 'La exportación se hace buzón por buzón: se abre el buzón con más reglas seleccionadas.',
     'focus_selection' => 'Vista parcial: :count bloques seleccionados y sus enlaces',
     'menu_refile'              => 'Archivar de nuevo en las carpetas (:count)',
-    'refile_confirm'           => 'Los correos de los tickets ya tratados por estas reglas se volverán a poner en su carpeta de correo, aunque se hayan movido a otra carpeta (nunca desde la papelera). Solo se repite el archivado: estado, asignación, reenvío… no se tocan. ¿Continuar?',
-    'refile_done'              => ':count correo(s) en cola para archivar de nuevo (:rules regla(s)). Resultado en la pestaña Historial.',
-    'refile_more'              => 'Quedan más: vuelva a lanzarlo para los siguientes.',
+    'refile_confirm'           => 'Se examinarán los tickets existentes de estos buzones: los que cumplen las condiciones de una regla («Nuevo» cuenta como cumplido) o que ya trató se archivan en su carpeta, aunque el correo se haya movido a otra carpeta (nunca desde la papelera). Si varias reglas encajan, gana la última en el orden de Workflows. Solo se archiva: estado, asignación, reenvío… no se tocan. ¿Continuar?',
 ];

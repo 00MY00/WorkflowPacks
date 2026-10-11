@@ -185,7 +185,5 @@ return [
     'export_one_mailbox' => 'Der Export erfolgt Postfach für Postfach: das Postfach mit den meisten ausgewählten Regeln wird geöffnet.',
     'focus_selection' => 'Teilansicht: :count ausgewählte Blöcke und ihre Verbindungen',
     'menu_refile'              => 'Erneut in die Ordner ablegen (:count)',
-    'refile_confirm'           => 'Die E-Mails der Tickets, die diese Regeln schon bearbeitet haben, werden wieder in ihren E-Mail-Ordner gelegt, auch wenn sie in einen anderen Ordner verschoben wurden (nie aus dem Papierkorb). Nur das Ablegen wird wiederholt: Status, Zuweisung, Weiterleitung… bleiben unberührt. Fortfahren?',
-    'refile_done'              => ':count E-Mail(s) erneut zum Ablegen eingereiht (:rules Regel(n)). Ergebnis im Tab Verlauf.',
-    'refile_more'              => 'Es bleiben weitere: erneut starten für die nächsten.',
+    'refile_confirm'           => 'Die bestehenden Tickets dieser Postfächer werden geprüft: Tickets, die die Bedingungen einer Regel erfüllen („Neu“ gilt als erfüllt) oder die sie schon bearbeitet hat, werden mit ihrer E-Mail in ihren Ordner gelegt, auch wenn sie in einen anderen Ordner verschoben wurde (nie aus dem Papierkorb). Passen mehrere Regeln, gewinnt die letzte in der Reihenfolge von Workflows. Nur das Ablegen wird ausgeführt: Status, Zuweisung, Weiterleitung… bleiben unberührt. Fortfahren?',
 ];

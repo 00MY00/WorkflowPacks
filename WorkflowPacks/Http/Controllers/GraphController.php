@@ -119,7 +119,10 @@ class GraphController extends Controller
             return response()->json(['ok' => false, 'errors' => ['invalid']], 422);
         }
 
-        return response()->json((new \Modules\WorkflowPacks\Services\Imap\Refiler())->rules(auth()->user(), $ids));
+        $result = (new \Modules\WorkflowPacks\Services\Imap\Refiler())->rules(auth()->user(), $ids);
+        list($result['message'], $result['warning']) = \Modules\WorkflowPacks\Services\Imap\Refiler::summary($result);
+
+        return response()->json($result);
     }
 
     public function apply(Request $request, $id)
