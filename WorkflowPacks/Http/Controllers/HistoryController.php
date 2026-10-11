@@ -63,6 +63,7 @@ class HistoryController extends Controller
             'users'     => $users,
             'diagnostic' => $user->isAdmin() ? $this->diagnostic() : null,
             'inspection' => null,
+            'trace'      => null,
         ]);
     }
 
@@ -77,6 +78,30 @@ class HistoryController extends Controller
         $result = (new ImapInspector())->inspect($mailbox, ImapFolders::prefix());
 
         return $this->index($request)->with('inspection', ['mailbox' => $mailbox, 'result' => $result]);
+    }
+
+    /** Administrators: how the e-mail of a ticket is looked for on the mail server, step by step (read only). */
+    public function trace(Request $request)
+    {
+        $this->guard();
+        abort_if(!auth()->user()->isAdmin(), 403);
+        // "conversation" (id, links of the history) or "number" (shown in FreeScout: the id, or its own number when
+        // custom numbering is on)
+        $conversation = $request->input('conversation')
+            ? \App\Conversation::find((int) $request->input('conversation'))
+            : \App\Conversation::where(self::numberField(), (int) $request->input('number'))->first();
+        if (!$conversation || !$conversation->mailbox) {
+            return redirect()->route('workflowpacks.history')->with('flash_error_floating', __('workflowpacks::messages.history_trace_unknown'));
+        }
+        $result = (new ImapInspector())->trace($conversation->mailbox, $conversation);
+
+        return $this->index($request)->with('trace', ['conversation' => $conversation, 'number' => $conversation->{self::numberField()},
+            'mailbox' => $conversation->mailbox, 'result' => $result]);
+    }
+
+    protected static function numberField()
+    {
+        return method_exists(\App\Conversation::class, 'numberFieldName') ? \App\Conversation::numberFieldName() : 'number';
     }
 
     /** Option, FreeScout's queue (the moves are done there), last calls of Workflows. */

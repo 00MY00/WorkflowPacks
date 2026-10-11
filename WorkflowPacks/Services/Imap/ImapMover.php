@@ -18,14 +18,19 @@ namespace Modules\WorkflowPacks\Services\Imap;
  */
 class ImapMover
 {
+    /** @var MessageFinder|null */
+    protected $finder;
+
     /**
      * @param \App\Mailbox $mailbox
      * @param string       $messageId Message-ID of the e-mail, without < >
      * @param string       $value     folder written in the rule ("Invoices/Suppliers")
      * @param bool         $anywhere  filed again ("File again"): an e-mail no longer in the inbox is also looked for in
      *                                the other folders of the account, never in the trash
+     * @param \Carbon\Carbon|null $date when FreeScout received the e-mail: lets the search read the headers of the
+     *                                messages of those days when the server does not answer a search by Message-ID
      */
-    public function move($mailbox, $messageId, $value, $prefix, $anywhere = false)
+    public function move($mailbox, $messageId, $value, $prefix, $anywhere = false, $date = null)
     {
         $parsed = FolderPath::parse($value);
         if ($parsed['error'] !== null) {
@@ -65,17 +70,26 @@ class ImapMover
             }
 
             // already filed (rule applied twice, or moved by hand): nothing to do
-            if ($this->isIn($client, $target, $messageId)) {
+            if ($this->finder()->find($client, $client->getFolderByPath($target), $messageId, $date, false)) {
                 return $this->result('already', $label);
             }
             // the e-mail, in the folders FreeScout fetches (INBOX by default)
-            $message = \MailHelper::fetchMessage($mailbox, $messageId);
+            $message = null;
+            $fetched = $this->fetchedFolders($mailbox);
+            foreach ($fetched as $path) {
+                $message = $this->finder()->find($client, $client->getFolderByPath($path), $messageId, $date);
+                if ($message) {
+                    break;
+                }
+            }
             $from = '';
             if (!$message && $anywhere) {
-                list($message, $from) = $this->findElsewhere($client, $messageId, $target, $layout);
+                list($message, $from) = $this->findElsewhere($client, $messageId, array_merge([$target], $fetched), $layout, $date);
             }
             if (!$message) {
-                return $this->result('not_found', $label);
+                $looked = array_values(array_unique(array_column($this->finder()->trace, 'folder')));
+
+                return $this->result('not_found', $label, $looked ? 'looked in "'.implode('", "', array_slice($looked, 0, 8)).'"' : '');
             }
             if (!$message->move($target)) {
                 // servers without the MOVE command: copy, then mark the original as deleted — without EXPUNGE, which
@@ -236,38 +250,46 @@ class ImapMover
         return 'INBOX';
     }
 
-    protected function isIn($client, $folderPath, $messageId)
+    /** Search of the e-mails (several ways, see MessageFinder); one per move, its trace tells what was tried. */
+    public function finder()
     {
-        try {
-            $folder = $client->getFolderByPath($folderPath);
-            if (!$folder) {
-                return false;
-            }
-
-            return $folder->query()->whereMessageId('"<'.addcslashes($messageId, '\"').'>"')->leaveUnread()->limit(1)->get()->count() > 0;
-        } catch (\Throwable $e) {
-            return false;
+        if (!$this->finder) {
+            $this->finder = app(MessageFinder::class);
         }
+
+        return $this->finder;
+    }
+
+    /** Folders FreeScout fetches for this mailbox (INBOX by default), as server paths. */
+    public function fetchedFolders($mailbox)
+    {
+        $names = method_exists($mailbox, 'getInImapFolders') ? (array) $mailbox->getInImapFolders() : [];
+
+        return array_map(function ($name) {
+            return mb_convert_encoding((string) $name, 'UTF7-IMAP', 'UTF-8');
+        }, $names ?: ['INBOX']);
     }
 
     /**
      * The e-mail in another folder of the account (moved by hand, by a mail client or a filter of the server): the
-     * first one holding it, the trash and the target excluded. [message, UTF-8 path of its folder] or [null, ''].
+     * first one holding it; the trash, the target and the folders already searched are left out. Headers are read
+     * only around the date of the e-mail. [message, UTF-8 path of its folder] or [null, ''].
      */
-    protected function findElsewhere($client, $messageId, $target, array $layout)
+    protected function findElsewhere($client, $messageId, array $searched, array $layout, $date = null)
     {
+        $done = array_map('strtoupper', array_merge($searched, ['INBOX']));
         foreach ($layout['paths'] as $path) {
-            if ($path === $target || strtoupper($path) === 'INBOX' || in_array($path, $layout['trash'], true)
+            if (in_array(strtoupper($path), $done, true) || in_array($path, $layout['trash'], true)
                 || $this->insideTrash(mb_convert_encoding($path, 'UTF-8', 'UTF7-IMAP'), $layout) !== null) {
                 continue;
             }
             try {
                 $folder = $client->getFolderByPath($path);
-                $found = $folder ? $folder->query()->whereMessageId('"<'.addcslashes($messageId, '\"').'>"')->leaveUnread()->limit(1)->get()->first() : null;
             } catch (\Throwable $e) {
                 // folder that cannot be opened (\Noselect…): the next one
                 continue;
             }
+            $found = $this->finder()->find($client, $folder, $messageId, $date, false);
             if ($found) {
                 return [$found, mb_convert_encoding($path, 'UTF-8', 'UTF7-IMAP')];
             }

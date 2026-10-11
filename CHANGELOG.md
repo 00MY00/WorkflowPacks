@@ -4,6 +4,29 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [1.13.1] - 2026-10-11
+
+### Corrigé
+- **E-mails « introuvables » alors qu'ils sont dans la boîte de réception.** Certains serveurs e-mail ne répondent
+  pas, ou répondent vide, à la recherche IMAP par Message-ID. Le rangement ne trouvait alors jamais l'e-mail, ni pour
+  les nouveaux e-mails ni avec « Ranger à nouveau ».
+  - La recherche essaie maintenant trois méthodes, dans le dossier visé, dans les dossiers relevés par FreeScout et
+    dans les autres dossiers :
+    1. la recherche par Message-ID ;
+    2. la même recherche sans jeu de caractères (serveurs Microsoft) ;
+    3. la lecture des en-têtes des e-mails reçus autour de la date du ticket, comparés un par un. Rien n'est marqué
+       comme lu.
+  - Un rangement « introuvable » indique les dossiers où l'e-mail a été cherché.
+
+### Ajouté
+- **« Tester la recherche d'un ticket »** (Historique, administrateurs), par numéro de ticket ou avec le lien
+  « Tester » d'une ligne « introuvable » ou « échec ». La page affiche :
+  - le Message-ID cherché ;
+  - chaque méthode essayée dans chaque dossier, avec la réponse du serveur ;
+  - le dossier où l'e-mail a été trouvé ;
+  - les derniers e-mails de la boîte de réception avec leur Message-ID, pour comparer.
+  Rien n'est modifié.
+
 ## [1.13.0] - 2026-10-11
 
 ### Modifié

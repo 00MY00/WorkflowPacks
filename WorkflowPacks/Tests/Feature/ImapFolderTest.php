@@ -597,6 +597,71 @@ class ImapFolderTest extends TestCase
         \Queue::assertNotPushed(RefileMailbox::class);
     }
 
+    /** Mail server whose search by Message-ID answers nothing (some servers do): only reading the headers finds it. */
+    protected function serverWithoutSearch()
+    {
+        app()->bind(\Modules\WorkflowPacks\Services\Imap\MessageFinder::class, function () {
+            return new class extends \Modules\WorkflowPacks\Services\Imap\MessageFinder {
+                protected function bySearch($folder, $id, $charset)
+                {
+                    return null;
+                }
+            };
+        });
+    }
+
+    public function testAnEmailIsFoundByItsHeadersWhenTheServerSearchAnswersNothing()
+    {
+        $mailbox = $this->imapMailbox();
+        $id = $this->deliver($mailbox);
+        $other = $this->deliver($mailbox, 'Autre');
+        list($conversation, $thread) = $this->conversation($mailbox, $id);
+        $this->serverWithoutSearch();
+
+        // the job gives the date of the e-mail: the headers of those days are read
+        (new FileIntoImapFolder($mailbox->id, $thread->id, 'Factures'))->handle();
+        $this->assertSame([$id], $this->idsIn($mailbox, '[WP] Factures'));
+        $this->assertSame([$other], $this->idsIn($mailbox, 'INBOX'));
+        // already in its folder: seen the same way, nothing moves
+        $again = (new ImapMover())->move($mailbox, $id, 'Factures', '[WP]', false, $thread->created_at);
+        $this->assertSame('already', $again['result']);
+
+        // e-mail that is nowhere: "not found", with the folders looked in
+        $missing = (new ImapMover())->move($mailbox, 'nowhere-'.self::uid().'@example.test', 'Factures', '[WP]', false, $thread->created_at);
+        $this->assertSame('not_found', $missing['result']);
+        $this->assertStringContainsString('INBOX', $missing['reason']);
+        app()->forgetInstance(\Modules\WorkflowPacks\Services\Imap\MessageFinder::class);
+        $this->assertNotNull($conversation);
+    }
+
+    public function testATicketCanBeTestedStepByStepByAdministrators()
+    {
+        $mailbox = $this->imapMailbox();
+        $id = $this->deliver($mailbox, 'Facture 77');
+        list($conversation) = $this->conversation($mailbox, $id);
+        $admin = $this->user([], true);
+
+        $page = $this->actingAs($admin)->get(route('workflowpacks.history.trace', ['conversation' => $conversation->id]));
+        $page->assertStatus(200);
+        $this->seeIn($page, e(__('workflowpacks::messages.history_trace_found', ['folder' => 'INBOX'])));
+        $this->seeIn($page, $id);
+        $this->seeIn($page, e(__('workflowpacks::messages.history_trace_step_search')));
+        $this->seeIn($page, 'Facture 77');
+
+        // by the number shown in FreeScout, and a server without search: found by the headers
+        $this->serverWithoutSearch();
+        $shown = method_exists(\App\Conversation::class, 'numberFieldName') ? $conversation->fresh()->{\App\Conversation::numberFieldName()} : $conversation->fresh()->number;
+        $page = $this->actingAs($admin)->get(route('workflowpacks.history.trace', ['number' => $shown]));
+        $this->seeIn($page, e(__('workflowpacks::messages.history_trace_step_headers')));
+        $this->seeIn($page, e(__('workflowpacks::messages.history_trace_found', ['folder' => 'INBOX'])));
+        app()->forgetInstance(\Modules\WorkflowPacks\Services\Imap\MessageFinder::class);
+
+        // unknown ticket, and not for other users
+        $this->actingAs($admin)->get(route('workflowpacks.history.trace', ['number' => 99999999]))
+            ->assertSessionHas('flash_error_floating', __('workflowpacks::messages.history_trace_unknown'));
+        $this->actingAs($this->user([$mailbox], false, true))->get(route('workflowpacks.history.trace', ['conversation' => $conversation->id]))->assertStatus(403);
+    }
+
     public function testNothingHappensWhenTheOptionIsTurnedOffBeforeTheJobRuns()
     {
         $mailbox = $this->imapMailbox();

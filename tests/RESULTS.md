@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 1.13.0
+# Résultats des tests — Workflow Packs 1.13.1
 
 Date : 2026-10-11. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,12 @@ Date : 2026-10-11. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 1.13.1 — e-mails trouvés même quand la recherche du serveur ne répond pas
+
+| Série | Résultat |
+|---|---|
+| Intégration (84 tests, 629 assertions) | `ImapFolderTest` (+2, **serveur IMAP réel**) : serveur simulé dont la recherche par Message-ID ne répond rien ; e-mail trouvé par la lecture des en-têtes autour de sa date et rangé ; « déjà rangé » vu de la même façon ; e-mail absent « introuvable » avec les dossiers où il a été cherché. « Tester la recherche d'un ticket » : par lien (id) et par numéro affiché, étapes et réponse du serveur, dossier trouvé, derniers e-mails ; ticket inconnu signalé ; refusé aux non-administrateurs |
 
 ## 1.13.0 — ranger les tickets existants selon les conditions des règles
 

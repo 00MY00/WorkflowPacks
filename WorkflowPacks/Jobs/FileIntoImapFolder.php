@@ -58,7 +58,7 @@ class FileIntoImapFolder implements ShouldQueue
             return $this->log('skipped: mailbox or e-mail no longer exists');
         }
         try {
-            $r = (new ImapMover())->move($mailbox, $thread->message_id, $this->folder, ImapFolders::prefix(), (bool) $this->anywhere);
+            $r = (new ImapMover())->move($mailbox, $thread->message_id, $this->folder, ImapFolders::prefix(), (bool) $this->anywhere, $thread->created_at);
         } catch (\Throwable $e) {
             // connection or protocol error: the server may be unreachable for a moment
             $r = ['result' => 'failed', 'folder' => '', 'reason' => $e->getMessage(), 'retry' => true];
@@ -91,6 +91,9 @@ class FileIntoImapFolder implements ShouldQueue
         ];
         if (isset($known[$reason])) {
             return __('workflowpacks::messages.history_reason_'.$known[$reason]);
+        }
+        if (strpos($reason, 'looked in "') === 0) {
+            return __('workflowpacks::messages.history_reason_looked_in', ['folders' => trim(substr($reason, strlen('looked in')), ' ')]);
         }
         if (strpos($reason, 'found in "') === 0) {
             return __('workflowpacks::messages.history_reason_found_in', ['folder' => trim(substr($reason, strlen('found in')), ' "')]);

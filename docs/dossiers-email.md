@@ -157,6 +157,21 @@ En haut de la page, un **diagnostic** réservé aux administrateurs montre :
 | « ignoré » | la raison affichée (option, boîte sans IMAP…) |
 | « demandé » qui ne change jamais | la tâche planifiée (cron) de FreeScout, qui traite la file d'attente |
 | « échec » | la raison du serveur ; un nouvel essai est fait automatiquement |
+| « introuvable » alors que l'e-mail est dans la boîte | le lien **« Tester »** de la ligne (voir ci-dessous) |
+
+**« Tester la recherche d'un ticket »** (administrateurs, dans le diagnostic, ou lien « Tester » d'une ligne
+« introuvable ») montre, sans rien modifier, comment l'e-mail du ticket est cherché sur le serveur :
+- le Message-ID connu de FreeScout ;
+- chaque méthode essayée dans chaque dossier, avec la réponse du serveur :
+  - recherche par Message-ID ;
+  - la même recherche sans jeu de caractères ;
+  - lecture des en-têtes des e-mails reçus autour de la date du ticket ;
+- le dossier où l'e-mail a été trouvé ;
+- les derniers e-mails de la boîte de réception avec leur Message-ID.
+
+Si l'e-mail n'est trouvé par aucune méthode, comparer son Message-ID avec ceux de la liste. Un Message-ID absent de
+la liste veut dire que FreeScout ne relève peut-être pas le même compte e-mail que celui ouvert dans le client
+e-mail.
 
 Le réglage **« Créer les dossiers »** (automatique, à la racine, sous INBOX) ne sert que si « Voir les dossiers »
 montre les dossiers `[WP]` au mauvais endroit. Un dossier `[WP]` n'est jamais créé dans la corbeille.

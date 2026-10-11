@@ -100,6 +100,55 @@
                         @endif
                     </div>
                 @endif
+                @if ($diagnostic['imap_mailboxes']->count())
+                    <form method="GET" action="{{ route('workflowpacks.history.trace') }}" class="form-inline wp-inline">
+                        <label for="wp-trace-number">{{ $wp_t('history_trace') }}</label>
+                        <input type="number" min="1" id="wp-trace-number" name="number" class="form-control input-sm" placeholder="{{ $wp_t('history_trace_number') }}"
+                            value="{{ !empty($trace) ? $trace['number'] : '' }}">
+                        <button type="submit" class="btn btn-default btn-sm">{{ $wp_t('history_trace_btn') }}</button>
+                    </form>
+                @endif
+                @if (!empty($trace))
+                    @php $wp_x = $trace['result']; @endphp
+                    <div class="wp-inspect margin-top">
+                        <strong>#{{ $trace['number'] }} {{ $trace['conversation']->subject }}</strong>
+                        <span class="wp-muted">— {{ $trace['mailbox']->name }}</span>
+                        @if (!empty($wp_x['message_id']))
+                            <p class="wp-muted">{{ $wp_t('history_trace_id') }} <code>{{ $wp_x['message_id'] }}</code> · {{ $wp_t('history_trace_date') }} {{ $wp_x['date'] }}</p>
+                        @endif
+                        @if (!$wp_x['ok'])
+                            <div class="alert alert-danger">{{ $wp_t('history_inspect_error') }} {{ $wp_x['error'] }}</div>
+                        @elseif ($wp_x['found_in'] !== null)
+                            <div class="alert alert-success">{{ $wp_t('history_trace_found', ['folder' => $wp_x['found_in']]) }}</div>
+                        @else
+                            <div class="alert alert-warning">{{ $wp_t('history_trace_not_found') }}</div>
+                        @endif
+                        @if (!empty($wp_x['trace']))
+                            <table class="table table-condensed">
+                                @foreach ($wp_x['trace'] as $s)
+                                    <tr>
+                                        <td>{{ $s['folder'] }}</td>
+                                        <td>{{ $wp_t('history_trace_step_'.$s['step']) }}</td>
+                                        <td><span class="label label-{{ ['found' => 'success', 'none' => 'default', 'error' => 'danger'][$s['result']] ?? 'default' }}">{{ $wp_t('history_trace_result_'.$s['result']) }}</span></td>
+                                        <td class="wp-muted"><small>{{ $s['detail'] }}</small></td>
+                                    </tr>
+                                @endforeach
+                            </table>
+                        @endif
+                        @if (!empty($wp_x['recent']))
+                            <div class="wp-sub">{{ $wp_t('history_trace_recent', ['folder' => $wp_x['recent_folder']]) }}</div>
+                            <table class="table table-condensed">
+                                @foreach ($wp_x['recent'] as $m)
+                                    <tr>
+                                        <td class="text-nowrap"><small>{{ $m['date'] }}</small></td>
+                                        <td>{{ $m['subject'] }}</td>
+                                        <td><code class="@if ($m['message_id'] !== '' && strcasecmp($m['message_id'], $wp_x['message_id']) === 0) text-success @endif">{{ $m['message_id'] }}</code></td>
+                                    </tr>
+                                @endforeach
+                            </table>
+                        @endif
+                    </div>
+                @endif
             </div>
         </div>
     @endif
@@ -147,6 +196,9 @@
                     {{ $e->subject }}
                     @if ($e->conversation_id && \Route::has('conversations.view'))
                         <a href="{{ route('conversations.view', ['id' => $e->conversation_id]) }}" class="wp-muted">#{{ $e->conversation_id }}</a>
+                    @endif
+                    @if ($e->conversation_id && $diagnostic && in_array($e->status, ['not_found', 'failed'], true))
+                        <a href="{{ route('workflowpacks.history.trace', ['conversation' => $e->conversation_id]) }}" class="btn btn-link btn-xs">{{ $wp_t('history_trace_btn') }}</a>
                     @endif
                 </td>
                 <td class="wp-muted">
