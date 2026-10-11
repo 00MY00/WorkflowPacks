@@ -7,4 +7,11 @@
             el.form.submit();
         }
     });
+    // last confirmation before an irreversible action (no inline handler: FreeScout's Content-Security-Policy)
+    document.addEventListener('click', function (e) {
+        var el = e.target && e.target.closest ? e.target.closest('[data-wp-confirm]') : null;
+        if (el && !window.confirm(el.getAttribute('data-wp-confirm'))) {
+            e.preventDefault();
+        }
+    });
 })();

@@ -18,6 +18,10 @@ Route::group([
     Route::post('/import/preview', $users + ['uses' => 'PacksController@preview'])->name('workflowpacks.import.preview');
     Route::post('/import/confirm', $users + ['uses' => 'PacksController@confirm'])->name('workflowpacks.import.confirm');
     Route::get('/packs/{key}/reimport', $users + ['uses' => 'PacksController@reimport'])->name('workflowpacks.reimport');
+    // remove a pack: preview -> confirmation (with a backup first) -> backup download
+    Route::get('/packs/{key}/remove', $users + ['uses' => 'RemoveController@preview'])->name('workflowpacks.remove');
+    Route::post('/packs/{key}/remove', $users + ['uses' => 'RemoveController@confirm'])->name('workflowpacks.remove.confirm');
+    Route::get('/backups/{id}', $users + ['uses' => 'RemoveController@backup'])->name('workflowpacks.backup');
 
     Route::get('/export', $users + ['uses' => 'ExportController@form'])->name('workflowpacks.export');
     Route::post('/export', $users + ['uses' => 'ExportController@preview'])->name('workflowpacks.export.preview');
