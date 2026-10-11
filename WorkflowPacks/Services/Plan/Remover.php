@@ -173,6 +173,9 @@ class Remover
             return ['ok' => false, 'error' => $e->getMessage() === 'changed' ? 'changed' : $e->getMessage()] + $result;
         }
 
+        \Modules\WorkflowPacks\Services\History::add('remove', 'ok', ['user_id' => $user ? $user->id : null, 'subject' => (string) $pack->name,
+            'message' => json_encode(['counts' => ['deleted' => $result['deleted'], 'kept' => $result['kept'], 'cleaned' => $result['cleaned']]])]);
+
         return $result;
     }
 

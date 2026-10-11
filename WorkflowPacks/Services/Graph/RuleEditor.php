@@ -149,6 +149,7 @@ class RuleEditor
         });
 
         $packModified = $current && Link::where('workflow_id', $current->id)->where('mailbox_id', $mailbox->id)->exists();
+        \Modules\WorkflowPacks\Services\History::add('rules', $current ? 'modified' : 'created', ['mailbox_id' => $mailbox->id, 'workflow_id' => $id, 'subject' => $attributes['name']]);
 
         return ['ok' => true, 'errors' => [], 'workflow_id' => $id, 'pack_modified' => $packModified];
     }
@@ -163,8 +164,12 @@ class RuleEditor
         if ($active && isset($wf->complete) && !$wf->complete) {
             return $this->fail([Problems::t('graph_incomplete')]);
         }
+        $was = (bool) $wf->active;
         $wf->active = (bool) $active;
         $wf->save();
+        if ($was !== (bool) $wf->active) {
+            \Modules\WorkflowPacks\Services\History::add('rules', $wf->active ? 'enabled' : 'disabled', ['mailbox_id' => $wf->mailbox_id, 'workflow_id' => $wf->id, 'subject' => $wf->name]);
+        }
 
         return ['ok' => true, 'errors' => [], 'workflow_id' => (int) $wf->id, 'active' => (bool) $wf->active];
     }
@@ -221,6 +226,7 @@ class RuleEditor
             $wf->apply_to_prev = (bool) $on;
             $wf->save();
             $out['changed']++;
+            \Modules\WorkflowPacks\Services\History::add('rules', $on ? 'previous_on' : 'previous_off', ['mailbox_id' => $wf->mailbox_id, 'workflow_id' => $wf->id, 'subject' => $wf->name]);
         }
 
         return $out;

@@ -39,17 +39,19 @@ class ImapMover
         $client = \MailHelper::getMailboxClient($mailbox);
         $client->connect();
         try {
-            $paths = [];
-            $delimiter = '/';
-            foreach ($client->getFolders(false) as $folder) {
-                $paths[] = (string) $folder->path;
-                $delimiter = (string) ($folder->delimiter ?: $delimiter);
-            }
-            $parent = $this->parent($paths, $delimiter);
+            $layout = $this->layout($client);
+            $paths = $layout['paths'];
+            $delimiter = $layout['delimiter'];
+            $parent = $layout['parent'];
             $levels = FolderPath::levels($parsed['segments'], $prefix, $delimiter, $parent);
             $label = end($levels);
             if (!FolderPath::isManaged($label, $prefix, $delimiter, $parent)) {
                 return $this->result('failed', $label, 'not a managed folder');
+            }
+            // never inside the trash (or any folder the server flags as such)
+            $inTrash = $this->insideTrash($levels[0], $layout);
+            if ($inTrash !== null) {
+                return $this->result('failed', $label, 'refused: this place is inside the trash folder "'.$inTrash.'"');
             }
 
             $target = '';
@@ -111,7 +113,106 @@ class ImapMover
         return true;
     }
 
-    /** Servers keeping every folder under INBOX (delimiter "."): the managed folders go there too. */
+    /** Usual names of the trash folder (last level, lower case), when the server does not flag it. */
+    const TRASH_NAMES = ['trash', 'deleted', 'deleted items', 'deleted messages', 'corbeille', 'éléments supprimés',
+        'papierkorb', 'gelöschte elemente', 'papelera', 'elementos eliminados', 'cestino', 'posta eliminata', 'prullenbak',
+        'verwijderde items', 'lixeira', 'itens excluídos', 'bin'];
+
+    /**
+     * Where the managed folders go on this server:
+     *  - the setting "Create the folders" (auto | root | inbox),
+     *  - auto: at the top, or under INBOX when every folder of the account is under "INBOX." (Courier, some Dovecot).
+     * The personal namespace of the account (IMAP NAMESPACE, RFC 2342) is read for the diagnostic page.
+     *
+     * @return array ['paths' => string[], 'delimiter' => string, 'parent' => string, 'trash' => string[], 'namespace' => array|null]
+     */
+    public function layout($client)
+    {
+        $paths = [];
+        $trash = [];
+        $delimiter = '';
+        $folders = [];
+        foreach ($client->getFolders(false) as $folder) {
+            $paths[] = (string) $folder->path;
+            $folders[] = $folder;
+            if ($delimiter === '' && (string) $folder->delimiter !== '') {
+                $delimiter = (string) $folder->delimiter;
+            }
+        }
+        // shown by the diagnostic only: the placement below stays the one of the previous versions (no folder moved)
+        $namespace = $this->namespace($client);
+        $delimiter = $delimiter !== '' ? $delimiter : '/';
+        foreach ($folders as $folder) {
+            if ($this->isTrash($folder, $delimiter)) {
+                $trash[] = (string) $folder->path;
+            }
+        }
+        $mode = ImapFolders::parentMode();
+        if ($mode === 'root') {
+            $parent = '';
+        } elseif ($mode === 'inbox') {
+            $parent = 'INBOX';
+        } else {
+            $parent = $this->parent($paths, $delimiter);
+        }
+
+        return ['paths' => $paths, 'delimiter' => $delimiter, 'parent' => $parent, 'trash' => $trash, 'namespace' => $namespace];
+    }
+
+    /** Personal namespace of the account (["prefix" => "INBOX.", "delimiter" => "."]), or null when unknown. */
+    protected function namespace($client)
+    {
+        try {
+            $lines = $client->getConnection()->requestAndResponse('NAMESPACE');
+        } catch (\Throwable $e) {
+            return null;
+        }
+        foreach (is_array($lines) ? $lines : [] as $line) {
+            if (!is_array($line) || strtoupper((string) ($line[0] ?? '')) !== 'NAMESPACE') {
+                continue;
+            }
+            $personal = $line[1] ?? null;
+            if (is_array($personal) && isset($personal[0]) && is_array($personal[0])) {
+                $prefix = (string) ($personal[0][0] ?? '');
+                $delimiter = (string) ($personal[0][1] ?? '');
+
+                return ['prefix' => $prefix === 'NIL' ? '' : $prefix, 'delimiter' => $delimiter === 'NIL' ? '' : $delimiter];
+            }
+        }
+
+        return null;
+    }
+
+    /** The trash folder containing this path, or null. */
+    protected function insideTrash($path, array $layout)
+    {
+        foreach ($layout['trash'] as $trash) {
+            $name = mb_convert_encoding($trash, 'UTF-8', 'UTF7-IMAP');
+            if ($path === $name || strpos($path, $name.$layout['delimiter']) === 0) {
+                return $name;
+            }
+        }
+
+        return null;
+    }
+
+    protected function isTrash($folder, $delimiter)
+    {
+        foreach (['attributes', 'flags'] as $property) {
+            $flags = isset($folder->$property) ? (array) $folder->$property : [];
+            foreach ($flags as $flag) {
+                if (is_string($flag) && strcasecmp($flag, '\Trash') === 0) {
+                    return true;
+                }
+            }
+        }
+        $path = mb_convert_encoding((string) $folder->path, 'UTF-8', 'UTF7-IMAP');
+        $parts = explode($delimiter ?: '/', $path);
+
+        return in_array(mb_strtolower(trim((string) end($parts))), self::TRASH_NAMES, true);
+    }
+
+    /** Servers keeping every folder under INBOX (delimiter "."), when they do not answer NAMESPACE. */
     protected function parent(array $paths, $delimiter)
     {
         $others = array_filter($paths, function ($p) {

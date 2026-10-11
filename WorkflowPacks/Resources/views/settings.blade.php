@@ -57,6 +57,18 @@
             <p class="form-help">{{ __('workflowpacks::messages.imap_prefix_help') }}</p>
         </div>
     </div>
+    <div class="form-group">
+        <label for="wp-imap-parent" class="col-sm-2 control-label">{{ __('workflowpacks::messages.imap_parent_label') }}</label>
+        <div class="col-sm-6">
+            @php $wp_parent = $settings[$wp_I::OPTION_PARENT] ?? $wp_I::parentMode(); @endphp
+            <select name="settings[{{ $wp_I::OPTION_PARENT }}]" id="wp-imap-parent" class="form-control input-sized">
+                @foreach ($wp_I::PARENT_MODES as $wp_mode)
+                    <option value="{{ $wp_mode }}" @if ($wp_parent === $wp_mode) selected @endif>{{ __('workflowpacks::messages.imap_parent_'.$wp_mode) }}</option>
+                @endforeach
+            </select>
+            <p class="form-help">{{ __('workflowpacks::messages.imap_parent_help') }}</p>
+        </div>
+    </div>
 
     <div class="form-group">
         <div class="col-sm-6 col-sm-offset-2">
@@ -75,7 +87,7 @@
         var form = document.getElementById('wp-settings-form');
         if (!form) { return; }
         var saving = {!! json_encode(__('workflowpacks::messages.saving'), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!};
-        Array.prototype.forEach.call(form.querySelectorAll('input[type=checkbox], input[type=text]'), function (input) {
+        Array.prototype.forEach.call(form.querySelectorAll('input[type=checkbox], input[type=text], select'), function (input) {
             input.addEventListener('change', function () {
                 var place = input.closest('.col-sm-6') || input.parentNode;
                 var note = document.createElement('span');

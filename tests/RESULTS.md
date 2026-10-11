@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 1.10.0
+# Résultats des tests — Workflow Packs 1.11.0
 
 Date : 2026-10-10. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,13 @@ Date : 2026-10-10. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 1.11.0 — historique et diagnostic du rangement
+
+| Série | Résultat |
+|---|---|
+| Intégration (79 tests, 581 assertions) | `HistoryTest` (3) : import et changements de règles écrits et affichés, filtres, diagnostic pour les administrateurs ; un utilisateur ne voit que ses boîtes, ni diagnostic ni dossiers du serveur ; purge des entrées de plus de 90 jours. `ImapFolderTest` (+3, **serveur IMAP réel**) : rangement « demandé » puis « rangé » (même ligne complétée par le travail en file), « ignoré » avec la raison ; dossiers du serveur listés (gérés, corbeille, séparateur) ; jamais de dossier `[WP]` dans la corbeille |
+| Navigateur (Chrome sans interface) | onglet Historique, diagnostic, « Voir les dossiers » (6 dossiers, `[WP]` marqués gérés, corbeille repérée), filtres ; raisons traduites ; aucune erreur |
 
 ## 1.10.0 — tickets existants, rectangle de sélection, actions rapides
 

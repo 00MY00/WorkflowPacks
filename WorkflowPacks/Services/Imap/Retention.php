@@ -89,6 +89,7 @@ class Retention
 
             return $total;
         }
+        \Modules\WorkflowPacks\Services\History::prune();
         $rows = self::all();
         if ($rows->isEmpty()) {
             return $total;
@@ -117,6 +118,8 @@ class Retention
                     $line = 'mailbox '.$mailbox->id.', "'.$r['folder'].'": '.$r['moved'].' moved to the trash, '.$r['deleted'].' deleted'
                         .($r['error'] !== '' ? ' — '.$r['error'] : '');
                     $out($line);
+                    \Modules\WorkflowPacks\Services\History::add('imap_clean', $r['error'] !== '' ? 'failed' : 'ok', ['mailbox_id' => $mailbox->id, 'user_id' => 0,
+                        'subject' => $r['folder'], 'message' => json_encode(['moved' => $r['moved'], 'deleted' => $r['deleted'], 'error' => $r['error']])]);
                     \Log::{$r['error'] !== '' ? 'warning' : 'info'}('[WorkflowPacks] [clean-up] '.$line);
                 }
             }

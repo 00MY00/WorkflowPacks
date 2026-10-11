@@ -15,7 +15,7 @@
 #
 set -Eeuo pipefail
 
-SCRIPT_VERSION="1.10.0"   # same as WorkflowPacks/module.json (checked by tools/build-release.sh)
+SCRIPT_VERSION="1.11.0"   # same as WorkflowPacks/module.json (checked by tools/build-release.sh)
 REPO_URL="${WP_REPO_URL:-https://github.com/00MY00/WorkflowPacks}"
 MODULE="WorkflowPacks"
 ALIAS="workflowpacks"
@@ -173,7 +173,7 @@ backup() {
         require "vendor/autoload.php"; $app = require "bootstrap/app.php";
         $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
         $out = [];
-        foreach (["workflowpacks_packs", "workflowpacks_links", "workflowpacks_imports", "workflowpacks_resources", "workflowpacks_layouts", "workflowpacks_backups", "workflowpacks_retention"] as $t) {
+        foreach (["workflowpacks_packs", "workflowpacks_links", "workflowpacks_imports", "workflowpacks_resources", "workflowpacks_layouts", "workflowpacks_backups", "workflowpacks_retention", "workflowpacks_activity"] as $t) {
             $out[$t] = Schema::hasTable($t) ? DB::table($t)->get() : null;
         }
         echo json_encode($out);

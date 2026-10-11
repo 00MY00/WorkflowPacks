@@ -4,6 +4,28 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [1.11.0] - 2026-10-20
+
+### Ajouté
+- **Onglet « Historique »** : ce que le module a fait, du plus récent au plus ancien, filtrable par action, état et
+  boîte, conservé 90 jours.
+  - **Rangement d'un e-mail** : « demandé » quand Workflows appelle l'action, puis « rangé », « déjà rangé »,
+    « introuvable » ou « échec » avec la raison du serveur. Un rangement est « ignoré » avec la raison : option
+    désactivée, boîte sans réception IMAP, aucun e-mail du client…
+  - Nettoyages de dossiers, imports et retraits de packs, règles activées, désactivées, créées, modifiées, appliquées
+    aux tickets existants.
+  - Chaque utilisateur voit les boîtes qu'il gère et ses propres actions ; les administrateurs voient tout.
+- **Diagnostic du rangement** (administrateurs), en haut de l'historique :
+  - état de l'option ;
+  - dernier appel de Workflows et dernier e-mail rangé ;
+  - rangements en attente ou en échec dans la file de FreeScout, avec une alerte si la file n'avance pas (cron) ;
+  - **« Voir les dossiers »** : les dossiers réellement présents sur le serveur e-mail d'une boîte, avec le
+    séparateur, l'espace de noms (`NAMESPACE`), l'emplacement des dossiers `[WP]` et la corbeille. C'est une simple
+    lecture, rien n'est modifié.
+- Réglage **« Créer les dossiers »** : automatique (par défaut, sans changement de comportement), à la racine, ou
+  sous la boîte de réception, pour les serveurs atypiques.
+- Garde-fou : un dossier `[WP]` n'est jamais créé ni rempli à l'intérieur de la corbeille.
+
 ## [1.10.0] - 2026-10-19
 
 ### Ajouté
