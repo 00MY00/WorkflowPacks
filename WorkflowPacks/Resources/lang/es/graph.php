@@ -132,4 +132,6 @@ return [
     'saved_pack_modified' => 'Regla guardada (ahora «modificada localmente» respecto al pack).',
     'no_mailbox'       => 'Ningún buzón disponible.',
     'kind_dest_imap' => 'Carpeta de correo (servidor IMAP)',
+    'filed_rules'    => 'Reglas que archivan aquí o en una subcarpeta (:count)',
+    'resize_hint'    => 'Arrastre para agrandar el bloque · doble clic: tamaño automático',
 ];

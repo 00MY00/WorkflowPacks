@@ -242,4 +242,5 @@ return [
     'backup_pack'              => 'Scarica il pack originale',
     'backup_full'              => 'Scarica il backup completo',
     'backup_help'              => 'Il pack originale si può reimportare così com’è (Importa un pack). Il backup completo contiene anche ogni regola eliminata com’era, modifiche comprese.',
+    'dest_imap_off'            => 'opzione «Archivia in una cartella e-mail» disattivata: non verrà archiviato nulla (Gestisci › Impostazioni › Workflow Packs).',
 ];

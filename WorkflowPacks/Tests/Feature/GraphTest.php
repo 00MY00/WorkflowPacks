@@ -87,6 +87,70 @@ class GraphTest extends TestCase
         $this->assertEquals(['mb:'.$a->id => 'modified', 'mb:'.$b->id => 'synced'], $states);
     }
 
+    public function testEmailFoldersAreAFlowOfFolderBlocksWithTheirRules()
+    {
+        $a = $this->mailbox('A');
+        $admin = $this->user([], true);
+        \App\Option::set(\Modules\WorkflowPacks\Services\Imap\ImapFolders::OPTION_ENABLED, true);
+        $one = $this->local($a, 'Factures fournisseurs', [['type' => 'wp_imap_folder', 'value' => 'Factures/Fournisseurs'], ['type' => 'status', 'value' => '3']]);
+        $two = $this->local($a, 'Factures clients', [['type' => 'wp_imap_folder', 'value' => 'Factures/Clients']]);
+
+        $data = $this->actingAs($admin)->getJson(route('workflowpacks.graph.data'))->json();
+        $folders = [];
+        foreach ($data['nodes'] as $node) {
+            if (($node['dest'] ?? '') === 'imap') {
+                $folders[$node['label']] = $node;
+            }
+        }
+        $this->assertEqualsCanonicalizing(['[WP] Factures', 'Fournisseurs', 'Clients'], array_keys($folders), 'one block per level, the top one shared');
+        $top = $folders['[WP] Factures'];
+        $this->assertSame(0, $top['depth']);
+        $this->assertSame(1, $folders['Fournisseurs']['depth']);
+        $this->assertSame('[WP] Factures › Fournisseurs', $folders['Fournisseurs']['sub']);
+        $this->assertEqualsCanonicalizing(['wf:'.$one->id, 'wf:'.$two->id], $top['filed_by']);
+        $this->assertSame(['wf:'.$one->id], $folders['Fournisseurs']['filed_by']);
+        $edges = array_map(function ($e) {
+            return $e['kind'].' '.$e['from'].' > '.$e['to'];
+        }, array_filter($data['edges'], function ($e) {
+            return in_array($e['kind'], ['sends', 'folder'], true);
+        }));
+        $this->assertContains('sends wf:'.$one->id.' > '.$top['key'], $edges, 'rule -> top folder');
+        $this->assertContains('folder '.$top['key'].' > '.$folders['Fournisseurs']['key'], $edges, 'folder -> sub-folder');
+        $this->assertSame('', $top['warn']);
+
+        // option off, or a name the action refuses: still shown, with a warning
+        \App\Option::set(\Modules\WorkflowPacks\Services\Imap\ImapFolders::OPTION_ENABLED, false);
+        $this->local($a, 'Mauvais nom', [['type' => 'wp_imap_folder', 'value' => 'Fact*']]);
+        $data = $this->actingAs($admin)->getJson(route('workflowpacks.graph.data'))->json();
+        $warns = [];
+        foreach ($data['nodes'] as $node) {
+            if (($node['dest'] ?? '') === 'imap') {
+                $warns[$node['label']] = $node['warn'];
+            }
+        }
+        $this->assertStringContainsString('Workflow Packs', $warns['[WP] Factures'], 'option off: said on the block');
+        $this->assertNotSame('', $warns['Fact*'], 'invalid name: said on the block');
+    }
+
+    public function testSizesOfEnlargedBlocksAreSavedValidatedAndKept()
+    {
+        $a = $this->mailbox('A');
+        $user = $this->user([$a], false, true);
+        $url = route('workflowpacks.graph.layout');
+        $this->actingAs($user)->postJson($url, ['positions' => ['mb:'.$a->id => [0, 0]], 'sizes' => ['mb:'.$a->id => [420, 120]]])->assertStatus(200);
+        $layout = $this->actingAs($user)->getJson(route('workflowpacks.graph.data'))->json()['layout'];
+        $this->assertSame(['mb:'.$a->id => [420, 120]], $layout['sizes']);
+
+        // rearranging (replace) keeps the sizes; out of bounds or bad keys refused; null = automatic size again
+        $this->actingAs($user)->postJson($url, ['positions' => ['mb:'.$a->id => [50, 50]], 'replace' => true])->assertStatus(200);
+        $this->assertSame([420, 120], $this->actingAs($user)->getJson(route('workflowpacks.graph.data'))->json()['layout']['sizes']['mb:'.$a->id]);
+        $this->actingAs($user)->postJson($url, ['sizes' => ['mb:'.$a->id => [5000, 120]]])->assertStatus(422);
+        $this->actingAs($user)->postJson($url, ['sizes' => ['mb:'.$a->id => [420]]])->assertStatus(422);
+        $this->actingAs($user)->postJson($url, ['sizes' => ['<b>' => [420, 120]]])->assertStatus(422);
+        $this->actingAs($user)->postJson($url, ['sizes' => ['mb:'.$a->id => null]])->assertStatus(200);
+        $this->assertSame([], $this->actingAs($user)->getJson(route('workflowpacks.graph.data'))->json()['layout']['sizes']);
+    }
+
     public function testLayoutIsSavedLiveMergedValidatedAndPerUser()
     {
         $a = $this->mailbox('A');

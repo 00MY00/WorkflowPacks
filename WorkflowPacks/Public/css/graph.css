@@ -72,13 +72,11 @@
 .wpg-node.dim { opacity: .28; }
 .wpg-node.drop-ok .wpg-box { stroke: var(--c-ok); stroke-width: 3; }
 .wpg-node.drop-bad .wpg-box { stroke: var(--c-err); stroke-width: 3; }
-/* semantic zoom (view.js): near = everything, mid = one short big label, far = macro view (rules become colored blocks) */
-.wpg-t1s { display: none; font-size: 20px; font-weight: 700; fill: var(--g-text); }
-.zoom-mid .wpg-t1, .zoom-mid .wpg-t2, .zoom-mid .wpg-warn, .zoom-far .wpg-handle { display: none; }
-.zoom-mid .wpg-t1s { display: inline; }
-.zoom-far .wpg-node.kind-rule .wpg-t1s { display: none; }
+/* semantic zoom (view.js): near = everything, mid = titles only (whole, never cut), far = macro view (rules become
+   colored blocks; mailboxes, packs and destinations keep their whole title) */
+.zoom-mid .wpg-t2, .zoom-mid .wpg-warn, .zoom-far .wpg-handle { display: none; }
+.zoom-far .wpg-node.kind-rule .wpg-t1 { display: none; }
 .zoom-far .wpg-node.kind-rule .wpg-box { fill: var(--c); fill-opacity: .18; }
-.zoom-far .wpg-t1s { font-size: 24px; }
 
 /* links */
 .wpg-line { fill: none; stroke: #94a3b8; stroke-width: 1.8; }
@@ -91,6 +89,13 @@
 /* pack -> rule: shown only around the selection (the color of the rule already tells it comes from a pack) */
 .wpg-edge.kind-contains .wpg-line { stroke: var(--c-pack); stroke-dasharray: 3 4; opacity: 0; transition: opacity .15s; }
 .wpg-edge.kind-contains.lit .wpg-line { opacity: .85; }
+/* e-mail folder -> sub-folder: the flow of the e-mail goes on */
+.wpg-edge.kind-folder .wpg-line { stroke: var(--c-imap); stroke-width: 2; }
+/* resize grip, bottom right corner of a block */
+.wpg-grip { fill: var(--c); opacity: 0; cursor: nwse-resize; transition: opacity .15s; }
+.wpg-node:hover .wpg-grip, .wpg-node.selected .wpg-grip { opacity: .55; }
+.zoom-far .wpg-grip { display: none; }
+.wpg-warn-text { color: #92400e; background: #fffbeb; border: 1px solid #fde68a; padding: 6px 8px; border-radius: 8px; font-size: 13px; }
 .wpg-edge-hit { fill: none; stroke: transparent; stroke-width: 14; cursor: pointer; }
 .wpg-edge.selected .wpg-line { stroke-width: 4; }
 .wpg-edge.dim { opacity: .15; }
@@ -118,7 +123,8 @@
 .wpg-ins-pill { display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 10px; color: var(--c); background: color-mix(in srgb, var(--c) 12%, transparent); }
 .wpg-ins-pill .wpg-svg-icon { width: 22px; height: 22px; }
 .wpg-ins-title { display: flex; flex-direction: column; min-width: 0; flex: 1; }
-.wpg-ins-title strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* whole names, wrapped (never cut) */
+.wpg-ins-title strong { overflow-wrap: anywhere; }
 .wpg-ins-title small { color: var(--g-muted); }
 .wpg-ins-close { border: 0; background: none; font-size: 22px; line-height: 1; color: var(--g-muted); cursor: pointer; }
 .wpg-ins-body { padding: 12px 14px 20px; }
@@ -126,7 +132,7 @@
 .wpg-inst { display: flex; align-items: center; gap: 8px; width: 100%; padding: 6px 8px; border: 1px solid var(--g-border); border-radius: 8px; margin-bottom: 6px; background: var(--g-card); text-align: left; }
 .wpg-inst.wpg-link { cursor: pointer; }
 .wpg-inst.wpg-link:hover { border-color: var(--g-brand); }
-.wpg-inst-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
+.wpg-inst-name { flex: 1; min-width: 0; overflow-wrap: anywhere; font-size: 13px; }
 .wpg-chip { font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 8px; color: #fff; background: var(--g-muted); white-space: nowrap; }
 .wpg-chip.state-synced { background: var(--c-ok); } .wpg-chip.state-modified { background: var(--c-warn); }
 .wpg-chip.state-local { background: var(--c-local); } .wpg-chip.state-missing { background: var(--c-err); }

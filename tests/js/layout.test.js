@@ -96,6 +96,38 @@ test('radial and columns: a pack shared by several mailboxes stays readable (no 
     });
 });
 
+test('columns: e-mail folders as a flow, each sub-folder in the next column facing its parent; wide blocks never overlap', () => {
+    const list = [
+        { key: 'mb:1', kind: 'mailbox', label: 'Support' },
+        { key: 'wf:1', kind: 'rule', label: 'Une règle au nom très long', box: { w: 380, h: 98 } },
+        { key: 'wf:2', kind: 'rule', label: 'Devis' },
+        { key: 'dest:imap:A', kind: 'dest', dest: 'imap', label: '[WP] Factures', depth: 0 },
+        { key: 'dest:imap:A/B', kind: 'dest', dest: 'imap', label: 'Fournisseurs', depth: 1, box: { w: 300, h: 56 } },
+        { key: 'dest:imap:A/B/C', kind: 'dest', dest: 'imap', label: '2026', depth: 2 },
+        { key: 'dest:status:closed', kind: 'dest', label: 'Fermées' },
+    ];
+    const links = [
+        { from: 'wf:1', to: 'mb:1', kind: 'applies' }, { from: 'wf:2', to: 'mb:1', kind: 'applies' },
+        { from: 'wf:1', to: 'dest:imap:A', kind: 'sends' }, { from: 'dest:imap:A', to: 'dest:imap:A/B', kind: 'folder' },
+        { from: 'dest:imap:A/B', to: 'dest:imap:A/B/C', kind: 'folder' }, { from: 'wf:2', to: 'dest:status:closed', kind: 'sends' },
+    ];
+    const pos = L.columns(list, links);
+    list.forEach((x) => assert.ok(pos[x.key], x.key));
+    const right = (key) => pos[key][0] + L.size(list.find((x) => x.key === key))[0];
+    assert.ok(pos['wf:1'][0] > right('mb:1'), 'rules after the mailboxes');
+    assert.ok(pos['dest:imap:A'][0] > right('wf:1'), 'destinations after the widest rule');
+    assert.ok(pos['dest:imap:A/B'][0] > right('dest:imap:A'), 'sub-folder in the next column');
+    assert.ok(pos['dest:imap:A/B/C'][0] > right('dest:imap:A/B'), 'and its own sub-folder after it');
+    const mid = (key) => pos[key][1] + L.size(list.find((x) => x.key === key))[1] / 2;
+    assert.ok(Math.abs(mid('dest:imap:A/B') - mid('dest:imap:A')) < 1, 'facing its parent');
+    for (let i = 0; i < list.length; i++) {
+        for (let j = i + 1; j < list.length; j++) {
+            const a = pos[list[i].key], b = pos[list[j].key], sa = L.size(list[i]), sb = L.size(list[j]);
+            assert.ok(!(a[0] < b[0] + sb[0] && b[0] < a[0] + sa[0] && a[1] < b[1] + sb[1] && b[1] < a[1] + sa[1]), list[i].key + ' / ' + list[j].key);
+        }
+    }
+});
+
 test('placeNew: a new rule is put next to its mailbox, saved blocks do not move', () => {
     const pos = L.columns(nodes, edges);
     const saved = JSON.parse(JSON.stringify(pos));

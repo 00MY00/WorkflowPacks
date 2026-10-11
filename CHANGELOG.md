@@ -4,6 +4,24 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [1.6.0] - 2026-10-15
+
+### Ajouté
+- **Schéma : les dossiers e-mail forment un flux.** Une règle qui range dans `Factures/Fournisseurs` mène au bloc
+  📁 `[WP] Factures`, puis au bloc 📁 `Fournisseurs` : un bloc par niveau, avec une icône de dossier. Les sous-dossiers
+  sont placés dans les colonnes suivantes, en face de leur dossier parent.
+  - Le panneau d'un dossier liste les règles qui rangent dans ce dossier ou dans un de ses sous-dossiers.
+  - Sélectionner une règle met en avant tout son chemin. La vue partielle d'une boîte inclut ses dossiers et
+    sous-dossiers.
+  - Une règle de rangement apparaît même quand l'option est désactivée ou que le nom du dossier est invalide, avec un
+    avertissement sur le bloc et dans le panneau : elle ne passe plus inaperçue.
+- **Blocs à la taille de leur texte.**
+  - La largeur suit le titre. Au-delà, le texte passe à la ligne et le bloc grandit : plus aucun texte coupé, à
+    aucune distance de zoom, ni dans le panneau latéral.
+  - **Poignée dans le coin** d'un bloc pour l'agrandir. La taille est enregistrée en direct, pour chaque
+    utilisateur, et conservée quand on réorganise. Un double-clic sur la poignée rend la taille automatique.
+  - Les colonnes et la grille s'élargissent selon les blocs, sans chevauchement.
+
 ## [1.5.1] - 2026-10-14
 
 ### Corrigé

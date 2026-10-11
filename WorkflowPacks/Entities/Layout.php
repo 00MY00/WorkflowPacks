@@ -8,5 +8,5 @@ class Layout extends Model
 {
     protected $table = 'workflowpacks_layouts';
 
-    protected $fillable = ['user_id', 'view', 'positions', 'settings'];
+    protected $fillable = ['user_id', 'view', 'positions', 'settings', 'sizes'];
 }

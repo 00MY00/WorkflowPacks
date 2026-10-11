@@ -38,8 +38,8 @@
     };
 
     Api.prototype.data = function () { return this.request('GET', this.urls.data); };
-    Api.prototype.saveLayout = function (positions, settings, replace) {
-        return this.request('POST', this.urls.layout, { positions: positions, settings: settings || {}, replace: !!replace });
+    Api.prototype.saveLayout = function (positions, settings, replace, sizes) {
+        return this.request('POST', this.urls.layout, { positions: positions, settings: settings || {}, replace: !!replace, sizes: sizes || {} });
     };
     Api.prototype.rule = function (id) { return this.request('GET', this.url('rule', id)); };
     Api.prototype.catalog = function (mailboxId) { return this.request('GET', this.url('catalog', mailboxId)); };

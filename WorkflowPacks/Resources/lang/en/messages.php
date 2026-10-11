@@ -246,4 +246,5 @@ return [
     'backup_pack'              => 'Download the original pack',
     'backup_full'              => 'Download the full backup',
     'backup_help'              => 'The original pack can be imported again as it is (Import a pack). The full backup also holds every deleted rule as it was, changes included.',
+    'dest_imap_off'            => 'option "File into an e-mail folder" is off: nothing will be filed (Manage › Settings › Workflow Packs).',
 ];

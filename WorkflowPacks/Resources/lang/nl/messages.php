@@ -242,4 +242,5 @@ return [
     'backup_pack'              => 'Oorspronkelijk pack downloaden',
     'backup_full'              => 'Volledige back-up downloaden',
     'backup_help'              => 'Het oorspronkelijke pack kan ongewijzigd opnieuw worden geïmporteerd (Pack importeren). De volledige back-up bevat ook elke verwijderde regel zoals hij was, met wijzigingen.',
+    'dest_imap_off'            => 'optie "Opbergen in een e-mailmap" staat uit: er wordt niets opgeborgen (Beheren › Instellingen › Workflow Packs).',
 ];

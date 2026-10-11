@@ -25,6 +25,15 @@ Destinations reconnues :
 | déplacer vers une autre boîte | la **boîte** cible (son bloc si vous la gérez) |
 | étiquettes (module Tags) | l'**étiquette** |
 
+**Dossiers e-mail** (action « Ranger dans un dossier e-mail », voir [dossiers-email.md](dossiers-email.md)) :
+
+- un bloc 📁 par niveau, en flux : la règle mène à `[WP] Factures`, puis à `Fournisseurs`, chaque sous-dossier étant
+  placé dans la colonne suivante, en face de son parent ;
+- le panneau d'un dossier liste les règles qui rangent dans ce dossier ou en dessous ;
+- quand l'option est désactivée ou que le nom est invalide, le bloc apparaît quand même, avec un avertissement.
+
+![Dossiers e-mail](screenshots/schema-dossiers.png)
+
 Liens d'une règle vers une boîte :
 
 | Trait | État |
@@ -56,7 +65,11 @@ Liens d'une règle vers une boîte :
 | **Grille** | grille compacte, par type puis par nom |
 | **Libre** | vos positions seulement |
 
-Chaque bloc déplacé est **enregistré aussitôt** (indicateur « Enregistré ✓ ») pour votre compte. Les autres
+Chaque bloc prend la **taille de son texte**, et un texte long passe à la ligne : rien n'est jamais coupé. La
+**poignée** dans le coin inférieur droit d'un bloc permet de l'agrandir, et un double-clic dessus rend la taille
+automatique.
+
+Chaque bloc déplacé ou agrandi est **enregistré aussitôt** (indicateur « Enregistré ✓ ») pour votre compte. Les autres
 utilisateurs gardent leur propre schéma. Choisir une disposition replace les blocs, et `Ctrl+Z` / `Ctrl+Y` annulent ou
 rétablissent les déplacements. Les liens peuvent être à angles droits, courbes ou droits, et les packs comme les
 destinations peuvent être masqués.
