@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 1.8.0
+# Résultats des tests — Workflow Packs 1.9.0
 
 Date : 2026-10-10. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,14 @@ Date : 2026-10-10. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 1.9.0 — règles minuteur, nettoyage automatique des dossiers e-mail
+
+| Série | Résultat |
+|---|---|
+| Unitaires (43 tests, 4 678 assertions) | `TimerTest` (2) : délai contrôlé et normalisé (« 30 » → 30, unités i/h/d, formes refusées), secondes, libellé ; règle « créée il y a plus de 30 jours ET fermée → supprimer » compilée avec un nombre entier, `WP-TIME-01` sinon |
+| Intégration (72 tests, 528 assertions) | `TimerTest` (2) : import (« 30 jour(s) » dans la prévisualisation, valeur écrite comme Workflows l'attend, délai invalide bloqué) ; éditeur (délais proposés, enregistrement, unité invalide refusée) ; schéma (« Après 2 heure(s) » sur le bloc). `ImapFolderTest` (+3) : réglage du nettoyage réservé aux administrateurs, contrôlé, normalisé, affiché sur le bloc et dans les réglages, retiré ; **serveur IMAP réel** : seul l'e-mail de plus de 7 jours de `[WP] Newsletters` va à la corbeille, dossier perso du même nom et corbeille intacts ; mode définitif (48 heures), dossier absent jamais créé, option désactivée : rien |
+| Navigateur (Chrome sans interface) | « Ajouter un délai » dans l'éditeur (nombre + unité), règle enregistrée, bloc « Après … jour(s) » ; nettoyage réglé dans le panneau d'un dossier, bloc « nettoyé après … » ; icônes SVG au lieu d'emojis |
 
 ## 1.8.0 — état des règles, sélection multiple, activation en lot
 

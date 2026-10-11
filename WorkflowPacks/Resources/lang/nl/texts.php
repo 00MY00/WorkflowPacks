@@ -194,4 +194,11 @@ return [
     'imap_folder_deep'         => 'e-mailmap: hoogstens 4 niveaus ("A/B/C/D").',
     'upd_workdir'              => 'de update draait als gebruiker ":user", die niet in zijn werkmap :path kan schrijven (eigenaar: :owner).',
     'upd_not_writable'         => 'de update draait als gebruiker ":user", die het volgende niet kan wijzigen: :paths. Er is niets gewijzigd. Herstel met: :command',
+    'timer_i'                  => ':count minuut/minuten',
+    'timer_h'                  => ':count uur',
+    'timer_d'                  => ':count dag(en)',
+    'timer_shape'              => 'termijn van ":type": een getal en een eenheid zijn nodig ({ "number": 30, "metric": "d" }).',
+    'timer_number'             => 'termijn: een geheel getal van 1 tot 100000.',
+    'timer_metric'             => 'termijn: eenheid i (minuten), h (uren) of d (dagen).',
+    'retention_mode'           => 'opschonen: modus "trash" (prullenbak) of "delete" (definitief).',
 ];

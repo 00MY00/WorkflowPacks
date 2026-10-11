@@ -27,11 +27,15 @@
             'save'      => route('workflowpacks.graph.save'),
             'toggle'    => route('workflowpacks.graph.toggle', ['id' => '__ID__']),
             'toggleMany' => route('workflowpacks.graph.toggle_many'),
+            'retention' => route('workflowpacks.retention.save'),
+            'retentionRemove' => route('workflowpacks.retention.remove'),
             'apply'     => route('workflowpacks.graph.apply', ['id' => '__ID__']),
             'reimport'  => route('workflowpacks.reimport', ['key' => '__ID__']),
             'workflows' => \Route::has('mailboxes.workflows') ? route('mailboxes.workflows', ['mailbox_id' => '__ID__']) : '',
         ],
         'texts' => __('workflowpacks::graph'),
+        // settings of the module (automatic clean-up of the e-mail folders): administrators only, checked again server-side
+        'admin' => auth()->user()->isAdmin(),
     ];
 @endphp
 <div class="wpg-app">

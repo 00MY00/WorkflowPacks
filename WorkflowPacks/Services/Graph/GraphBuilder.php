@@ -8,6 +8,7 @@ use Modules\WorkflowPacks\Services\Imap\FolderPath;
 use Modules\WorkflowPacks\Services\Imap\ImapFolders;
 use Modules\WorkflowPacks\Services\Pack\Fingerprint;
 use Modules\WorkflowPacks\Services\Pack\Problems;
+use Modules\WorkflowPacks\Services\Pack\Timer;
 use Modules\WorkflowPacks\Services\Workflows\Bridge;
 
 /**
@@ -29,6 +30,9 @@ use Modules\WorkflowPacks\Services\Workflows\Bridge;
  */
 class GraphBuilder
 {
+    /** @var \Illuminate\Support\Collection|null automatic clean-up settings, by folder */
+    protected $retention = null;
+
     public function build($user)
     {
         $jsonActions = (array) Bridge::config('json_value_actions');
@@ -180,6 +184,9 @@ class GraphBuilder
     {
         $prefix = ImapFolders::prefix();
         $warn = ImapFolders::enabled() ? '' : __('workflowpacks::messages.dest_imap_off');
+        if ($this->retention === null) {
+            $this->retention = \Modules\WorkflowPacks\Services\Imap\Retention::all()->keyBy('folder');
+        }
         $parsed = FolderPath::parse($value);
         if ($parsed['error'] !== null) {
             $raw = is_scalar($value) ? (string) $value : json_encode($value);
@@ -191,12 +198,18 @@ class GraphBuilder
         $path = '';
         foreach ($parsed['segments'] as $i => $segment) {
             $path .= ($i ? '/' : '').$segment;
+            // automatic clean-up set for this folder: shown on the block, editable in its side panel
+            $row = $this->retention->get($path);
+            $retention = $row ? ['number' => (int) $row->number, 'metric' => $row->metric, 'mode' => $row->mode] : null;
             $levels[] = [
+                'folder'    => $path,
+                'retention' => $retention,
                 'key'    => 'dest:imap:'.substr(preg_replace('/[^A-Za-z0-9._\/-]+/', '-', $path), 0, 140).'-'.substr(md5($path), 0, 6),
                 'kind'   => 'dest',
                 'dest'   => 'imap',
                 'label'  => $i ? $segment : $prefix.' '.$segment,
-                'sub'    => $i ? FolderPath::label($path, $prefix) : __('workflowpacks::messages.dest_imap'),
+                'sub'    => ($i ? FolderPath::label($path, $prefix) : __('workflowpacks::messages.dest_imap'))
+                    .($retention ? ' · '.__('workflowpacks::messages.retention_short', ['delay' => Timer::label($retention)]) : ''),
                 'depth'  => $i,
                 'warn'   => $warn,
                 'action' => $type,
@@ -212,8 +225,18 @@ class GraphBuilder
     protected function summary(array $attributes, array $jsonActions)
     {
         $conditions = 0;
+        $timer = '';
         foreach ((array) $attributes['conditions'] as $group) {
             $conditions += count((array) $group);
+            // timer rule: its delay in front ("After 30 day(s) · 2 condition(s) -> 1 action(s)")
+            foreach ((array) $group as $condition) {
+                if ($timer === '' && is_array($condition) && Timer::isTimer($condition['type'] ?? '')) {
+                    $checked = Timer::check($condition['value'] ?? null);
+                    if ($checked['error'] === null) {
+                        $timer = __('workflowpacks::messages.timer_prefix', ['delay' => Timer::label($checked['value'])]).' · ';
+                    }
+                }
+            }
         }
         $actions = Fingerprint::decodeActions($attributes['actions'], $jsonActions);
         $sensitive = [];
@@ -225,7 +248,7 @@ class GraphBuilder
         }
 
         return [
-            'text'      => __('workflowpacks::messages.graph_summary', ['conditions' => $conditions, 'actions' => count($actions)]),
+            'text'      => $timer.__('workflowpacks::messages.graph_summary', ['conditions' => $conditions, 'actions' => count($actions)]),
             'sensitive' => array_values(array_unique($sensitive)),
         ];
     }

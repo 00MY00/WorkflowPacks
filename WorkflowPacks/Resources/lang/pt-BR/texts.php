@@ -194,4 +194,11 @@ return [
     'imap_folder_deep'         => 'pasta de e-mail: no máximo 4 níveis ("A/B/C/D").',
     'upd_workdir'              => 'a atualização roda como o usuário ":user", que não pode gravar na sua pasta de trabalho :path (proprietário: :owner).',
     'upd_not_writable'         => 'a atualização roda como o usuário ":user", que não pode alterar: :paths. Nada foi alterado. Corrija com: :command',
+    'timer_i'                  => ':count minuto(s)',
+    'timer_h'                  => ':count hora(s)',
+    'timer_d'                  => ':count dia(s)',
+    'timer_shape'              => 'prazo de ":type": são necessários um número e uma unidade ({ "number": 30, "metric": "d" }).',
+    'timer_number'             => 'prazo: um número inteiro de 1 a 100000.',
+    'timer_metric'             => 'prazo: unidade i (minutos), h (horas) ou d (dias).',
+    'retention_mode'           => 'limpeza: modo "trash" (lixeira) ou "delete" (definitivo).',
 ];

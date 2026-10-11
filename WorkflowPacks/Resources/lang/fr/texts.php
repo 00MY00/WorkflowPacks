@@ -214,4 +214,11 @@ return [
     'imap_folder_deep'         => 'dossier e-mail : 4 niveaux au plus (« A/B/C/D »).',
     'upd_workdir'              => 'la mise à jour tourne sous l\'utilisateur « :user », qui ne peut pas écrire dans son dossier de travail :path (propriétaire : :owner).',
     'upd_not_writable'         => 'la mise à jour tourne sous l\'utilisateur « :user », qui ne peut pas modifier : :paths. Rien n\'a été changé. Corrigez avec : :command',
+    'timer_i'                  => ':count minute(s)',
+    'timer_h'                  => ':count heure(s)',
+    'timer_d'                  => ':count jour(s)',
+    'timer_shape'              => 'délai de « :type » : il faut un nombre et une unité ({ "number": 30, "metric": "d" }).',
+    'timer_number'             => 'délai : un nombre entier de 1 à 100000.',
+    'timer_metric'             => 'délai : unité i (minutes), h (heures) ou d (jours).',
+    'retention_mode'           => 'nettoyage : mode « trash » (corbeille) ou « delete » (définitif).',
 ];

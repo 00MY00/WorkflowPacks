@@ -4,6 +4,31 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [1.9.0] - 2026-10-18
+
+### Ajouté
+- **Règles minuteur**, détaillées dans [docs/minuteurs.md](docs/minuteurs.md).
+  - Le module prend en charge les conditions de délai de Workflows : date de création, en attente depuis, dernière
+    réponse d'un agent, dernière réponse du client. Le délai a la forme `{ "number": 30, "metric": "d" }`, en
+    minutes, heures ou jours. Exemple : « supprimer les tickets fermés **après 30 jours** ».
+  - Dans l'éditeur du Schéma, un nombre et une unité remplacent le champ texte, et **« Ajouter un délai »** crée la
+    condition en un clic. Le bloc de la règle affiche « Après 30 jour(s) ».
+  - À l'import : délai contrôlé et normalisé, et règle bloquée avec le code `WP-TIME-01` si le délai est mal écrit.
+    La prévisualisation et la liste affichent « 30 jour(s) ».
+- **Nettoyage automatique des dossiers e-mail `[WP]`.**
+  - Réglage par dossier : « les e-mails de plus de N minutes, heures ou jours vont à la corbeille », ou sont
+    supprimés définitivement. Il se fait dans le panneau du dossier, dans le Schéma (administrateurs). La liste et le
+    retrait sont dans les réglages.
+  - Exécution toutes les 15 minutes par le planificateur (`workflowpacks:clean-folders`), dans chaque boîte où le
+    dossier existe.
+  - Garde-fous : seulement les dossiers portant le préfixe ; corbeille et dossiers perso jamais touchés ; purge
+    limitée au dossier nettoyé ; dossier absent jamais créé ; 500 e-mails au plus par passage ; journal.
+- Icônes SVG du module au lieu d'emojis, pour un affichage identique partout.
+
+### Modifié
+- Paramètres nullables explicites (`?callable`, `?array`), sans avertissement PHP 8.4, et toujours compatibles
+  PHP 7.1.
+
 ## [1.8.0] - 2026-10-17
 
 ### Ajouté

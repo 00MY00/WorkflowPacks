@@ -21,7 +21,7 @@ class PortableTest extends TestCase
         return $mailbox;
     }
 
-    protected function v2(array $extra = [], array $rules = null)
+    protected function v2(array $extra = [], ?array $rules = null)
     {
         return $this->pack($rules ?: [$this->rule('r1', ['settings' => ['apply_to_prev' => false, 'max_executions' => 1]])], $extra + ['version' => 2]);
     }

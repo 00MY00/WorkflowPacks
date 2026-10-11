@@ -194,4 +194,11 @@ return [
     'imap_folder_deep'         => 'cartella e-mail: al massimo 4 livelli («A/B/C/D»).',
     'upd_workdir'              => 'l’aggiornamento gira con l’utente «:user», che non può scrivere nella sua cartella di lavoro :path (proprietario: :owner).',
     'upd_not_writable'         => 'l’aggiornamento gira con l’utente «:user», che non può modificare: :paths. Non è stato cambiato nulla. Correggi con: :command',
+    'timer_i'                  => ':count minuto/i',
+    'timer_h'                  => ':count ora/e',
+    'timer_d'                  => ':count giorno/i',
+    'timer_shape'              => 'durata di «:type»: servono un numero e un’unità ({ "number": 30, "metric": "d" }).',
+    'timer_number'             => 'durata: un numero intero da 1 a 100000.',
+    'timer_metric'             => 'durata: unità i (minuti), h (ore) o d (giorni).',
+    'retention_mode'           => 'pulizia: modalità «trash» (cestino) o «delete» (definitiva).',
 ];

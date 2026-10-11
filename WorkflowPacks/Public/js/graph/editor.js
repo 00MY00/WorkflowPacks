@@ -149,6 +149,13 @@
             s.lanes.push([{ type: self.firstType('conditions', 'subject'), operator: '' }]);
             self.render();
         } } }, ['+ ' + t.add_and]));
+        // timer rule in one click: "AND created more than 7 days ago" (Workflows checks it again and again)
+        if ((this.catalog.timers || []).indexOf('created') >= 0) {
+            body.appendChild(h('button', { type: 'button', class: 'btn btn-default btn-xs wpg-add-timer', title: t.timer_help, on: { click: function () {
+                s.lanes.push([{ type: 'created', operator: 'not_in_last', value: { number: 7, metric: 'd' } }]);
+                self.render();
+            } } }, [icon('timer'), ' ' + t.add_timer]));
+        }
 
         // THEN
         body.appendChild(h('div', { class: 'wpg-ed-sec' }, [h('span', { class: 'wpg-then', text: t.then }), ' ' + t.then_help]));
@@ -243,7 +250,16 @@
 
     /** Value of a condition: closed list -> select, no value -> nothing, else text. */
     Editor.prototype.valueControl = function (cfg, item, placeholder) {
-        var self = this;
+        var self = this, t = this.t;
+        // date condition: a delay, number + unit (what Workflows expects: { number, metric })
+        if ((this.catalog.timers || []).indexOf(item.type) >= 0) {
+            if (!item.value || typeof item.value !== 'object') { item.value = { number: 7, metric: 'd' }; }
+            var number = h('input', { type: 'number', min: 1, max: 100000, step: 1, class: 'form-control input-sm wpg-w-num', value: item.value.number,
+                'aria-label': t.timer_number, on: { input: function () { item.value.number = Math.max(1, parseInt(this.value, 10) || 1); self.sync(); } } });
+            var unit = select([['i', t.unit_i], ['h', t.unit_h], ['d', t.unit_d]], item.value.metric || 'd',
+                function (v) { item.value.metric = v; self.sync(); }, 'wpg-w-unit');
+            return h('span', { class: 'wpg-w-val wpg-timer', title: t.timer_help }, [h('span', { class: 'wpg-timer-ic' }, [icon('timer')]), number, unit]);
+        }
         if (Array.isArray(cfg.values) && cfg.values.length === 0) {
             delete item.value;
             return h('span', { class: 'wpg-w-val wpg-muted', text: '—' });

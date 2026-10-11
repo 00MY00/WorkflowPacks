@@ -27,6 +27,7 @@ class WorkflowPacksServiceProvider extends ServiceProvider
         $this->commands([
             \Modules\WorkflowPacks\Console\CheckCommand::class,
             \Modules\WorkflowPacks\Console\UpdateCommand::class,
+            \Modules\WorkflowPacks\Console\CleanFoldersCommand::class,
         ]);
     }
 
@@ -194,6 +195,10 @@ class WorkflowPacksServiceProvider extends ServiceProvider
                     ->withoutOverlapping();
                 $schedule->command('workflowpacks:update --requested')
                     ->everyMinute()
+                    ->withoutOverlapping();
+                // automatic clean-up of the managed e-mail folders (does nothing without a setting)
+                $schedule->command('workflowpacks:clean-folders')
+                    ->everyFifteenMinutes()
                     ->withoutOverlapping();
             } catch (\Throwable $e) {
                 // no automatic update rather than a broken scheduler

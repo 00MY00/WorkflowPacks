@@ -194,4 +194,11 @@ return [
     'imap_folder_deep'         => 'E-Mail-Ordner: höchstens 4 Ebenen („A/B/C/D“).',
     'upd_workdir'              => 'die Aktualisierung läuft als Benutzer „:user“, der nicht in seinen Arbeitsordner :path schreiben kann (Eigentümer: :owner).',
     'upd_not_writable'         => 'die Aktualisierung läuft als Benutzer „:user“, der Folgendes nicht ändern kann: :paths. Nichts wurde geändert. Beheben mit: :command',
+    'timer_i'                  => ':count Minute(n)',
+    'timer_h'                  => ':count Stunde(n)',
+    'timer_d'                  => ':count Tag(e)',
+    'timer_shape'              => 'Frist von „:type“: Zahl und Einheit nötig ({ "number": 30, "metric": "d" }).',
+    'timer_number'             => 'Frist: eine ganze Zahl von 1 bis 100000.',
+    'timer_metric'             => 'Frist: Einheit i (Minuten), h (Stunden) oder d (Tage).',
+    'retention_mode'           => 'Bereinigung: Modus „trash“ (Papierkorb) oder „delete“ (endgültig).',
 ];

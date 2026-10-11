@@ -194,4 +194,11 @@ return [
     'imap_folder_deep'         => 'e-mail folder: 4 levels at most ("A/B/C/D").',
     'upd_workdir'              => 'the update runs as the user ":user", who cannot write its work folder :path (owner: :owner).',
     'upd_not_writable'         => 'the update runs as the user ":user", who cannot change: :paths. Nothing was changed. Fix it with: :command',
+    'timer_i'                  => ':count minute(s)',
+    'timer_h'                  => ':count hour(s)',
+    'timer_d'                  => ':count day(s)',
+    'timer_shape'              => 'delay of ":type": a number and a unit are needed ({ "number": 30, "metric": "d" }).',
+    'timer_number'             => 'delay: a whole number from 1 to 100000.',
+    'timer_metric'             => 'delay: unit i (minutes), h (hours) or d (days).',
+    'retention_mode'           => 'clean-up: mode "trash" or "delete" (for good).',
 ];

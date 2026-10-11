@@ -36,6 +36,13 @@ class Workflow extends Model
                 'subject'      => ['title' => 'Subject', 'operators' => $text],
                 'new_or_reply' => ['title' => 'New / Reply / Moved', 'operators' => ['new' => 'New', 'reply' => 'Reply', 'moved' => 'Moved'], 'values' => []],
             ]],
+            // date conditions (value { number, metric }), evaluated by the scheduler of the real module
+            'dates' => ['title' => 'Dates', 'items' => [
+                'waiting'        => ['title' => 'Waiting Since', 'operators' => ['longer' => 'Is longer than', 'not_longer' => 'Is not longer than']],
+                'user_reply'     => ['title' => 'Last User Reply', 'operators' => ['in_last' => 'Is in the last', 'not_in_last' => 'Is not in the last']],
+                'customer_reply' => ['title' => 'Last Customer Reply', 'operators' => ['in_last' => 'Is in the last', 'not_in_last' => 'Is not in the last']],
+                'created'        => ['title' => 'Date Created', 'operators' => ['in_last' => 'Is in the last', 'not_in_last' => 'Is not in the last']],
+            ]],
         ];
 
         return \Eventy::filter('workflows.conditions_config', $config, $mailbox_id);

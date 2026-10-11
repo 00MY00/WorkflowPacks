@@ -65,6 +65,8 @@ class RuleEditor
             'sensitive'    => (array) Bridge::config('sensitive_actions'),
             'refs'         => (array) Bridge::config('local_refs'),
             'strict'       => (array) Bridge::config('strict_values'),
+            // date conditions (number + minutes / hours / days), evaluated again and again by Workflows
+            'timers'       => array_values(array_intersect(\Modules\WorkflowPacks\Services\Pack\Timer::CONDITIONS, array_keys(Bridge::catalog($mailboxId)['conditions']))),
         ];
     }
 
