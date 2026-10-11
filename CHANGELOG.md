@@ -4,6 +4,32 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [1.12.0] - 2026-10-11
+
+### Ajouté
+- **« Ranger à nouveau dans les dossiers e-mail »** : remet dans leur dossier `[WP]` les e-mails des tickets déjà
+  traités par les règles choisies, par exemple quand ils ont été déplacés depuis. Disponible dans la liste (règles
+  cochées) et dans le schéma (menu du clic droit, panneau de la sélection).
+  - Seul le rangement est refait : statut, assignation, transfert… ne sont pas relancés, et les compteurs de Workflows
+    ne changent pas.
+  - L'e-mail est cherché dans la boîte de réception puis dans les autres dossiers du compte, jamais dans la corbeille.
+  - Un e-mail déjà dans son dossier ne bouge pas. L'historique indique « rangement relancé » et le dossier où l'e-mail
+    a été retrouvé.
+
+### Modifié
+- **Import, option « tickets existants »** : l'ancien libellé « Respecter « conversations précédentes » du pack pour
+  les nouvelles règles » devient « Appliquer aussi aux tickets existants les nouvelles règles du pack qui le
+  prévoient ». Une explication sous la case dit ce qui se passe cochée ou non, la liste des règles du pack concernées
+  est affichée, et la case est grisée quand aucune règle du pack ne le prévoit. Le fonctionnement ne change pas
+  (7 langues).
+
+### Corrigé
+- **Schéma : plus aucun bloc superposé.** Sur un grand schéma (dizaines de règles et de dossiers, ancienne
+  disposition enregistrée, blocs agrandis), des blocs pouvaient rester les uns sur les autres. Le placement anti-
+  chevauchement est remplacé par une méthode qui se termine toujours sans superposition : 0 sur 200 grands schémas de
+  test au lieu de 49, et 10 fois plus rapide. Il s'applique au chargement, après un déplacement et après un
+  redimensionnement.
+
 ## [1.11.0] - 2026-10-20
 
 ### Ajouté

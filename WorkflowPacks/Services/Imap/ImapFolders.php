@@ -94,8 +94,9 @@ class ImapFolders
     /**
      * Queues the move of the last e-mail received in the conversation. False when there is nothing to move. Every call
      * is written in the history (Workflow Packs › History), with the reason when nothing is queued.
+     * $again: "File again" of the module (not Workflows): the e-mail is also looked for outside the inbox.
      */
-    public static function queue($conversation, $value, $workflow = null)
+    public static function queue($conversation, $value, $workflow = null, $again = false)
     {
         $entry = [
             'mailbox_id'      => $conversation->mailbox_id,
@@ -128,8 +129,8 @@ class ImapFolders
         if (!$thread) {
             return $skip(__('workflowpacks::messages.history_reason_no_email'));
         }
-        $activity = \Modules\WorkflowPacks\Services\History::add('imap_file', 'queued', $entry);
-        FileIntoImapFolder::dispatch((int) $conversation->mailbox_id, (int) $thread->id, (string) $value, $activity);
+        $activity = \Modules\WorkflowPacks\Services\History::add('imap_file', 'queued', $entry + ($again ? ['message' => __('workflowpacks::messages.history_reason_again')] : []));
+        FileIntoImapFolder::dispatch((int) $conversation->mailbox_id, (int) $thread->id, (string) $value, $activity, (bool) $again);
 
         return true;
     }

@@ -111,7 +111,26 @@
             <div class="panel-heading"><strong>{{ __('workflowpacks::messages.options') }}</strong></div>
             <div class="panel-body">
                 <div class="checkbox"><label><input type="checkbox" name="activate_new" value="1"> {{ __('workflowpacks::messages.opt_activate_new') }}</label></div>
-                <div class="checkbox"><label><input type="checkbox" name="allow_apply_to_prev" value="1"> {{ __('workflowpacks::messages.opt_apply_prev') }}</label></div>
+                @php
+                    // rules of the pack marked "previous conversations": the only ones the box changes
+                    $prevRules = collect($plan['rules'])->filter(function ($entry) {
+                        return !empty($entry['rule']['settings']['apply_to_prev']);
+                    });
+                @endphp
+                <div class="checkbox">
+                    <label><input type="checkbox" name="allow_apply_to_prev" value="1" @if ($prevRules->isEmpty()) disabled @endif> {{ __('workflowpacks::messages.opt_apply_prev') }}</label>
+                    <div class="help-block wp-muted">
+                        {{ __('workflowpacks::messages.opt_apply_prev_help') }}
+                        <br>
+                        @if ($prevRules->isEmpty())
+                            {{ __('workflowpacks::messages.opt_apply_prev_none') }}
+                        @else
+                            {!! __('workflowpacks::messages.opt_apply_prev_rules', ['rules' => $prevRules->map(function ($entry) {
+                                return '<strong>'.\Modules\WorkflowPacks\Services\Ui::value($entry['rule']['name']).'</strong>';
+                            })->implode(', ')]) !!}
+                        @endif
+                    </div>
+                </div>
                 <div class="form-group form-inline">
                     <label>{{ __('workflowpacks::messages.opt_active_mode') }}</label>
                     <select name="active_mode" class="form-control input-sm">

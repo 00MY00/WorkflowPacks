@@ -184,4 +184,8 @@ return [
     'apply_many_none' => 'Queste regole sono già tutte in questa casella.',
     'export_one_mailbox' => 'L’esportazione si fa casella per casella: si apre la casella con più regole selezionate.',
     'focus_selection' => 'Vista parziale: :count blocchi selezionati e i loro collegamenti',
+    'menu_refile'              => 'Archivia di nuovo nelle cartelle (:count)',
+    'refile_confirm'           => 'Le e-mail dei ticket già trattati da queste regole saranno rimesse nella loro cartella e-mail, anche se sono state spostate in un\'altra cartella (mai dal cestino). Viene ripetuta solo l\'archiviazione: stato, assegnazione, inoltro… non vengono toccati. Continuare?',
+    'refile_done'              => ':count e-mail in coda per essere archiviate di nuovo (:rules regola/e). Risultato nella scheda Cronologia.',
+    'refile_more'              => 'Ne restano altre: rilancia per le successive.',
 ];

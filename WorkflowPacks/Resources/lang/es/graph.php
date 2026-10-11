@@ -184,4 +184,8 @@ return [
     'apply_many_none' => 'Estas reglas ya están todas en este buzón.',
     'export_one_mailbox' => 'La exportación se hace buzón por buzón: se abre el buzón con más reglas seleccionadas.',
     'focus_selection' => 'Vista parcial: :count bloques seleccionados y sus enlaces',
+    'menu_refile'              => 'Archivar de nuevo en las carpetas (:count)',
+    'refile_confirm'           => 'Los correos de los tickets ya tratados por estas reglas se volverán a poner en su carpeta de correo, aunque se hayan movido a otra carpeta (nunca desde la papelera). Solo se repite el archivado: estado, asignación, reenvío… no se tocan. ¿Continuar?',
+    'refile_done'              => ':count correo(s) en cola para archivar de nuevo (:rules regla(s)). Resultado en la pestaña Historial.',
+    'refile_more'              => 'Quedan más: vuelva a lanzarlo para los siguientes.',
 ];

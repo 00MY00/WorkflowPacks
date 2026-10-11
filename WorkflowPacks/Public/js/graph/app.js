@@ -412,6 +412,17 @@
         }).catch(function (e) { self.toast(e.message, 'error'); });
     };
 
+    /** "File again": the e-mails of the tickets these rules already handled go back into their folder (queued). */
+    App.prototype.refileMany = function (ids) {
+        var self = this, t = this.texts;
+        if (!window.confirm(t.refile_confirm)) { return; }
+        this.api.refileMany(ids).then(function (r) {
+            if (!r.ok) { self.toast(r.error || t.status_error, 'error'); return; }
+            self.toast(t.refile_done.replace(':count', r.queued).replace(':rules', r.rules) + (r.more ? ' ' + t.refile_more : ''), 'ok');
+            if (r.refused && r.refused.length) { self.toast(r.refused.slice(0, 5).join('\n'), 'error'); }
+        }).catch(function (e) { self.toast(e.message, 'error'); });
+    };
+
     /** The selected rules applied to another mailbox (created there inactive), one after the other. */
     App.prototype.applyMany = function (ruleKeys, mailbox) {
         var self = this, t = this.texts, model = this.model;

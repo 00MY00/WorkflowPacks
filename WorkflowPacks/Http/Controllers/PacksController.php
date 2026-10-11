@@ -83,7 +83,15 @@ class PacksController extends Controller
             return $back->with('flash_error_floating', __('workflowpacks::messages.rules_none_selected'));
         }
         $editor = new \Modules\WorkflowPacks\Services\Graph\RuleEditor();
-        if ($request->has('previous')) {
+        if ($request->has('refile')) {
+            // "File again": the e-mails of the tickets already handled go back into the folder of each rule
+            $result = (new \Modules\WorkflowPacks\Services\Imap\Refiler())->rules(auth()->user(), $ids);
+            if (!$result['ok']) {
+                return $back->with('flash_error_floating', $result['error']);
+            }
+            $back = $back->with('flash_success_floating', __('workflowpacks::messages.refile_queued', ['count' => $result['queued'], 'rules' => $result['rules']])
+                .($result['more'] ? ' '.__('workflowpacks::messages.refile_more') : ''));
+        } elseif ($request->has('previous')) {
             // "apply to previous conversations" on / off instead of enabled / disabled
             $on = (bool) $request->input('previous');
             $result = $editor->applyToPreviousMany(auth()->user(), $ids, $on);

@@ -44,6 +44,7 @@
         var ids = inst.map(function (e) { return e.workflow_id; });
         var active = inst.filter(function (e) { return e.active; }).length;
         var previous = inst.filter(function (e) { return e.previous; }).length;
+        var filing = inst.filter(function (e) { return e.files; }).map(function (e) { return e.workflow_id; });
         var sensitive = inst.some(function (e) { return (e.sensitive || []).length; });
         var groups = [];
 
@@ -62,6 +63,8 @@
                 }]);
             }
             if (previous) { state.push([t.menu_prev_off.replace(':count', previous), 'redo', function () { app.previousMany(ids, false); }]); }
+            // rules filing into an e-mail folder: their e-mails back into it (moved since, by hand or elsewhere)
+            if (filing.length) { state.push([t.menu_refile.replace(':count', filing.length), 'folder', function () { app.refileMany(filing); }]); }
             groups.push(state);
         }
         // the selected rules elsewhere: another mailbox, a pack file

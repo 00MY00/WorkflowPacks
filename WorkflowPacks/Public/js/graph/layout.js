@@ -275,42 +275,53 @@
         return pos;
     }
 
-    /** Pushes overlapping blocks apart (a few passes, deterministic). Only keys in `movable` move (all by default). */
+    var PAD_X = 20;   // free space kept between two blocks side by side
+    var PAD_Y = 16;   // ... one above the other
+
+    /**
+     * Moves the blocks that overlap until none does (deterministic, always ends). Only keys in `movable` move (all by
+     * default); the others are placed first and never move. Then every movable block, from top to bottom, is put at
+     * its place or, when that place is taken, just above the block in the way when there is room there, else
+     * beside it when it only touches its edge, else below it. A block only goes right or down after a
+     * collision, so it leaves each block in its way once for all: at most one step per block already placed.
+     * `passes` is kept for the callers of older versions (no longer needed).
+     */
     function separate(pos, nodes, passes, movable) {
         var list = nodes.filter(function (n) { return pos[n.key]; });
         var canMove = function (key) { return !movable || movable.indexOf(key) >= 0; };
-        for (var p = 0; p < passes; p++) {
-            var moved = false;
-            for (var i = 0; i < list.length; i++) {
-                for (var j = i + 1; j < list.length; j++) {
-                    var a = list[i], b = list[j];
-                    if (!canMove(a.key) && !canMove(b.key)) {
-                        continue;
-                    }
-                    var pa = pos[a.key], pb = pos[b.key], sa = size(a), sb = size(b);
-                    var dx = Math.min(pa[0] + sa[0] + 20, pb[0] + sb[0] + 20) - Math.max(pa[0], pb[0]);
-                    var dy = Math.min(pa[1] + sa[1] + 16, pb[1] + sb[1] + 16) - Math.max(pa[1], pb[1]);
-                    if (dx > 0 && dy > 0) {
-                        moved = true;
-                        // along the smaller overlap; both blocks share the move when both may move (converges faster)
-                        var axis = dy <= dx ? 1 : 0;
-                        var gap = Math.ceil(axis ? dy : dx);
-                        var sign = pb[axis] > pa[axis] || (pb[axis] === pa[axis] && j > i) ? 1 : -1;
-                        if (canMove(a.key) && canMove(b.key)) {
-                            pb[axis] += sign * Math.ceil(gap / 2);
-                            pa[axis] -= sign * Math.floor(gap / 2);
-                        } else if (canMove(b.key)) {
-                            pb[axis] += sign * gap;
-                        } else {
-                            pa[axis] -= sign * gap;
-                        }
-                    }
+        var placed = list.filter(function (n) { return !canMove(n.key); });
+        var free = list.filter(function (n) { return canMove(n.key); }).sort(function (a, b) {
+            return (pos[a.key][1] - pos[b.key][1]) || (pos[a.key][0] - pos[b.key][0]) || (a.key < b.key ? -1 : a.key > b.key ? 1 : 0);
+        });
+        var hits = function (p, s, other) {
+            var q = pos[other.key], so = size(other);
+            return p[0] < q[0] + so[0] + PAD_X && q[0] < p[0] + s[0] + PAD_X && p[1] < q[1] + so[1] + PAD_Y && q[1] < p[1] + s[1] + PAD_Y;
+        };
+        var obstacle = function (p, s) {
+            for (var i = 0; i < placed.length; i++) {
+                if (hits(p, s, placed[i])) { return placed[i]; }
+            }
+            return null;
+        };
+        free.forEach(function (n) {
+            var p = pos[n.key], s = size(n);
+            for (var step = 0; step <= placed.length; step++) {
+                var other = obstacle(p, s);
+                if (!other) { break; }
+                var q = pos[other.key], so = size(other);
+                var up = p[1] + s[1] + PAD_Y - q[1];
+                var down = q[1] + so[1] + PAD_Y - p[1];
+                var right = q[0] + so[0] + PAD_X - p[0];
+                // only a little over the top of the block in the way, with nothing above: goes up, done
+                if (up < down && up <= s[1] / 2 && !obstacle([p[0], p[1] - up], s)) {
+                    p[1] -= up;
+                    break;
                 }
+                // only touching its right edge (wide block of the column on the left): steps aside
+                if (right < down && right <= 40) { p[0] += right; } else { p[1] += down; }
             }
-            if (!moved) {
-                break;
-            }
-        }
+            placed.push(n);
+        });
         return pos;
     }
 

@@ -188,12 +188,13 @@
         ]));
         var body = h('div', { class: 'wpg-ins-body' });
         this.panel.appendChild(body);
-        var ids = {}, active = 0;
+        var ids = {}, active = 0, filing = [];
         app.model.edges.forEach(function (e) {
             if (e.kind !== 'applies' || !e.workflow_id || ids[e.workflow_id]) { return; }
             if (keys.indexOf(e.from) >= 0 || keys.indexOf(e.to) >= 0) {
                 ids[e.workflow_id] = true;
                 if (e.active) { active++; }
+                if (e.files) { filing.push(e.workflow_id); }
             }
         });
         var list = Object.keys(ids).map(Number);
@@ -212,6 +213,7 @@
                 if (window.confirm(t.prev_confirm)) { app.previousMany(list, true); }
             }));
             actions.appendChild(this.button(t.menu_prev_off.replace(':count', list.length), 'redo', function () { app.previousMany(list, false); }));
+            if (filing.length) { actions.appendChild(this.button(t.menu_refile.replace(':count', filing.length), 'folder', function () { app.refileMany(filing); })); }
         } else {
             body.appendChild(h('p', { class: 'wpg-hint', text: t.multi_none }));
         }
