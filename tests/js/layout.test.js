@@ -147,6 +147,35 @@ test('separate: an enlarged or dropped block stays put, the blocks it covers ste
     }
 });
 
+test('separate: a big diagram with blocks piled up and enlarged never keeps an overlap', () => {
+    let seed = 7;
+    const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
+    for (let round = 0; round < 30; round++) {
+        const list = [];
+        const pos = {};
+        [['mailbox', 8, 0], ['rule', 40, 450], ['dest', 20, 1100], ['dest', 15, 1500]].forEach(([kind, count, x], c) => {
+            for (let i = 0; i < count; i++) {
+                const node = { key: kind + c + ':' + i, kind, label: 'b' + i };
+                if (rnd() < 0.6) { node.box = { w: 200 + Math.round(rnd() * 220), h: 56 + Math.round(rnd() * 40) }; }
+                list.push(node);
+                // saved from an older layout with smaller blocks: tight columns, some blocks piled up
+                const piled = rnd() < 0.15;
+                pos[node.key] = [x + Math.round((rnd() - 0.5) * (piled ? 120 : 40)), Math.round(i * 92 * (piled ? 0.3 : 0.85))];
+            }
+        });
+        const fixed = [list[12].key, list[30].key];
+        const kept = fixed.map((k) => pos[k].slice());
+        L.separate(pos, list, 120, list.map((n) => n.key).filter((k) => fixed.indexOf(k) < 0));
+        assert.deepStrictEqual(fixed.map((k) => pos[k]), kept, 'fixed blocks not moved');
+        for (let i = 0; i < list.length; i++) {
+            for (let j = i + 1; j < list.length; j++) {
+                const a = pos[list[i].key], b = pos[list[j].key], sa = L.size(list[i]), sb = L.size(list[j]);
+                assert.ok(!(a[0] < b[0] + sb[0] && b[0] < a[0] + sa[0] && a[1] < b[1] + sb[1] && b[1] < a[1] + sa[1]), 'round ' + round + ': ' + list[i].key + ' / ' + list[j].key);
+            }
+        }
+    }
+});
+
 test('placeNew: a new rule is put next to its mailbox, saved blocks do not move', () => {
     const pos = L.columns(nodes, edges);
     const saved = JSON.parse(JSON.stringify(pos));

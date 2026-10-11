@@ -185,4 +185,8 @@ return [
     'apply_many_none' => 'These rules are all in this mailbox already.',
     'export_one_mailbox' => 'The export works mailbox by mailbox: the mailbox holding most of the selected rules is opened.',
     'focus_selection' => 'Partial view: :count selected blocks and their links',
+    'menu_refile'              => 'File again into the folders (:count)',
+    'refile_confirm'           => 'The e-mails of the tickets these rules have already handled will be put back into their e-mail folder, even when they were moved into another folder (never from the trash). Only the filing is done again: status, assignment, forward… are not touched. Continue?',
+    'refile_done'              => ':count e-mail(s) queued for filing again (:rules rule(s)). Result in the History tab.',
+    'refile_more'              => 'Some are left: run it again for the next ones.',
 ];

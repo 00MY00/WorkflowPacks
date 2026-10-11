@@ -31,13 +31,16 @@ class FileIntoImapFolder implements ShouldQueue
     public $folder;
     /** entry of the history to complete with the result */
     public $activityId;
+    /** "File again": the e-mail is also looked for outside the inbox (not set in jobs queued by older versions) */
+    public $anywhere = false;
 
-    public function __construct($mailboxId, $threadId, $folder, $activityId = null)
+    public function __construct($mailboxId, $threadId, $folder, $activityId = null, $anywhere = false)
     {
         $this->mailboxId = (int) $mailboxId;
         $this->threadId = (int) $threadId;
         $this->folder = (string) $folder;
         $this->activityId = $activityId ? (int) $activityId : null;
+        $this->anywhere = (bool) $anywhere;
     }
 
     public function handle()
@@ -55,7 +58,7 @@ class FileIntoImapFolder implements ShouldQueue
             return $this->log('skipped: mailbox or e-mail no longer exists');
         }
         try {
-            $r = (new ImapMover())->move($mailbox, $thread->message_id, $this->folder, ImapFolders::prefix());
+            $r = (new ImapMover())->move($mailbox, $thread->message_id, $this->folder, ImapFolders::prefix(), (bool) $this->anywhere);
         } catch (\Throwable $e) {
             // connection or protocol error: the server may be unreachable for a moment
             $r = ['result' => 'failed', 'folder' => '', 'reason' => $e->getMessage(), 'retry' => true];
@@ -65,7 +68,11 @@ class FileIntoImapFolder implements ShouldQueue
         $retry = $r['result'] === 'failed' && !empty($r['retry']) && $this->job && $this->attempts() < self::ATTEMPTS;
         History::update($this->activityId, $r['result'], [
             'subject' => $r['folder'] !== '' ? $r['folder'] : null,
-            'message' => trim(self::reason($r['reason']).($retry ? ' — '.__('workflowpacks::messages.history_reason_retry', ['n' => $this->attempts(), 'max' => self::ATTEMPTS]) : '')) ?: null,
+            'message' => implode(' — ', array_filter([
+                $this->anywhere ? __('workflowpacks::messages.history_reason_again') : '',
+                self::reason($r['reason']),
+                $retry ? __('workflowpacks::messages.history_reason_retry', ['n' => $this->attempts(), 'max' => self::ATTEMPTS]) : '',
+            ], 'strlen')) ?: null,
         ]);
         // try again later only when it may help (not for an invalid name or a mailbox without IMAP settings)
         if ($retry) {
@@ -84,6 +91,9 @@ class FileIntoImapFolder implements ShouldQueue
         ];
         if (isset($known[$reason])) {
             return __('workflowpacks::messages.history_reason_'.$known[$reason]);
+        }
+        if (strpos($reason, 'found in "') === 0) {
+            return __('workflowpacks::messages.history_reason_found_in', ['folder' => trim(substr($reason, strlen('found in')), ' "')]);
         }
         if (strpos($reason, 'refused: this place is inside the trash folder') === 0) {
             return __('workflowpacks::messages.history_reason_trash', ['folder' => trim(substr($reason, strlen('refused: this place is inside the trash folder')), ' "')]);

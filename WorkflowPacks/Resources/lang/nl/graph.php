@@ -184,4 +184,8 @@ return [
     'apply_many_none' => 'Deze regels staan al allemaal in deze mailbox.',
     'export_one_mailbox' => 'Het exporteren gaat per mailbox: de mailbox met de meeste geselecteerde regels wordt geopend.',
     'focus_selection' => 'Deelweergave: :count geselecteerde blokken en hun verbindingen',
+    'menu_refile'              => 'Opnieuw opbergen in de mappen (:count)',
+    'refile_confirm'           => 'De e-mails van de tickets die deze regels al hebben behandeld worden teruggezet in hun e-mailmap, ook als ze naar een andere map verplaatst zijn (nooit vanuit de prullenbak). Alleen het opbergen wordt herhaald: status, toewijzing, doorsturen… blijven ongewijzigd. Doorgaan?',
+    'refile_done'              => ':count e-mail(s) opnieuw in de wachtrij om op te bergen (:rules regel(s)). Resultaat in het tabblad Geschiedenis.',
+    'refile_more'              => 'Er blijven er over: start opnieuw voor de volgende.',
 ];

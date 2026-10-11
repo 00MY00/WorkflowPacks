@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 1.11.1
+# Résultats des tests — Workflow Packs 1.12.0
 
 Date : 2026-10-11. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -13,11 +13,13 @@ Date : 2026-10-11. Environnements Docker jetables, données de test uniquement (
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
 
-## 1.11.1 — option « tickets existants » de l'import plus claire
+## 1.12.0 — ranger à nouveau, schéma sans superposition, option « tickets existants » plus claire
 
 | Série | Résultat |
 |---|---|
-| Intégration (80 tests, 589 assertions) | `ExportAndPagesTest` (+1) : explication sous la case, case grisée quand aucune règle du pack ne prévoit les tickets existants, sinon liste des seules règles concernées (noms échappés) |
+| Intégration (82 tests, 614 assertions) | `ImapFolderTest` (+2, **serveur IMAP réel**) : e-mail rangé puis déplacé à la main dans un autre dossier, remis dans son dossier par « Ranger à nouveau » (trouvé dans « Archive ») ; e-mail mis à la corbeille jamais repris ; statut du ticket non retouché ; deuxième passage « déjà rangé » ; refus pour les boîtes d'autres et les règles sans dossier, option désactivée, `files` du schéma. `ExportAndPagesTest` (+1) : explication sous la case de l'import, case grisée quand aucune règle ne le prévoit, sinon liste des règles concernées (noms échappés) |
+| JavaScript | `layout.test.js` (+1) : 30 grands schémas (83 blocs, blocs empilés et agrandis, 2 blocs fixes) sans aucune superposition. Essai de charge : 0 schéma sur 200 avec superposition (avant : 49), 6 ms au plus |
+| Navigateur (Chrome sans interface) | 84 blocs : ancienne disposition empilée, flux en colonnes, radial, bloc lâché sur les autres : 0 superposition ; menu « Ranger à nouveau dans les dossiers (3) » seulement pour les règles qui rangent dans un dossier ; bouton dans la liste ; aucune erreur |
 
 ## 1.11.0 — historique et diagnostic du rangement
 

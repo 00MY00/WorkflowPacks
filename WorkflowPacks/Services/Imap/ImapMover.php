@@ -22,8 +22,10 @@ class ImapMover
      * @param \App\Mailbox $mailbox
      * @param string       $messageId Message-ID of the e-mail, without < >
      * @param string       $value     folder written in the rule ("Invoices/Suppliers")
+     * @param bool         $anywhere  filed again ("File again"): an e-mail no longer in the inbox is also looked for in
+     *                                the other folders of the account, never in the trash
      */
-    public function move($mailbox, $messageId, $value, $prefix)
+    public function move($mailbox, $messageId, $value, $prefix, $anywhere = false)
     {
         $parsed = FolderPath::parse($value);
         if ($parsed['error'] !== null) {
@@ -68,6 +70,10 @@ class ImapMover
             }
             // the e-mail, in the folders FreeScout fetches (INBOX by default)
             $message = \MailHelper::fetchMessage($mailbox, $messageId);
+            $from = '';
+            if (!$message && $anywhere) {
+                list($message, $from) = $this->findElsewhere($client, $messageId, $target, $layout);
+            }
             if (!$message) {
                 return $this->result('not_found', $label);
             }
@@ -80,7 +86,7 @@ class ImapMover
                 $message->delete(false);
             }
 
-            return $this->result('moved', $label);
+            return $this->result('moved', $label, $from !== '' ? 'found in "'.$from.'"' : '');
         } finally {
             try {
                 $client->disconnect();
@@ -242,6 +248,32 @@ class ImapMover
         } catch (\Throwable $e) {
             return false;
         }
+    }
+
+    /**
+     * The e-mail in another folder of the account (moved by hand, by a mail client or a filter of the server): the
+     * first one holding it, the trash and the target excluded. [message, UTF-8 path of its folder] or [null, ''].
+     */
+    protected function findElsewhere($client, $messageId, $target, array $layout)
+    {
+        foreach ($layout['paths'] as $path) {
+            if ($path === $target || strtoupper($path) === 'INBOX' || in_array($path, $layout['trash'], true)
+                || $this->insideTrash(mb_convert_encoding($path, 'UTF-8', 'UTF7-IMAP'), $layout) !== null) {
+                continue;
+            }
+            try {
+                $folder = $client->getFolderByPath($path);
+                $found = $folder ? $folder->query()->whereMessageId('"<'.addcslashes($messageId, '\"').'>"')->leaveUnread()->limit(1)->get()->first() : null;
+            } catch (\Throwable $e) {
+                // folder that cannot be opened (\Noselect…): the next one
+                continue;
+            }
+            if ($found) {
+                return [$found, mb_convert_encoding($path, 'UTF-8', 'UTF7-IMAP')];
+            }
+        }
+
+        return [null, ''];
     }
 
     protected function result($result, $folder, $reason = '', $retry = false)

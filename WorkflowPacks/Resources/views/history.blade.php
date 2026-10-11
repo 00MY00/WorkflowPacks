@@ -12,7 +12,7 @@
         };
         $wp_class = ['moved' => 'success', 'ok' => 'success', 'enabled' => 'success', 'created' => 'success', 'already' => 'info',
             'queued' => 'warning', 'skipped' => 'default', 'not_found' => 'default', 'failed' => 'danger', 'disabled' => 'default',
-            'modified' => 'info', 'previous_on' => 'info', 'previous_off' => 'default'];
+            'modified' => 'info', 'previous_on' => 'info', 'previous_off' => 'default', 'refile' => 'info'];
         // details stored as JSON (counts) shown as text
         $wp_details = function ($message) use ($wp_t) {
             $data = json_decode((string) $message, true);
@@ -113,7 +113,7 @@
         </select>
         <select name="status" class="form-control input-sm wp-autosubmit">
             <option value="">{{ $wp_t('history_all_states') }}</option>
-            @foreach (['queued', 'moved', 'already', 'not_found', 'skipped', 'failed', 'ok', 'enabled', 'disabled', 'previous_on', 'previous_off', 'created', 'modified'] as $s)
+            @foreach (['queued', 'moved', 'already', 'not_found', 'skipped', 'failed', 'ok', 'enabled', 'disabled', 'previous_on', 'previous_off', 'refile', 'created', 'modified'] as $s)
                 <option value="{{ $s }}" @if ($filters['status'] === $s) selected @endif>{{ $wp_label($s) }}</option>
             @endforeach
         </select>

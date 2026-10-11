@@ -184,4 +184,8 @@ return [
     'apply_many_none' => 'Estas regras já estão todas nesta caixa.',
     'export_one_mailbox' => 'A exportação é feita caixa por caixa: abre-se a caixa com mais regras selecionadas.',
     'focus_selection' => 'Visão parcial: :count blocos selecionados e suas ligações',
+    'menu_refile'              => 'Arquivar novamente nas pastas (:count)',
+    'refile_confirm'           => 'Os e-mails dos tickets já tratados por estas regras serão colocados de volta na sua pasta de e-mail, mesmo se foram movidos para outra pasta (nunca a partir da lixeira). Só o arquivamento é refeito: status, atribuição, encaminhamento… não são alterados. Continuar?',
+    'refile_done'              => ':count e-mail(s) na fila para arquivar novamente (:rules regra(s)). Resultado na aba Histórico.',
+    'refile_more'              => 'Ainda restam: execute de novo para os próximos.',
 ];

@@ -32,6 +32,10 @@
             <button type="submit" name="previous" value="1" class="btn btn-default btn-xs" data-wp-bulk-action title="{{ __('workflowpacks::messages.previous_help') }}"
                 data-wp-confirm="{{ __('workflowpacks::messages.previous_confirm') }}">{{ __('workflowpacks::messages.previous_selected_on') }}</button>
             <button type="submit" name="previous" value="0" class="btn btn-default btn-xs" data-wp-bulk-action>{{ __('workflowpacks::messages.previous_selected_off') }}</button>
+            @if (\Modules\WorkflowPacks\Services\Imap\ImapFolders::enabled())
+                <button type="submit" name="refile" value="1" class="btn btn-default btn-xs" data-wp-bulk-action title="{{ __('workflowpacks::messages.refile_help') }}"
+                    data-wp-confirm="{{ __('workflowpacks::messages.refile_confirm') }}">{{ __('workflowpacks::messages.refile_selected') }}</button>
+            @endif
         </form>
     @endif
 

@@ -76,7 +76,8 @@ class GraphBuilder
             }
             $edges[] = ['from' => $ruleKey, 'to' => 'mb:'.$wf->mailbox_id, 'kind' => 'applies', 'workflow_id' => (int) $wf->id,
                 'active' => (bool) $wf->active, 'previous' => (bool) $wf->apply_to_prev, 'state' => $state, 'name' => (string) $wf->name,
-                'sensitive' => $summary['sensitive']];
+                'sensitive' => $summary['sensitive'], 'files' => false];
+            $applies = count($edges) - 1;
             foreach ($this->destinations($attributes, $jsonActions, $nodes) as $dest) {
                 $chain = $dest['chain'] ?? [];
                 unset($dest['chain']);
@@ -90,6 +91,8 @@ class GraphBuilder
                     $parent = $child['key'];
                 }
                 if (($dest['dest'] ?? '') === 'imap') {
+                    // the rule files into an e-mail folder: "File again" offered for it
+                    $edges[$applies]['files'] = true;
                     // every level knows the rules filing into it or below (side panel, highlight)
                     foreach (array_merge([$dest], $chain) as $folder) {
                         $filed = $nodes[$folder['key']]['filed_by'] ?? [];

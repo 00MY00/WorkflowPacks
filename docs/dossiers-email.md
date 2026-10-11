@@ -103,6 +103,28 @@ Le délimiteur du serveur (`/` ou `.`) est détecté automatiquement. Les serveu
   Workflows officiel, payant, avec une action ajoutée par filtre suit sa copie publique analysée
   ([analyse.md](analyse.md)) : à vérifier sur ton instance avec une règle de test.
 
+## Ranger à nouveau les e-mails déjà rangés
+
+Des e-mails ont quitté leur dossier `[WP]` après coup, par exemple déplacés à la main, par un client e-mail ou par un
+filtre du serveur. Workflows ne relance pas une règle sur un ticket qu'elle a déjà traité. Pour remettre ces e-mails
+dans leur dossier :
+- dans la liste **Workflow Packs**, cocher les règles, puis **« Ranger à nouveau dans les dossiers e-mail »** ;
+- ou, dans le **schéma**, sélectionner les règles, puis clic droit › **« Ranger à nouveau dans les dossiers »** (aussi
+  dans le panneau de la sélection).
+
+Ce qui se passe :
+- **Tickets repris :** ceux que la règle a déjà traités, connus par l'historique du module et, si Workflows la
+  garde, par sa table d'exécutions.
+- **Seul le rangement est refait.** Les autres actions de la règle (statut, assignation, transfert…) ne sont pas
+  relancées, et les compteurs de Workflows ne changent pas.
+- **Recherche de l'e-mail :**
+  - déjà dans son dossier : « déjà rangé », rien ne bouge ;
+  - sinon, il est cherché dans la boîte de réception, puis **dans les autres dossiers** du compte ;
+  - **jamais dans la corbeille** : un e-mail supprimé reste supprimé (« introuvable »).
+- **Suivi dans l'onglet Historique :** chaque e-mail y apparaît avec « rangement relancé » et, s'il a été retrouvé
+  ailleurs, le dossier où il était.
+- **Volume :** 2000 tickets au plus par clic. S'il en reste, le message le dit : il suffit de relancer.
+
 ## Suivre ce qui se passe : l'onglet Historique
 
 **Workflow Packs › Historique** liste chaque rangement :

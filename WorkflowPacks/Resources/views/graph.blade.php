@@ -28,6 +28,7 @@
             'toggle'    => route('workflowpacks.graph.toggle', ['id' => '__ID__']),
             'toggleMany' => route('workflowpacks.graph.toggle_many'),
             'previousMany' => route('workflowpacks.graph.previous_many'),
+            'refileMany' => route('workflowpacks.graph.refile_many'),
             'export'    => route('workflowpacks.export'),
             'retention' => route('workflowpacks.retention.save'),
             'retentionRemove' => route('workflowpacks.retention.remove'),

@@ -185,4 +185,8 @@ return [
     'apply_many_none' => 'Ces règles sont déjà toutes dans cette boîte.',
     'export_one_mailbox' => 'L\'export se fait boîte par boîte : la boîte qui contient le plus de règles sélectionnées est ouverte.',
     'focus_selection' => 'Vue partielle : :count blocs sélectionnés et leurs liens',
+    'menu_refile'              => 'Ranger à nouveau dans les dossiers (:count)',
+    'refile_confirm'           => 'Les e-mails des tickets déjà traités par ces règles vont être remis dans leur dossier e-mail, même s\'ils ont été déplacés dans un autre dossier (jamais depuis la corbeille). Seul le rangement est refait : statut, assignation, transfert… ne sont pas touchés. Continuer ?',
+    'refile_done'              => ':count e-mail(s) remis dans la file de rangement (:rules règle(s)). Résultat dans l\'onglet Historique.',
+    'refile_more'              => 'Il en reste : relancez pour les suivants.',
 ];
