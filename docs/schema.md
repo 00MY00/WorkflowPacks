@@ -34,6 +34,14 @@ Destinations reconnues :
 
 ![Dossiers e-mail](screenshots/schema-dossiers.png)
 
+**État d'une règle** : symbole en haut à droite de son bloc.
+
+| Symbole | État |
+|---|---|
+| rond vert plein | active dans toutes ses boîtes |
+| rond gris vide | désactivée partout |
+| demi-rond orange | active dans certaines boîtes seulement (le détail s'affiche au survol) |
+
 Liens d'une règle vers une boîte :
 
 | Trait | État |
@@ -95,6 +103,11 @@ destinations peuvent être masqués.
     suivie par le pack.
   - Pour une règle locale, c'est une copie, renommée si le nom est déjà pris.
 - L'interrupteur du panneau active ou désactive une règle. Une règle incomplète ne peut pas être activée.
+- **Plusieurs à la fois** : sélectionnez plusieurs blocs avec Maj + clic ou Maj + glisser sur le fond. Le panneau
+  propose alors **Activer (n)** et **Désactiver (n)** pour toutes les règles concernées : une règle sélectionnée dans
+  toutes ses boîtes, une boîte sélectionnée avec toutes ses règles.
+
+  ![Sélection multiple](screenshots/schema-selection.png)
 - Modifier une règle de pack la fait passer en « modifiée localement ». Le prochain import du pack proposera de
   conserver votre version ou de la remplacer.
 

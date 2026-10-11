@@ -171,6 +171,47 @@
         body.appendChild(h('div', { class: 'wpg-ins-actions' }, [this.button(t.focus_dest, 'focus', function () { app.focusOn(node.key); })]));
     };
 
+    /**
+     * Several blocks selected (Shift + click, Shift + drag): the Workflows rules they stand for — a selected rule in
+     * every mailbox where it applies, a selected mailbox with all its rules — enabled or disabled at once.
+     */
+    Inspector.prototype.showMulti = function (keys) {
+        var app = this.app, t = this.t;
+        this.current = null;
+        this.panel.textContent = '';
+        this.panel.classList.add('open');
+        this.panel.appendChild(h('div', { class: 'wpg-ins-head' }, [
+            h('span', { class: 'wpg-ins-pill' }, [icon('focus')]),
+            h('div', { class: 'wpg-ins-title' }, [h('strong', { text: t.multi_title.replace(':count', keys.length) }), h('small', { text: t.multi_hint })]),
+            h('button', { type: 'button', class: 'wpg-ins-close', title: t.close, 'aria-label': t.close, on: { click: app.clearSelection.bind(app) } }, ['×'])
+        ]));
+        var body = h('div', { class: 'wpg-ins-body' });
+        this.panel.appendChild(body);
+        var ids = {}, active = 0;
+        app.model.edges.forEach(function (e) {
+            if (e.kind !== 'applies' || !e.workflow_id || ids[e.workflow_id]) { return; }
+            if (keys.indexOf(e.from) >= 0 || keys.indexOf(e.to) >= 0) {
+                ids[e.workflow_id] = true;
+                if (e.active) { active++; }
+            }
+        });
+        var list = Object.keys(ids).map(Number);
+        this.section(body, t.multi_rules.replace(':count', list.length).replace(':active', active));
+        keys.slice(0, 15).forEach(function (k) {
+            var n = app.model.nodes[k];
+            if (n) { body.appendChild(h('div', { class: 'wpg-inst' }, [icon(I.of(n)), h('span', { class: 'wpg-inst-name', text: n.label })])); }
+        });
+        if (keys.length > 15) { body.appendChild(h('p', { class: 'wpg-muted', text: '… +' + (keys.length - 15) })); }
+        var actions = h('div', { class: 'wpg-ins-actions' });
+        if (list.length) {
+            actions.appendChild(this.button(t.enable_all.replace(':count', list.length - active), 'zap', function () { app.toggleMany(list, true); }, true));
+            actions.appendChild(this.button(t.disable_all.replace(':count', active), 'hand', function () { app.toggleMany(list, false); }));
+        } else {
+            body.appendChild(h('p', { class: 'wpg-hint', text: t.multi_none }));
+        }
+        body.appendChild(actions);
+    };
+
     /** A link mailbox -> rule = one Workflows rule in that mailbox. */
     Inspector.prototype.showEdge = function (edge) {
         if (!edge || edge.kind !== 'applies') { return this.hide(); }

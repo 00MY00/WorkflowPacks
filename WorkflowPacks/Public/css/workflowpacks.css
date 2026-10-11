@@ -115,3 +115,14 @@
   .wp-replacements tr { border-bottom: 1px solid var(--wp-border); padding: 6px 0; }
   .wp-catalog td:nth-child(2) { display: none; }
 }
+
+/* enable / disable rules from the list: state dot, one-click switch, bar for the ticked rules */
+.wp-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 2px; vertical-align: 0; }
+.wp-dot.is-on { background: var(--wp-ok); }
+.wp-dot.is-off { background: transparent; border: 1.5px solid #94a3b8; }
+.wp-chip { display: inline-flex; align-items: center; gap: 4px; }
+.wp-chip input[type=checkbox] { margin: 0; }
+.wp-chip-toggle .btn { padding: 0 4px; font-size: 11px; }
+.wp-bulk { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 10px 0; padding: 6px 10px; border: 1px solid var(--wp-border); border-radius: 8px; position: sticky; top: 0; z-index: 3; background: var(--fd-card, #fff); }
+.wp-bulk-all { font-weight: normal; margin: 0; }
+.wp-bulk-pack { margin: 0 6px 0 0 !important; vertical-align: -1px; }

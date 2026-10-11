@@ -254,4 +254,13 @@ return [
     'imap_off_enable'          => 'Turn the option on and refresh',
     'imap_off_ask'             => 'Ask an administrator to turn it on (Manage › Settings › Workflow Packs).',
     'saving'                   => 'Saving…',
+    'select_all'               => 'Select all',
+    'selected_rules'           => 'rule(s) selected',
+    'enable_selected'          => 'Enable the selection',
+    'disable_selected'         => 'Disable the selection',
+    'select_pack'              => 'Select the rules of this pack',
+    'rules_none_selected'      => 'No rule selected.',
+    'rules_enabled'            => ':count rule(s) enabled.',
+    'rules_disabled'           => ':count rule(s) disabled.',
+    'rules_refused'            => 'Not changed: :list',
 ];

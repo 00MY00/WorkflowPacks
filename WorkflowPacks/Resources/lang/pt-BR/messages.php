@@ -250,4 +250,13 @@ return [
     'imap_off_enable'          => 'Ativar a opção e atualizar',
     'imap_off_ask'             => 'Peça a um administrador para ativá-la (Gerenciar › Configurações › Workflow Packs).',
     'saving'                   => 'Salvando…',
+    'select_all'               => 'Selecionar tudo',
+    'selected_rules'           => 'regra(s) selecionada(s)',
+    'enable_selected'          => 'Ativar a seleção',
+    'disable_selected'         => 'Desativar a seleção',
+    'select_pack'              => 'Selecionar as regras deste pack',
+    'rules_none_selected'      => 'Nenhuma regra selecionada.',
+    'rules_enabled'            => ':count regra(s) ativada(s).',
+    'rules_disabled'           => ':count regra(s) desativada(s).',
+    'rules_refused'            => 'Não alteradas: :list',
 ];

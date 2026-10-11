@@ -86,6 +86,18 @@ class GraphController extends Controller
         return response()->json($result, $result['ok'] ? 200 : 422);
     }
 
+    /** Several rules at once (selection of the diagram). */
+    public function toggleMany(Request $request)
+    {
+        $this->guard();
+        $ids = $request->input('ids', []);
+        if (!is_array($ids)) {
+            return response()->json(['ok' => false, 'errors' => ['invalid']], 422);
+        }
+
+        return response()->json((new RuleEditor())->toggleMany(auth()->user(), $ids, (bool) $request->input('active')));
+    }
+
     public function apply(Request $request, $id)
     {
         $this->guard();

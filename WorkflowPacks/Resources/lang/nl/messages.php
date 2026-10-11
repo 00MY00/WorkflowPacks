@@ -250,4 +250,13 @@ return [
     'imap_off_enable'          => 'Optie inschakelen en vernieuwen',
     'imap_off_ask'             => 'Vraag een beheerder haar in te schakelen (Beheren › Instellingen › Workflow Packs).',
     'saving'                   => 'Opslaan…',
+    'select_all'               => 'Alles selecteren',
+    'selected_rules'           => 'regel(s) geselecteerd',
+    'enable_selected'          => 'Selectie inschakelen',
+    'disable_selected'         => 'Selectie uitschakelen',
+    'select_pack'              => 'De regels van dit pack selecteren',
+    'rules_none_selected'      => 'Geen regel geselecteerd.',
+    'rules_enabled'            => ':count regel(s) ingeschakeld.',
+    'rules_disabled'           => ':count regel(s) uitgeschakeld.',
+    'rules_refused'            => 'Niet gewijzigd: :list',
 ];

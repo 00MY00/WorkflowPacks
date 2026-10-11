@@ -104,14 +104,37 @@
         var grip = el('path', { class: 'wpg-grip', d: 'M' + (s[0] - 3) + ',' + (s[1] - 15) + 'L' + (s[0] - 3) + ',' + (s[1] - 3) + 'L' + (s[0] - 15) + ',' + (s[1] - 3) + 'Z' }, g);
         el('title', {}, grip).textContent = this.opts.texts.resize_hint || '';
         if (n.kind === 'rule') {
+            // state: active everywhere (full green), nowhere (empty grey), in some mailboxes only (half)
+            var st = this.ruleState(n.key);
+            if (st.total) {
+                var state = el('g', { class: 'wpg-state ' + (st.active === st.total ? 'is-on' : (st.active ? 'is-mixed' : 'is-off')) }, g);
+                el('circle', { cx: s[0] - 14, cy: 14, r: 6 }, state);
+                if (st.active && st.active < st.total) {
+                    el('path', { d: 'M' + (s[0] - 14) + ',8 A6,6 0 0 1 ' + (s[0] - 14) + ',20 Z', class: 'wpg-state-half' }, state);
+                }
+                el('title', {}, state).textContent = (this.opts.texts.state_summary || ':active / :total')
+                    .replace(':active', st.active).replace(':total', st.total);
+            }
             if ((n.sensitive || []).length) {
-                var warn = el('use', { class: 'wpg-warn', href: '#wpg-i-warn', x: s[0] - 24, y: 6, width: 16, height: 16 }, g);
+                var warn = el('use', { class: 'wpg-warn', href: '#wpg-i-warn', x: s[0] - 44, y: 6, width: 16, height: 16 }, g);
                 el('title', {}, warn).textContent = n.sensitive.map(function (k) { return this.opts.texts['sensitive_' + k] || k; }, this).join(', ');
             }
             // handle on the side of the mailboxes: drag it to a mailbox to apply the rule there
             var handle = el('circle', { class: 'wpg-handle', cx: 0, cy: s[1] / 2, r: 8 }, g);
             el('title', {}, handle).textContent = this.opts.texts.connect_hint;
         }
+    };
+
+    /** Rule enabled in how many of its mailboxes (rules deleted from Workflows are not counted). */
+    View.prototype.ruleState = function (key) {
+        var out = { active: 0, total: 0 };
+        this.model.edges.forEach(function (e) {
+            if (e.kind === 'applies' && e.from === key && e.workflow_id) {
+                out.total++;
+                if (e.active) { out.active++; }
+            }
+        });
+        return out;
     };
 
     /** Anchor points + path of a link, in the chosen style (orthogonal like draw.io, curved, straight). */
@@ -308,6 +331,11 @@
             this.mode = { type: 'edge', index: parseInt(edge.getAttribute('data-edge'), 10) };
             return;
         }
+        if (e.shiftKey) {
+            // Shift + drag on the background: selection rectangle (adds to the current selection)
+            this.mode = { type: 'lasso', start: w, rect: el('rect', { class: 'wpg-lasso', x: w[0], y: w[1], width: 0, height: 0 }, this.vp) };
+            return;
+        }
         this.mode = { type: 'pan', start: [e.clientX, e.clientY], t0: { x: this.t.x, y: this.t.y }, moved: false };
         this.svg.classList.add('panning');
     };
@@ -332,6 +360,13 @@
                 this.model.pos[k] = [Math.round((o[0] + ox) / snap) * snap, Math.round((o[1] + oy) / snap) * snap];
             }, this);
             this.moveNodes(m.keys);
+        } else if (m.type === 'lasso') {
+            var q = this.world(e.clientX, e.clientY);
+            m.box = [Math.min(m.start[0], q[0]), Math.min(m.start[1], q[1]), Math.abs(q[0] - m.start[0]), Math.abs(q[1] - m.start[1])];
+            m.rect.setAttribute('x', m.box[0]);
+            m.rect.setAttribute('y', m.box[1]);
+            m.rect.setAttribute('width', m.box[2]);
+            m.rect.setAttribute('height', m.box[3]);
         } else if (m.type === 'resize') {
             var r = this.world(e.clientX, e.clientY);
             var rx = r[0] - m.start[0], ry = r[1] - m.start[1];
@@ -375,6 +410,20 @@
                 } else if (this.opts.onSelect) {
                     this.opts.onSelect(m.key);
                 }
+            }
+        } else if (m.type === 'lasso') {
+            m.rect.parentNode.removeChild(m.rect);
+            if (m.box && m.box[2] > 3 && m.box[3] > 3) {
+                // every visible block touching the rectangle joins the selection
+                this.model.list(this.visible.bind(this)).forEach(function (n) {
+                    var p = this.model.pos[n.key], s = L.size(n);
+                    if (p && p[0] < m.box[0] + m.box[2] && p[0] + s[0] > m.box[0] && p[1] < m.box[1] + m.box[3] && p[1] + s[1] > m.box[1]) {
+                        this.selected[n.key] = true;
+                    }
+                }, this);
+                this.selectedEdge = null;
+                this.highlight();
+                if (this.opts.onSelect) { this.opts.onSelect(Object.keys(this.selected)[0] || null); }
             }
         } else if (m.type === 'resize') {
             if (m.moved) {

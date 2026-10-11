@@ -203,3 +203,13 @@
 .wpg-busy { display: none; color: var(--g-brand); font-size: 12px; margin-right: 8px; white-space: nowrap; }
 .wpg-app.is-busy .wpg-busy { display: inline-block; }
 .wpg-app.is-busy .wpg-stage, .wpg-app.is-busy .wpg-inspector, .wpg-app.is-busy .wpg-overlay { cursor: progress; }
+
+/* state of a rule (top right of its block): enabled everywhere / nowhere / in some mailboxes */
+.wpg-state circle { stroke-width: 2; }
+.wpg-state.is-on circle { fill: var(--c-ok); stroke: var(--c-ok); }
+.wpg-state.is-off circle { fill: var(--g-card); stroke: #94a3b8; }
+.wpg-state.is-mixed circle { fill: var(--g-card); stroke: var(--c-warn); }
+.wpg-state-half { fill: var(--c-warn); }
+.zoom-far .wpg-state { display: none; }
+/* selection rectangle (Shift + drag on the background) */
+.wpg-lasso { fill: rgba(99, 102, 241, .08); stroke: var(--g-brand); stroke-width: 1; stroke-dasharray: 4 3; pointer-events: none; }

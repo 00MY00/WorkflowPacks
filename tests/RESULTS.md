@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 1.7.0
+# Résultats des tests — Workflow Packs 1.8.0
 
 Date : 2026-10-10. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,13 @@ Date : 2026-10-10. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 1.8.0 — état des règles, sélection multiple, activation en lot
+
+| Série | Résultat |
+|---|---|
+| Intégration (67 tests, 494 assertions) | `BulkToggleTest` (3) : liste avec état, case et lien par règle ; un clic ne change que cette règle ; règles cochées changées ensemble, boîte d'un autre utilisateur non modifiée (signalée), aucune case cochée : message, filtre conservé ; sélection du schéma : changées ensemble, refus signalés, déjà dans l'état demandé comptées à part, demande invalide refusée |
+| Navigateur (Chrome sans interface, données de démonstration) | symboles d'état (actives, désactivées, mixtes) ; Maj + glisser : 4 blocs sélectionnés, « Activer (2) » : les 2 désactivées activées ; liste : boutons grisés sans case cochée, compteur, 2 règles désactivées ensemble, 1 activée d'un clic ; aucune erreur |
 
 ## 1.7.0 — réglages enregistrés automatiquement, activation depuis l'import, chargement, chevauchements
 

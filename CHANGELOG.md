@@ -4,6 +4,24 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [1.8.0] - 2026-10-17
+
+### Ajouté
+- **Schéma : état de chaque règle.** Un symbole en haut à droite de chaque règle indique son état : rond vert plein si
+  elle est active dans toutes ses boîtes, rond gris vide si elle est désactivée partout, demi-rond orange si l'état
+  est mixte. Le détail s'affiche au survol, par exemple « active dans 1 boîte sur 2 ».
+- **Schéma : sélection multiple et activation en lot.**
+  - Maj + clic, ou **Maj + glisser sur le fond** pour tracer un rectangle de sélection.
+  - Le panneau liste les blocs sélectionnés et les règles concernées : une règle sélectionnée dans toutes ses boîtes,
+    une boîte sélectionnée avec toutes ses règles.
+  - **Activer (n)** et **Désactiver (n)** s'appliquent à toutes ces règles d'un coup.
+- **Vue générale (Workflow Packs) : activer ou désactiver les règles.**
+  - Chaque règle porte, pour chaque boîte, un point d'état et un lien **Activer / Désactiver**.
+  - Une **case** par règle et par boîte, une case par pack et « Tout sélectionner » alimentent une barre **« Activer
+    la sélection » / « Désactiver la sélection »** avec le nombre de règles cochées. Le filtre par boîte est conservé.
+- Côté serveur, chaque règle est contrôlée séparément : permission de sa boîte, et une règle incomplète ne peut pas
+  être activée. Les autres sont modifiées quand même, et ce qui n'a pas pu l'être est indiqué.
+
 ## [1.7.0] - 2026-10-16
 
 ### Ajouté

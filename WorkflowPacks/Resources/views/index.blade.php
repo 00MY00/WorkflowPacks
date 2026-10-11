@@ -20,9 +20,24 @@
         @endif
     </div>
 
+    @if ($packs && $compat['state'] !== 'blocking')
+        {{-- several rules at once: the boxes of the rules below belong to this form (form="wp-bulk") --}}
+        <form id="wp-bulk" method="POST" action="{{ route('workflowpacks.rules.toggle') }}" class="wp-bulk">
+            {{ csrf_field() }}
+            @if ($filter)<input type="hidden" name="mailbox_id" value="{{ $filter }}">@endif
+            <label class="wp-bulk-all"><input type="checkbox" data-wp-check-all=".wp-bulk-check"> {{ __('workflowpacks::messages.select_all') }}</label>
+            <span class="wp-bulk-count"><b data-wp-bulk-count>0</b> {{ __('workflowpacks::messages.selected_rules') }}</span>
+            <button type="submit" name="active" value="1" class="btn btn-success btn-xs" data-wp-bulk-action>{{ __('workflowpacks::messages.enable_selected') }}</button>
+            <button type="submit" name="active" value="0" class="btn btn-default btn-xs" data-wp-bulk-action>{{ __('workflowpacks::messages.disable_selected') }}</button>
+        </form>
+    @endif
+
     @forelse ($packs as $entry)
         <div class="panel panel-default wp-pack">
             <div class="panel-heading">
+                @if ($compat['state'] !== 'blocking')
+                    <input type="checkbox" class="wp-bulk-pack" data-wp-check-all=".wp-bulk-check" data-wp-scope=".wp-pack" title="{{ __('workflowpacks::messages.select_pack') }}" aria-label="{{ __('workflowpacks::messages.select_pack') }}">
+                @endif
                 <strong>{{ $entry['pack']->name }}</strong>
                 <code>{{ $entry['pack']->pack_key }}</code>
                 @if ($entry['pack']->pack_version !== '')<span class="label label-default">{{ __('workflowpacks::messages.version') }} {{ $entry['pack']->pack_version }}</span>@endif
@@ -35,7 +50,7 @@
             <div class="panel-body">
                 @if ($entry['pack']->description)<p class="wp-muted">{{ $entry['pack']->description }}</p>@endif
                 @foreach ($entry['rules'] as $r)
-                    @include('workflowpacks::partials.rule_schema', ['rule' => $r['rule'], 'states' => $r['states'], 'mailboxId' => null])
+                    @include('workflowpacks::partials.rule_schema', ['rule' => $r['rule'], 'states' => $r['states'], 'mailboxId' => null, 'toggles' => $compat['state'] !== 'blocking', 'filter' => $filter])
                 @endforeach
             </div>
         </div>
