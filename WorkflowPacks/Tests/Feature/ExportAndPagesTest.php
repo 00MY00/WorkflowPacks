@@ -93,6 +93,10 @@ class ExportAndPagesTest extends TestCase
         $step3->assertStatus(200);
         $this->seeIn($step3, 'wp-matrix');
         $this->seeIn($step3, e(__('workflowpacks::messages.sensitive_forward')));
+        // no rule of the example pack asks for the existing tickets: the box is explained and greyed out
+        $this->seeIn($step3, e(__('workflowpacks::messages.opt_apply_prev_help')));
+        $this->seeIn($step3, e(__('workflowpacks::messages.opt_apply_prev_none')));
+        $this->assertSame(1, preg_match('/name="allow_apply_to_prev" value="1"\s+disabled/', $step3->getContent()));
         $this->assertSame(1, preg_match('/name="token" value="([a-f0-9]{64})"/', $step3->getContent(), $m));
 
         // the newsletter rule is blocked (sender not given): explicit acknowledgement needed
@@ -129,5 +133,24 @@ class ExportAndPagesTest extends TestCase
         $this->assertStringNotContainsString('<script>alert(1)</script>', $response->getContent());
         $this->seeIn($response, '&lt;script&gt;alert(1)&lt;/script&gt;');
         $this->assertNotNull($a);
+    }
+
+    public function testImportPreviewListsTheRulesThatAskForTheExistingTickets()
+    {
+        $a = $this->mailbox('A');
+        $admin = $this->user([], true);
+        $pack = $this->pack([
+            $this->rule('prev', ['name' => '<b>Ancien</b>']),
+            $this->rule('new', ['name' => 'Nouveaux seulement', 'settings' => ['apply_to_prev' => false, 'max_executions' => 1]]),
+        ]);
+        $response = $this->actingAs($admin)->post(route('workflowpacks.import.preview'), [
+            'pack_b64' => base64_encode(json_encode($pack)), 'mailboxes' => [$a->id],
+        ]);
+        $response->assertStatus(200);
+        $html = $response->getContent();
+        $this->assertSame(1, preg_match('/name="allow_apply_to_prev" value="1"\s*>/', $html), 'box enabled');
+        $this->assertSame(1, preg_match('/'.preg_quote(e(__('workflowpacks::messages.opt_apply_prev_rules', ['rules' => '#'])), '/').'/', str_replace('<strong>&lt;b&gt;Ancien&lt;/b&gt;</strong>', '#', $html)), 'only the rule that asks for it, escaped');
+        $this->assertStringNotContainsString('<b>Ancien</b>', $html);
+        $this->assertStringNotContainsString(e(__('workflowpacks::messages.opt_apply_prev_none')), $html);
     }
 }

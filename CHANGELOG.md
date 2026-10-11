@@ -4,6 +4,15 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [1.11.1] - 2026-10-11
+
+### Modifié
+- **Import, option « tickets existants »** : l'ancien libellé « Respecter « conversations précédentes » du pack pour
+  les nouvelles règles » devient « Appliquer aussi aux tickets existants les nouvelles règles du pack qui le
+  prévoient ». Une explication sous la case dit ce qui se passe cochée ou non, la liste des règles du pack concernées
+  est affichée, et la case est grisée quand aucune règle du pack ne le prévoit. Le fonctionnement ne change pas
+  (7 langues).
+
 ## [1.11.0] - 2026-10-20
 
 ### Ajouté

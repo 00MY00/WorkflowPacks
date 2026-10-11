@@ -1,6 +1,6 @@
-# Résultats des tests — Workflow Packs 1.11.0
+# Résultats des tests — Workflow Packs 1.11.1
 
-Date : 2026-10-10. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
+Date : 2026-10-11. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
 ## Versions effectivement vérifiées
 
@@ -12,6 +12,12 @@ Date : 2026-10-10. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 1.11.1 — option « tickets existants » de l'import plus claire
+
+| Série | Résultat |
+|---|---|
+| Intégration (80 tests, 589 assertions) | `ExportAndPagesTest` (+1) : explication sous la case, case grisée quand aucune règle du pack ne prévoit les tickets existants, sinon liste des seules règles concernées (noms échappés) |
 
 ## 1.11.0 — historique et diagnostic du rangement
 
