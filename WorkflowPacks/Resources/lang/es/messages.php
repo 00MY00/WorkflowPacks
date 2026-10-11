@@ -243,4 +243,11 @@ return [
     'backup_full'              => 'Descargar la copia de seguridad completa',
     'backup_help'              => 'El pack original se puede volver a importar tal cual (Importar un pack). La copia completa contiene además cada regla eliminada tal como estaba, con sus cambios.',
     'dest_imap_off'            => 'opción «Archivar en una carpeta de correo» desactivada: no se archivará nada (Gestionar › Ajustes › Workflow Packs).',
+    'settings_autosave'        => 'Los interruptores se guardan automáticamente.',
+    'imap_enabled_now'         => 'Opción «Archivar en una carpeta de correo» activada.',
+    'imap_off_title'           => 'Este pack archiva correos en carpetas,',
+    'imap_off_text'            => 'pero la opción «Archivar en una carpeta de correo» está desactivada: estas reglas están bloqueadas.',
+    'imap_off_enable'          => 'Activar la opción y actualizar',
+    'imap_off_ask'             => 'Pida a un administrador que la active (Gestionar › Ajustes › Workflow Packs).',
+    'saving'                   => 'Guardando…',
 ];

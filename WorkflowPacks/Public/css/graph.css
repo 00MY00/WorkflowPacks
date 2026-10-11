@@ -198,3 +198,8 @@
   .wpg-toolbar .wpg-search { flex: 1 1 100%; }
   .wpg-toolbar .wpg-search input { width: 100%; }
 }
+
+/* loading indicator: shown while a request to the server is running (api.js) */
+.wpg-busy { display: none; color: var(--g-brand); font-size: 12px; margin-right: 8px; white-space: nowrap; }
+.wpg-app.is-busy .wpg-busy { display: inline-block; }
+.wpg-app.is-busy .wpg-stage, .wpg-app.is-busy .wpg-inspector, .wpg-app.is-busy .wpg-overlay { cursor: progress; }

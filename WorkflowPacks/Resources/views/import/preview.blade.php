@@ -127,6 +127,8 @@
             </div>
         </div>
         <button type="submit" class="btn btn-primary">{{ __('workflowpacks::messages.confirm') }}</button>
+        {{-- after the main button: it stays the default one (Enter key) --}}
+        @include('workflowpacks::partials.imap_off')
         <a href="{{ route('workflowpacks.import') }}" class="btn btn-link">{{ __('workflowpacks::messages.back') }}</a>
     </form>
 @endsection

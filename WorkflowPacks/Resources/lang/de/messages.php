@@ -243,4 +243,11 @@ return [
     'backup_full'              => 'Vollständige Sicherung herunterladen',
     'backup_help'              => 'Das ursprüngliche Pack lässt sich unverändert wieder importieren (Pack importieren). Die vollständige Sicherung enthält zusätzlich jede gelöschte Regel, wie sie war, mit Änderungen.',
     'dest_imap_off'            => 'Option „In einen E-Mail-Ordner ablegen“ ist aus: nichts wird abgelegt (Verwalten › Einstellungen › Workflow Packs).',
+    'settings_autosave'        => 'Schalter werden automatisch gespeichert.',
+    'imap_enabled_now'         => 'Option „In einen E-Mail-Ordner ablegen“ aktiviert.',
+    'imap_off_title'           => 'Dieses Pack legt E-Mails in Ordnern ab,',
+    'imap_off_text'            => 'aber die Option „In einen E-Mail-Ordner ablegen“ ist aus: diese Regeln sind blockiert.',
+    'imap_off_enable'          => 'Option aktivieren und aktualisieren',
+    'imap_off_ask'             => 'Bitten Sie einen Administrator, sie zu aktivieren (Verwalten › Einstellungen › Workflow Packs).',
+    'saving'                   => 'Speichern…',
 ];

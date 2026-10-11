@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 1.6.0
+# Résultats des tests — Workflow Packs 1.7.0
 
 Date : 2026-10-10. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,14 @@ Date : 2026-10-10. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 1.7.0 — réglages enregistrés automatiquement, activation depuis l'import, chargement, chevauchements
+
+| Série | Résultat |
+|---|---|
+| Intégration (64 tests, 465 assertions) | `ImapFolderTest` : import d'un pack qui range dans des dossiers, option désactivée → message et bouton pour un administrateur, « demandez à un administrateur » sinon ; bouton sans effet pour un non-administrateur ; administrateur : option activée et prévisualisation recalculée (règle plus bloquée) ; réglages : enregistrement au changement présent |
+| Node (`tests/js`) | `layout` (9) : bloc agrandi ou lâché fixe, les blocs recouverts s'écartent, aucun chevauchement ; `textfit` (5) |
+| Navigateur (Chrome sans interface) | interrupteur basculé sans « Enregistrer » : enregistré ; import : message, bouton, option activée, message disparu ; blocs empilés au chargement, bloc agrandi, bloc lâché sur un autre, annulation : 0 chevauchement ; Schéma : « Chargement… » pendant une requête lente, masqué après ; bouton du module : icône qui tourne et désactivé juste après le clic, formulaire bien envoyé |
 
 ## 1.6.0 — dossiers e-mail dans le schéma, blocs à la taille du texte
 

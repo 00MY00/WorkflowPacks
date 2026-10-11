@@ -4,6 +4,30 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [1.7.0] - 2026-10-16
+
+### Ajouté
+- **Réglages enregistrés automatiquement.** Dans Gérer › Paramètres › Workflow Packs, chaque interrupteur s'enregistre
+  dès qu'on le bascule, comme « Ranger dans un dossier e-mail » ou « Mise à jour quotidienne ». Le préfixe des dossiers
+  s'enregistre quand on quitte le champ. « Enregistrement… » s'affiche pendant l'opération : plus de changement perdu
+  faute d'avoir cliqué sur « Enregistrer ».
+- **Import d'un pack qui range dans des dossiers alors que l'option est désactivée** : un message l'explique sous le
+  bouton de l'étape. Pour un administrateur, **« Activer l'option et actualiser »** l'active et recalcule aussitôt la
+  prévisualisation, sans rien perdre de ce qui a été saisi. Les autres utilisateurs voient qui peut l'activer.
+- **Indicateurs de chargement.**
+  - Icône qui tourne sur le bouton cliqué pendant que la page travaille (import, retrait, mise à jour, recherche).
+    Les boutons se désactivent pour éviter un double envoi.
+  - Dans le Schéma, « Chargement… » dans la barre d'outils pendant chaque échange avec le serveur.
+
+### Corrigé
+- **Schéma : blocs superposés.** Les blocs qui se chevauchent sont écartés automatiquement, puis enregistrés :
+  - au chargement, par exemple quand des positions enregistrées avant que les blocs prennent la taille de leur texte
+    se recouvrent, ou pour de nouveaux blocs ;
+  - après un bloc lâché sur un autre ;
+  - après un bloc agrandi à la poignée.
+
+  Le bloc déplacé ou agrandi reste où il a été mis, ce sont les autres qui s'écartent. Le tout s'annule avec Ctrl+Z.
+
 ## [1.6.0] - 2026-10-15
 
 ### Ajouté

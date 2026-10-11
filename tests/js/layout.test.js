@@ -128,6 +128,25 @@ test('columns: e-mail folders as a flow, each sub-folder in the next column faci
     }
 });
 
+test('separate: an enlarged or dropped block stays put, the blocks it covers step aside', () => {
+    const list = [
+        { key: 'wf:1', kind: 'rule', label: 'Agrandie', box: { w: 520, h: 180 } },
+        { key: 'wf:2', kind: 'rule', label: 'Voisine 1' },
+        { key: 'wf:3', kind: 'rule', label: 'Voisine 2' },
+        { key: 'dest:status:closed', kind: 'dest', label: 'Fermées' },
+    ];
+    // saved positions from before the blocks fitted their text: everything piled up
+    const pos = { 'wf:1': [0, 0], 'wf:2': [100, 60], 'wf:3': [200, 120], 'dest:status:closed': [150, 90] };
+    L.separate(pos, list, 120, ['wf:2', 'wf:3', 'dest:status:closed']);
+    assert.deepStrictEqual(pos['wf:1'], [0, 0], 'fixed block not moved');
+    for (let i = 0; i < list.length; i++) {
+        for (let j = i + 1; j < list.length; j++) {
+            const a = pos[list[i].key], b = pos[list[j].key], sa = L.size(list[i]), sb = L.size(list[j]);
+            assert.ok(!(a[0] < b[0] + sb[0] && b[0] < a[0] + sa[0] && a[1] < b[1] + sb[1] && b[1] < a[1] + sa[1]), list[i].key + ' / ' + list[j].key);
+        }
+    }
+});
+
 test('placeNew: a new rule is put next to its mailbox, saved blocks do not move', () => {
     const pos = L.columns(nodes, edges);
     const saved = JSON.parse(JSON.stringify(pos));

@@ -46,8 +46,10 @@ Exemple de règle dans un pack :
 }
 ```
 
-Si l'option est désactivée sur l'instance qui importe le pack, la prévisualisation bloque la règle avec le message
-« l'action … est désactivée : activez-la dans Gérer › Paramètres › Workflow Packs ».
+Si l'option est désactivée sur l'instance qui importe le pack, l'import l'indique sous le bouton de l'étape. Un
+administrateur peut cliquer sur **« Activer l'option et actualiser »** : l'option est activée et la prévisualisation
+recalculée, sans rien perdre de ce qui a été saisi. Sinon, les règles concernées restent bloquées avec le message
+« l'action … est désactivée ».
 
 ## Comment ça marche
 

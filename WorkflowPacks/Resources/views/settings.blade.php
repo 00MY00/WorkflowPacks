@@ -12,7 +12,7 @@
     · <a href="{{ route('workflowpacks.diagnostic') }}">{{ __('workflowpacks::messages.diagnostic') }}</a>
 </p>
 
-<form class="form-horizontal margin-top margin-bottom" method="POST" action="" autocomplete="off">
+<form class="form-horizontal margin-top margin-bottom" method="POST" action="" autocomplete="off" id="wp-settings-form">
     {{ csrf_field() }}
 
     <h3 class="subheader">{{ __('workflowpacks::messages.auto_update') }}</h3>
@@ -61,9 +61,35 @@
     <div class="form-group">
         <div class="col-sm-6 col-sm-offset-2">
             <button type="submit" class="btn btn-primary">{{ __('workflowpacks::messages.save') }}</button>
+            <span class="text-muted margin-left">{{ __('workflowpacks::messages.settings_autosave') }}</span>
         </div>
     </div>
 </form>
+{{--
+    Switches saved as soon as they change (and the prefix when the field is left): no change lost for a forgotten click.
+    "Saving…" with a spinning icon (FreeScout's glyphicon-spin) next to the changed field until the page comes back.
+    workflowpacks.js: the same indicator on the buttons of the update block below.
+--}}
+<script {!! \Helper::cspNonceAttr() !!}>
+    (function () {
+        var form = document.getElementById('wp-settings-form');
+        if (!form) { return; }
+        var saving = {!! json_encode(__('workflowpacks::messages.saving'), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!};
+        Array.prototype.forEach.call(form.querySelectorAll('input[type=checkbox], input[type=text]'), function (input) {
+            input.addEventListener('change', function () {
+                var place = input.closest('.col-sm-6') || input.parentNode;
+                var note = document.createElement('span');
+                note.className = 'text-muted';
+                note.innerHTML = '<i class="glyphicon glyphicon-refresh glyphicon-spin" aria-hidden="true"></i> ';
+                note.appendChild(document.createTextNode(saving));
+                place.insertBefore(note, place.querySelector('.form-help'));
+                Array.prototype.forEach.call(form.querySelectorAll('input'), function (i) { if (i !== input && i.type !== 'hidden') { i.readOnly = true; } });
+                form.submit();
+            });
+        });
+    })();
+</script>
+<script src="{{ asset(\Module::getPublicPath('workflowpacks').'/js/workflowpacks.js') }}?v={{ \Modules\WorkflowPacks\Services\Update\Updater::currentVersion() }}" {!! \Helper::cspNonceAttr() !!}></script>
 
 <h3 class="subheader">{{ __('workflowpacks::messages.update') }}</h3>
 <div class="form-horizontal margin-bottom">

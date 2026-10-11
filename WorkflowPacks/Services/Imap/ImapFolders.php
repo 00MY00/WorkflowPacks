@@ -26,6 +26,26 @@ class ImapFolders
         return (bool) \App\Option::get(self::OPTION_ENABLED, false, true, false);
     }
 
+    public static function setEnabled($enabled)
+    {
+        \App\Option::set(self::OPTION_ENABLED, $enabled ? 1 : 0);
+        \Modules\WorkflowPacks\Services\Workflows\Bridge::forgetCatalogs();
+    }
+
+    /** Does a (validated) pack use the action? Used by the import to offer turning the option on. */
+    public static function usedBy(array $pack)
+    {
+        foreach ((array) ($pack['workflows'] ?? []) as $rule) {
+            foreach ((array) ($rule['actions'] ?? []) as $action) {
+                if (($action['type'] ?? null) === FolderPath::ACTION) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     public static function prefix()
     {
         return FolderPath::prefix(\App\Option::get(self::OPTION_PREFIX, FolderPath::DEFAULT_PREFIX, true, false));

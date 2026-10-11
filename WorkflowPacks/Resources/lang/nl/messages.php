@@ -243,4 +243,11 @@ return [
     'backup_full'              => 'Volledige back-up downloaden',
     'backup_help'              => 'Het oorspronkelijke pack kan ongewijzigd opnieuw worden geïmporteerd (Pack importeren). De volledige back-up bevat ook elke verwijderde regel zoals hij was, met wijzigingen.',
     'dest_imap_off'            => 'optie "Opbergen in een e-mailmap" staat uit: er wordt niets opgeborgen (Beheren › Instellingen › Workflow Packs).',
+    'settings_autosave'        => 'Schakelaars worden automatisch opgeslagen.',
+    'imap_enabled_now'         => 'Optie "Opbergen in een e-mailmap" ingeschakeld.',
+    'imap_off_title'           => 'Dit pack bergt e-mails op in mappen,',
+    'imap_off_text'            => 'maar de optie "Opbergen in een e-mailmap" staat uit: deze regels zijn geblokkeerd.',
+    'imap_off_enable'          => 'Optie inschakelen en vernieuwen',
+    'imap_off_ask'             => 'Vraag een beheerder haar in te schakelen (Beheren › Instellingen › Workflow Packs).',
+    'saving'                   => 'Opslaan…',
 ];

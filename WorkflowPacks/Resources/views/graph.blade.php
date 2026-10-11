@@ -70,6 +70,7 @@
         <div class="wpg-group wpg-grow">
             <select id="wpg-goto" class="wpg-select" title="{{ __('workflowpacks::graph.goto_help') }}"></select>
             <span class="wpg-search">{!! $wpg_i('search') !!}<input type="search" id="wpg-search" placeholder="{{ __('workflowpacks::graph.search_ph') }}"></span>
+            <span class="wpg-busy" role="status" aria-live="polite"><i class="glyphicon glyphicon-refresh glyphicon-spin" aria-hidden="true"></i> {{ __('workflowpacks::graph.loading') }}</span>
             <span class="wpg-status is-saved">{{ __('workflowpacks::graph.status_saved') }}</span>
         </div>
     </div>
