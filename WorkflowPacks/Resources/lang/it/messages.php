@@ -243,4 +243,11 @@ return [
     'backup_full'              => 'Scarica il backup completo',
     'backup_help'              => 'Il pack originale si può reimportare così com’è (Importa un pack). Il backup completo contiene anche ogni regola eliminata com’era, modifiche comprese.',
     'dest_imap_off'            => 'opzione «Archivia in una cartella e-mail» disattivata: non verrà archiviato nulla (Gestisci › Impostazioni › Workflow Packs).',
+    'settings_autosave'        => 'Gli interruttori vengono salvati automaticamente.',
+    'imap_enabled_now'         => 'Opzione «Archivia in una cartella e-mail» attivata.',
+    'imap_off_title'           => 'Questo pack archivia e-mail in cartelle,',
+    'imap_off_text'            => 'ma l’opzione «Archivia in una cartella e-mail» è disattivata: queste regole sono bloccate.',
+    'imap_off_enable'          => 'Attiva l’opzione e aggiorna',
+    'imap_off_ask'             => 'Chiedi a un amministratore di attivarla (Gestisci › Impostazioni › Workflow Packs).',
+    'saving'                   => 'Salvataggio…',
 ];

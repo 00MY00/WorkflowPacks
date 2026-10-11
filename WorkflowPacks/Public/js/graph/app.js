@@ -16,6 +16,8 @@
         this.cfg = JSON.parse(root.querySelector('#wpg-config').textContent);
         this.texts = this.cfg.texts;
         this.api = new WPGraph.Api(this.cfg.urls, this.cfg.token);
+        // loading indicator (toolbar) while the server works: saving a rule, applying it, loading the data…
+        this.api.onBusy = function (busy) { root.classList.toggle('is-busy', busy); };
         this.model = new WPGraph.Model();
         this.settings = { layout: 'columns', edges: 'orthogonal', packs: true, dests: true };
         this.catalogs = {};
@@ -26,7 +28,15 @@
         var self = this;
         this.view = new WPGraph.View(root.querySelector('.wpg-canvas'), this.model, {
             texts: this.texts,
-            onMoved: function (before, after) { self.model.commit(before, after); self.savePositions(after); self.minimap.update(); },
+            onMoved: function (before, after) {
+                // blocks dropped on others: the others step aside (the moved ones stay where they were put)
+                var pushed = self.unoverlap(Object.keys(after));
+                Object.keys(pushed.before).forEach(function (k) { before[k] = pushed.before[k]; after[k] = pushed.after[k]; });
+                self.model.commit(before, after);
+                self.savePositions(after);
+                if (Object.keys(pushed.after).length) { self.view.render(); }
+                self.minimap.update();
+            },
             onSelect: function (key) { if (key) { self.inspector.show(key); } else { self.inspector.hide(); } self.minimap.update(); },
             onEdge: function (edge) { self.inspector.showEdge(edge); },
             onConnect: function (from, to) { self.connect(from, to); },
@@ -64,6 +74,8 @@
             } else {
                 var before = Object.keys(self.model.pos);
                 L.placeNew(self.model.pos, nodes, self.model.edges);
+                // blocks now larger than when they were placed (they fit their text): no block over another
+                self.unoverlap([]);
                 var fresh = {};
                 Object.keys(self.model.pos).forEach(function (k) { if (before.indexOf(k) < 0) { fresh[k] = self.model.pos[k]; } });
                 if (Object.keys(fresh).length) { self.savePositions(fresh); }
@@ -81,6 +93,27 @@
     };
 
     App.prototype.reload = function () { return this.load(false); };
+
+    /**
+     * Moves apart the blocks that overlap (fixed: the keys given, e.g. the blocks just moved or enlarged), saves the
+     * new positions and returns them as { before, after } (for the undo history).
+     */
+    App.prototype.unoverlap = function (fixed) {
+        var nodes = this.model.list();
+        var movable = nodes.map(function (n) { return n.key; }).filter(function (k) { return fixed.indexOf(k) < 0 && this.model.pos[k]; }, this);
+        var before = this.model.snapshot(movable);
+        L.separate(this.model.pos, nodes, 120, movable);
+        var out = { before: {}, after: {} };
+        movable.forEach(function (k) {
+            var a = before[k], b = this.model.pos[k];
+            if (a && b && (a[0] !== b[0] || a[1] !== b[1])) {
+                out.before[k] = a;
+                out.after[k] = b.slice();
+            }
+        }, this);
+        if (Object.keys(out.after).length) { this.savePositions(out.after); }
+        return out;
+    };
 
     /** Size of every block from its text (textfit.js), or the size chosen by hand. */
     App.prototype.fitBoxes = function () {
@@ -120,6 +153,8 @@
         if (done) {
             this.sizeQueue[key] = size ? [n.box.w, n.box.h] : null;
             if (size) { this.sizes[key] = [n.box.w, n.box.h]; }
+            // an enlarged block pushes its neighbours away instead of covering them
+            if (Object.keys(this.unoverlap([key]).after).length) { this.view.render(); }
             this.savePositions({});
             this.minimap.update();
         }

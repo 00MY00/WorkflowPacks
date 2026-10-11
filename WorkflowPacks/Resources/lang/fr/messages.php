@@ -251,4 +251,11 @@ return [
     'backup_full'              => 'Télécharger la sauvegarde complète',
     'backup_help'              => 'Le pack d\'origine se réimporte tel quel (Importer un pack). La sauvegarde complète contient aussi chaque règle supprimée telle qu\'elle était, modifications comprises.',
     'dest_imap_off'            => 'option « Ranger dans un dossier e-mail » désactivée : rien ne sera rangé (Gérer › Paramètres › Workflow Packs).',
+    'settings_autosave'        => 'Les interrupteurs sont enregistrés automatiquement.',
+    'imap_enabled_now'         => 'Option « Ranger dans un dossier e-mail » activée.',
+    'imap_off_title'           => 'Ce pack range des e-mails dans des dossiers,',
+    'imap_off_text'            => 'mais l\'option « Ranger dans un dossier e-mail » est désactivée : ces règles sont bloquées.',
+    'imap_off_enable'          => 'Activer l\'option et actualiser',
+    'imap_off_ask'             => 'Demandez à un administrateur de l\'activer (Gérer › Paramètres › Workflow Packs).',
+    'saving'                   => 'Enregistrement…',
 ];

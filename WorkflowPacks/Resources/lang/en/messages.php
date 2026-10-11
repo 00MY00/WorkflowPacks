@@ -247,4 +247,11 @@ return [
     'backup_full'              => 'Download the full backup',
     'backup_help'              => 'The original pack can be imported again as it is (Import a pack). The full backup also holds every deleted rule as it was, changes included.',
     'dest_imap_off'            => 'option "File into an e-mail folder" is off: nothing will be filed (Manage › Settings › Workflow Packs).',
+    'settings_autosave'        => 'Switches are saved automatically.',
+    'imap_enabled_now'         => 'Option "File into an e-mail folder" turned on.',
+    'imap_off_title'           => 'This pack files e-mails into folders,',
+    'imap_off_text'            => 'but the option "File into an e-mail folder" is off: these rules are blocked.',
+    'imap_off_enable'          => 'Turn the option on and refresh',
+    'imap_off_ask'             => 'Ask an administrator to turn it on (Manage › Settings › Workflow Packs).',
+    'saving'                   => 'Saving…',
 ];

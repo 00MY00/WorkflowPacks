@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Modules\WorkflowPacks\Entities\Link;
 use Modules\WorkflowPacks\Entities\Pack;
 use Modules\WorkflowPacks\Services\Compat\Checker;
+use Modules\WorkflowPacks\Services\Imap\ImapFolders;
 use Modules\WorkflowPacks\Services\Pack\Fingerprint;
 use Modules\WorkflowPacks\Services\Pack\MailboxSelector;
 use Modules\WorkflowPacks\Services\Pack\Problems;
@@ -83,6 +84,8 @@ class PacksController extends Controller
     public function configure(Request $request)
     {
         $this->guard();
+        // before anything reads the Workflows catalog (Workflows keeps it for the whole request)
+        $this->enableImapOnRequest($request);
         if (Checker::blocking()) {
             return $this->blockedPage();
         }
@@ -114,6 +117,8 @@ class PacksController extends Controller
     public function preview(Request $request)
     {
         $this->guard();
+        // before anything reads the Workflows catalog (Workflows keeps it for the whole request)
+        $this->enableImapOnRequest($request);
         if (Checker::blocking()) {
             return $this->blockedPage();
         }
@@ -126,7 +131,20 @@ class PacksController extends Controller
             return $this->configurePage($json, $result['pack'], (array) $request->input('mailboxes', []), (array) $request->input('params', []), 0, $plan['problems']->all(), (array) $request->input('resources', []));
         }
 
-        return $this->page('import.preview', ['plan' => $plan, 'json' => $json, 'input' => $request->only(['mailboxes', 'params', 'resources']), 'warning' => '']);
+        return $this->page('import.preview', ['plan' => $plan, 'json' => $json, 'input' => $request->only(['mailboxes', 'params', 'resources']), 'warning' => '',
+            'imapOff' => ImapFolders::usedBy($result['pack']) && !ImapFolders::enabled()]);
+    }
+
+    /**
+     * "Turn it on" button of the import, shown when the pack files e-mails into folders while the option is off
+     * (administrators only: it is a setting of Manage › Settings › Workflow Packs).
+     */
+    protected function enableImapOnRequest(Request $request)
+    {
+        if ($request->input('enable_imap') && auth()->user()->isAdmin() && !ImapFolders::enabled()) {
+            ImapFolders::setEnabled(true);
+            \Session::flash('flash_success_floating', __('workflowpacks::messages.imap_enabled_now'));
+        }
     }
 
     /** Step 4: the plan is computed again; it must be the one that was previewed. */
@@ -231,6 +249,7 @@ class PacksController extends Controller
             'existing'  => Pack::where('pack_key', $pack['key'])->first(),
             'selectors' => $selectorPreview,
             'resources' => ResourceResolver::resolve($pack, $resourceInput, $user, new Problems()),
+            'imapOff'   => ImapFolders::usedBy($pack) && !ImapFolders::enabled(),
         ]);
     }
 

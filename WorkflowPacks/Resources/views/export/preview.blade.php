@@ -23,7 +23,7 @@
         @include('workflowpacks::partials.rule_schema', ['rule' => $rule, 'mailboxId' => null])
     @endforeach
 
-    <form method="POST" action="{{ route('workflowpacks.export.download') }}" class="wp-form">
+    <form method="POST" action="{{ route('workflowpacks.export.download') }}" class="wp-form" data-wp-busy="off">{{-- file download: the page stays, no loading indicator --}}
         {{ csrf_field() }}
         @foreach ($input as $k => $v)
             @if (is_array($v))

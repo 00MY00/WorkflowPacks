@@ -243,4 +243,11 @@ return [
     'backup_full'              => 'Baixar o backup completo',
     'backup_help'              => 'O pack original pode ser importado de novo como está (Importar um pack). O backup completo contém também cada regra excluída como estava, com as alterações.',
     'dest_imap_off'            => 'opção "Arquivar em uma pasta de e-mail" desativada: nada será arquivado (Gerenciar › Configurações › Workflow Packs).',
+    'settings_autosave'        => 'Os interruptores são salvos automaticamente.',
+    'imap_enabled_now'         => 'Opção "Arquivar em uma pasta de e-mail" ativada.',
+    'imap_off_title'           => 'Este pack arquiva e-mails em pastas,',
+    'imap_off_text'            => 'mas a opção "Arquivar em uma pasta de e-mail" está desativada: estas regras estão bloqueadas.',
+    'imap_off_enable'          => 'Ativar a opção e atualizar',
+    'imap_off_ask'             => 'Peça a um administrador para ativá-la (Gerenciar › Configurações › Workflow Packs).',
+    'saving'                   => 'Salvando…',
 ];

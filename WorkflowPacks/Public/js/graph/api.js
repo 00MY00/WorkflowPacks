@@ -8,9 +8,20 @@
     function Api(urls, token) {
         this.urls = urls;
         this.token = token;
+        this.pending = 0;
+        this.onBusy = null;     // function (busy): loading indicator while a request is running
     }
 
+    Api.prototype.busy = function (delta) {
+        this.pending = Math.max(0, this.pending + delta);
+        if (this.onBusy) { this.onBusy(this.pending > 0); }
+    };
+
     Api.prototype.request = function (method, url, body) {
+        var self = this;
+        this.busy(1);
+        var done = function (value) { self.busy(-1); return value; };
+        var failed = function (error) { self.busy(-1); throw error; };
         return fetch(url, {
             method: method,
             credentials: 'same-origin',
@@ -30,7 +41,7 @@
                 }
                 return json;
             });
-        });
+        }).then(done, failed);
     };
 
     Api.prototype.url = function (name, id) {

@@ -227,6 +227,44 @@ class ImapFolderTest extends TestCase
         $this->assertFalse((new ImapMover())->move($mailbox, 'x@example.test', 'Factures', '[WP]')['retry'], 'no IMAP settings: no retry');
     }
 
+    public function testAnImportNeedingTheOptionOffersToTurnItOn()
+    {
+        \Option::set(ImapFolders::OPTION_ENABLED, false);
+        Bridge::forgetCatalogs();
+        $a = $this->mailbox('A');
+        $admin = $this->user([], true);
+        $agent = $this->user([$a], false, true);
+        $pack = $this->pack([$this->rule('r1', ['actions' => [['type' => FolderPath::ACTION, 'value' => 'Factures/Fournisseurs']]])]);
+        $form = ['pack_json' => json_encode($pack), 'mailboxes' => [$a->id]];
+
+        // step 2: notice + button for an administrator, "ask an administrator" for the others
+        $page = $this->actingAs($admin)->post(route('workflowpacks.import.configure'), ['pack_json' => json_encode($pack)]);
+        $this->seeIn($page, 'name="enable_imap"');
+        $other = $this->actingAs($agent)->post(route('workflowpacks.import.configure'), ['pack_json' => json_encode($pack)]);
+        $this->assertStringNotContainsString('name="enable_imap"', $other->getContent());
+        $this->seeIn($other, e(__('workflowpacks::messages.imap_off_ask')));
+
+        // the button of someone who may not change the settings does nothing
+        $this->actingAs($agent)->post(route('workflowpacks.import.preview'), $form + ['enable_imap' => '1']);
+        $this->assertFalse(ImapFolders::enabled());
+
+        // an administrator: option on, and the preview at once shows the rule as created (no longer blocked)
+        $preview = $this->actingAs($admin)->post(route('workflowpacks.import.preview'), $form + ['enable_imap' => '1'])->assertStatus(200);
+        $this->assertTrue(ImapFolders::enabled());
+        $this->assertStringNotContainsString('name="enable_imap"', $preview->getContent(), 'notice gone');
+        $this->assertStringNotContainsString(e(__('workflowpacks::texts.imap_disabled')), $preview->getContent());
+        $this->seeIn($preview, 'name="token"');
+    }
+
+    public function testTheSettingsSwitchesAreSavedWhenChanged()
+    {
+        $admin = $this->user([], true);
+        $page = $this->actingAs($admin)->get(route('settings', ['section' => 'workflowpacks']));
+        $this->seeIn($page, 'id="wp-settings-form"');
+        $this->seeIn($page, "addEventListener('change'");
+        $this->seeIn($page, e(__('workflowpacks::messages.settings_autosave')));
+    }
+
     public function testNothingHappensWhenTheOptionIsTurnedOffBeforeTheJobRuns()
     {
         $mailbox = $this->imapMailbox();

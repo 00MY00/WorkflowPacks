@@ -94,6 +94,8 @@
         @endif
 
         <button type="submit" class="btn btn-primary">{{ __('workflowpacks::messages.preview_btn') }}</button>
+        {{-- after the main button: it stays the default one (Enter key) --}}
+        @include('workflowpacks::partials.imap_off')
     </form>
 
     <h4 class="wp-section">{{ __('workflowpacks::messages.rules') }}</h4>
