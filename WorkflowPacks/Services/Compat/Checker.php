@@ -38,7 +38,7 @@ class Checker
         $add('WP-CORE-01', version_compare($app, '1.8.0', '>=') ? 'ok' : 'warning', 'FreeScout '.$app, Problems::t('chk_core_detail'));
         $add('WP-PHP-01', version_compare(PHP_VERSION, '7.1.0', '>=') ? 'ok' : 'blocking', 'PHP '.PHP_VERSION, Problems::t('chk_php_detail'));
 
-        $tables = ['workflowpacks_packs', 'workflowpacks_links', 'workflowpacks_imports', 'workflowpacks_resources', 'workflowpacks_layouts', 'workflowpacks_backups'];
+        $tables = ['workflowpacks_packs', 'workflowpacks_links', 'workflowpacks_imports', 'workflowpacks_resources', 'workflowpacks_layouts', 'workflowpacks_backups', 'workflowpacks_retention'];
         $missing = array_values(array_filter($tables, function ($t) {
             return !\Schema::hasTable($t);
         }));

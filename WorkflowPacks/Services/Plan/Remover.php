@@ -30,7 +30,7 @@ class Remover
      * @param int[]|null $mailboxIds mailboxes to remove the pack from (null = every mailbox the user manages)
      * @return array|null ['pack', 'items', 'counts', 'token'] or null when the pack is unknown
      */
-    public function plan($packKey, $user, array $mailboxIds = null)
+    public function plan($packKey, $user, ?array $mailboxIds = null)
     {
         $pack = Pack::where('pack_key', (string) $packKey)->first();
         if (!$pack) {

@@ -41,6 +41,9 @@ Route::group([
     Route::post('/graph/rule/{id}/apply', $users + ['uses' => 'GraphController@apply'])->name('workflowpacks.graph.apply');
 
     Route::get('/diagnostic', $admins + ['uses' => 'DiagnosticController@index'])->name('workflowpacks.diagnostic');
+    // automatic clean-up of a managed e-mail folder (diagram: side panel of the folder; settings: list)
+    Route::post('/retention', $admins + ['uses' => 'RetentionController@save'])->name('workflowpacks.retention.save');
+    Route::post('/retention/remove', $admins + ['uses' => 'RetentionController@remove'])->name('workflowpacks.retention.remove');
     Route::post('/auto-update', $admins + ['uses' => 'DiagnosticController@autoUpdate'])->name('workflowpacks.auto_update');
     Route::post('/update-now', $admins + ['uses' => 'DiagnosticController@updateNow'])->name('workflowpacks.update_now');
     Route::post('/check-update', $admins + ['uses' => 'DiagnosticController@checkUpdate'])->name('workflowpacks.check_update');

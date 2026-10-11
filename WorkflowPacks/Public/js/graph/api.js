@@ -57,6 +57,10 @@
     Api.prototype.saveRule = function (payload) { return this.request('POST', this.urls.save, payload); };
     Api.prototype.toggle = function (id, active) { return this.request('POST', this.url('toggle', id), { active: !!active }); };
     Api.prototype.toggleMany = function (ids, active) { return this.request('POST', this.urls.toggleMany, { ids: ids, active: !!active }); };
+    Api.prototype.saveRetention = function (folder, number, metric, mode) {
+        return this.request('POST', this.urls.retention, { folder: folder, number: number, metric: metric, mode: mode });
+    };
+    Api.prototype.removeRetention = function (folder) { return this.request('POST', this.urls.retentionRemove, { folder: folder }); };
     Api.prototype.apply = function (id, mailboxId) { return this.request('POST', this.url('apply', id), { mailbox_id: mailboxId }); };
 
     WPGraph.Api = Api;

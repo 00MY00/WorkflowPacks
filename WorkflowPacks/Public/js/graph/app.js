@@ -425,6 +425,9 @@
                 var val = function (kind, type, v) {
                     if (v === undefined || v === null || v === '') { return ''; }
                     var labels = (cat[kind][type] && cat[kind][type].value_labels) || {};
+                    if (typeof v === 'object' && v.number !== undefined && v.metric) {
+                        return t['unit_' + v.metric] ? v.number + ' ' + t['unit_' + v.metric] : JSON.stringify(v);
+                    }
                     if (typeof v === 'object') { return v.body !== undefined ? String(v.body).replace(/<[^>]*>/g, '').slice(0, 80) : JSON.stringify(v); }
                     var ref = refs[(c.refs[kind] || {})[type]];
                     var found = ref && ref.filter(function (r) { return String(r.id) === String(v); })[0];

@@ -24,6 +24,10 @@ remplacées pour chacune (`{{mailbox.email}}`, `{{mailbox.name}}`, `{{mailbox.id
 - **Rangement dans les dossiers e-mail** (option, désactivée par défaut) : action « Ranger dans un dossier e-mail
   [WP] » qui déplace l'e-mail reçu dans un dossier de la boîte e-mail (serveur IMAP), créé s'il manque, toujours sous
   le préfixe `[WP]`. Voir [docs/dossiers-email.md](docs/dossiers-email.md).
+- **Règles minuteur et nettoyage automatique** : « supprimer les tickets fermés après 30 jours » (conditions de délai
+  de Workflows, en minutes, heures ou jours, avec « Ajouter un délai » dans l'éditeur), et « les e-mails de
+  `[WP] Newsletters` vont à la corbeille après 7 jours » (réglé dans le Schéma, appliqué toutes les 15 minutes). Voir
+  [docs/minuteurs.md](docs/minuteurs.md).
 - **Packs portables (format 2)** :
   - **sélecteurs de boîtes** (« toutes les boîtes », « adresse contient @example.com »…) évalués sur chaque
     installation ;

@@ -265,6 +265,104 @@ class ImapFolderTest extends TestCase
         $this->seeIn($page, e(__('workflowpacks::messages.settings_autosave')));
     }
 
+    /** Puts an e-mail dated $daysAgo days ago in a folder of the test server ("/" between the levels), created if needed. */
+    protected function appendTo($mailbox, $path, $daysAgo)
+    {
+        $client = \MailHelper::getMailboxClient($mailbox);
+        $client->connect();
+        $delimiter = (string) ($client->getFolders(false)->first()->delimiter ?? '/');
+        $server = mb_convert_encoding(str_replace('/', $delimiter, $path), 'UTF7-IMAP', 'UTF-8');
+        if (!$client->getFolderByPath($server)) {
+            $client->createFolder($server, false);
+        }
+        $date = \Carbon\Carbon::now()->subDays($daysAgo);
+        $messageId = 'old-'.self::uid().'@example.test';
+        $raw = "From: News <news@example.test>\r\nTo: ".$mailbox->email."\r\nSubject: Newsletter\r\nMessage-ID: <".$messageId.">\r\n"
+            ."Date: ".$date->format('r')."\r\nContent-Type: text/plain; charset=utf-8\r\n\r\nPromo.\r\n";
+        $client->getFolderByPath($server)->appendMessage($raw, null, $date);
+        $client->disconnect();
+
+        return $messageId;
+    }
+
+    public function testCleanUpSettingsAreForAdministratorsAndShownInTheDiagramAndTheSettings()
+    {
+        $a = $this->mailbox('A');
+        $admin = $this->user([], true);
+        $agent = $this->user([$a], false, true);
+        $save = route('workflowpacks.retention.save');
+
+        $this->actingAs($agent)->postJson($save, ['folder' => 'Newsletters', 'number' => 7, 'metric' => 'd', 'mode' => 'trash'])->assertStatus(403);
+        $this->actingAs($admin)->postJson($save, ['folder' => 'Fact*', 'number' => 7, 'metric' => 'd', 'mode' => 'trash'])->assertStatus(422);
+        $this->actingAs($admin)->postJson($save, ['folder' => 'Newsletters', 'number' => 0, 'metric' => 'd', 'mode' => 'trash'])->assertStatus(422);
+        $this->actingAs($admin)->postJson($save, ['folder' => 'Newsletters', 'number' => 7, 'metric' => 'd', 'mode' => 'shred'])->assertStatus(422);
+        $this->actingAs($admin)->postJson($save, ['folder' => ' Newsletters / Promos ', 'number' => '7', 'metric' => 'd', 'mode' => 'trash'])->assertStatus(200);
+        $this->assertSame(['Newsletters/Promos', 7, 'd', 'trash'], [
+            \Modules\WorkflowPacks\Entities\Retention::first()->folder, (int) \Modules\WorkflowPacks\Entities\Retention::first()->number,
+            \Modules\WorkflowPacks\Entities\Retention::first()->metric, \Modules\WorkflowPacks\Entities\Retention::first()->mode,
+        ], 'folder written as in the rules');
+
+        // diagram: shown on the folder block; settings: listed with a "Remove" button
+        $class = Bridge::modelClass();
+        $wf = new $class();
+        $wf->mailbox_id = $a->id;
+        $wf->name = 'Promos';
+        $wf->type = 1;
+        $wf->apply_to_prev = false;
+        $wf->max_executions = 1;
+        $wf->conditions = [[['type' => 'subject', 'operator' => 'contains', 'value' => 'promo']]];
+        $wf->actions = [[['type' => FolderPath::ACTION, 'value' => 'Newsletters/Promos']]];
+        $wf->save();
+        $node = collect($this->actingAs($admin)->getJson(route('workflowpacks.graph.data'))->json()['nodes'])->where('dest', 'imap')->firstWhere('label', 'Promos');
+        $this->assertSame(['number' => 7, 'metric' => 'd', 'mode' => 'trash'], $node['retention']);
+        $this->assertStringContainsString(__('workflowpacks::messages.retention_short', ['delay' => __('workflowpacks::texts.timer_d', ['count' => 7])]), $node['sub']);
+        $this->seeIn($this->actingAs($admin)->get(route('settings', ['section' => 'workflowpacks'])), e(__('workflowpacks::messages.retention_remove_btn')));
+
+        $this->actingAs($admin)->post(route('workflowpacks.retention.remove'), ['folder' => 'Newsletters/Promos'])->assertRedirect();
+        $this->assertSame(0, \Modules\WorkflowPacks\Entities\Retention::count());
+    }
+
+    public function testOldEmailsOfACleanedFolderGoToTheTrashAndOnlyThem()
+    {
+        $mailbox = $this->imapMailbox();
+        $old = $this->appendTo($mailbox, '[WP] Newsletters', 10);
+        $new = $this->appendTo($mailbox, '[WP] Newsletters', 1);
+        $mine = $this->appendTo($mailbox, 'Newsletters', 10);          // a folder of the user, same name, no prefix
+        $this->appendTo($mailbox, 'Trash', 400);                           // the trash of the account (with an old e-mail)
+        \Modules\WorkflowPacks\Services\Imap\Retention::save('Newsletters', ['number' => 7, 'metric' => 'd'], 'trash', null);
+
+        $total = (new \Modules\WorkflowPacks\Services\Imap\Retention())->run();
+
+        $this->assertSame(1, $total['moved']);
+        $this->assertSame([$new], $this->idsIn($mailbox, '[WP] Newsletters'), 'only the e-mail older than 7 days left');
+        $this->assertContains($old, $this->idsIn($mailbox, 'Trash'), 'moved to the trash, not lost');
+        $this->assertSame([$mine], $this->idsIn($mailbox, 'Newsletters'), 'folder of the user never touched');
+        $this->assertCount(2, $this->idsIn($mailbox, 'Trash'), 'the trash itself is never cleaned');
+    }
+
+    public function testDeleteModeAndGuards()
+    {
+        $mailbox = $this->imapMailbox();
+        $old = $this->appendTo($mailbox, '[WP] Spam', 3);
+        $recent = $this->appendTo($mailbox, '[WP] Spam', 0);
+        \Modules\WorkflowPacks\Services\Imap\Retention::save('Spam', ['number' => 48, 'metric' => 'h'], 'delete', null);
+        \Modules\WorkflowPacks\Services\Imap\Retention::save('Absent', ['number' => 1, 'metric' => 'd'], 'delete', null);
+
+        // option off: nothing at all
+        \Option::set(ImapFolders::OPTION_ENABLED, false);
+        $this->assertSame(['moved' => 0, 'deleted' => 0, 'errors' => 0], (new \Modules\WorkflowPacks\Services\Imap\Retention())->run());
+        $this->assertCount(2, $this->idsIn($mailbox, '[WP] Spam'));
+
+        // option on: deleted for good (hours), the recent one kept; a folder that does not exist is not created
+        \Option::set(ImapFolders::OPTION_ENABLED, true);
+        $total = (new \Modules\WorkflowPacks\Services\Imap\Retention())->run();
+        $this->assertSame(1, $total['deleted']);
+        $this->assertSame([$recent], $this->idsIn($mailbox, '[WP] Spam'));
+        $this->assertNotContains($old, (array) $this->idsIn($mailbox, 'Trash'));
+        $this->assertNull($this->idsIn($mailbox, '[WP] Absent'), 'nothing created');
+        $this->assertSame(0, $total['errors']);
+    }
+
     public function testNothingHappensWhenTheOptionIsTurnedOffBeforeTheJobRuns()
     {
         $mailbox = $this->imapMailbox();

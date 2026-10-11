@@ -109,6 +109,17 @@ class RuleCompiler
 
             return $condition;
         }
+        if (Timer::isTimer($type)) {
+            // date condition evaluated by Workflows' scheduler: { number, metric } (minutes, hours, days)
+            $timer = Timer::check($condition['value'] ?? null);
+            if ($timer['error'] !== null) {
+                $problems->add($path.'.value', 'WP-TIME-01', $timer['error'], ['type' => $type]);
+            } else {
+                $condition['value'] = $timer['value'];
+            }
+
+            return $condition;
+        }
         if (!array_key_exists('value', $condition)) {
             return $condition;
         }

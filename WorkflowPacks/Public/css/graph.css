@@ -213,3 +213,10 @@
 .zoom-far .wpg-state { display: none; }
 /* selection rectangle (Shift + drag on the background) */
 .wpg-lasso { fill: rgba(99, 102, 241, .08); stroke: var(--g-brand); stroke-width: 1; stroke-dasharray: 4 3; pointer-events: none; }
+
+/* delays: timer conditions (editor) and automatic clean-up of a folder (side panel) */
+.wpg-timer, .wpg-retention { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.wpg-retention { margin: 4px 0 8px; }
+.wpg-w-num { width: 90px !important; }
+.wpg-w-unit { width: auto !important; }
+.wpg-timer-ic { font-size: 15px; }

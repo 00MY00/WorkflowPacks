@@ -91,6 +91,28 @@
 </script>
 <script src="{{ asset(\Module::getPublicPath('workflowpacks').'/js/workflowpacks.js') }}?v={{ \Modules\WorkflowPacks\Services\Update\Updater::currentVersion() }}" {!! \Helper::cspNonceAttr() !!}></script>
 
+{{-- automatic clean-up of the managed e-mail folders: set from the side panel of a folder in the diagram --}}
+@php $wp_R = \Modules\WorkflowPacks\Services\Imap\Retention::all(); @endphp
+<h3 class="subheader">{{ __('workflowpacks::messages.retention_list') }}</h3>
+<div class="form-horizontal margin-bottom">
+    <div class="form-group">
+        <div class="col-sm-8 col-sm-offset-2">
+            @forelse ($wp_R as $wp_r)
+                <form method="POST" action="{{ route('workflowpacks.retention.remove') }}" class="margin-bottom-10">
+                    {{ csrf_field() }}
+                    <input type="hidden" name="folder" value="{{ $wp_r->folder }}">
+                    <i class="glyphicon glyphicon-trash" aria-hidden="true"></i> <strong>{{ \Modules\WorkflowPacks\Services\Imap\FolderPath::label($wp_r->folder, \Modules\WorkflowPacks\Services\Imap\ImapFolders::prefix()) }}</strong> —
+                    {{ __('workflowpacks::messages.'.($wp_r->mode === 'delete' ? 'retention_row_delete' : 'retention_row_trash'), ['delay' => \Modules\WorkflowPacks\Services\Pack\Timer::label(['number' => (int) $wp_r->number, 'metric' => $wp_r->metric])]) }}
+                    <button type="submit" class="btn btn-link btn-xs">{{ __('workflowpacks::messages.retention_remove_btn') }}</button>
+                </form>
+            @empty
+                <p class="text-muted">{{ __('workflowpacks::messages.retention_none') }}</p>
+            @endforelse
+            <p class="form-help">{{ __('workflowpacks::messages.retention_settings_help') }}</p>
+        </div>
+    </div>
+</div>
+
 <h3 class="subheader">{{ __('workflowpacks::messages.update') }}</h3>
 <div class="form-horizontal margin-bottom">
     <div class="form-group">

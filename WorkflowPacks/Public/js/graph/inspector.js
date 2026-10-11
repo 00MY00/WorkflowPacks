@@ -167,6 +167,7 @@
             if (!r) { return; }
             body.appendChild(h('button', { type: 'button', class: 'wpg-inst wpg-link', on: { click: function () { app.select(r.key); } } }, [icon(I.of(r)), h('span', { class: 'wpg-inst-name', text: r.label })]));
         });
+        if (node.dest === 'imap' && node.folder) { this.retention(body, node); }
         body.appendChild(h('p', { class: 'wpg-hint', text: t.dest_hint }));
         body.appendChild(h('div', { class: 'wpg-ins-actions' }, [this.button(t.focus_dest, 'focus', function () { app.focusOn(node.key); })]));
     };
@@ -210,6 +211,46 @@
             body.appendChild(h('p', { class: 'wpg-hint', text: t.multi_none }));
         }
         body.appendChild(actions);
+    };
+
+    /**
+     * Automatic clean-up of an e-mail folder: "the e-mails of this folder go to the trash after 7 days" (every mailbox
+     * where the folder exists). Administrators change it; the others see it.
+     */
+    Inspector.prototype.retention = function (body, node) {
+        var app = this.app, t = this.t, r = node.retention;
+        this.section(body, t.retention_title);
+        var unit = function (m) { return t['unit_' + m] || m; };
+        body.appendChild(h('p', { class: 'wpg-muted', text: r
+            ? t[r.mode === 'delete' ? 'retention_on_delete' : 'retention_on_trash'].replace(':delay', r.number + ' ' + unit(r.metric))
+            : t.retention_off }));
+        if (!app.cfg.admin) { return; }
+        var number = h('input', { type: 'number', min: 1, max: 100000, class: 'form-control input-sm wpg-w-num', value: r ? r.number : 30, 'aria-label': t.timer_number });
+        var metric = h('select', { class: 'form-control input-sm wpg-w-unit', 'aria-label': t.timer_unit });
+        [['i', unit('i')], ['h', unit('h')], ['d', unit('d')]].forEach(function (o) {
+            var opt = h('option', { value: o[0], text: o[1] });
+            if ((r ? r.metric : 'd') === o[0]) { opt.selected = true; }
+            metric.appendChild(opt);
+        });
+        var mode = h('select', { class: 'form-control input-sm', 'aria-label': t.retention_mode });
+        [['trash', t.retention_trash], ['delete', t.retention_delete]].forEach(function (o) {
+            var opt = h('option', { value: o[0], text: o[1] });
+            if ((r ? r.mode : 'trash') === o[0]) { opt.selected = true; }
+            mode.appendChild(opt);
+        });
+        body.appendChild(h('div', { class: 'wpg-retention' }, [h('span', { text: t.retention_after }), number, metric, mode]));
+        var done = function (res) { app.toast(res.message, 'ok'); return app.reload(); };
+        var fail = function (e) { app.toast(e.message, 'error'); };
+        var actions = h('div', { class: 'wpg-ins-actions' }, [this.button(t.save, 'zap', function () {
+            app.api.saveRetention(node.folder, parseInt(number.value, 10) || 0, metric.value, mode.value).then(done).catch(fail);
+        }, true)]);
+        if (r) {
+            actions.appendChild(this.button(t.retention_remove, 'hand', function () {
+                app.api.removeRetention(node.folder).then(done).catch(fail);
+            }));
+        }
+        body.appendChild(actions);
+        body.appendChild(h('p', { class: 'wpg-hint', text: t.retention_help }));
     };
 
     /** A link mailbox -> rule = one Workflows rule in that mailbox. */

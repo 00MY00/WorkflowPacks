@@ -30,7 +30,7 @@ class Updater
 {
     const MODULE = 'WorkflowPacks';
     const ALIAS = 'workflowpacks';
-    const TABLES = ['workflowpacks_packs', 'workflowpacks_links', 'workflowpacks_imports', 'workflowpacks_resources', 'workflowpacks_layouts', 'workflowpacks_backups'];
+    const TABLES = ['workflowpacks_packs', 'workflowpacks_links', 'workflowpacks_imports', 'workflowpacks_resources', 'workflowpacks_layouts', 'workflowpacks_backups', 'workflowpacks_retention'];
     const OPTION = 'workflowpacks.auto_update';
     const KEEP_BACKUPS = 3;
 
@@ -40,7 +40,7 @@ class Updater
     /** @var array */
     protected $log = [];
 
-    public function __construct(callable $out = null)
+    public function __construct(?callable $out = null)
     {
         $this->out = $out ?: function ($line) {
         };

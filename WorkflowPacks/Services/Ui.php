@@ -16,6 +16,10 @@ class Ui
         if ($value === null || $value === '') {
             return '';
         }
+        // delay of a date condition ({ number, metric }): "30 day(s)"
+        if (is_array($value) && \Modules\WorkflowPacks\Services\Pack\Timer::check($value)['error'] === null) {
+            return e(\Modules\WorkflowPacks\Services\Pack\Timer::label(\Modules\WorkflowPacks\Services\Pack\Timer::check($value)['value']));
+        }
         $text = is_string($value) ? $value : json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         if (mb_strlen($text) > 300) {
             $text = mb_substr($text, 0, 300).'…';
