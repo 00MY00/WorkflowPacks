@@ -56,6 +56,7 @@
     Api.prototype.catalog = function (mailboxId) { return this.request('GET', this.url('catalog', mailboxId)); };
     Api.prototype.saveRule = function (payload) { return this.request('POST', this.urls.save, payload); };
     Api.prototype.toggle = function (id, active) { return this.request('POST', this.url('toggle', id), { active: !!active }); };
+    Api.prototype.toggleMany = function (ids, active) { return this.request('POST', this.urls.toggleMany, { ids: ids, active: !!active }); };
     Api.prototype.apply = function (id, mailboxId) { return this.request('POST', this.url('apply', id), { mailbox_id: mailboxId }); };
 
     WPGraph.Api = Api;

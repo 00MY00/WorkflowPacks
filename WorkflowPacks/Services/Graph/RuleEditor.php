@@ -168,6 +168,36 @@ class RuleEditor
     }
 
     /**
+     * Enables / disables several rules at once (diagram selection, list of the packs). Each rule is checked on its own
+     * (permission of its mailbox, an incomplete rule cannot be enabled); the others are still changed.
+     *
+     * @return array ['ok' => true, 'changed' => int, 'unchanged' => int, 'refused' => string[] (rule: reason)]
+     */
+    public function toggleMany($user, array $workflowIds, $active)
+    {
+        $out = ['ok' => true, 'changed' => 0, 'unchanged' => 0, 'refused' => []];
+        foreach (array_slice(array_values(array_unique(array_map('intval', $workflowIds))), 0, 1000) as $id) {
+            $wf = $id ? Bridge::query()->find($id) : null;
+            if (!$wf || !Bridge::canEdit($user, $wf->mailbox_id)) {
+                $out['refused'][] = '#'.$id.' : '.Problems::t('denied');
+                continue;
+            }
+            if ((bool) $wf->active === (bool) $active) {
+                $out['unchanged']++;
+                continue;
+            }
+            $result = $this->toggle($user, $id, $active);
+            if ($result['ok']) {
+                $out['changed']++;
+            } else {
+                $out['refused'][] = $wf->name.' : '.implode(' ', $result['errors']);
+            }
+        }
+
+        return $out;
+    }
+
+    /**
      * Applies the rule of a node to another mailbox (link drawn in the diagram). Rule of a pack: the pack is imported
      * for this rule only, through the normal plan / import (variables, resources, links). Other rule: copied, inactive.
      */

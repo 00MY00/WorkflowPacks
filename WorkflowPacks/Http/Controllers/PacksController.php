@@ -58,6 +58,7 @@ class PacksController extends Controller
                         'mailbox'  => optional($mailboxes->firstWhere('id', $link->mailbox_id))->name ?: '#'.$link->mailbox_id,
                         'state'    => $state,
                         'active'   => $wf ? (bool) $wf->active : false,
+                        'workflow_id' => $state !== 'missing' ? (int) $wf->id : null,
                         'url'      => $wf && \Route::has('mailboxes.workflows.update') ? route('mailboxes.workflows.update', ['mailbox_id' => $wf->mailbox_id, 'id' => $wf->id]) : '',
                         'version'  => $link->pack_version,
                     ];
@@ -68,6 +69,25 @@ class PacksController extends Controller
         }
 
         return $this->page('index', ['packs' => $packs, 'filter' => $filter, 'mailboxes' => $mailboxes]);
+    }
+
+    /** Enables / disables the rules ticked in the list (or the one whose switch was clicked), then back to the list. */
+    public function toggleRules(Request $request)
+    {
+        $this->guard();
+        $ids = array_map('intval', (array) $request->input('workflow_ids', []));
+        $active = (bool) $request->input('active');
+        $back = redirect()->route('workflowpacks.index', array_filter(['mailbox_id' => (int) $request->input('mailbox_id')]));
+        if (!$ids) {
+            return $back->with('flash_error_floating', __('workflowpacks::messages.rules_none_selected'));
+        }
+        $result = (new \Modules\WorkflowPacks\Services\Graph\RuleEditor())->toggleMany(auth()->user(), $ids, $active);
+        $back = $back->with('flash_success_floating', __('workflowpacks::messages.'.($active ? 'rules_enabled' : 'rules_disabled'), ['count' => $result['changed']]));
+        if ($result['refused']) {
+            $back = $back->with('flash_error_floating', __('workflowpacks::messages.rules_refused', ['list' => implode(' · ', array_slice($result['refused'], 0, 10))]));
+        }
+
+        return $back;
     }
 
     public function upload(Request $request)

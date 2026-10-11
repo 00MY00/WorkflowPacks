@@ -37,7 +37,12 @@
                 if (Object.keys(pushed.after).length) { self.view.render(); }
                 self.minimap.update();
             },
-            onSelect: function (key) { if (key) { self.inspector.show(key); } else { self.inspector.hide(); } self.minimap.update(); },
+            onSelect: function () {
+                // one block: its panel; several (Shift + click / Shift + drag): what to do with all of them
+                var keys = Object.keys(self.view.selected);
+                if (keys.length > 1) { self.inspector.showMulti(keys); } else if (keys.length) { self.inspector.show(keys[0]); } else { self.inspector.hide(); }
+                self.minimap.update();
+            },
             onEdge: function (edge) { self.inspector.showEdge(edge); },
             onConnect: function (from, to) { self.connect(from, to); },
             onRefused: function () { self.toast(self.texts.connect_refused, 'error'); },
@@ -123,7 +128,7 @@
 
     App.prototype.fitBox = function (measure, n) {
         // room on the right for the warning icon of sensitive rules and of folders with a problem
-        var extra = (n.kind === 'rule' && (n.sensitive || []).length) || n.warn ? 20 : 0;
+        var extra = (n.kind === 'rule' ? 22 : 0) + ((n.kind === 'rule' && (n.sensitive || []).length) || n.warn ? 20 : 0);
         n.box = WPGraph.textfit.fit(n, L.SIZE[n.kind] || [220, 60], measure, this.sizes[n.key] || null, extra);
     };
 
@@ -379,6 +384,19 @@
             if (checkbox) { checkbox.checked = !active; }
             self.toast(e.message, 'error');
         });
+    };
+
+    /** Enables / disables several rules (selection of the diagram); the server checks each one. */
+    App.prototype.toggleMany = function (ids, active) {
+        var self = this, t = this.texts;
+        this.api.toggleMany(ids, active).then(function (r) {
+            self.toast(t[active ? 'bulk_enabled' : 'bulk_disabled'].replace(':count', r.changed), 'ok');
+            if (r.refused && r.refused.length) { self.toast(r.refused.slice(0, 5).join('\n'), 'error'); }
+            return self.reload();
+        }).then(function () {
+            var keys = Object.keys(self.view.selected);
+            if (keys.length > 1) { self.inspector.showMulti(keys); }
+        }).catch(function (e) { self.toast(e.message, 'error'); });
     };
 
     /** Link drawn from a rule to a mailbox: the rule is applied there (inactive), after confirmation. */

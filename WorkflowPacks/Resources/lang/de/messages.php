@@ -250,4 +250,13 @@ return [
     'imap_off_enable'          => 'Option aktivieren und aktualisieren',
     'imap_off_ask'             => 'Bitten Sie einen Administrator, sie zu aktivieren (Verwalten › Einstellungen › Workflow Packs).',
     'saving'                   => 'Speichern…',
+    'select_all'               => 'Alle auswählen',
+    'selected_rules'           => 'Regel(n) ausgewählt',
+    'enable_selected'          => 'Auswahl aktivieren',
+    'disable_selected'         => 'Auswahl deaktivieren',
+    'select_pack'              => 'Regeln dieses Packs auswählen',
+    'rules_none_selected'      => 'Keine Regel ausgewählt.',
+    'rules_enabled'            => ':count Regel(n) aktiviert.',
+    'rules_disabled'           => ':count Regel(n) deaktiviert.',
+    'rules_refused'            => 'Nicht geändert: :list',
 ];

@@ -150,6 +150,15 @@ Les boîtes et les paramètres du dernier import sont repris. Les paramètres «
 - La détection compare une empreinte du nom, du type, du nombre maximal d'exécutions, des conditions et des actions.
   L'état actif, « conversations précédentes » et l'ordre restent sous votre contrôle.
 
+## Activer ou désactiver des règles
+
+Dans la liste des packs, chaque règle affiche son état dans chaque boîte, avec un lien **Activer / Désactiver**. Pour
+en changer plusieurs, cochez-les (une case par règle et par boîte, une par pack, ou « Tout sélectionner »), puis
+cliquez sur **Activer la sélection** ou **Désactiver la sélection**. Le Schéma permet la même chose sur une sélection
+de blocs.
+
+![Activer ou désactiver](docs/screenshots/liste-activer.png)
+
 ## Retirer un pack
 
 **Retirer le pack**, dans la liste des packs, supprime de Workflows les règles créées par ce pack.

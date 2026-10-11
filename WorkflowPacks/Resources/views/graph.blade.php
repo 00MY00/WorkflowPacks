@@ -26,6 +26,7 @@
             'catalog'   => route('workflowpacks.graph.catalog', ['mailbox_id' => '__ID__']),
             'save'      => route('workflowpacks.graph.save'),
             'toggle'    => route('workflowpacks.graph.toggle', ['id' => '__ID__']),
+            'toggleMany' => route('workflowpacks.graph.toggle_many'),
             'apply'     => route('workflowpacks.graph.apply', ['id' => '__ID__']),
             'reimport'  => route('workflowpacks.reimport', ['key' => '__ID__']),
             'workflows' => \Route::has('mailboxes.workflows') ? route('mailboxes.workflows', ['mailbox_id' => '__ID__']) : '',

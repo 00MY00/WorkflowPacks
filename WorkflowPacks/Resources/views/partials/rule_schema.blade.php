@@ -60,9 +60,23 @@
         <div class="wp-chips">
             @forelse ($states as $s)
                 <span class="wp-chip wp-chip-{{ $s['state'] }}" title="{{ __('workflowpacks::messages.version') }} {{ $s['version'] }}">
+                    @if (!empty($toggles) && !empty($s['workflow_id']))
+                        <input type="checkbox" form="wp-bulk" name="workflow_ids[]" value="{{ $s['workflow_id'] }}" class="wp-bulk-check" aria-label="{{ $s['mailbox'] }}">
+                    @endif
+                    @if ($s['state'] !== 'missing')<span class="wp-dot {{ $s['active'] ? 'is-on' : 'is-off' }}" aria-hidden="true"></span>@endif
                     @if ($s['url'])<a href="{{ $s['url'] }}">{{ $s['mailbox'] }}</a>@else{{ $s['mailbox'] }}@endif
                     · {{ __('workflowpacks::messages.state_'.$s['state']) }}
                     @if ($s['state'] !== 'missing') · {{ __('workflowpacks::messages.'.($s['active'] ? 'active' : 'inactive')) }}@endif
+                    @if (!empty($toggles) && !empty($s['workflow_id']))
+                        {{-- one click: this rule only --}}
+                        <form method="POST" action="{{ route('workflowpacks.rules.toggle') }}" class="wp-inline wp-chip-toggle">
+                            {{ csrf_field() }}
+                            <input type="hidden" name="workflow_ids[]" value="{{ $s['workflow_id'] }}">
+                            <input type="hidden" name="active" value="{{ $s['active'] ? 0 : 1 }}">
+                            @if (!empty($filter))<input type="hidden" name="mailbox_id" value="{{ $filter }}">@endif
+                            <button type="submit" class="btn btn-link btn-xs">{{ __('workflowpacks::messages.'.($s['active'] ? 'disable' : 'enable')) }}</button>
+                        </form>
+                    @endif
                 </span>
             @empty
                 <span class="wp-muted">{{ __('workflowpacks::messages.not_applied') }}</span>
