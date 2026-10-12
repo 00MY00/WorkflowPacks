@@ -53,3 +53,14 @@ test('Dossiers e-mail : action compilée avec variables, nom contrôlé, message
     same([[['type' => FolderPath::ACTION, 'value' => 'Factures/Ventes']]], $r['attributes']['actions']);
     same(['WP-IMAP-02'], codes($on->compile($rule('Factures/*'), $vars, 4)['problems']));
 });
+
+test('Dossier actuel des tickets : dossier de la règle retrouvé depuis le chemin du serveur (historique d’avant 1.14.0)', function () {
+    $v = function ($path) { return \Modules\WorkflowPacks\Services\Imap\TicketFolders::valueFromPath($path, '[WP]'); };
+    same('Factures/Fournisseurs', $v('[WP] Factures/Fournisseurs'), 'délimiteur /');
+    same('Factures/Fournisseurs', $v('INBOX.[WP] Factures.Fournisseurs'), 'délimiteur . sous INBOX (Courier)');
+    same('Factures/Fournisseurs', $v('[WP] Factures › Fournisseurs'), 'libellé de l’historique');
+    same('Newsletters', $v('[WP] Newsletters'), 'un seul niveau');
+    same('Mr. Smith', $v('[WP] Mr. Smith'), 'point dans un nom, délimiteur /');
+    same(null, $v('Factures'), 'dossier de l’utilisateur : rien');
+    same(null, $v(''), 'vide');
+});

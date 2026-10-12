@@ -15,11 +15,12 @@ class ImapCleaner extends ImapMover
     /**
      * @param int    $cutoff e-mails dated before this time (Unix timestamp) are removed
      * @param string $mode   trash | delete
-     * @return array ['moved' => n, 'deleted' => n, 'folder' => path on the server, 'error' => '']
+     * @return array ['moved' => n, 'deleted' => n, 'folder' => path on the server, 'error' => '', 'message_ids' => [...]]
+     *               message_ids: Message-IDs of the e-mails removed (their tickets leave the folder, TicketFolders)
      */
     public function clean($mailbox, $folder, $prefix, $cutoff, $mode, $limit)
     {
-        $out = ['moved' => 0, 'deleted' => 0, 'folder' => '', 'error' => ''];
+        $out = ['moved' => 0, 'deleted' => 0, 'folder' => '', 'error' => '', 'message_ids' => []];
         $parsed = FolderPath::parse($folder);
         if ($parsed['error'] !== null) {
             return ['error' => $parsed['error']] + $out;
@@ -58,15 +59,22 @@ class ImapCleaner extends ImapMover
                 if ($date === null || $date > $cutoff) {
                     continue;
                 }
+                $messageId = $this->messageIdOf($message);
                 if ($toTrash) {
                     if ($message->move($trash)) {
                         $out['moved']++;
+                        if ($messageId !== '') {
+                            $out['message_ids'][] = $messageId;
+                        }
                         continue;
                     }
                 }
                 // no trash folder in this account (or the move refused): deleted for good, in this folder only
                 $message->setFlag('Deleted');
                 $out['deleted']++;
+                if ($messageId !== '') {
+                    $out['message_ids'][] = $messageId;
+                }
             }
             if ($out['deleted']) {
                 $client->openFolder($target, true);
@@ -79,6 +87,21 @@ class ImapCleaner extends ImapMover
                 $client->disconnect();
             } catch (\Throwable $e) {
             }
+        }
+    }
+
+    /** Message-ID of the e-mail without "<>", or '' when it cannot be read. */
+    protected function messageIdOf($message)
+    {
+        try {
+            $id = $message->getMessageId();
+            if (is_object($id) && method_exists($id, 'first')) {
+                $id = $id->first();
+            }
+
+            return trim((string) $id, " <>\t\r\n");
+        } catch (\Throwable $e) {
+            return '';
         }
     }
 

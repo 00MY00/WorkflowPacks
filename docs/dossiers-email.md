@@ -138,6 +138,19 @@ Ce qui se passe, en arrière-plan, boîte par boîte (100 tickets à la fois) :
     ignorés) ;
   - chaque e-mail a sa ligne « rangement relancé » et, s'il a été retrouvé ailleurs, le dossier où il était.
 
+## Dossier actuel des tickets
+
+Workflow Packs garde, pour chaque ticket dont il a rangé l'e-mail, le dossier où se trouve cet e-mail sur le serveur.
+Cette information est gardée tant que le ticket existe et effacée avec lui.
+
+- **Dans le ticket :** une étiquette à côté du sujet, par exemple « [WP] Factures › Fournisseurs ». L'infobulle
+  donne le dossier sur le serveur et la date du rangement. Si le nettoyage automatique du dossier a retiré l'e-mail,
+  l'étiquette l'indique.
+- **Pour les autres modules,** comme RefreshGlobal : lecture par des filtres Eventy ou par la table. Voir
+  [api-dossiers.md](api-dossiers.md).
+
+![Dossier dans le ticket](screenshots/dossier-ticket.png)
+
 ## Suivre ce qui se passe : l'onglet Historique
 
 **Workflow Packs › Historique** liste chaque rangement :

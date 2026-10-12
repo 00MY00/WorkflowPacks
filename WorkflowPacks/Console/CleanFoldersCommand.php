@@ -22,6 +22,11 @@ class CleanFoldersCommand extends Command
             $this->line($line);
         });
         $this->info($total['moved'].' moved to the trash, '.$total['deleted'].' deleted, '.$total['errors'].' error(s).');
+        // once a day: current folders of tickets removed without FreeScout's action
+        $pruned = \Modules\WorkflowPacks\Services\Imap\TicketFolders::prune();
+        if ($pruned) {
+            $this->line($pruned.' current folder(s) of deleted tickets removed.');
+        }
 
         return $total['errors'] ? 1 : 0;
     }

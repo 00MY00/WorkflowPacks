@@ -4,6 +4,23 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [1.14.0] - 2026-10-12
+
+### Ajouté
+- **Dossier e-mail actuel de chaque ticket**, gardé sans limite de durée et effacé seulement avec le ticket
+  (table `workflowpacks_ticket_folders`, une ligne par ticket).
+  - **Mise à jour :** à chaque rangement (déplacé ou déjà en place) et lors du nettoyage automatique du dossier (état
+    « retiré par le nettoyage »).
+  - **Reprise :** les rangements déjà présents dans l'historique sont repris à l'installation.
+  - **Dans le ticket :** une étiquette « [WP] Factures › Fournisseurs » à côté du sujet, avec dans l'infobulle le
+    dossier sur le serveur et la date du rangement.
+  - **Pour les autres modules (RefreshGlobal…) :** filtres Eventy `workflowpacks.ticket_folder` et
+    `workflowpacks.ticket_folders`, action `workflowpacks.ticket_folder_changed`, et la table en lecture seule avec
+    des colonnes et des index stables. Voir [docs/api-dossiers.md](docs/api-dossiers.md).
+  - **Suppression :** la ligne d'un ticket est effacée avec lui, dans `conversations.before_delete_forever`, après
+    les modules qui écoutent cette action (priorité 1000). Une vérification quotidienne efface celles des tickets
+    supprimés autrement.
+
 ## [1.13.1] - 2026-10-11
 
 ### Corrigé

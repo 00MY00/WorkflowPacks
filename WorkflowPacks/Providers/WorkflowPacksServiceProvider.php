@@ -52,6 +52,8 @@ class WorkflowPacksServiceProvider extends ServiceProvider
         $this->registerSettings();
         // optional action "file into an e-mail folder [WP]" (off by default, Manage › Settings › Workflow Packs)
         \Modules\WorkflowPacks\Services\Imap\ImapFolders::register();
+        // current e-mail folder of each ticket: read API for the other modules, shown in the ticket, removed with it
+        \Modules\WorkflowPacks\Services\Imap\TicketFolders::register();
     }
 
     /**

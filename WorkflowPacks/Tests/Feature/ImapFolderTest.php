@@ -662,6 +662,57 @@ class ImapFolderTest extends TestCase
         $this->actingAs($this->user([$mailbox], false, true))->get(route('workflowpacks.history.trace', ['conversation' => $conversation->id]))->assertStatus(403);
     }
 
+    /**
+     * What the module adds to the page of a ticket, next to its subject (FreeScout's "conversation.after_subject"; the
+     * whole page cannot be rendered with the minimal tickets of these tests).
+     */
+    protected function ticketPage($conversation)
+    {
+        ob_start();
+        \Eventy::action('conversation.after_subject', $conversation->fresh(), $conversation->mailbox);
+
+        return ob_get_clean();
+    }
+
+    public function testTheCurrentFolderOfTheTicketIsKeptShownAndUpdatedByTheCleanUp()
+    {
+        $mailbox = $this->imapMailbox();
+        $id = $this->appendTo($mailbox, 'INBOX', 10);
+        list($conversation, $thread) = $this->conversation($mailbox, $id);
+        $changes = [];
+        \Eventy::addAction('workflowpacks.ticket_folder_changed', function ($cid, $current, $previous) use (&$changes) {
+            $changes[] = [$cid, $current ? $current['state'] : null, $previous ? $previous['state'] : null];
+        }, 20, 3);
+
+        (new FileIntoImapFolder($mailbox->id, $thread->id, 'Newsletters'))->handle();
+
+        $folder = \Eventy::filter('workflowpacks.ticket_folder', null, $conversation->id);
+        $this->assertSame(['Newsletters', '[WP] Newsletters', 'filed'], [$folder['folder'], $folder['label'], $folder['state']]);
+        $this->assertStringContainsString('Newsletters', $folder['path'], 'folder on the server');
+        $this->assertSame([(int) $conversation->id], array_keys(\Eventy::filter('workflowpacks.ticket_folders', [], [$conversation->id, 999999])));
+        $this->assertSame([[(int) $conversation->id, 'filed', null]], $changes);
+
+        // shown in the ticket, next to its subject
+        $page = $this->ticketPage($conversation);
+        $this->assertStringContainsString('wp-ticket-folder', $page);
+        $this->assertStringContainsString('[WP] Newsletters', $page);
+
+        // filed again: same row, no change announced
+        (new FileIntoImapFolder($mailbox->id, $thread->id, 'Newsletters'))->handle();
+        $this->assertSame(1, \DB::table('workflowpacks_ticket_folders')->where('conversation_id', $conversation->id)->count());
+        $this->assertCount(1, $changes);
+
+        // the automatic clean-up of the folder removes the e-mail: the ticket is no longer there
+        \Modules\WorkflowPacks\Services\Imap\Retention::save('Newsletters', ['number' => 7, 'metric' => 'd'], 'trash', null);
+        (new \Modules\WorkflowPacks\Services\Imap\Retention())->run();
+        $folder = \Modules\WorkflowPacks\Services\Imap\TicketFolders::get($conversation->id);
+        $this->assertSame('cleaned', $folder['state']);
+        $this->assertNotNull($folder['cleaned_at']);
+        $this->assertSame([(int) $conversation->id, 'cleaned', 'filed'], end($changes));
+        $this->assertStringContainsString(e(__('workflowpacks::messages.ticket_folder_cleaned')), $this->ticketPage($conversation));
+        \Modules\WorkflowPacks\Services\Imap\Retention::remove('Newsletters');
+    }
+
     public function testNothingHappensWhenTheOptionIsTurnedOffBeforeTheJobRuns()
     {
         $mailbox = $this->imapMailbox();

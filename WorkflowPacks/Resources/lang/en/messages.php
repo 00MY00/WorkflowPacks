@@ -385,4 +385,7 @@ return [
     'history_trace_result_error' => 'error',
     'history_trace_recent'     => 'Last e-mails of ":folder" on the server',
     'history_reason_looked_in' => 'looked for in :folders',
+    'ticket_folder_title'      => 'E-mail folder on the server',
+    'ticket_folder_filed_at'   => 'filed on :date',
+    'ticket_folder_cleaned'    => 'removed by the clean-up',
 ];

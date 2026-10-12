@@ -381,4 +381,7 @@ return [
     'history_trace_result_error' => 'error',
     'history_trace_recent'     => 'Últimos correos de «:folder» en el servidor',
     'history_reason_looked_in' => 'buscado en :folders',
+    'ticket_folder_title'      => 'Carpeta de correo en el servidor',
+    'ticket_folder_filed_at'   => 'archivado el :date',
+    'ticket_folder_cleaned'    => 'quitado por la limpieza',
 ];
