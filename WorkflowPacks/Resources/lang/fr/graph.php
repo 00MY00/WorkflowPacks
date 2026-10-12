@@ -187,4 +187,5 @@ return [
     'focus_selection' => 'Vue partielle : :count blocs sélectionnés et leurs liens',
     'menu_refile'              => 'Ranger à nouveau dans les dossiers (:count)',
     'refile_confirm'           => 'Les tickets existants des boîtes concernées vont être examinés : ceux qui remplissent les conditions d\'une règle (« Nouveau » compte comme rempli) ou qu\'elle a déjà traités ont leur e-mail rangé dans son dossier, même s\'il a été déplacé dans un autre dossier (jamais depuis la corbeille). Si plusieurs règles conviennent, la dernière dans l\'ordre de Workflows l\'emporte. Seul le rangement est fait : statut, assignation, transfert… ne sont pas touchés. Continuer ?',
+    'help_touch'     => 'Un doigt : se déplacer. Deux doigts : pincer pour zoomer. Toucher : sélectionner ; toucher deux fois : modifier une règle ou isoler une boîte (sur le fond : zoomer). Appui long sur un bloc : actions rapides ; sur le fond, puis glisser : rectangle de sélection. Un bloc sélectionné se déplace avec le doigt ; tirer son ● vers une boîte pour l\'y appliquer.',
 ];

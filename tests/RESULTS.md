@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 1.14.1
+# Résultats des tests — Workflow Packs 1.15.0
 
 Date : 2026-10-12. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,14 @@ Date : 2026-10-12. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 1.15.0 — schéma au doigt (téléphone, tablette)
+
+| Série | Résultat |
+|---|---|
+| JavaScript | `gestures.test.js` (4) : pincement (zoom autour des doigts, limites, doigts confondus), vitesse et élan (s'arrête, même trajet à 30 ou 60 images/s), toucher et double toucher (temps, distance, même cible) |
+| Navigateur, téléphone simulé (390 × 844, vrais événements tactiles, 3 passages identiques) | un doigt : déplacement, la page ne défile pas ; élan après un geste rapide ; deux doigts : zoom 0,8 → 2,4 ; doigt sur un bloc non sélectionné : la vue bouge, pas le bloc ; toucher : sélection et panneau en bas ; bloc sélectionné déplacé au doigt ; appui long : actions rapides ; appui long + glisser : rectangle (21 blocs) ; double toucher sur le fond : zoom × 2, sur une règle : éditeur ; ● tiré au doigt (à côté du point) vers une boîte : règle appliquée ; aide tactile affichée ; aucune erreur |
+| Navigateur, ordinateur | 84 blocs : déplacement, rectangle, menu, aucune superposition, comme avant |
 
 ## 1.14.1 — migrations sans recréation de table
 

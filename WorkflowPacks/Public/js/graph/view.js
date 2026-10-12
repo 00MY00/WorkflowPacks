@@ -7,6 +7,13 @@
  *   links read as a flow: mailbox -> rule -> destination (folder, person, tag, other mailbox) ·
  *   double click = open (mailbox: show only its rules; rule: edit)
  *
+ * Touch screens (phones, tablets), the usual gestures (arithmetic in gestures.js):
+ *   one finger = move around (glides on after a flick) · two fingers = pinch to zoom, and move · tap = select (block,
+ *   link; on the background: nothing selected) · double tap = open (on the background: zoom in) · long press on a
+ *   block = quick actions · long press on the background then slide = selection rectangle · a selected block is moved
+ *   with one finger (an other one: the view moves, so that a full diagram can still be moved around) · the ● handle
+ *   and the resize grip of a selected block, with larger touch areas
+ *
  * Detail level follows the zoom (far: names only). The view never talks to the server: it calls the callbacks given
  * by app.js (onMoved, onSelect, onEdge, onConnect, onOpen, onView).
  */
@@ -122,7 +129,10 @@
             // handle on the side of the mailboxes: drag it to a mailbox to apply the rule there
             var handle = el('circle', { class: 'wpg-handle', cx: 0, cy: s[1] / 2, r: 8 }, g);
             el('title', {}, handle).textContent = this.opts.texts.connect_hint;
+            // larger area for a finger (active on a selected block of a touch screen only, graph.css)
+            el('circle', { class: 'wpg-handle wpg-touch-hit', cx: 0, cy: s[1] / 2, r: 22 }, g);
         }
+        el('rect', { class: 'wpg-grip wpg-touch-hit', x: s[0] - 30, y: s[1] - 30, width: 34, height: 34 }, g);
     };
 
     /** Rule enabled in how many of its mailboxes (rules deleted from Workflows are not counted). */
@@ -308,14 +318,21 @@
     };
 
     View.prototype.down = function (e) {
+        // touch screens have their own gestures (and larger touch areas, graph.css)
+        this.svg.classList.toggle('is-touch', e.pointerType === 'touch');
+        this.stopGlide();
+        if (e.pointerType === 'touch') {
+            this.touchDown(e);
+            return;
+        }
         var handle = e.target.closest('.wpg-handle');
         var grip = e.target.closest('.wpg-grip');
         var node = e.target.closest('.wpg-node');
         var edge = e.target.closest('.wpg-edge-hit');
         var w = this.world(e.clientX, e.clientY);
         if (this.opts.onMenuClose) { this.opts.onMenuClose(); }
-        // moving the view: right or middle button, Space + left button, or a finger
-        if (e.button === 1 || e.button === 2 || (e.button === 0 && (this.spaceDown || e.pointerType === 'touch') && !node)) {
+        // moving the view: right or middle button, or Space + left button
+        if (e.button === 1 || e.button === 2 || (e.button === 0 && this.spaceDown && !node)) {
             this.svg.setPointerCapture(e.pointerId);
             this.mode = { type: 'pan', start: [e.clientX, e.clientY], t0: { x: this.t.x, y: this.t.y }, moved: false, button: e.button,
                 node: node ? node.getAttribute('data-key') : null };
@@ -357,6 +374,15 @@
     };
 
     View.prototype.move = function (e) {
+        if (e.pointerType === 'touch') {
+            this.touchMove(e);
+            return;
+        }
+        this.moveWith(e);
+    };
+
+    /** Moves of the current mode (mouse, pen, or a finger once its gesture is known). */
+    View.prototype.moveWith = function (e) {
         var m = this.mode;
         if (!m) { return; }
         if (m.type === 'pan') {
@@ -406,6 +432,15 @@
     };
 
     View.prototype.up = function (e) {
+        if (e.pointerType === 'touch') {
+            this.touchUp(e);
+            return;
+        }
+        this.upWith(e);
+    };
+
+    /** End of the current mode (mouse, pen, or a finger once its gesture is known). */
+    View.prototype.upWith = function (e) {
         var m = this.mode;
         this.mode = null;
         this.svg.classList.remove('panning', 'connecting');
@@ -483,9 +518,252 @@
     };
 
     View.prototype.cancel = function () {
+        this.dropMode();
+        this.fingers = {};
+        clearTimeout(this.pressTimer);
+    };
+
+    /** Leaves the current mode without applying it (a block being moved goes back where it was). */
+    View.prototype.dropMode = function () {
+        var m = this.mode;
         this.mode = null;
+        if (m && m.type === 'drag' && m.moved) {
+            m.keys.forEach(function (k) { if (m.origin[k]) { this.model.pos[k] = m.origin[k].slice(); } }, this);
+            this.moveNodes(m.keys);
+        }
+        if (m && m.type === 'lasso' && m.rect.parentNode) {
+            m.rect.parentNode.removeChild(m.rect);
+        }
+        if (m && m.type === 'resize' && m.moved && this.opts.onResize) {
+            this.opts.onResize(m.key, m.origin, false);
+        }
         this.ghost.setAttribute('d', '');
-        this.svg.classList.remove('panning', 'connecting');
+        Array.prototype.forEach.call(this.nodeLayer.querySelectorAll('.drop-ok, .drop-bad'), function (g) { g.classList.remove('drop-ok', 'drop-bad'); });
+        this.svg.classList.remove('panning', 'connecting', 'pressing');
+    };
+
+    // ------------------------------------------------------------------------------------------- touch screens
+
+    View.prototype.local = function (clientX, clientY) {
+        var r = this.svg.getBoundingClientRect();
+        return [clientX - r.left, clientY - r.top];
+    };
+
+    View.prototype.touchDown = function (e) {
+        var G = WPGraph.gestures;
+        this.fingers = this.fingers || {};
+        this.fingers[e.pointerId] = [e.clientX, e.clientY];
+        this.svg.setPointerCapture(e.pointerId);
+        if (this.opts.onMenuClose) { this.opts.onMenuClose(); }
+        var ids = Object.keys(this.fingers);
+        if (ids.length === 2) {
+            // second finger: pinch (whatever the first one was doing is dropped)
+            clearTimeout(this.pressTimer);
+            this.dropMode();
+            var a = this.fingers[ids[0]], b = this.fingers[ids[1]];
+            this.mode = { type: 'pinch', ids: ids, a0: this.local(a[0], a[1]), b0: this.local(b[0], b[1]), t0: { x: this.t.x, y: this.t.y, k: this.t.k } };
+            return;
+        }
+        if (ids.length > 2) { return; }
+
+        var nodeEl = e.target.closest('.wpg-node');
+        var key = nodeEl ? nodeEl.getAttribute('data-key') : null;
+        var edge = e.target.closest('.wpg-edge-hit');
+        var start = [e.clientX, e.clientY];
+        // the handle and the grip only on a selected block: elsewhere a finger on a block moves the view
+        if (key && this.selected[key] && e.target.closest('.wpg-handle')) {
+            this.mode = { type: 'connect', from: key, touch: true };
+            this.svg.classList.add('connecting');
+            return;
+        }
+        if (key && this.selected[key] && e.target.closest('.wpg-grip')) {
+            this.mode = { type: 'resize', key: key, start: this.world(e.clientX, e.clientY), origin: L.size(this.model.nodes[key]), moved: false, size: null };
+            return;
+        }
+        if (key && this.selected[key]) {
+            // selected block: one finger moves it (with the other selected blocks)
+            var keys = Object.keys(this.selected);
+            this.mode = { type: 'drag', key: key, start: this.world(e.clientX, e.clientY), origin: this.model.snapshot(keys), keys: keys,
+                moved: false, screen: start };
+        } else {
+            this.mode = { type: 'touch-pan', start: start, t0: { x: this.t.x, y: this.t.y }, moved: false, node: key,
+                edge: edge ? parseInt(edge.getAttribute('data-edge'), 10) : null, samples: [{ x: e.clientX, y: e.clientY, at: Date.now() }] };
+        }
+        // long press: quick actions on a block, selection rectangle on the background
+        var self = this;
+        clearTimeout(this.pressTimer);
+        this.pressTimer = setTimeout(function () { self.longPress(e.clientX, e.clientY); }, G.LONG_PRESS);
+    };
+
+    View.prototype.longPress = function (x, y) {
+        var m = this.mode;
+        if (!m || m.moved || (m.type !== 'touch-pan' && m.type !== 'drag')) { return; }
+        if (navigator.vibrate) { try { navigator.vibrate(12); } catch (err) { /* not allowed: no vibration */ } }
+        var key = m.type === 'drag' ? m.key : m.node;
+        if (key) {
+            this.mode = { type: 'done' };
+            if (!this.selected[key]) {
+                this.selected = {};
+                this.selected[key] = true;
+                this.selectedEdge = null;
+                this.highlight();
+                if (this.opts.onSelect) { this.opts.onSelect(key); }
+            }
+            if (this.opts.onMenu) { this.opts.onMenu(x, y, Object.keys(this.selected)); }
+            return;
+        }
+        if (m.edge !== null) { return; }
+        // background: the finger now draws the selection rectangle
+        var w = this.world(x, y);
+        this.mode = { type: 'lasso', start: w, add: false, rect: el('rect', { class: 'wpg-lasso', x: w[0], y: w[1], width: 0, height: 0 }, this.vp) };
+        this.svg.classList.add('pressing');
+    };
+
+    View.prototype.touchMove = function (e) {
+        var G = WPGraph.gestures;
+        if (!this.fingers || !this.fingers[e.pointerId]) { return; }
+        this.fingers[e.pointerId] = [e.clientX, e.clientY];
+        var m = this.mode;
+        if (!m) { return; }
+        if (m.type === 'pinch') {
+            var a = this.fingers[m.ids[0]], b = this.fingers[m.ids[1]];
+            if (!a || !b) { return; }
+            var t = G.pinch(m.t0, m.a0, m.b0, this.local(a[0], a[1]), this.local(b[0], b[1]));
+            this.t.x = t.x;
+            this.t.y = t.y;
+            this.t.k = t.k;
+            this.setTransform();
+            return;
+        }
+        if (m.type === 'touch-pan') {
+            if (!m.moved && G.isTap(m.start, [e.clientX, e.clientY])) { return; }
+            if (!m.moved) { clearTimeout(this.pressTimer); }
+            m.moved = true;
+            this.t.x = m.t0.x + e.clientX - m.start[0];
+            this.t.y = m.t0.y + e.clientY - m.start[1];
+            this.setTransform();
+            m.samples.push({ x: e.clientX, y: e.clientY, at: Date.now() });
+            if (m.samples.length > 12) { m.samples.shift(); }
+            return;
+        }
+        if (m.type === 'drag' && !m.moved) {
+            // a finger shakes a little: only a real move moves the block
+            if (G.isTap(m.screen, [e.clientX, e.clientY])) { return; }
+            clearTimeout(this.pressTimer);
+        }
+        if (m.type !== 'done') { this.moveWith(e); }
+    };
+
+    View.prototype.touchUp = function (e) {
+        var G = WPGraph.gestures;
+        if (this.fingers) { delete this.fingers[e.pointerId]; }
+        clearTimeout(this.pressTimer);
+        var m = this.mode;
+        if (!m) { return; }
+        if (m.type === 'pinch') {
+            // one finger left: it moves the view (never a tap)
+            var left = Object.keys(this.fingers || {});
+            if (left.length === 1) {
+                var f = this.fingers[left[0]];
+                this.mode = { type: 'touch-pan', start: f, t0: { x: this.t.x, y: this.t.y }, moved: true, node: null, edge: null, samples: [] };
+            } else {
+                this.mode = null;
+            }
+            return;
+        }
+        if (Object.keys(this.fingers || {}).length) { return; }
+        this.svg.classList.remove('pressing');
+        if (m.type === 'done') {
+            this.mode = null;
+            return;
+        }
+        if (m.type === 'touch-pan') {
+            this.mode = null;
+            if (m.moved) {
+                var v = G.velocity(m.samples, Date.now());
+                if (G.flick(v)) { this.startGlide(v); }
+                return;
+            }
+            this.tap(m, e.clientX, e.clientY, e.timeStamp);
+            return;
+        }
+        if (m.type === 'drag' && !m.moved) {
+            // tap on a selected block: same as a click, the selection is kept (double tap: open)
+            this.mode = null;
+            this.tap({ node: m.key, edge: null, keep: true }, e.clientX, e.clientY, e.timeStamp);
+            return;
+        }
+        this.upWith(e);
+    };
+
+    /**
+     * A tap: select (block, link), nothing selected (background); double tap: open, or zoom in on the background. $at:
+     * when the finger touched the screen (the event's time): a page busy after the first tap must not hide the double tap.
+     */
+    View.prototype.tap = function (m, x, y, at) {
+        var G = WPGraph.gestures;
+        var target = m.node || (m.edge !== null ? 'edge:' + m.edge : 'background');
+        var tap = { x: x, y: y, at: at || (window.performance ? window.performance.now() : Date.now()), target: target };
+        var twice = G.isDoubleTap(this.lastTap, tap);
+        this.lastTap = twice ? null : tap;
+        if (m.node) {
+            if (!m.keep) {
+                this.selected = {};
+                this.selected[m.node] = true;
+            }
+            this.selectedEdge = null;
+            this.highlight();
+            if (twice && this.opts.onOpen) {
+                this.opts.onOpen(m.node);
+            } else if (this.opts.onSelect) {
+                this.opts.onSelect(m.node);
+            }
+        } else if (m.edge !== null) {
+            this.select([], m.edge);
+            if (this.opts.onEdge) { this.opts.onEdge(this.model.edges[m.edge]); }
+        } else if (twice) {
+            this.animateZoom(2, x, y);
+        } else {
+            this.select([]);
+            if (this.opts.onSelect) { this.opts.onSelect(null); }
+        }
+    };
+
+    /** After a flick, the view glides on and slows down; stopped by the next touch. */
+    View.prototype.startGlide = function (v) {
+        var self = this, G = WPGraph.gestures, last = null;
+        this.stopGlide();
+        var frame = function (now) {
+            var step = G.glide(v, last === null ? 16 : Math.min(64, now - last));
+            last = now;
+            if (!step) { self.glideId = null; return; }
+            v = step.v;
+            self.t.x += step.dx;
+            self.t.y += step.dy;
+            self.setTransform();
+            self.glideId = window.requestAnimationFrame(frame);
+        };
+        this.glideId = window.requestAnimationFrame(frame);
+    };
+
+    View.prototype.stopGlide = function () {
+        if (this.glideId) {
+            window.cancelAnimationFrame(this.glideId);
+            this.glideId = null;
+        }
+    };
+
+    /** Zoom by a factor around a point of the screen, smoothly (double tap). */
+    View.prototype.animateZoom = function (factor, clientX, clientY) {
+        var self = this, steps = 8, done = 0;
+        var each = Math.pow(factor, 1 / steps);
+        this.stopGlide();
+        var frame = function () {
+            self.zoomAt(each, clientX, clientY);
+            done++;
+            self.glideId = done < steps ? window.requestAnimationFrame(frame) : null;
+        };
+        this.glideId = window.requestAnimationFrame(frame);
     };
 
     View.prototype.targetAt = function (x, y) {

@@ -53,8 +53,8 @@ Liens d'une règle vers une boîte :
 
 ## Se déplacer
 
-- **Se déplacer** : clic droit ou molette maintenus, ou Espace + glisser, ou un doigt sur écran tactile. La molette
-  sert à zoomer. La mini-carte en bas à droite sert à sauter ailleurs.
+- **Se déplacer** : clic droit ou molette maintenus, ou Espace + glisser. La molette
+  sert à zoomer. Sur écran tactile, voir [Téléphone et tablette](#téléphone-et-tablette). La mini-carte en bas à droite sert à sauter ailleurs.
 - **Sélectionner** : glissez sur le fond avec le clic gauche pour tracer un **rectangle bleu** (Maj : ajouter à la
   sélection), ou cliquez sur un bloc (Maj + clic : en ajouter un).
 - **Actions rapides** : au relâchement du rectangle, ou avec un clic droit, un menu s'ouvre à l'endroit de la souris.
@@ -143,17 +143,33 @@ destinations peuvent être masqués.
 - Les positions sont limitées et contrôlées : clés de blocs connues, coordonnées bornées, choix d'affichage dans une
   liste fixe. Elles sont stockées dans `workflowpacks_layouts`, une ligne par utilisateur.
 
-## Téléphone
+## Téléphone et tablette
 
-La barre d'outils se replie et la mini-carte est masquée. Le panneau latéral occupe toute la largeur. Un doigt
-déplace le schéma ou un bloc, et les boutons + et − zooment.
+Sur un écran tactile, le schéma suit les gestes habituels, comme dans une application de cartes :
 
-![Téléphone](screenshots/schema-mobile.png)
+| Geste | Effet |
+|---|---|
+| un doigt glissé | se déplacer ; après un geste rapide, le schéma continue sur sa lancée puis ralentit |
+| deux doigts écartés ou rapprochés | zoomer autour des doigts (et se déplacer en même temps) |
+| toucher un bloc ou un lien | le sélectionner (panneau en bas de l'écran) ; toucher le fond : plus rien de sélectionné |
+| toucher deux fois | modifier une règle, isoler une boîte ; sur le fond : zoomer |
+| appui long sur un bloc | actions rapides (comme le clic droit) |
+| appui long sur le fond, puis glisser | rectangle de sélection, puis actions rapides |
+| glisser un bloc **sélectionné** | le déplacer (un bloc non sélectionné déplace la vue, pour pouvoir parcourir un schéma plein) |
+| tirer le ● d'une règle sélectionnée vers une boîte | l'appliquer à cette boîte (zone de toucher élargie) |
+| coin en bas à droite d'un bloc sélectionné | l'agrandir |
+
+Sur un téléphone, la barre d'outils se replie et la mini-carte est masquée. Le panneau d'un bloc s'ouvre **en bas
+de l'écran**, sur la moitié de la hauteur, et le schéma reste visible au-dessus. Les menus et boutons sont plus
+grands, et l'aide sous le schéma décrit les gestes tactiles.
+
+![Téléphone](screenshots/schema-telephone.png)
 
 ## Code
 
 | Fichier | Rôle |
 |---|---|
+| `Public/js/graph/gestures.js` | calculs des gestes tactiles (pincement, élan, toucher, double toucher), testés avec Node |
 | `Services/Graph/GraphBuilder.php` | blocs et liens, limités aux boîtes autorisées ; destinations déduites des actions |
 | `Services/Graph/RuleEditor.php` | détail, catalogue, création / modification, activation, application à une autre boîte |
 | `Services/Graph/RuleCodec.php` | règle Workflows → règle au format pack (partagé avec l'export) |
