@@ -107,7 +107,15 @@ class Retention
                 try {
                     $r = (new ImapCleaner())->clean($mailbox, $row->folder, $prefix, $cutoff, $row->mode, self::BATCH);
                 } catch (\Throwable $e) {
-                    $r = ['moved' => 0, 'deleted' => 0, 'folder' => '', 'error' => $e->getMessage()];
+                    $r = ['moved' => 0, 'deleted' => 0, 'folder' => '', 'error' => $e->getMessage(), 'message_ids' => []];
+                }
+                // their tickets are no longer in this folder (current folder of each ticket)
+                if (!empty($r['message_ids'])) {
+                    try {
+                        TicketFolders::cleaned($mailbox->id, $r['message_ids'], $r['folder']);
+                    } catch (\Throwable $e) {
+                        \Log::warning('[WorkflowPacks] [clean-up] current folder of the tickets not updated: '.$e->getMessage());
+                    }
                 }
                 $total['moved'] += $r['moved'];
                 $total['deleted'] += $r['deleted'];

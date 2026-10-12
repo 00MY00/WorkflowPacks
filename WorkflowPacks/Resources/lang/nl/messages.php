@@ -381,4 +381,7 @@ return [
     'history_trace_result_error' => 'fout',
     'history_trace_recent'     => 'Laatste e-mails van ":folder" op de server',
     'history_reason_looked_in' => 'gezocht in :folders',
+    'ticket_folder_title'      => 'E-mailmap op de server',
+    'ticket_folder_filed_at'   => 'opgeborgen op :date',
+    'ticket_folder_cleaned'    => 'verwijderd door het opruimen',
 ];

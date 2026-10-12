@@ -1,6 +1,6 @@
-# Résultats des tests — Workflow Packs 1.13.1
+# Résultats des tests — Workflow Packs 1.14.0
 
-Date : 2026-10-11. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
+Date : 2026-10-12. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
 ## Versions effectivement vérifiées
 
@@ -12,6 +12,14 @@ Date : 2026-10-11. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 1.14.0 — dossier e-mail actuel de chaque ticket
+
+| Série | Résultat |
+|---|---|
+| Unitaires (44 tests) | dossier de la règle retrouvé depuis le chemin du serveur ou le libellé de l'historique (délimiteurs `/` et `.`, sous INBOX) |
+| Intégration (87 tests, 652 assertions) | `ImapFolderTest` (+1, **serveur IMAP réel**) : dossier enregistré au rangement (dossier, libellé, chemin, état), filtres Eventy, action « changé » une seule fois, étiquette dans le ticket ; rangé à nouveau : même ligne ; nettoyage automatique : état « retiré », date, étiquette. `TicketFoldersTest` (2) : un module à l'écoute de la suppression (priorité 20) lit encore le dossier, puis la ligne est effacée avec le ticket, les autres gardées ; vérification quotidienne (une fois par jour) ; reprise de l'historique (dossier de la règle, sinon du chemin ; ticket déjà connu gardé ; « introuvable » ignoré) |
+| Navigateur (Chrome sans interface) | page d'un ticket : étiquette « [WP] Factures › Fournisseurs » sous le sujet, infobulle avec le dossier du serveur et la date ; aucune erreur |
 
 ## 1.13.1 — e-mails trouvés même quand la recherche du serveur ne répond pas
 

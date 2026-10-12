@@ -65,6 +65,14 @@ class FileIntoImapFolder implements ShouldQueue
         }
         $this->log($r['result'].($r['folder'] !== '' ? ' "'.$r['folder'].'"' : '').($r['reason'] !== '' ? ': '.$r['reason'] : ''),
             $r['result'] === 'failed' ? 'warning' : 'info');
+        // current folder of the ticket (kept as long as the ticket, unlike the history): other modules show it
+        if (in_array($r['result'], ['moved', 'already'], true)) {
+            try {
+                \Modules\WorkflowPacks\Services\Imap\TicketFolders::record($thread->conversation_id, $mailbox->id, $this->folder, ImapFolders::prefix(), $r['folder']);
+            } catch (\Throwable $e) {
+                $this->log('current folder of the ticket not recorded: '.$e->getMessage(), 'warning');
+            }
+        }
         $retry = $r['result'] === 'failed' && !empty($r['retry']) && $this->job && $this->attempts() < self::ATTEMPTS;
         History::update($this->activityId, $r['result'], [
             'subject' => $r['folder'] !== '' ? $r['folder'] : null,

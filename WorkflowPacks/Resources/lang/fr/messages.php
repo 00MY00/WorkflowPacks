@@ -389,4 +389,7 @@ return [
     'history_trace_result_error' => 'erreur',
     'history_trace_recent'     => 'Derniers e-mails de « :folder » sur le serveur',
     'history_reason_looked_in' => 'cherché dans :folders',
+    'ticket_folder_title'      => 'Dossier e-mail sur le serveur',
+    'ticket_folder_filed_at'   => 'rangé le :date',
+    'ticket_folder_cleaned'    => 'retiré par le nettoyage',
 ];

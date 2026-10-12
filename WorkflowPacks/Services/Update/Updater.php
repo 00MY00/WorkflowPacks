@@ -30,7 +30,7 @@ class Updater
 {
     const MODULE = 'WorkflowPacks';
     const ALIAS = 'workflowpacks';
-    const TABLES = ['workflowpacks_packs', 'workflowpacks_links', 'workflowpacks_imports', 'workflowpacks_resources', 'workflowpacks_layouts', 'workflowpacks_backups', 'workflowpacks_retention', 'workflowpacks_activity'];
+    const TABLES = ['workflowpacks_packs', 'workflowpacks_links', 'workflowpacks_imports', 'workflowpacks_resources', 'workflowpacks_layouts', 'workflowpacks_backups', 'workflowpacks_retention', 'workflowpacks_activity', 'workflowpacks_ticket_folders'];
     const OPTION = 'workflowpacks.auto_update';
     const KEEP_BACKUPS = 3;
 

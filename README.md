@@ -23,7 +23,8 @@ remplacées pour chacune (`{{mailbox.email}}`, `{{mailbox.name}}`, `{{mailbox.id
   Voir [docs/schema.md](docs/schema.md).
 - **Rangement dans les dossiers e-mail** (option, désactivée par défaut) : action « Ranger dans un dossier e-mail
   [WP] » qui déplace l'e-mail reçu dans un dossier de la boîte e-mail (serveur IMAP), créé s'il manque, toujours sous
-  le préfixe `[WP]`. Voir [docs/dossiers-email.md](docs/dossiers-email.md).
+  le préfixe `[WP]`. Voir [docs/dossiers-email.md](docs/dossiers-email.md). Le dossier actuel de chaque ticket
+  est gardé, affiché dans le ticket et lisible par les autres modules ([docs/api-dossiers.md](docs/api-dossiers.md)).
 - **Règles minuteur et nettoyage automatique** : « supprimer les tickets fermés après 30 jours » (conditions de délai
   de Workflows, en minutes, heures ou jours, avec « Ajouter un délai » dans l'éditeur), et « les e-mails de
   `[WP] Newsletters` vont à la corbeille après 7 jours » (réglé dans le Schéma, appliqué toutes les 15 minutes). Voir
