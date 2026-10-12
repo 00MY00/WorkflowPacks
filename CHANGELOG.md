@@ -4,6 +4,14 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [1.14.1] - 2026-10-12
+
+### Modifié
+- **Migrations :** une table déjà présente n'est plus recréée, par exemple après une installation interrompue ou une
+  base restaurée. Elle est gardée telle quelle, comme le faisait déjà la table des dossiers des tickets.
+- **Documentation :** [docs/api-dossiers.md](docs/api-dossiers.md) liste ce que RefreshGlobal 1.8.0 lit de Workflow
+  Packs (tables, routes, ordre de suppression), à garder stable.
+
 ## [1.14.0] - 2026-10-12
 
 ### Ajouté

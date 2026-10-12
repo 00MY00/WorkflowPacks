@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 1.14.0
+# Résultats des tests — Workflow Packs 1.14.1
 
 Date : 2026-10-12. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,12 @@ Date : 2026-10-12. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 1.14.1 — migrations sans recréation de table
+
+| Série | Résultat |
+|---|---|
+| Intégration (87 tests) | installation complète (toutes les migrations) puis suite entière, inchangée ; migrations relancées sur une base déjà installée : aucune erreur, tables gardées |
 
 ## 1.14.0 — dossier e-mail actuel de chaque ticket
 

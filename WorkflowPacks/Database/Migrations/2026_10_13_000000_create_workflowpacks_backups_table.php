@@ -12,14 +12,16 @@ class CreateWorkflowpacksBackupsTable extends Migration
 {
     public function up()
     {
-        Schema::create('workflowpacks_backups', function (Blueprint $table) {
-            $table->increments('id');
-            $table->string('pack_key', 100);
-            $table->unsignedInteger('user_id')->nullable();
-            $table->longText('content');
-            $table->timestamps();
-            $table->index('pack_key');
-        });
+        if (!Schema::hasTable('workflowpacks_backups')) {
+            Schema::create('workflowpacks_backups', function (Blueprint $table) {
+                $table->increments('id');
+                $table->string('pack_key', 100);
+                $table->unsignedInteger('user_id')->nullable();
+                $table->longText('content');
+                $table->timestamps();
+                $table->index('pack_key');
+            });
+        }
     }
 
     public function down()

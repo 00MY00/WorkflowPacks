@@ -13,18 +13,20 @@ class CreateWorkflowpacksResourcesTable extends Migration
 {
     public function up()
     {
-        Schema::create('workflowpacks_resources', function (Blueprint $table) {
-            $table->increments('id');
-            $table->string('pack_key', 100);
-            $table->string('resource_key', 100);
-            $table->string('resource_type', 30);
-            $table->unsignedInteger('local_id');
-            $table->boolean('created_by_pack')->default(false);
-            $table->string('last_seen_name', 191)->default('');
-            $table->string('fingerprint', 64)->default('');
-            $table->timestamps();
-            $table->unique(['pack_key', 'resource_key', 'resource_type'], 'workflowpacks_resources_identity');
-        });
+        if (!Schema::hasTable('workflowpacks_resources')) {
+            Schema::create('workflowpacks_resources', function (Blueprint $table) {
+                $table->increments('id');
+                $table->string('pack_key', 100);
+                $table->string('resource_key', 100);
+                $table->string('resource_type', 30);
+                $table->unsignedInteger('local_id');
+                $table->boolean('created_by_pack')->default(false);
+                $table->string('last_seen_name', 191)->default('');
+                $table->string('fingerprint', 64)->default('');
+                $table->timestamps();
+                $table->unique(['pack_key', 'resource_key', 'resource_type'], 'workflowpacks_resources_identity');
+            });
+        }
     }
 
     public function down()

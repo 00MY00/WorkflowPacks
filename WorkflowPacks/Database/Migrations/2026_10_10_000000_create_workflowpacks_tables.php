@@ -16,42 +16,48 @@ class CreateWorkflowpacksTables extends Migration
 {
     public function up()
     {
-        Schema::create('workflowpacks_packs', function (Blueprint $table) {
-            $table->increments('id');
-            $table->string('pack_key', 100)->unique();
-            $table->string('name', 191);
-            $table->text('description')->nullable();
-            $table->string('pack_version', 50)->default('');
-            $table->unsignedInteger('schema_version')->default(1);
-            $table->longText('source');
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('workflowpacks_packs')) {
+            Schema::create('workflowpacks_packs', function (Blueprint $table) {
+                $table->increments('id');
+                $table->string('pack_key', 100)->unique();
+                $table->string('name', 191);
+                $table->text('description')->nullable();
+                $table->string('pack_version', 50)->default('');
+                $table->unsignedInteger('schema_version')->default(1);
+                $table->longText('source');
+                $table->timestamps();
+            });
+        }
 
-        Schema::create('workflowpacks_links', function (Blueprint $table) {
-            $table->increments('id');
-            $table->string('pack_key', 100);
-            $table->string('workflow_key', 100);
-            $table->unsignedInteger('mailbox_id');
-            $table->unsignedInteger('workflow_id')->nullable();
-            $table->longText('template');
-            $table->text('params')->nullable();
-            $table->string('fingerprint', 64);
-            $table->string('pack_version', 50)->default('');
-            $table->unsignedInteger('imported_by')->nullable();
-            $table->timestamps();
-            $table->unique(['pack_key', 'workflow_key', 'mailbox_id'], 'workflowpacks_links_identity');
-            $table->index('workflow_id');
-        });
+        if (!Schema::hasTable('workflowpacks_links')) {
+            Schema::create('workflowpacks_links', function (Blueprint $table) {
+                $table->increments('id');
+                $table->string('pack_key', 100);
+                $table->string('workflow_key', 100);
+                $table->unsignedInteger('mailbox_id');
+                $table->unsignedInteger('workflow_id')->nullable();
+                $table->longText('template');
+                $table->text('params')->nullable();
+                $table->string('fingerprint', 64);
+                $table->string('pack_version', 50)->default('');
+                $table->unsignedInteger('imported_by')->nullable();
+                $table->timestamps();
+                $table->unique(['pack_key', 'workflow_key', 'mailbox_id'], 'workflowpacks_links_identity');
+                $table->index('workflow_id');
+            });
+        }
 
-        Schema::create('workflowpacks_imports', function (Blueprint $table) {
-            $table->increments('id');
-            $table->string('pack_key', 100);
-            $table->string('pack_version', 50)->default('');
-            $table->unsignedInteger('user_id')->nullable();
-            $table->text('summary');
-            $table->timestamps();
-            $table->index('pack_key');
-        });
+        if (!Schema::hasTable('workflowpacks_imports')) {
+            Schema::create('workflowpacks_imports', function (Blueprint $table) {
+                $table->increments('id');
+                $table->string('pack_key', 100);
+                $table->string('pack_version', 50)->default('');
+                $table->unsignedInteger('user_id')->nullable();
+                $table->text('summary');
+                $table->timestamps();
+                $table->index('pack_key');
+            });
+        }
     }
 
     public function down()

@@ -12,15 +12,17 @@ class CreateWorkflowpacksLayoutsTable extends Migration
 {
     public function up()
     {
-        Schema::create('workflowpacks_layouts', function (Blueprint $table) {
-            $table->increments('id');
-            $table->unsignedInteger('user_id');
-            $table->string('view', 50)->default('main');
-            $table->longText('positions');
-            $table->text('settings')->nullable();
-            $table->timestamps();
-            $table->unique(['user_id', 'view'], 'workflowpacks_layouts_identity');
-        });
+        if (!Schema::hasTable('workflowpacks_layouts')) {
+            Schema::create('workflowpacks_layouts', function (Blueprint $table) {
+                $table->increments('id');
+                $table->unsignedInteger('user_id');
+                $table->string('view', 50)->default('main');
+                $table->longText('positions');
+                $table->text('settings')->nullable();
+                $table->timestamps();
+                $table->unique(['user_id', 'view'], 'workflowpacks_layouts_identity');
+            });
+        }
     }
 
     public function down()
