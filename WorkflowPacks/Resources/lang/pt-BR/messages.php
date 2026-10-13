@@ -384,4 +384,7 @@ return [
     'ticket_folder_title'      => 'Pasta de e-mail no servidor',
     'ticket_folder_filed_at'   => 'arquivado em :date',
     'ticket_folder_cleaned'    => 'retirado pela limpeza',
+    'cleanup_label_trash'      => 'Lixeira após :delay',
+    'cleanup_label_delete'     => 'Excluído após :delay',
+    'cleanup_sub'              => 'limpeza de :folder',
 ];

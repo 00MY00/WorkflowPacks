@@ -132,8 +132,9 @@
     Next.prototype.run = function (node, mailbox, edge, run) {
         var app = this.app;
         if (run.retention) {
-            // the clean-up of the folder, in its panel
-            app.select(node.key);
+            // the clean-up of the folder, in its panel (its own block when it is already set)
+            var clean = 'dest:clean:' + node.key.slice('dest:'.length);
+            app.select(app.model.nodes[clean] ? clean : node.key);
             setTimeout(function () {
                 var input = app.root.querySelector('.wpg-retention input');
                 if (input) { input.focus(); input.select(); input.scrollIntoView({ block: 'center' }); }

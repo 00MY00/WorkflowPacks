@@ -38,7 +38,7 @@
         if (node.kind === 'mailbox') { return 'inbox'; }
         if (node.kind === 'pack') { return 'package'; }
         if (node.kind === 'rule') { return node.type === 'manual' ? 'hand' : 'zap'; }
-        return { closed: 'closed', pending: 'pending', active: 'active', spam: 'spam', deleted: 'deleted', person: 'person', tag: 'tag', mailbox: 'mailbox' }[node.dest] || 'folder';
+        return { closed: 'closed', pending: 'pending', active: 'active', spam: 'spam', deleted: 'deleted', cleanup: 'deleted', person: 'person', tag: 'tag', mailbox: 'mailbox' }[node.dest] || 'folder';
     }
 
     /** <symbol> elements in the <defs> of the diagram. */

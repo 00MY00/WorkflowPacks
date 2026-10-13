@@ -209,4 +209,7 @@ return [
     'next_name_subfolder'      => 'Sottocartella di :folder',
     'next_name_after_delete'   => 'Cestino per «:status» dopo 30 giorni',
     'next_name_after_close'    => 'Chiudi «:status» dopo 7 giorni',
+    'kind_dest_cleanup'        => 'Pulizia automatica della cartella',
+    'legend_cleanup'           => 'pulizia automatica',
+    'cleanup_folder'           => 'Mostra la cartella',
 ];

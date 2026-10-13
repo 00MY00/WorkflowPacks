@@ -209,4 +209,7 @@ return [
     'next_name_subfolder'      => 'Subcarpeta de :folder',
     'next_name_after_delete'   => 'Papelera para «:status» tras 30 días',
     'next_name_after_close'    => 'Cerrar «:status» tras 7 días',
+    'kind_dest_cleanup'        => 'Limpieza automática de la carpeta',
+    'legend_cleanup'           => 'limpieza automática',
+    'cleanup_folder'           => 'Ver la carpeta',
 ];

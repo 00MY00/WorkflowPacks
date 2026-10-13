@@ -104,6 +104,20 @@ class GraphBuilder
         foreach ($sends as $edge) {
             $edges[] = $edge;
         }
+        // automatic clean-up of an e-mail folder: a block of its own, after the folder ("Deleted after 30 days")
+        foreach ($nodes as $key => $node) {
+            if (($node['dest'] ?? '') !== 'imap' || empty($node['retention'])) {
+                continue;
+            }
+            $r = $node['retention'];
+            // a destination too: "dest:" keys are the ones whose position is saved (LayoutStore::KEY)
+            $cleanKey = 'dest:clean:'.substr($key, strlen('dest:'));
+            $nodes[$cleanKey] = ['key' => $cleanKey, 'kind' => 'dest', 'dest' => 'cleanup', 'folder' => $node['folder'], 'retention' => $r,
+                'parent' => $key, 'depth' => ($node['depth'] ?? 0) + 1,
+                'label' => __('workflowpacks::messages.cleanup_label_'.($r['mode'] === 'delete' ? 'delete' : 'trash'), ['delay' => Timer::label($r)]),
+                'sub' => __('workflowpacks::messages.cleanup_sub', ['folder' => $node['label']])];
+            $edges[] = ['from' => $key, 'to' => $cleanKey, 'kind' => 'cleanup'];
+        }
 
         // links whose rule was deleted from Workflows since the import
         $existing = $workflows->pluck('id')->map(function ($id) {
@@ -202,7 +216,7 @@ class GraphBuilder
         $path = '';
         foreach ($parsed['segments'] as $i => $segment) {
             $path .= ($i ? '/' : '').$segment;
-            // automatic clean-up set for this folder: shown on the block, editable in its side panel
+            // automatic clean-up set for this folder: a block of its own after it (see build()), editable in its panel
             $row = $this->retention->get($path);
             $retention = $row ? ['number' => (int) $row->number, 'metric' => $row->metric, 'mode' => $row->mode] : null;
             $levels[] = [
@@ -212,8 +226,7 @@ class GraphBuilder
                 'kind'   => 'dest',
                 'dest'   => 'imap',
                 'label'  => $i ? $segment : $prefix.' '.$segment,
-                'sub'    => ($i ? FolderPath::label($path, $prefix) : __('workflowpacks::messages.dest_imap'))
-                    .($retention ? ' · '.__('workflowpacks::messages.retention_short', ['delay' => Timer::label($retention)]) : ''),
+                'sub'    => $i ? FolderPath::label($path, $prefix) : __('workflowpacks::messages.dest_imap'),
                 'depth'  => $i,
                 'warn'   => $warn,
                 'action' => $type,

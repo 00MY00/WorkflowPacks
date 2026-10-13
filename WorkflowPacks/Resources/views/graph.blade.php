@@ -99,6 +99,7 @@
             <span class="lg lg-modified">{{ __('workflowpacks::graph.legend_modified') }}</span>
             <span class="lg lg-missing">{{ __('workflowpacks::graph.legend_missing') }}</span>
             <span class="lg lg-sends">{{ __('workflowpacks::graph.legend_sends') }}</span>
+            <span class="lg lg-cleanup">{{ __('workflowpacks::graph.legend_cleanup') }}</span>
         </div>
         <div class="wpg-toasts" aria-live="polite"></div>
     </div>

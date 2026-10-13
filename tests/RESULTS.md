@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 1.16.0
+# Résultats des tests — Workflow Packs 1.17.0
 
 Date : 2026-10-13. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,13 @@ Date : 2026-10-13. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 1.17.0 — bloc « nettoyage » dans le schéma
+
+| Série | Résultat |
+|---|---|
+| Intégration (87 tests, 657 assertions) | `ImapFolderTest` : bloc de nettoyage après son dossier (clé, dossier, colonne suivante, libellé « Corbeille après 7 jour(s) »), relié par un lien « nettoyage », seulement pour le dossier qui en a un ; sa position est enregistrée comme celle des autres blocs |
+| Navigateur, ordinateur | « [WP] Factures » → « Corbeille après 30 jour(s) » dans la colonne suivante, trait rouge en pointillé, légende ; clic : réglage du nettoyage (30 jours) et « Voir le dossier » ; « + » du dossier : ouvre ce bloc ; nettoyage retiré : le bloc disparaît ; positions enregistrées ; aucune erreur |
 
 ## 1.16.0 — « Ajouter une suite » dans le schéma
 

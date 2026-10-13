@@ -209,4 +209,7 @@ return [
     'next_name_subfolder'      => 'Submap van :folder',
     'next_name_after_delete'   => 'Prullenbak voor ":status" na 30 dagen',
     'next_name_after_close'    => '":status" na 7 dagen sluiten',
+    'kind_dest_cleanup'        => 'Automatisch opruimen van de map',
+    'legend_cleanup'           => 'automatisch opruimen',
+    'cleanup_folder'           => 'Map tonen',
 ];

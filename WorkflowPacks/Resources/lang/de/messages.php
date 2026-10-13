@@ -384,4 +384,7 @@ return [
     'ticket_folder_title'      => 'E-Mail-Ordner auf dem Server',
     'ticket_folder_filed_at'   => 'abgelegt am :date',
     'ticket_folder_cleaned'    => 'durch die Bereinigung entfernt',
+    'cleanup_label_trash'      => 'Papierkorb nach :delay',
+    'cleanup_label_delete'     => 'Gelöscht nach :delay',
+    'cleanup_sub'              => 'Bereinigung von :folder',
 ];

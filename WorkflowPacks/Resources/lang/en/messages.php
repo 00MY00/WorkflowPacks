@@ -388,4 +388,7 @@ return [
     'ticket_folder_title'      => 'E-mail folder on the server',
     'ticket_folder_filed_at'   => 'filed on :date',
     'ticket_folder_cleaned'    => 'removed by the clean-up',
+    'cleanup_label_trash'      => 'Trash after :delay',
+    'cleanup_label_delete'     => 'Deleted after :delay',
+    'cleanup_sub'              => 'clean-up of :folder',
 ];

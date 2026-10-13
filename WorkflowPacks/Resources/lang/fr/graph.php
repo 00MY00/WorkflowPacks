@@ -210,4 +210,7 @@ return [
     'next_name_subfolder'      => 'Sous-dossier de :folder',
     'next_name_after_delete'   => 'Corbeille pour « :status » après 30 jours',
     'next_name_after_close'    => 'Fermer « :status » après 7 jours',
+    'kind_dest_cleanup'        => 'Nettoyage automatique du dossier',
+    'legend_cleanup'           => 'nettoyage automatique',
+    'cleanup_folder'           => 'Voir le dossier',
 ];

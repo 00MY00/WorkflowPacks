@@ -384,4 +384,7 @@ return [
     'ticket_folder_title'      => 'E-mailmap op de server',
     'ticket_folder_filed_at'   => 'opgeborgen op :date',
     'ticket_folder_cleaned'    => 'verwijderd door het opruimen',
+    'cleanup_label_trash'      => 'Prullenbak na :delay',
+    'cleanup_label_delete'     => 'Verwijderd na :delay',
+    'cleanup_sub'              => 'opruimen van :folder',
 ];
