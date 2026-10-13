@@ -209,4 +209,7 @@ return [
     'next_name_subfolder'      => 'Unterordner von :folder',
     'next_name_after_delete'   => 'Papierkorb für „:status“ nach 30 Tagen',
     'next_name_after_close'    => '„:status“ nach 7 Tagen schließen',
+    'kind_dest_cleanup'        => 'Automatische Bereinigung des Ordners',
+    'legend_cleanup'           => 'automatische Bereinigung',
+    'cleanup_folder'           => 'Ordner anzeigen',
 ];

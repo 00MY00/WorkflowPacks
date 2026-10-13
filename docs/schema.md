@@ -99,6 +99,11 @@ Rien n'est enregistré directement :
 
 Les délais proposés (7 et 30 jours) se modifient dans l'éditeur.
 
+**Le nettoyage d'un dossier est un bloc à part**, rouge, avec une corbeille : « Corbeille après 30 jours » ou
+« Suppression après 30 jours » selon le mode. Il est placé après son dossier et relié par un trait rouge en
+pointillé, ce qui se lit ainsi : « [WP] Newsletters → 🗑 Corbeille après 30 jours ». Un clic dessus ouvre son
+réglage (changer le délai, le mode, ou « Ne plus nettoyer »).
+
 ![Ajouter une suite](screenshots/schema-suite.png)
 
 ## Disposer les blocs

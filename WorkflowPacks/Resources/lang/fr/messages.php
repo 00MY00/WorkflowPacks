@@ -392,4 +392,7 @@ return [
     'ticket_folder_title'      => 'Dossier e-mail sur le serveur',
     'ticket_folder_filed_at'   => 'rangé le :date',
     'ticket_folder_cleaned'    => 'retiré par le nettoyage',
+    'cleanup_label_trash'      => 'Corbeille après :delay',
+    'cleanup_label_delete'     => 'Suppression après :delay',
+    'cleanup_sub'              => 'nettoyage de :folder',
 ];

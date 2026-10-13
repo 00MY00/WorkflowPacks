@@ -306,7 +306,7 @@ class ImapFolderTest extends TestCase
             \Modules\WorkflowPacks\Entities\Retention::first()->metric, \Modules\WorkflowPacks\Entities\Retention::first()->mode,
         ], 'folder written as in the rules');
 
-        // diagram: shown on the folder block; settings: listed with a "Remove" button
+        // diagram: a clean-up block of its own after the folder; settings: listed with a "Remove" button
         $class = Bridge::modelClass();
         $wf = new $class();
         $wf->mailbox_id = $a->id;
@@ -317,9 +317,19 @@ class ImapFolderTest extends TestCase
         $wf->conditions = [[['type' => 'subject', 'operator' => 'contains', 'value' => 'promo']]];
         $wf->actions = [[['type' => FolderPath::ACTION, 'value' => 'Newsletters/Promos']]];
         $wf->save();
-        $node = collect($this->actingAs($admin)->getJson(route('workflowpacks.graph.data'))->json()['nodes'])->where('dest', 'imap')->firstWhere('label', 'Promos');
+        $graph = $this->actingAs($admin)->getJson(route('workflowpacks.graph.data'))->json();
+        $node = collect($graph['nodes'])->where('dest', 'imap')->firstWhere('label', 'Promos');
         $this->assertSame(['number' => 7, 'metric' => 'd', 'mode' => 'trash'], $node['retention']);
-        $this->assertStringContainsString(__('workflowpacks::messages.retention_short', ['delay' => __('workflowpacks::texts.timer_d', ['count' => 7])]), $node['sub']);
+        $clean = collect($graph['nodes'])->firstWhere('dest', 'cleanup');
+        $this->assertSame([$node['key'], 'Newsletters/Promos', $node['depth'] + 1], [$clean['parent'], $clean['folder'], $clean['depth']]);
+        $this->assertSame(__('workflowpacks::messages.cleanup_label_trash', ['delay' => __('workflowpacks::texts.timer_d', ['count' => 7])]), $clean['label']);
+        $this->assertNotNull(collect($graph['edges'])->first(function ($e) use ($node, $clean) {
+            return $e['kind'] === 'cleanup' && $e['from'] === $node['key'] && $e['to'] === $clean['key'];
+        }), 'linked to its folder');
+        $this->assertSame(1, collect($graph['nodes'])->where('dest', 'cleanup')->count(), 'only the folder that has one');
+        // its position is saved like the other blocks
+        $this->actingAs($admin)->postJson(route('workflowpacks.graph.layout'), ['positions' => [$clean['key'] => [120, 40]]])->assertStatus(200);
+        $this->assertSame([120, 40], $this->actingAs($admin)->getJson(route('workflowpacks.graph.data'))->json()['layout']['positions'][$clean['key']] ?? null);
         $this->seeIn($this->actingAs($admin)->get(route('settings', ['section' => 'workflowpacks'])), e(__('workflowpacks::messages.retention_remove_btn')));
 
         $this->actingAs($admin)->post(route('workflowpacks.retention.remove'), ['folder' => 'Newsletters/Promos'])->assertRedirect();

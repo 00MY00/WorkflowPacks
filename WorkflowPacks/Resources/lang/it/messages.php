@@ -384,4 +384,7 @@ return [
     'ticket_folder_title'      => 'Cartella e-mail sul server',
     'ticket_folder_filed_at'   => 'archiviato il :date',
     'ticket_folder_cleaned'    => 'tolto dalla pulizia',
+    'cleanup_label_trash'      => 'Cestino dopo :delay',
+    'cleanup_label_delete'     => 'Eliminato dopo :delay',
+    'cleanup_sub'              => 'pulizia di :folder',
 ];

@@ -4,6 +4,15 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [1.17.0] - 2026-10-13
+
+### Modifié
+- **Schéma : le nettoyage automatique d'un dossier e-mail est un bloc à part.** Le bloc est rouge, avec une
+  corbeille, et indique « Corbeille après 30 jours » ou « Suppression après 30 jours ». Il est placé après son
+  dossier et relié par un trait rouge en pointillé, avec une entrée dans la légende. Un clic dessus ouvre son réglage.
+  Auparavant, le nettoyage n'était qu'un texte dans le bloc du dossier. Le « + » d'un dossier qui a déjà un
+  nettoyage ouvre ce bloc.
+
 ## [1.16.0] - 2026-10-13
 
 ### Ajouté

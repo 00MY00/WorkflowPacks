@@ -173,6 +173,7 @@
 
     Inspector.prototype.show_dest = function (node) {
         var app = this.app, t = this.t;
+        if (node.dest === 'cleanup') { return this.show_cleanup(node); }
         var body = this.frame(node, t['kind_dest_' + node.dest] || t.kind_dest);
         if (node.warn) { body.appendChild(h('p', { class: 'wpg-warn-text' }, [icon('warn'), ' ' + node.warn])); }
         // e-mail folders: the rules filing into this folder or one of its sub-folders
@@ -187,6 +188,16 @@
         if (node.dest === 'imap' && node.folder) { this.retention(body, node); }
         body.appendChild(h('p', { class: 'wpg-hint', text: t.dest_hint }));
         body.appendChild(h('div', { class: 'wpg-ins-actions' }, [this.button(t.focus_dest, 'focus', function () { app.focusOn(node.key); })]));
+    };
+
+    /** Automatic clean-up of an e-mail folder (its own block, after the folder): its setting, the folder. */
+    Inspector.prototype.show_cleanup = function (node) {
+        var app = this.app, t = this.t;
+        var body = this.frame(node, t.kind_dest_cleanup);
+        this.retention(body, node);
+        if (node.parent && app.model.nodes[node.parent]) {
+            body.appendChild(h('div', { class: 'wpg-ins-actions' }, [this.button(t.cleanup_folder, 'folder', function () { app.select(node.parent); })]));
+        }
     };
 
     /**

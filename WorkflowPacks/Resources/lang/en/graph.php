@@ -210,4 +210,7 @@ return [
     'next_name_subfolder'      => 'Sub-folder of :folder',
     'next_name_after_delete'   => 'Deleted folder for ":status" after 30 days',
     'next_name_after_close'    => 'Close ":status" after 7 days',
+    'kind_dest_cleanup'        => 'Automatic clean-up of the folder',
+    'legend_cleanup'           => 'automatic clean-up',
+    'cleanup_folder'           => 'Show the folder',
 ];

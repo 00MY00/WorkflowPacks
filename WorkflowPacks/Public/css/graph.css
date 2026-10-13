@@ -270,3 +270,8 @@
 .wpg-next-plus { stroke: #fff; stroke-width: 2.2; stroke-linecap: round; pointer-events: none; }
 .wpg-next-list { flex-direction: column; align-items: stretch; }
 .wpg-next-list .btn { text-align: left; white-space: normal; }
+
+/* automatic clean-up of an e-mail folder: a block of its own after the folder, red, with a trash icon */
+.wpg-node.dest-cleanup, .wpg-ins-head.dest-cleanup { --c: var(--c-spam); }
+.wpg-edge.kind-cleanup .wpg-line { stroke: var(--c-spam); stroke-dasharray: 6 4; }
+.lg-cleanup::before { border-color: var(--c-spam); border-top-style: dashed; }

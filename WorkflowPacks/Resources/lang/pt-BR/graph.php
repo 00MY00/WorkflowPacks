@@ -209,4 +209,7 @@ return [
     'next_name_subfolder'      => 'Subpasta de :folder',
     'next_name_after_delete'   => 'Lixeira para ":status" após 30 dias',
     'next_name_after_close'    => 'Fechar ":status" após 7 dias',
+    'kind_dest_cleanup'        => 'Limpeza automática da pasta',
+    'legend_cleanup'           => 'limpeza automática',
+    'cleanup_folder'           => 'Ver a pasta',
 ];
