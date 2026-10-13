@@ -186,4 +186,5 @@ return [
     'focus_selection' => 'Vista parziale: :count blocchi selezionati e i loro collegamenti',
     'menu_refile'              => 'Archivia di nuovo nelle cartelle (:count)',
     'refile_confirm'           => 'I ticket esistenti di queste caselle saranno esaminati: quelli che soddisfano le condizioni di una regola («Nuovo» conta come soddisfatto) o che ha già trattato vengono archiviati nella sua cartella, anche se l\'e-mail è stata spostata in un\'altra cartella (mai dal cestino). Se più regole corrispondono, vince l\'ultima nell\'ordine di Workflows. Viene fatta solo l\'archiviazione: stato, assegnazione, inoltro… non vengono toccati. Continuare?',
+    'help_touch'     => 'Un dito: spostarsi. Due dita: pizzicare per lo zoom. Toccare: selezionare; toccare due volte: modificare una regola o isolare una casella (sullo sfondo: ingrandire). Pressione lunga su un blocco: azioni rapide; sullo sfondo, poi scorrere: rettangolo di selezione. Un blocco selezionato si sposta con il dito; trascinare il suo ● verso una casella per applicarlo lì.',
 ];

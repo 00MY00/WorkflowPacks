@@ -187,4 +187,5 @@ return [
     'focus_selection' => 'Partial view: :count selected blocks and their links',
     'menu_refile'              => 'File again into the folders (:count)',
     'refile_confirm'           => 'The existing tickets of these mailboxes will be looked at: those matching the conditions of a rule ("New" counts as matched) or that it has already handled get their e-mail filed into its folder, even when it was moved into another folder (never from the trash). When several rules match, the last one in the order of Workflows wins. Only the filing is done: status, assignment, forward… are not touched. Continue?',
+    'help_touch'     => 'One finger: move around. Two fingers: pinch to zoom. Tap: select; double tap: edit a rule or isolate a mailbox (on the background: zoom in). Long press on a block: quick actions; on the background, then slide: selection rectangle. A selected block moves with the finger; drag its ● to a mailbox to apply it there.',
 ];

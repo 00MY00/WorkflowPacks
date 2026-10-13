@@ -102,14 +102,15 @@
         </div>
         <div class="wpg-toasts" aria-live="polite"></div>
     </div>
-    <p class="wpg-help">{{ __('workflowpacks::graph.help') }}</p>
+    <p class="wpg-help wpg-help-mouse">{{ __('workflowpacks::graph.help') }}</p>
+    <p class="wpg-help wpg-help-touch">{{ __('workflowpacks::graph.help_touch') }}</p>
     <div class="wpg-overlay"></div>
 </div>
 @endsection
 
 @section('javascripts')
     @parent
-    @foreach (['icons', 'layout', 'textfit', 'model', 'api', 'view', 'minimap', 'inspector', 'editor', 'menu', 'app'] as $wpg_js)
+    @foreach (['icons', 'layout', 'textfit', 'gestures', 'model', 'api', 'view', 'minimap', 'inspector', 'editor', 'menu', 'app'] as $wpg_js)
         <script src="{{ asset(\Module::getPublicPath('workflowpacks').'/js/graph/'.$wpg_js.'.js') }}?v={{ \Modules\WorkflowPacks\Services\Update\Updater::currentVersion() }}" {!! \Helper::cspNonceAttr() !!}></script>
     @endforeach
     <script {!! \Helper::cspNonceAttr() !!}>WPGraph.icons.define(document.getElementById('wpg-toolbar-defs'));</script>

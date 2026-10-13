@@ -12,15 +12,17 @@ class CreateWorkflowpacksRetentionTable extends Migration
 {
     public function up()
     {
-        Schema::create('workflowpacks_retention', function (Blueprint $table) {
-            $table->increments('id');
-            $table->string('folder', 191)->unique();          // as written in the rules: "Newsletters/Promotions"
-            $table->unsignedInteger('number');
-            $table->string('metric', 1);                      // i (minutes) | h (hours) | d (days)
-            $table->string('mode', 10)->default('trash');     // trash | delete
-            $table->unsignedInteger('updated_by')->nullable();
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('workflowpacks_retention')) {
+            Schema::create('workflowpacks_retention', function (Blueprint $table) {
+                $table->increments('id');
+                $table->string('folder', 191)->unique();          // as written in the rules: "Newsletters/Promotions"
+                $table->unsignedInteger('number');
+                $table->string('metric', 1);                      // i (minutes) | h (hours) | d (days)
+                $table->string('mode', 10)->default('trash');     // trash | delete
+                $table->unsignedInteger('updated_by')->nullable();
+                $table->timestamps();
+            });
+        }
     }
 
     public function down()

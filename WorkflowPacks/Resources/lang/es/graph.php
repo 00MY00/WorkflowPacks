@@ -186,4 +186,5 @@ return [
     'focus_selection' => 'Vista parcial: :count bloques seleccionados y sus enlaces',
     'menu_refile'              => 'Archivar de nuevo en las carpetas (:count)',
     'refile_confirm'           => 'Se examinarán los tickets existentes de estos buzones: los que cumplen las condiciones de una regla («Nuevo» cuenta como cumplido) o que ya trató se archivan en su carpeta, aunque el correo se haya movido a otra carpeta (nunca desde la papelera). Si varias reglas encajan, gana la última en el orden de Workflows. Solo se archiva: estado, asignación, reenvío… no se tocan. ¿Continuar?',
+    'help_touch'     => 'Un dedo: desplazarse. Dos dedos: pellizcar para hacer zoom. Tocar: seleccionar; tocar dos veces: editar una regla o aislar un buzón (en el fondo: acercar). Pulsación larga en un bloque: acciones rápidas; en el fondo y luego deslizar: rectángulo de selección. Un bloque seleccionado se mueve con el dedo; arrastrar su ● hacia un buzón para aplicarlo allí.',
 ];

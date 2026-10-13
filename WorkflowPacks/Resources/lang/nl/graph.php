@@ -186,4 +186,5 @@ return [
     'focus_selection' => 'Deelweergave: :count geselecteerde blokken en hun verbindingen',
     'menu_refile'              => 'Opnieuw opbergen in de mappen (:count)',
     'refile_confirm'           => 'De bestaande tickets van deze mailboxen worden bekeken: tickets die aan de voorwaarden van een regel voldoen ("Nieuw" telt als voldaan) of die ze al heeft behandeld krijgen hun e-mail in haar map, ook als die naar een andere map verplaatst is (nooit vanuit de prullenbak). Passen meerdere regels, dan wint de laatste in de volgorde van Workflows. Alleen het opbergen gebeurt: status, toewijzing, doorsturen… blijven ongewijzigd. Doorgaan?',
+    'help_touch'     => 'Eén vinger: verschuiven. Twee vingers: knijpen om te zoomen. Tikken: selecteren; dubbel tikken: een regel bewerken of een mailbox isoleren (op de achtergrond: inzoomen). Lang drukken op een blok: snelle acties; op de achtergrond en dan schuiven: selectierechthoek. Een geselecteerd blok beweegt met de vinger; sleep zijn ● naar een mailbox om het daar toe te passen.',
 ];

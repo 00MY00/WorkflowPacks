@@ -4,6 +4,35 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [1.15.0] - 2026-10-12
+
+### Ajouté
+- **Schéma sur téléphone et tablette :** les gestes tactiles habituels.
+  - un doigt pour se déplacer, avec élan après un geste rapide ;
+  - deux doigts pour zoomer autour des doigts ;
+  - toucher pour sélectionner ;
+  - toucher deux fois pour ouvrir (sur le fond : zoomer) ;
+  - appui long sur un bloc pour les actions rapides ;
+  - appui long sur le fond puis glisser pour un rectangle de sélection ;
+  - un bloc sélectionné se déplace avec le doigt ; un bloc non sélectionné déplace la vue, pour pouvoir parcourir un
+    schéma plein ;
+  - le ● et le coin d'agrandissement d'un bloc sélectionné ont des zones de toucher élargies.
+  Voir [docs/schema.md](docs/schema.md#téléphone-et-tablette).
+
+### Modifié
+- **Sur téléphone, le panneau d'un bloc s'ouvre en bas de l'écran** (moitié de la hauteur), le schéma reste visible
+  au-dessus. Menus, boutons et liens sont plus grands au doigt, et l'aide sous le schéma décrit les gestes tactiles.
+- Le double toucher prend l'heure du geste, pas celle de son traitement : une page occupée après le premier toucher ne
+  le fait plus manquer.
+
+## [1.14.1] - 2026-10-12
+
+### Modifié
+- **Migrations :** une table déjà présente n'est plus recréée, par exemple après une installation interrompue ou une
+  base restaurée. Elle est gardée telle quelle, comme le faisait déjà la table des dossiers des tickets.
+- **Documentation :** [docs/api-dossiers.md](docs/api-dossiers.md) liste ce que RefreshGlobal 1.8.0 lit de Workflow
+  Packs (tables, routes, ordre de suppression), à garder stable.
+
 ## [1.14.0] - 2026-10-12
 
 ### Ajouté

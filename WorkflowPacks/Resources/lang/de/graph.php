@@ -186,4 +186,5 @@ return [
     'focus_selection' => 'Teilansicht: :count ausgewählte Blöcke und ihre Verbindungen',
     'menu_refile'              => 'Erneut in die Ordner ablegen (:count)',
     'refile_confirm'           => 'Die bestehenden Tickets dieser Postfächer werden geprüft: Tickets, die die Bedingungen einer Regel erfüllen („Neu“ gilt als erfüllt) oder die sie schon bearbeitet hat, werden mit ihrer E-Mail in ihren Ordner gelegt, auch wenn sie in einen anderen Ordner verschoben wurde (nie aus dem Papierkorb). Passen mehrere Regeln, gewinnt die letzte in der Reihenfolge von Workflows. Nur das Ablegen wird ausgeführt: Status, Zuweisung, Weiterleitung… bleiben unberührt. Fortfahren?',
+    'help_touch'     => 'Ein Finger: verschieben. Zwei Finger: zum Zoomen auseinanderziehen. Tippen: auswählen; doppelt tippen: Regel bearbeiten oder Postfach isolieren (auf dem Hintergrund: vergrößern). Langes Drücken auf einen Block: Schnellaktionen; auf den Hintergrund, dann ziehen: Auswahlrechteck. Ein ausgewählter Block folgt dem Finger; seinen ● zu einem Postfach ziehen, um ihn dort anzuwenden.',
 ];

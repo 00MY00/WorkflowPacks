@@ -186,4 +186,5 @@ return [
     'focus_selection' => 'Visão parcial: :count blocos selecionados e suas ligações',
     'menu_refile'              => 'Arquivar novamente nas pastas (:count)',
     'refile_confirm'           => 'Os tickets existentes destas caixas serão examinados: os que cumprem as condições de uma regra ("Novo" conta como cumprido) ou que ela já tratou têm o e-mail arquivado na sua pasta, mesmo se ele foi movido para outra pasta (nunca a partir da lixeira). Se várias regras servirem, vence a última na ordem do Workflows. Só o arquivamento é feito: status, atribuição, encaminhamento… não são alterados. Continuar?',
+    'help_touch'     => 'Um dedo: mover-se. Dois dedos: pinçar para dar zoom. Tocar: selecionar; tocar duas vezes: editar uma regra ou isolar uma caixa (no fundo: aproximar). Toque longo em um bloco: ações rápidas; no fundo e depois deslizar: retângulo de seleção. Um bloco selecionado se move com o dedo; arraste o seu ● para uma caixa para aplicá-lo lá.',
 ];

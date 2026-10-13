@@ -88,6 +88,22 @@ l'action : la ligne n'existera plus ensuite.
 Une vérification quotidienne efface aussi les lignes des tickets supprimés autrement (directement dans la base,
 par exemple).
 
+## Ce que lit RefreshGlobal (à garder stable)
+
+RefreshGlobal 1.8.0 et plus récent (`Services/AutoFolders.php`) lit, **en lecture seule**, les éléments suivants de
+Workflow Packs. Ne pas les renommer ni changer leur sens sans adapter RefreshGlobal en même temps :
+
+| Élément | Utilisé pour |
+|---|---|
+| table `workflowpacks_ticket_folders` : `conversation_id`, `mailbox_id`, `folder`, `label` (séparateur `" › "`), `path`, `state` (`filed`), `filed_at`, `updated_at` | étiquette des tickets, filtre et comptage par dossier |
+| ordre de suppression : RefreshGlobal à la priorité 20, Workflow Packs à 1000 sur `conversations.before_delete_forever` | RefreshGlobal copie `path` dans sa file « corbeille du serveur » avant que la ligne disparaisse |
+| table `workflowpacks_retention` : `folder`, `number`, `metric` (`i`, `h`, `d`), `mode` (`trash`, `delete`) | colonne « nettoyage » de sa page de synthèse |
+| routes `workflowpacks.graph` et `workflowpacks.history` | liens vers le schéma et l'historique |
+| `WorkflowPacksServiceProvider::userCanUse($user)` | ces liens ne sont montrés qu'aux utilisateurs qui ont accès au module |
+
+RefreshGlobal détecte la fonction avec `App\Module::isActive('workflowpacks')`, `Schema::hasTable` et
+`Schema::hasColumns`.
+
 ## À savoir
 
 - Le dossier est celui du **dernier e-mail du client rangé** par le module dans ce ticket. Les e-mails plus anciens

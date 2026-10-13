@@ -190,7 +190,10 @@
   .wpg-stage { height: calc(100vh - 260px); min-height: 380px; }
   .wpg-btn span { display: none; }
   .wpg-minimap, .wpg-legend { display: none; }
-  .wpg-inspector { width: 100%; max-width: 100%; }
+  /* phone: the side panel becomes a sheet at the bottom, the diagram stays visible (and touchable) above it */
+  .wpg-inspector { top: auto; left: 0; width: 100%; max-width: 100%; height: 52%; border-left: 0; border-top: 1px solid var(--g-border);
+    border-radius: 16px 16px 0 0; box-shadow: 0 -8px 24px rgba(15, 23, 42, .12); transform: translateY(105%); }
+  .wpg-inspector.open { transform: none; }
   .wpg-row2, .wpg-cond, .wpg-act { grid-template-columns: 1fr; }
   .wpg-search input { width: 110px; }
   .wpg-toolbar .wpg-label { display: none; }
@@ -239,3 +242,20 @@
 .wpg-canvas.space-pan { cursor: grab; }
 .wpg-canvas.panning { cursor: grabbing; }
 .wpg-lasso { fill: rgba(37, 99, 235, .10); stroke: #2563eb; stroke-width: 1.5; stroke-dasharray: none; }
+
+/* touch screens (view.js, gestures.js): no browser gesture or callout on the diagram, larger areas for a finger */
+.wpg-canvas { -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+.wpg-handle.wpg-touch-hit, .wpg-grip.wpg-touch-hit { fill: transparent; stroke: none; opacity: 0; pointer-events: none; }
+.is-touch .wpg-node.selected .wpg-touch-hit { pointer-events: all; }
+.is-touch .wpg-node.selected .wpg-grip:not(.wpg-touch-hit) { opacity: .8; }
+.is-touch .wpg-edge-hit { stroke-width: 28; }
+/* long press on the background: the selection rectangle is drawn by the finger */
+.wpg-canvas.pressing { cursor: crosshair; }
+.wpg-help-touch { display: none; }
+@media (hover: none) and (pointer: coarse) {
+  .wpg-help-mouse { display: none; }
+  .wpg-help-touch { display: block; }
+  .wpg-menu { min-width: 0; max-width: calc(100vw - 16px); }
+  .wpg-menu-item { padding: 11px 10px; font-size: 15px; }
+  .wpg-btn { min-height: 40px; min-width: 40px; }
+}
