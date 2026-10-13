@@ -87,6 +87,23 @@
         if (!node) { return this.hide(); }
         this.current = { method: 'show', args: [key] };
         this['show_' + node.kind](node);
+        if (WPGraph.next.can(node)) { this.nextSteps(key); }
+    };
+
+    /** "Add a next step": the same list as the "+" of the block (next.js), as buttons at the end of its panel. */
+    Inspector.prototype.nextSteps = function (key) {
+        var self = this, t = this.t, body = this.panel.querySelector('.wpg-ins-body');
+        if (!body) { return; }
+        var box = h('div', { class: 'wpg-ins-next' });
+        body.appendChild(box);
+        this.app.next.items(key).then(function (items) {
+            // the panel may show another block by now
+            if (!items.length || !self.current || self.current.args[0] !== key || !box.isConnected) { return; }
+            self.section(box, t.next_section);
+            box.appendChild(h('div', { class: 'wpg-ins-actions wpg-next-list' }, items.map(function (item) {
+                return self.button(item[0], item[1], item[2]);
+            })));
+        }).catch(function () { /* the list is only a shortcut: nothing shown */ });
     };
 
     Inspector.prototype.show_mailbox = function (node) {

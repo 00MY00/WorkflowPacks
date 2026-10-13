@@ -58,7 +58,10 @@
 
     // ---------------------------------------------------------------------------------------------- open
 
-    /** opts: { mailboxId, workflowId?, packRule? } */
+    /**
+     * opts: { mailboxId, workflowId?, packRule?, rule? (new rule, filled in: next.js), addAction? (existing rule: an
+     * action added at the end, to be completed and saved) }
+     */
     Editor.prototype.open = function (opts) {
         var self = this, app = this.app;
         this.opts = opts;
@@ -70,9 +73,10 @@
             if (res[0]) {
                 self.fromRule(res[0].rule);
                 self.packInfo = res[0].pack;
+                if (opts.addAction) { self.state.actions.push({ type: opts.addAction.type, value: opts.addAction.value }); }
             } else {
                 self.packInfo = null;
-                self.fromRule({ name: '', type: 'automatic', conditions: { all: [{ type: self.firstType('conditions', 'subject'), operator: '' }] }, actions: [] });
+                self.fromRule(opts.rule || { name: '', type: 'automatic', conditions: { all: [{ type: self.firstType('conditions', 'subject'), operator: '' }] }, actions: [] });
             }
             self.render();
             self.overlay.classList.add('open');

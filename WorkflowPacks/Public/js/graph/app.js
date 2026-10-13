@@ -41,6 +41,8 @@
                 // one block: its panel; several (Shift + click / Shift + drag): what to do with all of them
                 var keys = Object.keys(self.view.selected);
                 if (keys.length > 1) { self.inspector.showMulti(keys); } else if (keys.length) { self.inspector.show(keys[0]); } else { self.inspector.hide(); }
+                // phone: the panel opens at the bottom (graph.css), the block stays visible above it
+                if (keys.length === 1 && window.matchMedia && window.matchMedia('(max-width: 767px)').matches) { self.view.reveal(keys[0], 0.46); }
                 self.minimap.update();
             },
             onEdge: function (edge) { self.inspector.showEdge(edge); },
@@ -49,6 +51,7 @@
             onOpen: function (key) { self.open(key); },
             onResize: function (key, size, done) { self.resize(key, size, done); },
             onMenu: function (x, y, keys) { self.menu.show(x, y, keys); },
+            onNext: function (key, x, y) { self.next.open(key, x, y); },
             onMenuClose: function () { if (self.menu) { self.menu.close(); } },
             onView: function () { if (self.minimap) { self.minimap.update(); } }
         });
@@ -56,6 +59,7 @@
         this.inspector = new WPGraph.Inspector(root.querySelector('.wpg-inspector'), this);
         this.editor = new WPGraph.Editor(root.querySelector('.wpg-overlay'), this);
         this.menu = new WPGraph.Menu(this);
+        this.next = new WPGraph.Next(this);
         this.bindToolbar();
         this.bindKeys();
         this.load(true);

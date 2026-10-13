@@ -79,6 +79,28 @@ Liens d'une règle vers une boîte :
 - La **recherche** trouve un bloc par son nom.
 - Cliquer sur un bloc met en avant ses voisins et estompe le reste. `Maj` + clic sélectionne plusieurs blocs.
 
+## Ajouter une suite (le « + » d'un bloc)
+
+Comme les flèches de draw.io : un bloc sélectionné affiche un **« + »** à sa droite. Il propose ce qui peut venir
+après ce bloc, seulement ce que Workflows permet pour la boîte. La même liste se trouve dans le panneau du bloc
+(« Ajouter une suite ») et dans ses actions rapides (« Ajouter une suite… »).
+
+| Bloc | Suites proposées |
+|---|---|
+| boîte | nouvelle règle pour cette boîte ; ranger les nouveaux e-mails dans un dossier e-mail ; fermer les tickets sans réponse depuis 7 jours |
+| règle | puis ranger dans un dossier e-mail, puis changer le statut, puis assigner : seulement les actions qu'elle ne fait pas encore |
+| dossier e-mail | supprimer ses e-mails après X jours (administrateurs) ; ranger une partie dans un sous-dossier |
+| statut (Fermées, En attente…) | mettre ces tickets à la corbeille après 30 jours sans message du client ; fermer après 7 jours sans réponse (sauf Fermées) |
+
+Rien n'est enregistré directement :
+- **Règle :** l'éditeur s'ouvre rempli, pour la compléter (un nom de dossier, par exemple), la vérifier, puis
+  l'enregistrer. Une nouvelle règle est créée **désactivée** et ne s'applique pas aux tickets existants.
+- **Nettoyage d'un dossier :** le panneau du dossier s'ouvre sur son réglage.
+
+Les délais proposés (7 et 30 jours) se modifient dans l'éditeur.
+
+![Ajouter une suite](screenshots/schema-suite.png)
+
 ## Disposer les blocs
 
 | Disposition | Principe |
@@ -169,6 +191,7 @@ grands, et l'aide sous le schéma décrit les gestes tactiles.
 
 | Fichier | Rôle |
 |---|---|
+| `Public/js/graph/next.js` | « Ajouter une suite » : ce qui peut suivre chaque bloc (fonction pure testée avec Node), puis l'éditeur pré-rempli |
 | `Public/js/graph/gestures.js` | calculs des gestes tactiles (pincement, élan, toucher, double toucher), testés avec Node |
 | `Services/Graph/GraphBuilder.php` | blocs et liens, limités aux boîtes autorisées ; destinations déduites des actions |
 | `Services/Graph/RuleEditor.php` | détail, catalogue, création / modification, activation, application à une autre boîte |
