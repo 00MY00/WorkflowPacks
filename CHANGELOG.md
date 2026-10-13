@@ -4,6 +4,22 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [1.16.0] - 2026-10-13
+
+### Ajouté
+- **Schéma : « Ajouter une suite », comme les flèches de draw.io.** Un « + » à droite d'un bloc sélectionné propose
+  ce qui peut venir après lui. On le retrouve aussi dans le panneau du bloc et dans ses actions rapides.
+  - **Boîte :** nouvelle règle, ranger les nouveaux e-mails dans un dossier, fermer les tickets sans réponse depuis
+    7 jours.
+  - **Règle :** puis ranger dans un dossier, changer le statut ou assigner.
+  - **Dossier e-mail :** supprimer ses e-mails après X jours, ranger une partie dans un sous-dossier.
+  - **Statut :** mettre à la corbeille après 30 jours sans message du client, fermer après 7 jours sans réponse.
+
+  Seul ce que Workflows propose pour la boîte est listé. L'éditeur s'ouvre pré-rempli, pour vérifier puis
+  enregistrer, et une nouvelle règle est créée désactivée. Voir [docs/schema.md](docs/schema.md).
+- **Sur téléphone :** quand un bloc est sélectionné, le schéma se décale pour qu'il reste visible au-dessus du
+  panneau, avec son « + ».
+
 ## [1.15.0] - 2026-10-12
 
 ### Ajouté

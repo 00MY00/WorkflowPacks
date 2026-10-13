@@ -81,6 +81,10 @@
             more.push([t.menu_export, 'external', function () { app.exportRules(inst); }]);
         }
         if (more.length) { groups.push(more); }
+        // one block: what can follow it (same list as its "+")
+        if (nodes.length === 1 && WPGraph.next.can(nodes[0])) {
+            groups.push([[t.menu_next, 'plus', function () { app.next.open(nodes[0].key, x, y); }]]);
+        }
         // the blocks themselves
         var blocks = [[t.menu_focus, 'focus', function () { app.focusKeys(keys); }]];
         if (nodes.length > 1) {
@@ -94,8 +98,14 @@
         blocks.push([t.menu_autosize, 'minus', function () { app.autoSize(keys); }]);
         blocks.push([t.menu_deselect, 'search', function () { app.clearSelection(); }]);
         groups.push(blocks);
+        this.render(x, y, t.menu_title.replace(':count', keys.length), groups);
+    };
 
-        var menu = h('div', { class: 'wpg-menu', role: 'menu' }, [h('div', { class: 'wpg-menu-head', text: t.menu_title.replace(':count', keys.length) })]);
+    /** A menu where the pointer is: a title, then groups of items ([label, icon, action, sub-items]). */
+    Menu.prototype.render = function (x, y, title, groups) {
+        var app = this.app, self = this;
+        this.close();
+        var menu = h('div', { class: 'wpg-menu', role: 'menu' }, [h('div', { class: 'wpg-menu-head', text: title })]);
         groups.forEach(function (items, gi) {
             if (gi) { menu.appendChild(h('div', { class: 'wpg-menu-sep' })); }
             items.forEach(function (item) { menu.appendChild(self.item(item)); });

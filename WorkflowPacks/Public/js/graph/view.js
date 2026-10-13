@@ -133,6 +133,14 @@
             el('circle', { class: 'wpg-handle wpg-touch-hit', cx: 0, cy: s[1] / 2, r: 22 }, g);
         }
         el('rect', { class: 'wpg-grip wpg-touch-hit', x: s[0] - 30, y: s[1] - 30, width: 34, height: 34 }, g);
+        // "+" on the right of a selected block: what can follow it (next.js), like the arrows of draw.io
+        if (WPGraph.next && WPGraph.next.can(n)) {
+            var next = el('g', { class: 'wpg-next', transform: 'translate(' + (s[0] + 20) + ',' + (s[1] / 2) + ')' }, g);
+            el('title', {}, next).textContent = this.opts.texts.next_plus || '';
+            el('circle', { class: 'wpg-next-hit', r: 22 }, next);
+            el('circle', { class: 'wpg-next-dot', r: 11 }, next);
+            el('path', { class: 'wpg-next-plus', d: 'M-5,0H5M0,-5V5' }, next);
+        }
     };
 
     /** Rule enabled in how many of its mailboxes (rules deleted from Workflows are not counted). */
@@ -284,6 +292,32 @@
         this.setTransform();
     };
 
+    /**
+     * A block (with its "+") brought into the part of the view that is not covered: the top `fraction` of its
+     * height (phone: the panel of the block covers the bottom). Moves smoothly, and only when needed.
+     */
+    View.prototype.reveal = function (key, fraction) {
+        var n = this.model.nodes[key], p = this.model.pos[key];
+        if (!n || !p) { return; }
+        var s = L.size(n), r = this.svg.getBoundingClientRect(), k = this.t.k;
+        var top = p[1] * k + this.t.y, bottom = (p[1] + s[1]) * k + this.t.y;
+        var left = p[0] * k + this.t.x, right = (p[0] + s[0] + 44) * k + this.t.x;
+        var limit = r.height * (fraction || 1);
+        var dy = top < 12 || bottom > limit - 12 ? limit / 2 - (top + bottom) / 2 : 0;
+        var dx = left < 8 || right > r.width - 8 ? r.width / 2 - (left + right) / 2 : 0;
+        if (!dx && !dy) { return; }
+        var self = this, steps = 10, done = 0;
+        this.stopGlide();
+        var frame = function () {
+            self.t.x += dx / steps;
+            self.t.y += dy / steps;
+            self.setTransform();
+            done++;
+            self.glideId = done < steps ? window.requestAnimationFrame(frame) : null;
+        };
+        this.glideId = window.requestAnimationFrame(frame);
+    };
+
     View.prototype.select = function (keys, edgeIndex) {
         this.selected = {};
         (keys || []).forEach(function (k) { this.selected[k] = true; }, this);
@@ -340,6 +374,10 @@
             return;
         }
         if (e.button !== 0) { return; }
+        if (node && e.target.closest('.wpg-next')) {
+            if (this.opts.onNext) { this.opts.onNext(node.getAttribute('data-key'), e.clientX, e.clientY); }
+            return;
+        }
         this.svg.setPointerCapture(e.pointerId);
         if (handle && node) {
             this.mode = { type: 'connect', from: node.getAttribute('data-key') };
@@ -570,7 +608,12 @@
         var key = nodeEl ? nodeEl.getAttribute('data-key') : null;
         var edge = e.target.closest('.wpg-edge-hit');
         var start = [e.clientX, e.clientY];
-        // the handle and the grip only on a selected block: elsewhere a finger on a block moves the view
+        // the "+", the handle and the grip only on a selected block: elsewhere a finger on a block moves the view
+        if (key && this.selected[key] && e.target.closest('.wpg-next')) {
+            this.mode = { type: 'done' };
+            if (this.opts.onNext) { this.opts.onNext(key, e.clientX, e.clientY); }
+            return;
+        }
         if (key && this.selected[key] && e.target.closest('.wpg-handle')) {
             this.mode = { type: 'connect', from: key, touch: true };
             this.svg.classList.add('connecting');

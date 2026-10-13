@@ -1,6 +1,6 @@
-# Résultats des tests — Workflow Packs 1.15.0
+# Résultats des tests — Workflow Packs 1.16.0
 
-Date : 2026-10-12. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
+Date : 2026-10-13. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
 ## Versions effectivement vérifiées
 
@@ -12,6 +12,15 @@ Date : 2026-10-12. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 1.16.0 — « Ajouter une suite » dans le schéma
+
+| Série | Résultat |
+|---|---|
+| JavaScript | `next.test.js` (6) : blocs qui ont un « + » ; suites de boîte, règle (actions qu'elle ne fait pas encore), dossier (nettoyage seulement pour les administrateurs, sous-dossier), statut (corbeille, fermeture ; rien sans le catalogue) ; règles préparées automatiques, jamais appliquées aux tickets existants |
+| Intégration (87 tests, 652 assertions) | suite entière inchangée |
+| Navigateur, ordinateur | « + » d'un dossier : menu « Après « [WP] Factures » », nettoyage ouvert avec le champ prêt, même liste dans le panneau ; statut Fermées : éditeur pré-rempli (statut = Fermé, dernier message du client il y a plus de 30 jours, mise à la corbeille signalée comme sensible), enregistré, règle ajoutée au schéma ; boîte : 3 suites ; règle : l'action proposée ajoutée à ses actions ; clic droit : « Ajouter une suite… » ; aucune erreur |
+| Navigateur, téléphone simulé | bloc touché en bas de l'écran : le schéma se décale au-dessus du panneau ; « + » touché à côté du point : suites ; les 9 gestes tactiles toujours bons |
 
 ## 1.15.0 — schéma au doigt (téléphone, tablette)
 
