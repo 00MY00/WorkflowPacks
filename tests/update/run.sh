@@ -7,12 +7,12 @@
 #   bash tests/update/run.sh cli:v1.0.0 ...     # some scenarios
 #
 # Scenarios (start version = git commit or tag of this repository):
-#   cli:<ref>        php artisan workflowpacks:update            (what the daily automatic update runs)
-#   button:<ref>     "Update now" -> request -> php artisan schedule:run (what the button triggers)
+#   native:<ref>     FreeScout's own module update (Manage > Modules > Update), through latestVersionUrl /
+#                    latestVersionZipUrl of module.json: what UpdateGuard relies on too (tests/update/native-update.php)
 #   install:<ref>    sudo bash install.sh (latest script of the release)
 #   install-local:<ref>  sudo bash install.sh of this working copy (downloads the latest release, SHA-256 checked)
 #
-# Checks after each update: installed version = latest release, no rollback, workflowpacks:check not blocking,
+# Checks after each update: installed version = latest release, workflowpacks:health ok, workflowpacks:check not blocking,
 # tables workflowpacks_resources (1.2) and workflowpacks_layouts (1.3) present, data of the previous version kept (packs, links, workflows).
 # Results: tests/update/last-run.md
 #
@@ -30,7 +30,7 @@ APP="wp-upd-app"
 RESULTS="$ROOT/tests/update/last-run.md"
 LATEST_URL="https://github.com/00MY00/WorkflowPacks/releases/latest/download"
 SCENARIOS=("$@")
-[ "${#SCENARIOS[@]}" -gt 0 ] || SCENARIOS=(cli:e875b74 cli:8cae637 button:v1.2.0 cli:v1.2.2 install:e875b74 install-local:8cae637)
+[ "${#SCENARIOS[@]}" -gt 0 ] || SCENARIOS=(native:v1.2.2 native:v1.14.0 install:e875b74 install-local:8cae637)
 PASS=0; FAILED=0
 WORK="$(mktemp -d)"
 # host path for "docker cp" (Git Bash on Windows: /tmp/... -> C:/Users/.../Temp/...)
@@ -108,7 +108,7 @@ verify() {
     local version state after resources
     version="$(installed)"
     expect "$name" "version installée = $latest" "$latest" "$version"
-    if printf '%s' "$output" | grep -qiE "Rolled back to|rolled back:|Previous version restored|Version précédente restaurée|Putting the previous version back"; then record "$name" "aucun retour arrière" FAIL "$(printf '%s' "$output" | tail -n 3 | tr '\n' ' ')"; else record "$name" "aucun retour arrière" PASS; fi
+    expect "$name" "workflowpacks:health (code de sortie)" "0" "$(www 'php artisan workflowpacks:health >/dev/null 2>&1; echo $?')"
     state="$(www 'php artisan workflowpacks:check --json' | sed -n 's/.*"state": "\([a-z]*\)".*/\1/p' | head -n 1)"
     expect "$name" "workflowpacks:check" "ok" "${state:-?}"
     resources="$(php_eval 'echo Schema::hasTable("workflowpacks_resources") ? "yes" : "no";')"
@@ -129,19 +129,10 @@ for scenario in "${SCENARIOS[@]}"; do
     name="$mode depuis $from ($ref)"
     record "$name" "version de départ installée" PASS "$from, données $before"
     case "$mode" in
-        cli)
-            out="$(www 'php artisan workflowpacks:update 2>&1' || true)"
-            ;;
-        button)
-            # what "Update now" does: a request in the options, picked up by the scheduler within a minute
-            php_eval 'Modules\WorkflowPacks\Services\Update\Updater::requestUpdate(); echo "requested";' >/dev/null
-            # like cron: a first run starts FreeScout's queue worker (it never ends, as on a real server); the
-            # next minute's run skips it (withoutOverlapping) and runs the requested update
-            docker exec -d -u www-data -w /var/www/html "$APP" php artisan schedule:run
-            sleep 8
-            out="$(www 'timeout 900 php artisan schedule:run 2>&1' || true)"
-            pending="$(php_eval 'echo Modules\WorkflowPacks\Services\Update\Updater::pendingRequest() === "" ? "cleared" : "pending";' || true)"
-            expect "$name" "demande traitée par le planificateur" "cleared" "$pending"
+        native)
+            docker cp "$ROOT/tests/update/native-update.php" "$APP:/tmp/native-update.php"
+            out="$(www "php /tmp/native-update.php $LATEST_URL 2>&1" || true)"
+            expect "$name" "mise à jour native de FreeScout" "success" "$(printf '%s' "$out" | tail -n 1 | awk '{print $1}')"
             ;;
         install)
             docker exec "$APP" sh -c "curl -fsSL -o /tmp/install.sh $LATEST_URL/install.sh"

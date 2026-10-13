@@ -15,7 +15,7 @@
 #
 set -Eeuo pipefail
 
-SCRIPT_VERSION="1.17.0"   # same as WorkflowPacks/module.json (checked by tools/build-release.sh)
+SCRIPT_VERSION="2.0.0"   # same as WorkflowPacks/module.json (checked by tools/build-release.sh)
 REPO_URL="${WP_REPO_URL:-https://github.com/00MY00/WorkflowPacks}"
 MODULE="WorkflowPacks"
 ALIAS="workflowpacks"
@@ -178,7 +178,7 @@ backup() {
         }
         echo json_encode($out);
     ') >"$BACKUP/tables.json" 2>>"$LOG" || warn "$(t "Sauvegarde des tables impossible (base inaccessible ?) : voir le journal." "Cannot save the tables (database unreachable?): see the log.")"
-    # the whole work folder, not only backups/: the in-app update (cron, web server user) writes its lock there
+    # the whole work folder, not only backups/: the module (web server user) writes there
     chown -R "$WEB_USER":"$WEB_USER" "${FS_PATH}/storage/app/workflowpacks"
     ok "$(t "Sauvegarde : $BACKUP" "Backup: $BACKUP")"
 }
@@ -189,7 +189,7 @@ fetch_module() {
     local src="$SOURCE"
     if [ -z "$src" ]; then
         if [ "$DRY_RUN" -eq 1 ]; then printf '  (dry-run) download\n'; return 0; fi
-        # latest published release, checked against its SHA256SUMS (same source as the in-app update)
+        # latest published release, checked against its SHA256SUMS (same source as FreeScout's Modules page and UpdateGuard)
         src="$WORK/WorkflowPacks.zip"
         if curl -fsSL "${REPO_URL}/releases/latest/download/WorkflowPacks.zip" -o "$src" 2>>"$LOG" \
             && curl -fsSL "${REPO_URL}/releases/latest/download/SHA256SUMS" -o "$WORK/SHA256SUMS" 2>>"$LOG"; then
@@ -250,8 +250,8 @@ install_module() {
 verify() {
     step "$(t "Vérification" "Verification")"
     if [ "$DRY_RUN" -eq 1 ]; then printf '  (dry-run) php artisan workflowpacks:check\n'; return 0; fi
-    # repairs installations made by earlier versions of this script (work folder left to root): the in-app update
-    # runs as the web server user and must be able to write there
+    # repairs installations made by earlier versions of this script (work folder left to root): the module runs as
+    # the web server user and must be able to write there
     if [ -d "${FS_PATH}/storage/app/workflowpacks" ]; then
         chown -R "$WEB_USER":"$WEB_USER" "${FS_PATH}/storage/app/workflowpacks" 2>>"$LOG" || true
     fi
@@ -264,8 +264,12 @@ verify() {
     else
         ok "$(t "Workflow Packs est opérationnel : menu Gérer › Workflow Packs." "Workflow Packs is ready: menu Manage › Workflow Packs.")"
     fi
-    # latest published version recorded now, so that the settings page shows "up to date" instead of "not checked yet"
-    (cd "$FS_PATH" && sudo -u "$WEB_USER" php artisan workflowpacks:update --check) >>"$LOG" 2>&1 || true
+    # health of the installed module (same command as UpdateGuard runs after an update)
+    if (cd "$FS_PATH" && sudo -u "$WEB_USER" php artisan workflowpacks:health) >>"$LOG" 2>&1; then
+        ok "$(t "Contrôle de santé du module : OK." "Module health check: OK.")"
+    else
+        warn "$(t "Contrôle de santé du module en échec : voir $LOG (php artisan workflowpacks:health)." "Module health check failed: see $LOG (php artisan workflowpacks:health).")"
+    fi
 }
 
 uninstall() {
@@ -300,7 +304,7 @@ main() {
     fetch_module
     install_module
     verify
-    printf '\n%s\n' "$(t "Terminé. Mises à jour : relancer ce script, ou Gérer › Workflow Packs › Diagnostic (mise à jour avec retour arrière automatique)." "Done. Updates: run this script again, or Manage › Workflow Packs › Diagnostic (update with automatic rollback).")"
+    printf '\n%s\n' "$(t "Terminé. Mises à jour : Gérer › Modules de FreeScout, ou le module UpdateGuard pour des mises à jour sécurisées (https://github.com/00MY00/UpdateGuard), ou relancer ce script." "Done. Updates: FreeScout's Manage › Modules, or the UpdateGuard module for safe updates (https://github.com/00MY00/UpdateGuard), or run this script again.")"
 }
 
 main "$@"

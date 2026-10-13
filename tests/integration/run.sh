@@ -98,6 +98,8 @@ php artisan config:clear
 log "workflowpacks:check"
 docker exec -u www-data -w /var/www/html "$APP" php artisan workflowpacks:check || true
 docker exec -u www-data -w /var/www/html "$APP" php artisan workflowpacks:check --pack=Modules/WorkflowPacks/Resources/packs/tri-emails-multilingue.json | tail -n 2
+log "workflowpacks:health"
+docker exec -u www-data -w /var/www/html "$APP" php artisan workflowpacks:health
 
 log "PHPUnit"
 docker exec "$APP" sh -c "curl -sSL -o /tmp/phpunit.phar $PHPUNIT_URL"

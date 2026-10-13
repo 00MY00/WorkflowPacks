@@ -69,12 +69,4 @@ return [
         'mailboxes'        => 100,
     ],
 
-    // ------------------------------------------------------------------------------------------------ updates
-    // Same mechanism as RefreshGlobal: module.json + WorkflowPacks.zip + SHA256SUMS of the latest GitHub release.
-    'update_url'             => env('WORKFLOWPACKS_UPDATE_URL', 'https://github.com/00MY00/WorkflowPacks/releases/latest/download'),
-    // no release published yet: current version of the main branch (no SHA256SUMS; HTTPS + checks + rollback)
-    'update_branch_manifest' => env('WORKFLOWPACKS_BRANCH_MANIFEST', 'https://raw.githubusercontent.com/00MY00/WorkflowPacks/main/WorkflowPacks/module.json'),
-    'update_branch_zip'      => env('WORKFLOWPACKS_BRANCH_ZIP', 'https://github.com/00MY00/WorkflowPacks/archive/refs/heads/main.zip'),
-    'auto_update_default'    => false,
-    'auto_update_time'       => '03:40',
 ];
