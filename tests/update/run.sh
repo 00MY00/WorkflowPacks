@@ -104,7 +104,7 @@ counts() { php_eval 'echo DB::table("workflowpacks_packs")->count()."/".DB::tabl
 installed() { www 'sed -n "s/^[[:space:]]*\"version\"[[:space:]]*:[[:space:]]*\"\([^\"]*\)\".*/\1/p" Modules/WorkflowPacks/module.json | head -n 1'; }
 
 verify() {
-    local name=$1 before=$2 output=$3
+    local name=$1 before=$2
     local version state after resources
     version="$(installed)"
     expect "$name" "version installée = $latest" "$latest" "$version"
@@ -146,7 +146,7 @@ for scenario in "${SCENARIOS[@]}"; do
             ;;
     esac
     printf '%s\n' "$out" | tail -n 5 >&2
-    verify "$name" "$before" "$out"
+    verify "$name" "$before"
 done
 
 {
