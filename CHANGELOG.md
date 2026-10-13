@@ -4,6 +4,32 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [2.0.0] - 2026-10-13
+
+### Modifié
+- **Les mises à jour passent par FreeScout ou par UpdateGuard.** Workflow Packs ne se met plus à jour lui-même.
+  - `module.json` déclare `latestVersionUrl` (`version.txt` de la dernière release) et `latestVersionZipUrl`
+    (`WorkflowPacks.zip`) : la page **Gérer › Modules** de FreeScout signale et installe les nouvelles versions.
+  - Avec le module [UpdateGuard](https://github.com/00MY00/UpdateGuard), la mise à jour est sécurisée (niveau
+    « Full Safe Update ») : SHA-256, sauvegarde, contrôle de santé, observation et retour arrière automatique.
+    Les migrations sont déclarées compatibles avec la version précédente.
+  - Les réglages et le Diagnostic indiquent qui met le module à jour. Sans UpdateGuard, son installation est
+    conseillée.
+  - Chaque release publie `version.txt`, inclus dans `SHA256SUMS`.
+
+### Ajouté
+- `php artisan workflowpacks:health [--json]` : contrôle de santé du module installé, utilisé par UpdateGuard et par
+  `install.sh`. Il vérifie fichiers, classes, vues, routes, fichiers publics, tables et migrations, en lecture seule,
+  et répond avec le code 0 s'il est sain, 1 sinon.
+
+### Supprimé
+- La mise à jour intégrée au module, et tout ce qui en dépendait :
+  - le bouton « Mettre à jour maintenant » et le bandeau ;
+  - la mise à jour automatique quotidienne ;
+  - la commande `workflowpacks:update` ;
+  - les routes `update-now`, `check-update` et `auto-update`.
+  Les options qu'elle enregistrait sont effacées par une migration.
+
 ## [1.17.0] - 2026-10-13
 
 ### Modifié

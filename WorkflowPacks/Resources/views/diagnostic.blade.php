@@ -22,11 +22,7 @@
     </ul>
 
     <h4>{{ __('workflowpacks::messages.update') }}</h4>
-    @include('workflowpacks::partials.update_state', ['back' => ''])
-    <p>
-        {{ __('workflowpacks::messages.auto_update') }} : <strong>{{ $autoUpdate ? 'ON' : 'OFF' }}</strong> —
-        <a href="{{ route('settings', ['section' => 'workflowpacks']) }}">{{ __('workflowpacks::messages.open_settings') }}</a>
-    </p>
+    @include('workflowpacks::partials.updates')
 
     @if ($catalog)
         <h4 class="wp-section">{{ __('workflowpacks::messages.catalog') }}</h4>

@@ -78,7 +78,8 @@ WorkflowPacks/
   Services/Plan/Planner       ce que ferait l'import (rien n'est écrit)
   Services/Plan/Importer      application en une transaction
   Services/Export/Exporter    export (modèles d'origine, remplacements explicites, secrets retirés)
-  Services/Update/Updater     mise à jour du module (mécanisme de RefreshGlobal)
+  Services/ModuleInfo         version, tables ; mises à jour par FreeScout (Modules) ou UpdateGuard
+  Console/HealthCommand       workflowpacks:health, contrôle de santé (UpdateGuard)
 ```
 
 Tables propres au module :

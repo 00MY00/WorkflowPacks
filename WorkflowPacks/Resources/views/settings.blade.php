@@ -1,11 +1,9 @@
 {{--
     Manage › Settings › Workflow Packs (included by resources/views/settings/view.blade.php through the "settings.view"
     filter). Same layout as RefreshGlobal's settings page: intro + links, sections with a grey band (subheader),
-    switches with their help below, Save button, then the version / update block (its own form, outside the settings
-    form). The settings form posts to FreeScout's own settings route, which saves the values in its options table.
+    switches with their help below, Save button, then who updates the module (FreeScout's Modules page, or
+    UpdateGuard). The settings form posts to FreeScout's own settings route, which saves the values in its options table.
 --}}
-@php $wp_U = '\Modules\WorkflowPacks\Services\Update\Updater'; @endphp
-<div class="margin-top">@include('workflowpacks::partials.update_banner', ['back' => 'settings'])</div>
 <p class="margin-top">{{ __('workflowpacks::messages.settings_intro') }}</p>
 <p>
     <a href="{{ route('workflowpacks.index') }}">{{ __('workflowpacks::messages.menu') }}</a>
@@ -14,24 +12,6 @@
 
 <form class="form-horizontal margin-top margin-bottom" method="POST" action="" autocomplete="off" id="wp-settings-form">
     {{ csrf_field() }}
-
-    <h3 class="subheader">{{ __('workflowpacks::messages.auto_update') }}</h3>
-    <div class="form-group">
-        <label for="wp-auto-update" class="col-sm-2 control-label">{{ __('workflowpacks::messages.auto_update_label') }}</label>
-        <div class="col-sm-6">
-            {{-- the hidden field is posted when the switch is off (an unchecked checkbox is not sent) --}}
-            <input type="hidden" name="settings[{{ $wp_U::OPTION }}]" value="0">
-            <div class="controls">
-                <div class="onoffswitch-wrap">
-                    <div class="onoffswitch">
-                        <input type="checkbox" name="settings[{{ $wp_U::OPTION }}]" value="1" id="wp-auto-update" class="onoffswitch-checkbox" @if (!empty($settings[$wp_U::OPTION])) checked="checked" @endif>
-                        <label class="onoffswitch-label" for="wp-auto-update"></label>
-                    </div>
-                </div>
-            </div>
-            <p class="form-help">{{ __('workflowpacks::messages.auto_update_help', ['time' => (string) config('workflowpacks.auto_update_time', '03:40')]) }}</p>
-        </div>
-    </div>
 
     @php $wp_I = '\Modules\WorkflowPacks\Services\Imap\ImapFolders'; @endphp
     <h3 class="subheader">{{ __('workflowpacks::messages.imap_title') }}</h3>
@@ -101,7 +81,7 @@
         });
     })();
 </script>
-<script src="{{ asset(\Module::getPublicPath('workflowpacks').'/js/workflowpacks.js') }}?v={{ \Modules\WorkflowPacks\Services\Update\Updater::currentVersion() }}" {!! \Helper::cspNonceAttr() !!}></script>
+<script src="{{ asset(\Module::getPublicPath('workflowpacks').'/js/workflowpacks.js') }}?v={{ \Modules\WorkflowPacks\Services\ModuleInfo::version() }}" {!! \Helper::cspNonceAttr() !!}></script>
 
 {{-- automatic clean-up of the managed e-mail folders: set from the side panel of a folder in the diagram --}}
 @php $wp_R = \Modules\WorkflowPacks\Services\Imap\Retention::all(); @endphp
@@ -130,7 +110,7 @@
     <div class="form-group">
         <label class="col-sm-2 control-label">Workflow Packs</label>
         <div class="col-sm-8 form-control-static">
-            @include('workflowpacks::partials.update_state', ['back' => 'settings'])
+            @include('workflowpacks::partials.updates')
         </div>
     </div>
 </div>

@@ -70,10 +70,12 @@ jobs:
             dist/WorkflowPacks.zip
             dist/install.sh
             dist/module.json
+            dist/version.txt
             dist/SHA256SUMS
 
-  # After each release: update from older versions to the release just published (CLI, "Update now" button through
-  # the scheduler, install.sh), with checks of version, rollback, migrations, data kept (tests/update/run.sh)
+  # After each release: update from older versions to the release just published, with FreeScout's own module update
+  # (what UpdateGuard relies on) and install.sh; checks of version, health command, migrations, data kept
+  # (tests/update/run.sh)
   update-e2e:
     if: startsWith(github.ref, 'refs/tags/v')
     needs: [release]

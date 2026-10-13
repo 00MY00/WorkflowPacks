@@ -2,127 +2,89 @@
 
 namespace Modules\WorkflowPacks\Tests\Feature;
 
-use Modules\WorkflowPacks\Services\Update\Updater;
+use Modules\WorkflowPacks\Services\ModuleInfo;
 use Modules\WorkflowPacks\Tests\TestCase;
 
-/** Manage › Settings › Workflow Packs: update options (same layout as RefreshGlobal), saved by FreeScout. */
+/**
+ * Manage › Settings › Workflow Packs (same layout as RefreshGlobal), saved by FreeScout; who updates the module:
+ * UpdateGuard when it is installed, else FreeScout's own Modules page (2.0.0: no built-in updater any more).
+ */
 class SettingsTest extends TestCase
 {
-    public function testTheSectionIsListedAndShowsTheUpdateOptions()
+    protected function tearDown(): void
+    {
+        \App\Module::setActive('updateguard', false);
+        \App\Module::clearModulesCache();
+        parent::tearDown();
+    }
+
+    public function testWithoutUpdateGuardFreeScoutUpdatesTheModuleAndUpdateGuardIsAdvised()
     {
         $admin = $this->user([], true);
         $page = $this->actingAs($admin)->get(route('settings', ['section' => 'workflowpacks']));
         $page->assertStatus(200);
-        $this->seeIn($page, 'name="settings['.Updater::OPTION.']"');
         $this->seeIn($page, 'class="subheader"');
-        $this->seeIn($page, route('workflowpacks.check_update'));
-        $this->seeIn($page, 'Workflow Packs');
-    }
-
-    /** Status written by the update check (Updater::check(), daily from the scheduler), in the options table. */
-    protected function latest($version)
-    {
-        \App\Option::set(Updater::OPTION_STATUS, json_encode(['latest' => $version, 'last_check_at' => date('c'), 'source' => 'release']));
-        Updater::clearRequest();
-    }
-
-    public function testTheCheckResultIsKeptEvenWhenTheStorageFolderIsNotWritable()
-    {
-        $admin = $this->user([], true);
-        \App\Option::set(Updater::OPTION_STATUS, '');
-        // a newer release, as GitHub would answer it (local file instead of the network)
-        $dir = sys_get_temp_dir().'/wp-release-'.self::uid();
-        @mkdir($dir, 0775, true);
-        file_put_contents($dir.'/module.json', json_encode(['alias' => 'workflowpacks', 'version' => '99.0.0']));
-        config(['workflowpacks.update_url' => $dir]);
-        // storage/app/workflowpacks owned by another user (created by cron): simulated by a file in its place
-        $storage = Updater::dir();
-        $moved = is_dir($storage) ? $storage.'.bak-'.self::uid() : null;
-        if ($moved) {
-            rename($storage, $moved);
+        $this->seeIn($page, e(__('workflowpacks::messages.updates_version', ['version' => ModuleInfo::version()])));
+        $this->seeIn($page, e(__('workflowpacks::messages.updates_native')));
+        $this->seeIn($page, ModuleInfo::UPDATEGUARD_URL);
+        $this->assertStringNotContainsString('settings[workflowpacks.auto_update]', $page->getContent(), 'no automatic update switch any more');
+        // the same on the diagnostic page
+        $this->seeIn($this->actingAs($admin)->get(route('workflowpacks.diagnostic')), e(__('workflowpacks::messages.updates_advice')));
+        // the built-in updater is gone
+        foreach (['workflowpacks.update_now', 'workflowpacks.check_update', 'workflowpacks.auto_update'] as $route) {
+            $this->assertFalse(\Route::has($route), $route);
         }
-        file_put_contents($storage, 'not a folder');
-        try {
-            $this->actingAs($admin)->post(route('workflowpacks.check_update'), ['back' => 'settings'])->assertRedirect();
-            $this->assertSame('available', Updater::state(), 'result saved in the database');
-            $page = $this->actingAs($admin)->get(route('settings', ['section' => 'workflowpacks']));
-            $this->seeIn($page, '99.0.0');
-            $this->seeIn($page, route('workflowpacks.update_now'));
-        } finally {
-            @unlink($storage);
-            if ($moved) {
-                rename($moved, $storage);
-            }
-            @unlink($dir.'/module.json');
-            @rmdir($dir);
-        }
+        $this->assertArrayNotHasKey('workflowpacks:update', \Artisan::all());
     }
 
-    public function testUpdateNowButtonIsAlwaysThereAndTheBannerOnlyWhenANewVersionIsKnown()
+    public function testWithUpdateGuardItIsTheOneUpdatingTheModule()
     {
-        $admin = $this->user([], true);
-
-        // up to date (or last check older than the release): "Update now" still offered, no banner
-        $this->latest(Updater::currentVersion());
-        $page = $this->actingAs($admin)->get(route('settings', ['section' => 'workflowpacks']));
-        $this->seeIn($page, route('workflowpacks.update_now'));
-        $this->assertStringNotContainsString('wp-update-banner', $this->actingAs($admin)->get(route('workflowpacks.index'))->getContent());
-
-        // newer version: banner + button on the settings page and on the module pages
-        $this->latest('99.0.0');
-        $page = $this->actingAs($admin)->get(route('settings', ['section' => 'workflowpacks']));
-        $this->seeIn($page, 'wp-update-banner');
-        $this->seeIn($page, route('workflowpacks.update_now'));
-        $this->seeIn($page, '99.0.0');
-        $index = $this->actingAs($admin)->get(route('workflowpacks.index'));
-        $this->seeIn($index, 'wp-update-banner');
-        $this->seeIn($index, route('workflowpacks.update_now'));
-
-        // clicked: the request is recorded and the banner says it is running soon
-        $this->actingAs($admin)->post(route('workflowpacks.update_now'))->assertRedirect(route('workflowpacks.diagnostic'));
-        $this->seeIn($this->actingAs($admin)->get(route('workflowpacks.index')), e(__('workflowpacks::messages.update_state_requested')));
-        Updater::clearRequest();
+        \App\Module::setActive('updateguard', true);
+        \App\Module::clearModulesCache();
+        $this->assertTrue(ModuleInfo::updateGuard());
+        $page = $this->actingAs($this->user([], true))->get(route('settings', ['section' => 'workflowpacks']));
+        $this->seeIn($page, e(__('workflowpacks::messages.updates_guard')));
+        $this->assertStringNotContainsString(e(__('workflowpacks::messages.updates_advice')), $page->getContent());
     }
 
-    public function testTheBannerIsNotShownToNonAdministrators()
+    public function testModuleJsonPointsFreeScoutAndUpdateGuardToTheLatestRelease()
     {
-        $a = $this->mailbox('A');
-        $agent = $this->user([$a], false, true);
-        $this->latest('99.0.0');
-        $page = $this->actingAs($agent)->get(route('workflowpacks.index'));
-        $page->assertStatus(200);
-        $this->assertStringNotContainsString('wp-update-banner', $page->getContent());
+        $json = json_decode(file_get_contents(base_path('Modules/WorkflowPacks/module.json')), true);
+        $this->assertSame('https://github.com/00MY00/WorkflowPacks/releases/latest/download/version.txt', $json['latestVersionUrl']);
+        $this->assertSame('https://github.com/00MY00/WorkflowPacks/releases/latest/download/WorkflowPacks.zip', $json['latestVersionZipUrl']);
+        $this->assertSame('workflowpacks:health', $json['healthCommand']);
+        $this->assertSame('backward-compatible', $json['updateGuard']['migrations']);
     }
 
-    public function testFreeScoutSavesTheAutomaticUpdateSwitch()
-    {
-        $admin = $this->user([], true);
-        Updater::setEnabled(false);
-        $this->actingAs($admin)->post(route('settings.save', ['section' => 'workflowpacks']), [
-            'settings' => [Updater::OPTION => '1'],
-        ])->assertStatus(302);
-        $this->assertTrue(Updater::enabled());
-        $this->actingAs($admin)->post(route('settings.save', ['section' => 'workflowpacks']), [
-            'settings' => [Updater::OPTION => '0'],
-        ]);
-        $this->assertFalse(Updater::enabled());
-    }
-
-    public function testUpdateNowFromTheSettingsGoesBackToTheSettings()
-    {
-        $admin = $this->user([], true);
-        Updater::clearRequest();
-        $response = $this->actingAs($admin)->post(route('workflowpacks.update_now'), ['back' => 'settings']);
-        $response->assertRedirect(route('settings', ['section' => 'workflowpacks']));
-        $this->assertNotSame('', Updater::pendingRequest(), 'request recorded for the scheduler');
-        Updater::clearRequest();
-    }
-
-    public function testNonAdministratorsCannotSeeOrChangeTheSettings()
+    public function testNonAdministratorsCannotSeeTheSettings()
     {
         $a = $this->mailbox('A');
         $agent = $this->user([$a], false, true);
         $this->actingAs($agent)->get(route('settings', ['section' => 'workflowpacks']))->assertStatus(403);
-        $this->actingAs($agent)->post(route('workflowpacks.update_now'), ['back' => 'settings'])->assertStatus(403);
+    }
+
+    public function testTheHealthCommandSaysWhenTheModuleIsHealthyOrNot()
+    {
+        $this->assertSame(0, \Artisan::call('workflowpacks:health', ['--json' => true]));
+        $out = json_decode(trim(\Artisan::output()), true);
+        $this->assertSame('ok', $out['status'], json_encode($out));
+        $this->assertSame(['WorkflowPacks', ModuleInfo::version()], [$out['module'], $out['version']]);
+        foreach (['files', 'classes', 'views', 'routes', 'assets', 'database'] as $check) {
+            $this->assertSame('ok', $out['checks'][$check], $check);
+        }
+        $this->assertArrayHasKey('workflows', $out['checks'], 'Workflows reported');
+
+        // a migration of the module not applied: unhealthy, and said
+        $last = basename(collect(glob(base_path('Modules/WorkflowPacks/Database/Migrations/*.php')))->sort()->last(), '.php');
+        $row = (array) \DB::table('migrations')->where('migration', $last)->first();
+        \DB::table('migrations')->where('migration', $last)->delete();
+        try {
+            $this->assertSame(1, \Artisan::call('workflowpacks:health', ['--json' => true]));
+            $out = json_decode(trim(\Artisan::output()), true);
+            $this->assertSame(['fail', 'fail'], [$out['status'], $out['checks']['database']]);
+            $this->assertSame([$last], $out['details']['database']['pending_migrations']);
+        } finally {
+            \DB::table('migrations')->insert(['migration' => $last, 'batch' => $row['batch'] ?? 1]);
+        }
     }
 }

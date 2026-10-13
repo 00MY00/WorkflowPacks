@@ -4,12 +4,11 @@ namespace Modules\WorkflowPacks\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Modules\WorkflowPacks\Services\Compat\Checker;
-use Modules\WorkflowPacks\Services\Update\Updater;
 use Modules\WorkflowPacks\Services\Workflows\Bridge;
 
 /**
  * Administrators: compatibility checks, versions, catalog of the conditions/actions offered by Workflows on this
- * instance (the identifiers to use in a pack), and the module's update (same mechanism as RefreshGlobal).
+ * instance (the identifiers to use in a pack), and who updates the module (FreeScout's Modules page, or UpdateGuard).
  */
 class DiagnosticController extends Controller
 {
@@ -36,47 +35,6 @@ class DiagnosticController extends Controller
             'catalog'   => $catalog,
             'mailboxes' => $mailboxes,
             'mailbox'   => $mailbox,
-            'update'    => Updater::status(),
-            'updateState' => Updater::state(),
-            'autoUpdate' => Updater::enabled(),
         ]);
-    }
-
-    public function autoUpdate(Request $request)
-    {
-        Updater::setEnabled((bool) $request->input('enabled'));
-
-        return $this->back($request)->with('flash_success_floating', $request->input('enabled')
-            ? __('workflowpacks::messages.auto_update_on') : __('workflowpacks::messages.auto_update_off'));
-    }
-
-    /** Runs from the scheduler within a minute (never inside a web request). */
-    public function updateNow(Request $request)
-    {
-        Updater::requestUpdate();
-
-        return $this->back($request)->with('flash_success_floating', __('workflowpacks::messages.update_requested'));
-    }
-
-    public function checkUpdate(Request $request)
-    {
-        try {
-            $info = (new Updater())->setTimeout(15)->check();
-            $message = $info['available']
-                ? __('workflowpacks::messages.update_available', ['version' => $info['latest']])
-                : __('workflowpacks::messages.up_to_date', ['version' => $info['current']]);
-
-            return $this->back($request)->with('flash_success_floating', $message);
-        } catch (\Throwable $e) {
-            return $this->back($request)->with('flash_error_floating', __('workflowpacks::messages.update_check_failed'));
-        }
-    }
-
-    /** Back to Manage › Settings › Workflow Packs when the button was there, else to the diagnostic page. */
-    protected function back(Request $request)
-    {
-        return $request->input('back') === 'settings'
-            ? redirect()->route('settings', ['section' => 'workflowpacks'])
-            : redirect()->route('workflowpacks.diagnostic');
     }
 }

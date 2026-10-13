@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 1.17.0
+# Résultats des tests — Workflow Packs 2.0.0
 
 Date : 2026-10-13. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,13 @@ Date : 2026-10-13. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 2.0.0 — mises à jour par FreeScout ou UpdateGuard
+
+| Série | Résultat |
+|---|---|
+| Intégration (82 tests, 646 assertions) | `SettingsTest` (réécrit) : sans UpdateGuard, mises à jour par FreeScout et conseil d'UpdateGuard (réglages et Diagnostic) ; avec UpdateGuard actif, mises à jour gérées par lui ; plus d'interrupteur, de routes ni de commande de mise à jour ; `module.json` (`latestVersionUrl`, `latestVersionZipUrl`, `healthCommand`, migrations compatibles) ; `workflowpacks:health` sain (code 0, JSON), puis en échec avec une migration non appliquée (code 1, migration citée). Les 3 tests de l'ancienne mise à jour (droits du dossier de travail) retirés avec elle |
+| Mise à jour native de FreeScout (conteneur) | `version.txt` de la release servi : nouvelle version proposée (1.17.0 → 2.0.0) ; archive décompressée dans `Modules/` puis `freescout:module-install` : « Configuration cached successfully », version 2.0.0, migration appliquée, `workflowpacks:health` OK. FreeScout refuse de télécharger depuis une adresse locale : le téléchargement depuis GitHub est testé par la CI après la release (`tests/update/run.sh`, scénario `native`) |
 
 ## 1.17.0 — bloc « nettoyage » dans le schéma
 

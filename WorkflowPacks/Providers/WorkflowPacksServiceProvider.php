@@ -13,7 +13,10 @@ use Modules\WorkflowPacks\Services\Workflows\Bridge;
  *   menu.manage.after_mailboxes (resources/views/layouts/app.blade.php)       -> "Workflow Packs" in Manage
  *   mailboxes.settings.menu     (resources/views/mailboxes/settings_menu.blade.php) -> entry in the mailbox menu
  *   refresh.rail_items          (Refresh module, when installed)               -> entry in Refresh's left bar
- *   schedule                    (app/Console/Kernel.php)                       -> daily update check
+ *   schedule                    (app/Console/Kernel.php)                       -> clean-up of the e-mail folders
+ *
+ * Updates: module.json declares latestVersionUrl / latestVersionZipUrl (FreeScout's Manage › Modules page, and the
+ * UpdateGuard module for safe updates; workflowpacks:health is its health check).
  */
 class WorkflowPacksServiceProvider extends ServiceProvider
 {
@@ -26,7 +29,7 @@ class WorkflowPacksServiceProvider extends ServiceProvider
         $this->mergeConfigFrom(__DIR__.'/../Config/config.php', self::ALIAS);
         $this->commands([
             \Modules\WorkflowPacks\Console\CheckCommand::class,
-            \Modules\WorkflowPacks\Console\UpdateCommand::class,
+            \Modules\WorkflowPacks\Console\HealthCommand::class,
             \Modules\WorkflowPacks\Console\CleanFoldersCommand::class,
         ]);
     }
@@ -57,7 +60,8 @@ class WorkflowPacksServiceProvider extends ServiceProvider
     }
 
     /**
-     * Manage › Settings › Workflow Packs (administrators): module update options. Same filters as RefreshGlobal and
+     * Manage › Settings › Workflow Packs (administrators): e-mail folders, their clean-up, who updates the module.
+     * Same filters as RefreshGlobal and
      * Refresh: "settings.sections", "settings.section_settings" (the keys FreeScout saves itself in its options
      * table, SettingsController::processSave) and "settings.view".
      */
@@ -74,7 +78,6 @@ class WorkflowPacksServiceProvider extends ServiceProvider
             }
 
             return array_merge($settings, [
-                \Modules\WorkflowPacks\Services\Update\Updater::OPTION => \Modules\WorkflowPacks\Services\Update\Updater::enabled(),
                 \Modules\WorkflowPacks\Services\Imap\ImapFolders::OPTION_ENABLED => \Modules\WorkflowPacks\Services\Imap\ImapFolders::enabled(),
                 \Modules\WorkflowPacks\Services\Imap\ImapFolders::OPTION_PREFIX => \Modules\WorkflowPacks\Services\Imap\ImapFolders::prefix(),
                 \Modules\WorkflowPacks\Services\Imap\ImapFolders::OPTION_PARENT => \Modules\WorkflowPacks\Services\Imap\ImapFolders::parentMode(),
@@ -187,24 +190,17 @@ class WorkflowPacksServiceProvider extends ServiceProvider
         });
     }
 
-    /** Daily update check (installs only when the automatic update is on) + "Update now" requests. */
+    /** Automatic clean-up of the managed e-mail folders (updates: FreeScout's Modules page, or UpdateGuard). */
     protected function registerSchedule()
     {
         \Eventy::addFilter('schedule', function ($schedule) {
             try {
-                $time = (string) config('workflowpacks.auto_update_time', '03:40');
-                $schedule->command('workflowpacks:update --scheduled')
-                    ->dailyAt(preg_match('/^\d{1,2}:\d{2}$/', $time) ? $time : '03:40')
-                    ->withoutOverlapping();
-                $schedule->command('workflowpacks:update --requested')
-                    ->everyMinute()
-                    ->withoutOverlapping();
                 // automatic clean-up of the managed e-mail folders (does nothing without a setting)
                 $schedule->command('workflowpacks:clean-folders')
                     ->everyFifteenMinutes()
                     ->withoutOverlapping();
             } catch (\Throwable $e) {
-                // no automatic update rather than a broken scheduler
+                // no clean-up rather than a broken scheduler
             }
 
             return $schedule;

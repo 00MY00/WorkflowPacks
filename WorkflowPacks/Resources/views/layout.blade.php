@@ -4,7 +4,7 @@
 @section('title', __('workflowpacks::messages.title'))
 
 @section('stylesheets')
-    <link href="{{ asset(\Module::getPublicPath('workflowpacks').'/css/workflowpacks.css') }}?v={{ \Modules\WorkflowPacks\Services\Update\Updater::currentVersion() }}" rel="stylesheet" type="text/css">
+    <link href="{{ asset(\Module::getPublicPath('workflowpacks').'/css/workflowpacks.css') }}?v={{ \Modules\WorkflowPacks\Services\ModuleInfo::version() }}" rel="stylesheet" type="text/css">
 @endsection
 
 @section('content')
@@ -30,11 +30,10 @@
             @endforeach
         </div>
     @endif
-    @include('workflowpacks::partials.update_banner', ['back' => ''])
     @yield('wp_content')
 </div>
 @endsection
 
 @section('javascripts')
-    <script src="{{ asset(\Module::getPublicPath('workflowpacks').'/js/workflowpacks.js') }}?v={{ \Modules\WorkflowPacks\Services\Update\Updater::currentVersion() }}" {!! \Helper::cspNonceAttr() !!}></script>
+    <script src="{{ asset(\Module::getPublicPath('workflowpacks').'/js/workflowpacks.js') }}?v={{ \Modules\WorkflowPacks\Services\ModuleInfo::version() }}" {!! \Helper::cspNonceAttr() !!}></script>
 @endsection

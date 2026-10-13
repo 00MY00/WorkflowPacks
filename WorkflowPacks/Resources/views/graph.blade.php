@@ -8,7 +8,7 @@
 
 @section('stylesheets')
     @parent
-    <link href="{{ asset(\Module::getPublicPath('workflowpacks').'/css/graph.css') }}?v={{ \Modules\WorkflowPacks\Services\Update\Updater::currentVersion() }}" rel="stylesheet" type="text/css">
+    <link href="{{ asset(\Module::getPublicPath('workflowpacks').'/css/graph.css') }}?v={{ \Modules\WorkflowPacks\Services\ModuleInfo::version() }}" rel="stylesheet" type="text/css">
 @endsection
 
 @section('wp_content')
@@ -112,7 +112,7 @@
 @section('javascripts')
     @parent
     @foreach (['icons', 'layout', 'textfit', 'gestures', 'next', 'model', 'api', 'view', 'minimap', 'inspector', 'editor', 'menu', 'app'] as $wpg_js)
-        <script src="{{ asset(\Module::getPublicPath('workflowpacks').'/js/graph/'.$wpg_js.'.js') }}?v={{ \Modules\WorkflowPacks\Services\Update\Updater::currentVersion() }}" {!! \Helper::cspNonceAttr() !!}></script>
+        <script src="{{ asset(\Module::getPublicPath('workflowpacks').'/js/graph/'.$wpg_js.'.js') }}?v={{ \Modules\WorkflowPacks\Services\ModuleInfo::version() }}" {!! \Helper::cspNonceAttr() !!}></script>
     @endforeach
     <script {!! \Helper::cspNonceAttr() !!}>WPGraph.icons.define(document.getElementById('wpg-toolbar-defs'));</script>
 @endsection

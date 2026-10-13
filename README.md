@@ -45,8 +45,8 @@ remplacées pour chacune (`{{mailbox.email}}`, `{{mailbox.name}}`, `{{mailbox.id
   l'entrée se trouve dans le menu burger de FreeScout (Gérer).
 - **7 langues**, interface et messages (validation, diagnostic, erreurs) : français, anglais, allemand, espagnol,
   italien, néerlandais, portugais (Brésil). La langue suit le profil FreeScout de l'utilisateur.
-- La mise à jour automatique du module reprend le mécanisme de RefreshGlobal : version publiée, SHA-256, sauvegarde,
-  vérification et retour arrière automatique.
+- **Mises à jour** : par la page **Gérer › Modules** de FreeScout, ou par le module
+  [UpdateGuard](https://github.com/00MY00/UpdateGuard), recommandé, pour des mises à jour sécurisées.
 
 | Schéma : flux boîtes → règles → destinations | Schéma : éditeur de règle |
 |---|---|
@@ -274,44 +274,39 @@ publique analysée ne contient pas : pour classer par étiquettes, consultez le 
 
 ## Mise à jour du module
 
-Les mises à jour se font depuis **Gérer › Paramètres › Workflow Packs**, réservé aux administrateurs. La page a la même
-présentation que RefreshGlobal :
+Depuis la version 2.0.0, Workflow Packs ne se met plus à jour lui-même. Son `module.json` déclare la dernière version
+publiée (`latestVersionUrl` → `version.txt`, `latestVersionZipUrl` → `WorkflowPacks.zip` de la dernière release
+GitHub), la convention de FreeScout pour les modules communautaires :
 
-- la section « Mise à jour automatique » avec son interrupteur et le bouton Enregistrer ;
-- la section « Mise à jour du module » avec la version, l'état et les boutons.
+- **Sans UpdateGuard** : **Gérer › Modules** de FreeScout signale la nouvelle version et la propose avec son bouton
+  « Mettre à jour ». Cette mise à jour ne vérifie pas l'archive, ne fait pas de sauvegarde et ne revient pas en
+  arrière en cas de problème.
+- **Avec [UpdateGuard](https://github.com/00MY00/UpdateGuard)** (recommandé) : la mise à jour est **sécurisée**,
+  niveau « Full Safe Update ». Elle suit ces étapes :
+  - vérification SHA-256 de l'archive avec le `SHA256SUMS` publié ;
+  - préparation à part, puis sauvegarde ;
+  - installation ;
+  - contrôle de santé avec `php artisan workflowpacks:health` ;
+  - période d'observation ;
+  - **retour arrière automatique** en cas de problème.
 
-Le même bloc apparaît dans **Diagnostic**. Dès qu'une version plus récente est trouvée, un bandeau « Workflow Packs X
-est disponible » s'affiche, avec un bouton **Mettre à jour maintenant**. Il est visible par les administrateurs sur
-les pages du module et dans les réglages.
+  Les migrations de Workflow Packs ne font qu'ajouter des tables ou des colonnes. Elles sont donc déclarées
+  compatibles avec la version précédente (`"updateGuard": {"migrations": "backward-compatible"}`).
 
-![Réglages](docs/screenshots/reglages-mise-a-jour.png)
+**Gérer › Paramètres › Workflow Packs** et **Diagnostic** indiquent qui met le module à jour, avec un lien vers
+UpdateGuard ou vers la page des modules.
 
-Le bouton est traité par le planificateur de FreeScout (cron `schedule:run` chaque minute). Comptez **1 à 2
-minutes**, car le premier passage peut être occupé par la file d'e-mails de FreeScout.
+`php artisan workflowpacks:health [--json]` vérifie le module installé, en lecture seule et sans réseau : fichiers,
+classes, vues, routes, fichiers publics, tables et migrations. Il répond avec le code 0 s'il est sain, 1 sinon.
+L'absence du module Workflows est signalée, mais ne fait pas échouer ce contrôle.
 
-La mise à jour directe vers la dernière version est testée depuis 1.0.0, 1.1.0 et 1.2.0, par la commande, le bouton
-et `install.sh`. Ce test est relancé automatiquement après chaque release ; voir `tests/update/last-run.md`.
+`install.sh` reste disponible pour une première installation, ou pour réinstaller la dernière version publiée avec
+vérification SHA-256 et sauvegarde.
 
-Trois actions :
+Après chaque release, la mise à jour vers la version publiée est testée automatiquement depuis des versions plus
+anciennes, par la page Modules de FreeScout et par `install.sh` ; voir `tests/update/last-run.md`.
 
-- « Rechercher une mise à jour » ;
-- « Mettre à jour maintenant » : exécuté par le planificateur de FreeScout dans la minute, jamais pendant une requête
-  web ;
-- mise à jour automatique quotidienne, désactivée par défaut.
-
-En ligne de commande : `php artisan workflowpacks:update [--check|--enable|--disable|--force]`.
-
-Déroulement d'une mise à jour :
-
-1. Lecture de `module.json` de la dernière version publiée.
-2. Contrôle SHA-256 de l'archive. Sans version publiée, l'archive de la branche `main` est utilisée.
-3. Sauvegarde du dossier du module et des tables.
-4. Installation.
-5. Contrôle avec `workflowpacks:check`.
-6. Si l'installation échoue ou si l'état est pire qu'avant, **retour arrière automatique** : migrations annulées,
-   dossier et tables restaurés. Une version annulée n'est pas retentée automatiquement.
-
-Les numéros de version suivent `module.json` (actuellement **1.2.2**) ; voir [CHANGELOG.md](CHANGELOG.md).
+Les numéros de version suivent `module.json` ; voir [CHANGELOG.md](CHANGELOG.md).
 
 ## Limites
 
