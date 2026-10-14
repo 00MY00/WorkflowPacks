@@ -1,6 +1,6 @@
-# Résultats des tests — Workflow Packs 2.0.0
+# Résultats des tests — Workflow Packs 2.1.0
 
-Date : 2026-10-13. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
+Date : 2026-10-14. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
 ## Versions effectivement vérifiées
 
@@ -12,6 +12,14 @@ Date : 2026-10-13. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 2.1.0 — condition « Tag d'e-mail » (RefreshGlobal)
+
+| Série | Résultat |
+|---|---|
+| Intégration (86 tests, 674 assertions) | `MailTagsTest` (4, RefreshGlobal simulé : module actif et son filtre `refreshglobal.mail_tags`) : condition dans le catalogue de Workflows avec les tags standard proposés, absente sans RefreshGlobal ; évaluée par `workflow.check_condition` (a / n'a pas le tag, casse et espaces ignorés, tag vide jamais vrai) ; `refreshglobal.mail_tagged` : la règle s'exécute (statut spam) et est enregistrée, pas deux fois, pas sur un ticket plus ancien que la règle sans « Tickets existants », pas pour une règle inactive ; règle de pack importée avec la condition. Bouchon Workflows complété : conditions des autres modules, `checkPrevious()`, `performActions()` |
+| JavaScript | `next.test.js` (+1) : « + » d'une boîte → « Règle pour les e-mails classés spam » seulement avec la condition |
+| Navigateur | « + » d'une boîte : la suite spam proposée ; éditeur : tags proposés en boutons (`classified_spam` choisi), clic sur un autre tag, saisie libre ; aucune erreur |
 
 ## 2.0.0 — mises à jour par FreeScout ou UpdateGuard
 
