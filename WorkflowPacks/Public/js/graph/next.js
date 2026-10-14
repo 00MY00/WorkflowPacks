@@ -2,7 +2,8 @@
  * Workflow Packs — diagram: "what next?" for a block, like the arrows of draw.io. The "+" next to a selected block
  * (or "Add a next step…" in its quick actions and its side panel) lists what can follow it:
  *
- *   mailbox         a new rule; file its new e-mails into a folder; close the tickets left without answer
+ *   mailbox         a new rule; file its new e-mails into a folder; close the tickets left without answer; the
+ *                   e-mails classified as spam (e-mail tags of RefreshGlobal, when installed)
  *   rule            then file into an e-mail folder / change the status / assign (the actions it does not do yet)
  *   e-mail folder   delete its e-mails after a delay (administrators); file a part into a sub-folder
  *   status          after a delay in that state: delete the tickets, or close them
@@ -50,6 +51,10 @@
             if (hasA(FOLDER) && hasC('new_or_reply')) {
                 out.push({ id: 'file_new', icon: 'folder', label: 'next_file_new', run: { editor: { rule: rule(ctx.names.file_new,
                     [{ type: 'new_or_reply', operator: 'new' }], [{ type: FOLDER, value: '' }]) } } });
+            }
+            if (hasC('wp_mail_tag')) {
+                out.push({ id: 'tag_spam', icon: 'spam', label: 'next_tag_spam', run: { editor: { rule: rule(ctx.names.tag_spam,
+                    [{ type: 'wp_mail_tag', operator: 'has', value: 'classified_spam' }], hasA('status') ? [{ type: 'status', value: STATUS.spam }] : []) } } });
             }
             if (hasC('waiting') && hasA('status')) {
                 out.push({ id: 'waiting_close', icon: 'timer', label: 'next_waiting_close', run: { editor: { rule: rule(ctx.names.waiting_close,
@@ -117,7 +122,7 @@
                 catalog: res[0].catalog, admin: !!app.cfg.admin,
                 ruleActions: res[1] ? (res[1].rule.actions || []).map(function (a) { return a.type; }) : [],
                 names: {
-                    file_new: t.next_name_file_new, waiting_close: t.next_name_waiting_close,
+                    file_new: t.next_name_file_new, waiting_close: t.next_name_waiting_close, tag_spam: t.next_name_tag_spam,
                     subfolder: (t.next_name_subfolder || '').replace(':folder', node.label || ''),
                     after_delete: (t.next_name_after_delete || '').replace(':status', status),
                     after_close: (t.next_name_after_close || '').replace(':status', status)

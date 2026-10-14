@@ -106,6 +106,29 @@ réglage (changer le délai, le mode, ou « Ne plus nettoyer »).
 
 ![Ajouter une suite](screenshots/schema-suite.png)
 
+## Tags d'e-mail (RefreshGlobal)
+
+Quand le module RefreshGlobal (1.11.0 ou plus récent) est installé, les règles ont une condition de plus : **« Tag
+d'e-mail »**, avec « a le tag » ou « n'a pas le tag ». RefreshGlobal donne à chaque e-mail relevé le tag du dossier
+du serveur d'où il vient, et marque les spams.
+
+Dans l'éditeur, les tags connus sont proposés en boutons sous le champ :
+- les tags standard : `inbox`, `spam`, `classified_spam` (classé spam par le serveur), `trash`, `sent`, `drafts`,
+  `archive` ;
+- les tags déjà vus dans la boîte, par exemple `folder:clients` ou les noms choisis par l'administrateur.
+
+Un clic choisit un tag, et vous pouvez aussi taper le vôtre. Le « + » d'une boîte propose aussi « Règle pour les
+e-mails classés spam ».
+
+La condition est évaluée par Workflows lui-même. RefreshGlobal pose ses tags pendant la relève, au même moment que
+Workflows lance les règles. Quand un e-mail reçoit ses tags, les règles actives qui utilisent cette condition sont
+donc vérifiées à nouveau pour ce ticket :
+- jamais deux fois la même règle sur le même ticket ;
+- jamais sur un ticket plus ancien que la règle, sauf si « Tickets existants : oui » est réglé pour elle. Recalculer
+  les tags dans RefreshGlobal ne relance donc rien sur les anciens tickets.
+
+Sans RefreshGlobal, la condition n'est pas proposée et n'est jamais vraie.
+
 ## Disposer les blocs
 
 | Disposition | Principe |

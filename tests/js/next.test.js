@@ -35,6 +35,16 @@ test('mailbox: new rule, file the new e-mails, close the tickets without answer 
     assert.deepStrictEqual(ids(noFolder), ['new_rule', 'waiting_close']);
 });
 
+test('mailbox: the e-mails classified as spam, only when the e-mail tag condition is there (RefreshGlobal)', () => {
+    const withTags = { conditions: Object.assign({ wp_mail_tag: {} }, full.conditions), actions: full.actions };
+    const s = N.suggest({ kind: 'mailbox' }, { catalog: withTags, names });
+    assert.deepStrictEqual(ids(s), ['new_rule', 'file_new', 'tag_spam', 'waiting_close']);
+    const spam = s[2].run.editor.rule;
+    assert.deepStrictEqual(spam.conditions, { all: [{ type: 'wp_mail_tag', operator: 'has', value: 'classified_spam' }] });
+    assert.deepStrictEqual(spam.actions, [{ type: 'status', value: '4' }]);
+    assert.ok(!ids(N.suggest({ kind: 'mailbox' }, { catalog: full, names })).includes('tag_spam'), 'not without RefreshGlobal');
+});
+
 test('rule: only the actions it does not do yet', () => {
     assert.deepStrictEqual(ids(N.suggest({ kind: 'rule' }, { catalog: full, names, ruleActions: ['status'] })), ['then_wp_imap_folder', 'then_assign']);
     const s = N.suggest({ kind: 'rule' }, { catalog: full, names, ruleActions: [] });

@@ -213,4 +213,8 @@ return [
     'kind_dest_cleanup'        => 'Automatic clean-up of the folder',
     'legend_cleanup'           => 'automatic clean-up',
     'cleanup_folder'           => 'Show the folder',
+    'tag_ph'                   => 'tag: classified_spam, inbox, folder:…',
+    'tag_known'                => 'Known tags: click to choose, or type your own',
+    'next_tag_spam'            => 'Rule for the e-mails classified as spam',
+    'next_name_tag_spam'       => 'E-mails classified as spam',
 ];

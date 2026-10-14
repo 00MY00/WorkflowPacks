@@ -4,6 +4,22 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [2.1.0] - 2026-10-14
+
+### Ajouté
+- **Condition « Tag d'e-mail » des règles**, avec RefreshGlobal 1.11.0 ou plus récent : « a le tag » / « n'a pas le
+  tag » `classified_spam`, `inbox`, `spam`, `trash`, `sent`, `drafts`, `archive`, `folder:<nom>` ou un tag de
+  l'administrateur.
+  - **Dans l'éditeur du schéma** : tags standard et tags déjà vus dans la boîte proposés en boutons sous le champ, et
+    saisie libre.
+  - **Évaluation** : faite par Workflows lui-même, par son filtre `workflow.check_condition`.
+  - **Quand RefreshGlobal pose les tags** d'un e-mail, au même moment que Workflows lance les règles, les règles
+    actives qui utilisent la condition sont vérifiées à nouveau pour ce ticket. Jamais deux fois, et jamais sur les
+    tickets plus anciens que la règle sans « Tickets existants ».
+  - **Dans les packs** : utilisable aussi.
+  - **Sans RefreshGlobal** : la condition n'est pas proposée.
+- **« + » d'une boîte** : « Règle pour les e-mails classés spam ».
+
 ## [2.0.0] - 2026-10-13
 
 ### Modifié

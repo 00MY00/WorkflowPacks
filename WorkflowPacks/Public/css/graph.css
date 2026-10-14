@@ -275,3 +275,10 @@
 .wpg-node.dest-cleanup, .wpg-ins-head.dest-cleanup { --c: var(--c-spam); }
 .wpg-edge.kind-cleanup .wpg-line { stroke: var(--c-spam); stroke-dasharray: 6 4; }
 .lg-cleanup::before { border-color: var(--c-spam); border-top-style: dashed; }
+
+/* value with known suggestions (e-mail tags of RefreshGlobal): free text + buttons */
+.wpg-tags { display: inline-flex; flex-direction: column; gap: 6px; min-width: 220px; }
+.wpg-tag-list { display: flex; flex-wrap: wrap; gap: 4px; }
+.wpg-tag-btn { border: 1px solid var(--g-border); background: var(--g-card); color: var(--g-text, #0f172a); border-radius: 999px; padding: 1px 9px; font-size: 12px; cursor: pointer; }
+.wpg-tag-btn:hover { border-color: var(--g-brand); }
+.wpg-tag-btn.is-on { background: var(--g-brand); border-color: var(--g-brand); color: #fff; }

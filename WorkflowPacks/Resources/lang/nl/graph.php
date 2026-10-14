@@ -212,4 +212,8 @@ return [
     'kind_dest_cleanup'        => 'Automatisch opruimen van de map',
     'legend_cleanup'           => 'automatisch opruimen',
     'cleanup_folder'           => 'Map tonen',
+    'tag_ph'                   => 'tag: classified_spam, inbox, folder:…',
+    'tag_known'                => 'Bekende tags: klik om te kiezen, of typ uw eigen tag',
+    'next_tag_spam'            => 'Regel voor als spam aangemerkte e-mails',
+    'next_name_tag_spam'       => 'Als spam aangemerkte e-mails',
 ];
