@@ -212,4 +212,8 @@ return [
     'kind_dest_cleanup'        => 'Automatische Bereinigung des Ordners',
     'legend_cleanup'           => 'automatische Bereinigung',
     'cleanup_folder'           => 'Ordner anzeigen',
+    'tag_ph'                   => 'Tag: classified_spam, inbox, folder:…',
+    'tag_known'                => 'Bekannte Tags: zum Auswählen klicken oder eigenen eingeben',
+    'next_tag_spam'            => 'Regel für als Spam eingestufte E-Mails',
+    'next_name_tag_spam'       => 'Als Spam eingestufte E-Mails',
 ];

@@ -19,6 +19,9 @@
         this.t = app.texts;
     }
 
+    /** counter of the lists of known values (ids of their <datalist>) */
+    Editor.lists = 0;
+
     // ------------------------------------------------------------------------------- pack format <-> form
 
     function lanesOf(tree) {
@@ -273,6 +276,30 @@
             return select(cfg.values.map(function (v) { return [v, (cfg.value_labels || {})[v] || v]; }), item.value, function (v) { item.value = v; self.sync(); }, 'wpg-w-val');
         }
         var text = typeof item.value === 'object' && item.value !== null ? JSON.stringify(item.value) : (item.value === undefined ? '' : String(item.value));
+        // known values (e.g. e-mail tags): a free text, with the known ones as buttons and in the browser's list
+        var known = cfg.suggest && typeof cfg.suggest === 'object' ? Object.keys(cfg.suggest) : [];
+        if (known.length) {
+            var listId = 'wpg-suggest-' + (++Editor.lists);
+            var buttons = [];
+            var mark = function () { buttons.forEach(function (b) { b.classList.toggle('is-on', b.getAttribute('data-v') === String(item.value || '')); }); };
+            var input = h('input', { class: 'form-control input-sm', value: text, placeholder: t.tag_ph || placeholder, list: listId, on: { input: function () {
+                item.value = this.value.trim();
+                mark();
+                self.sync();
+            } } });
+            buttons = known.map(function (v) {
+                return h('button', { type: 'button', class: 'wpg-tag-btn', 'data-v': v, title: cfg.suggest[v], text: v, on: { click: function () {
+                    item.value = v;
+                    input.value = v;
+                    mark();
+                    self.sync();
+                } } });
+            });
+            mark();
+            return h('span', { class: 'wpg-w-val wpg-tags' }, [input,
+                h('datalist', { id: listId }, known.map(function (v) { return h('option', { value: v, label: cfg.suggest[v] }); })),
+                h('span', { class: 'wpg-tag-list', title: t.tag_known }, buttons)]);
+        }
         return h('input', { class: 'form-control input-sm wpg-w-val', value: text, placeholder: placeholder, on: { input: function () {
             var v = this.value;
             if (/^[\[{]/.test(v)) { try { v = JSON.parse(v); } catch (e) { /* kept as text */ } }

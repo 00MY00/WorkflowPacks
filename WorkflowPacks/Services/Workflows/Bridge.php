@@ -127,6 +127,8 @@ class Bridge
                     // readable labels for the editor of the diagram (keys above stay the reference)
                     'operator_labels' => self::labels($item['operators'] ?? null),
                     'value_labels'    => self::labels($item['values'] ?? null),
+                    // known values offered next to a free text (e.g. the e-mail tags of RefreshGlobal): [value => label]
+                    'suggest'         => self::labels($item['suggest'] ?? null),
                 ];
             }
         }

@@ -45,6 +45,8 @@ remplacées pour chacune (`{{mailbox.email}}`, `{{mailbox.name}}`, `{{mailbox.id
   l'entrée se trouve dans le menu burger de FreeScout (Gérer).
 - **7 langues**, interface et messages (validation, diagnostic, erreurs) : français, anglais, allemand, espagnol,
   italien, néerlandais, portugais (Brésil). La langue suit le profil FreeScout de l'utilisateur.
+- **Tags d'e-mail de RefreshGlobal** (spam, boîte de réception, dossier du serveur…) : condition « Tag d'e-mail » des
+  règles, avec les tags connus proposés dans l'éditeur. Voir [docs/schema.md](docs/schema.md).
 - **Mises à jour** : par la page **Gérer › Modules** de FreeScout, ou par le module
   [UpdateGuard](https://github.com/00MY00/UpdateGuard), recommandé, pour des mises à jour sécurisées.
 

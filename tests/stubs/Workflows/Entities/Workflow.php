@@ -101,6 +101,10 @@ class Workflow extends Model
                         }
                         $or_true = $operator === 'new' && strpos($action, 'created') !== false;
                         break;
+                    default:
+                        // conditions added by other modules (real module: Workflow.php, default of checkConditions())
+                        $or_true = \Eventy::filter('workflow.check_condition', false, $row['type'] ?? '', $operator, $row['value'] ?? '', $conversation, $this);
+                        break;
                 }
                 if ($or_true) {
                     break;
@@ -112,6 +116,29 @@ class Workflow extends Model
         }
 
         return true;
+    }
+
+    /** Conversations created before the rule: only with "apply to previous conversations" (real module). */
+    public function checkPrevious($conversation)
+    {
+        return $this->apply_to_prev || $conversation->created_at > $this->created_at;
+    }
+
+    /** Subset of the real performActions(): status, the actions of other modules, then the execution is recorded. */
+    public function performActions($conversation)
+    {
+        foreach ((array) $this->actions as $ands) {
+            foreach ((array) $ands as $action) {
+                $type = $action['type'] ?? '';
+                if ($type === 'status') {
+                    $conversation->status = (int) ($action['value'] ?? 1);
+                    $conversation->save();
+                } else {
+                    \Eventy::filter('workflow.perform_action', false, $type, $action['operator'] ?? '', $action['value'] ?? '', $conversation, $this);
+                }
+            }
+        }
+        $this->markProcessed($conversation->id);
     }
 
     public function markProcessed($conversation_id)

@@ -212,4 +212,8 @@ return [
     'kind_dest_cleanup'        => 'Pulizia automatica della cartella',
     'legend_cleanup'           => 'pulizia automatica',
     'cleanup_folder'           => 'Mostra la cartella',
+    'tag_ph'                   => 'tag: classified_spam, inbox, folder:…',
+    'tag_known'                => 'Tag conosciuti: clicca per scegliere o scrivi il tuo',
+    'next_tag_spam'            => 'Regola per le e-mail classificate come spam',
+    'next_name_tag_spam'       => 'E-mail classificate come spam',
 ];
