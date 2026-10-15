@@ -2,7 +2,7 @@
     "name": "WorkflowPacks",
     "alias": "workflowpacks",
     "description": "Import, export and update sets of rules of the official Workflows module, with per-mailbox variables, previews, conflict detection and no duplicates.",
-    "version": "2.1.0",
+    "version": "2.1.1",
     "detailsUrl": "https://github.com/00MY00/WorkflowPacks",
     "latestVersionUrl": "https://github.com/00MY00/WorkflowPacks/releases/latest/download/version.txt",
     "latestVersionZipUrl": "https://github.com/00MY00/WorkflowPacks/releases/latest/download/WorkflowPacks.zip",

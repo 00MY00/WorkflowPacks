@@ -59,6 +59,8 @@ return [
     'sensitive_delete' => 'elimina',
     'sensitive_move'   => 'sposta in un’altra casella',
     'close'            => 'Chiudi',
+    'sheet_expand'     => 'Schermo intero',
+    'sheet_shrink'     => 'Riduci',
     'edit'             => 'Modifica',
     'loading'          => 'Caricamento…',
     'kind_mailbox'     => 'Casella',

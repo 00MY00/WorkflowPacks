@@ -60,6 +60,8 @@ return [
     'sensitive_delete' => 'supprime',
     'sensitive_move'   => 'change de boîte',
     'close'            => 'Fermer',
+    'sheet_expand'     => 'Plein écran',
+    'sheet_shrink'     => 'Réduire',
     'edit'             => 'Modifier',
     'loading'          => 'Chargement…',
     'kind_mailbox'     => 'Boîte de réception',

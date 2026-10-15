@@ -60,6 +60,8 @@ return [
     'sensitive_delete' => 'deletes',
     'sensitive_move'   => 'moves to another mailbox',
     'close'            => 'Close',
+    'sheet_expand'     => 'Whole screen',
+    'sheet_shrink'     => 'Smaller',
     'edit'             => 'Edit',
     'loading'          => 'Loading…',
     'kind_mailbox'     => 'Mailbox',

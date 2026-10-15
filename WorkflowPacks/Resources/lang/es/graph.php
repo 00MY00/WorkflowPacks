@@ -59,6 +59,8 @@ return [
     'sensitive_delete' => 'elimina',
     'sensitive_move'   => 'cambia de buzón',
     'close'            => 'Cerrar',
+    'sheet_expand'     => 'Pantalla completa',
+    'sheet_shrink'     => 'Reducir',
     'edit'             => 'Editar',
     'loading'          => 'Cargando…',
     'kind_mailbox'     => 'Buzón',
