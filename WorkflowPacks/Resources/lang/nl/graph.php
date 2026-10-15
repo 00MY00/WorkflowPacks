@@ -59,6 +59,8 @@ return [
     'sensitive_delete' => 'verwijdert',
     'sensitive_move'   => 'verplaatst naar een andere mailbox',
     'close'            => 'Sluiten',
+    'sheet_expand'     => 'Volledig scherm',
+    'sheet_shrink'     => 'Verkleinen',
     'edit'             => 'Bewerken',
     'loading'          => 'Laden…',
     'kind_mailbox'     => 'Mailbox',

@@ -59,6 +59,8 @@ return [
     'sensitive_delete' => 'exclui',
     'sensitive_move'   => 'move para outra caixa',
     'close'            => 'Fechar',
+    'sheet_expand'     => 'Tela inteira',
+    'sheet_shrink'     => 'Reduzir',
     'edit'             => 'Editar',
     'loading'          => 'Carregando…',
     'kind_mailbox'     => 'Caixa',

@@ -1,6 +1,6 @@
-# Résultats des tests — Workflow Packs 2.1.0
+# Résultats des tests — Workflow Packs 2.1.1
 
-Date : 2026-10-14. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
+Date : 2026-10-15. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
 ## Versions effectivement vérifiées
 
@@ -12,6 +12,14 @@ Date : 2026-10-14. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 2.1.1 — fenêtres du schéma sur téléphone
+
+| Série | Résultat |
+|---|---|
+| Navigateur, téléphone 390 × 844 (FreeScout de test, pack d'exemple importé) | **Avant** : panneau d'une règle à 730 px du haut de l'écran, ~110 px visibles. **Après** : panneau fixé au bas de l'écran, 490 px visibles, règle choisie visible au-dessus ; « Plein écran » → 844 px, « Réduire » ; fermer le panneau quitte le plein écran ; panneaux d'une boîte et d'un dossier identiques. Éditeur (règle existante et nouvelle règle) : tout l'écran, titre et Annuler / Enregistrer visibles en haut et en bas du défilement, croix de suppression à droite de la première ligne. Aucune erreur JavaScript |
+| Navigateur, ordinateur 1366 × 900 | Panneau latéral inchangé (360 px), pas de bouton « Plein écran » |
+| JavaScript, PHP | `node --check` des scripts du schéma ; `tests/js/*.test.js` OK ; tests unitaires PHP : 44 tests, 0 échec ; `tools/build-release.sh` OK |
 
 ## 2.1.0 — condition « Tag d'e-mail » (RefreshGlobal)
 

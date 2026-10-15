@@ -59,6 +59,8 @@ return [
     'sensitive_delete' => 'löscht',
     'sensitive_move'   => 'verschiebt in ein anderes Postfach',
     'close'            => 'Schließen',
+    'sheet_expand'     => 'Ganzer Bildschirm',
+    'sheet_shrink'     => 'Verkleinern',
     'edit'             => 'Bearbeiten',
     'loading'          => 'Laden…',
     'kind_mailbox'     => 'Postfach',

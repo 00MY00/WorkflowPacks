@@ -41,11 +41,10 @@
                 // one block: its panel; several (Shift + click / Shift + drag): what to do with all of them
                 var keys = Object.keys(self.view.selected);
                 if (keys.length > 1) { self.inspector.showMulti(keys); } else if (keys.length) { self.inspector.show(keys[0]); } else { self.inspector.hide(); }
-                // phone: the panel opens at the bottom (graph.css), the block stays visible above it
-                if (keys.length === 1 && window.matchMedia && window.matchMedia('(max-width: 767px)').matches) { self.view.reveal(keys[0], 0.46); }
+                if (keys.length) { self.phoneSheet(keys.length === 1 ? keys[0] : null); }
                 self.minimap.update();
             },
-            onEdge: function (edge) { self.inspector.showEdge(edge); },
+            onEdge: function (edge) { self.inspector.showEdge(edge); self.phoneSheet(null); },
             onConnect: function (from, to) { self.connect(from, to); },
             onRefused: function () { self.toast(self.texts.connect_refused, 'error'); },
             onOpen: function (key) { self.open(key); },
@@ -349,6 +348,19 @@
         var p = this.model.pos[key];
         if (p) { this.view.centerOn(p[0] + 120, p[1] + 30); }
         this.inspector.show(key);
+    };
+
+    /**
+     * Phone: the panel is a sheet fixed at the bottom of the screen (graph.css). The page scrolls to the diagram and the
+     * selected block is moved into the part of the diagram that stays visible above the sheet.
+     */
+    App.prototype.phoneSheet = function (key) {
+        if (!(window.matchMedia && window.matchMedia('(max-width: 767px)').matches)) { return; }
+        var stage = this.root.querySelector('.wpg-stage');
+        window.scrollTo(0, stage.getBoundingClientRect().top + window.pageYOffset - 8);
+        if (!key) { return; }
+        var r = stage.getBoundingClientRect(), sheet = this.inspector.panel.getBoundingClientRect().top;
+        this.view.reveal(key, Math.max(0.2, Math.min(1, (sheet - r.top) / r.height)));
     };
 
     App.prototype.clearSelection = function () {

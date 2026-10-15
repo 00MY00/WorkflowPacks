@@ -127,6 +127,7 @@
 .wpg-ins-title strong { overflow-wrap: anywhere; }
 .wpg-ins-title small { color: var(--g-muted); }
 .wpg-ins-close { border: 0; background: none; font-size: 22px; line-height: 1; color: var(--g-muted); cursor: pointer; }
+.wpg-ins-grow { display: none; align-items: center; padding: 4px; }
 .wpg-ins-body { padding: 12px 14px 20px; }
 .wpg-ins-sec { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--g-muted); margin: 14px 0 6px; }
 .wpg-inst { display: flex; align-items: center; gap: 8px; width: 100%; padding: 6px 8px; border: 1px solid var(--g-border); border-radius: 8px; margin-bottom: 6px; background: var(--g-card); text-align: left; }
@@ -190,11 +191,30 @@
   .wpg-stage { height: calc(100vh - 260px); min-height: 380px; }
   .wpg-btn span { display: none; }
   .wpg-minimap, .wpg-legend { display: none; }
-  /* phone: the side panel becomes a sheet at the bottom, the diagram stays visible (and touchable) above it */
-  .wpg-inspector { top: auto; left: 0; width: 100%; max-width: 100%; height: 52%; border-left: 0; border-top: 1px solid var(--g-border);
-    border-radius: 16px 16px 0 0; box-shadow: 0 -8px 24px rgba(15, 23, 42, .12); transform: translateY(105%); }
+  /* phone: the side panel becomes a sheet fixed at the bottom of the screen (not of the diagram, which is partly below
+     the toolbar); the diagram stays visible (and touchable) above it, the sheet can take the whole screen */
+  .wpg-inspector { position: fixed; top: auto; left: 0; right: 0; width: 100%; max-width: 100%; height: 58vh; height: 58dvh;
+    border-left: 0; border-top: 1px solid var(--g-border); border-radius: 16px 16px 0 0; box-shadow: 0 -8px 24px rgba(15, 23, 42, .18);
+    transform: translateY(105%); z-index: 1045; overscroll-behavior: contain; transition: transform .2s, height .2s; }
   .wpg-inspector.open { transform: none; }
-  .wpg-row2, .wpg-cond, .wpg-act { grid-template-columns: 1fr; }
+  .wpg-inspector.is-full { height: 100vh; height: 100dvh; border-radius: 0; }
+  .wpg-ins-head { position: sticky; top: 0; z-index: 1; background: var(--g-card); }
+  .wpg-ins-grow { display: inline-flex; }
+  /* room under the page so that the diagram can be scrolled to the top of the screen, above the sheet */
+  body.wpg-sheet-open { padding-bottom: 60vh; }
+  /* editor: the whole screen, title and Save / Cancel always visible */
+  .wpg-overlay { padding: 0; }
+  .wpg-dialog { width: 100%; min-height: 100%; border-radius: 0; box-shadow: none; display: flex; flex-direction: column; }
+  .wpg-dialog-head { position: sticky; top: 0; z-index: 2; background: var(--g-card); }
+  .wpg-dialog-body { flex: 1; padding: 12px; }
+  .wpg-dialog-foot { position: sticky; bottom: 0; z-index: 2; background: var(--g-card); padding: 10px 12px; }
+  .wpg-dialog-foot .btn { flex: 1; }
+  .wpg-row2 { grid-template-columns: 1fr; }
+  /* condition / action: the fields one under the other, the delete cross at the right of the first one */
+  .wpg-cond, .wpg-act { grid-template-columns: minmax(0, 1fr) 32px; }
+  .wpg-cond > *, .wpg-act > * { grid-column: 1; min-width: 0; }
+  .wpg-cond > .wpg-del, .wpg-act > .wpg-del { grid-column: 2; grid-row: 1; font-size: 22px; }
+  .wpg-tags { min-width: 0; }
   .wpg-search input { width: 110px; }
   .wpg-toolbar .wpg-label { display: none; }
   .wpg-toolbar .wpg-select { max-width: calc(50vw - 40px); }

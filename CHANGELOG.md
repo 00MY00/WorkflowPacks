@@ -4,6 +4,19 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [2.1.1] - 2026-10-15
+
+### Corrigé
+- **Schéma sur téléphone : le panneau d'un bloc était trop petit pour travailler.** Il était collé au bas du schéma, qui
+  est en partie sous la barre d'outils, et il n'en restait qu'une bande d'environ 110 px visible à l'écran.
+  - Le panneau (règle, boîte, dossier, pack, lien, sélection de plusieurs blocs) est maintenant fixé au bas de
+    l'**écran** et en prend 58 %. La page défile jusqu'au schéma, et le bloc choisi reste visible au-dessus du panneau.
+  - Bouton **« Plein écran »** dans la barre de titre du panneau, pour lui donner tout l'écran (et « Réduire »). La
+    barre de titre reste visible quand on fait défiler le panneau.
+- **Éditeur de règle sur téléphone** : il prend tout l'écran ; son titre et les boutons **Annuler / Enregistrer**
+  restent toujours visibles. La croix de suppression d'une condition ou d'une action est à droite de sa première ligne,
+  au lieu d'occuper une ligne à elle seule.
+
 ## [2.1.0] - 2026-10-14
 
 ### Ajouté

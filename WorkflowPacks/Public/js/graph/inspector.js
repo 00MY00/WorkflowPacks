@@ -33,8 +33,28 @@
 
     Inspector.prototype.hide = function () {
         this.current = null;
-        this.panel.classList.remove('open');
+        this.panel.classList.remove('open', 'is-full');
         this.panel.textContent = '';
+        document.body.classList.remove('wpg-sheet-open');
+    };
+
+    /** Opens the panel; on a phone it is a sheet at the bottom of the screen (graph.css) that can take the whole screen. */
+    Inspector.prototype.open = function () {
+        this.panel.textContent = '';
+        this.panel.classList.add('open');
+        document.body.classList.add('wpg-sheet-open');
+    };
+
+    /** Buttons of the panel's title bar: whole screen (phone only, graph.css) and close. */
+    Inspector.prototype.headButtons = function () {
+        var panel = this.panel, t = this.t;
+        var label = function () { return panel.classList.contains('is-full') ? t.sheet_shrink : t.sheet_expand; };
+        var grow = h('button', { type: 'button', class: 'wpg-ins-close wpg-ins-grow', title: label(), 'aria-label': label(), on: { click: function () {
+            panel.classList.toggle('is-full');
+            grow.title = label();
+            grow.setAttribute('aria-label', label());
+        } } }, [icon('fit')]);
+        return [grow, h('button', { type: 'button', class: 'wpg-ins-close', title: t.close, 'aria-label': t.close, on: { click: this.app.clearSelection.bind(this.app) } }, ['×'])];
     };
 
     Inspector.prototype.refresh = function () {
@@ -42,13 +62,11 @@
     };
 
     Inspector.prototype.frame = function (node, kindLabel) {
-        this.panel.textContent = '';
-        this.panel.classList.add('open');
+        this.open();
         var head = h('div', { class: 'wpg-ins-head kind-' + node.kind + (node.dest ? ' dest-' + node.dest : '') }, [
             h('span', { class: 'wpg-ins-pill' }, [icon(I.of(node))]),
-            h('div', { class: 'wpg-ins-title' }, [h('strong', { text: node.label }), h('small', { text: kindLabel })]),
-            h('button', { type: 'button', class: 'wpg-ins-close', title: this.t.close, 'aria-label': this.t.close, on: { click: this.app.clearSelection.bind(this.app) } }, ['×'])
-        ]);
+            h('div', { class: 'wpg-ins-title' }, [h('strong', { text: node.label }), h('small', { text: kindLabel })])
+        ].concat(this.headButtons()));
         this.panel.appendChild(head);
         var body = h('div', { class: 'wpg-ins-body' });
         this.panel.appendChild(body);
@@ -207,13 +225,11 @@
     Inspector.prototype.showMulti = function (keys) {
         var app = this.app, t = this.t;
         this.current = null;
-        this.panel.textContent = '';
-        this.panel.classList.add('open');
+        this.open();
         this.panel.appendChild(h('div', { class: 'wpg-ins-head' }, [
             h('span', { class: 'wpg-ins-pill' }, [icon('focus')]),
-            h('div', { class: 'wpg-ins-title' }, [h('strong', { text: t.multi_title.replace(':count', keys.length) }), h('small', { text: t.multi_hint })]),
-            h('button', { type: 'button', class: 'wpg-ins-close', title: t.close, 'aria-label': t.close, on: { click: app.clearSelection.bind(app) } }, ['×'])
-        ]));
+            h('div', { class: 'wpg-ins-title' }, [h('strong', { text: t.multi_title.replace(':count', keys.length) }), h('small', { text: t.multi_hint })])
+        ].concat(this.headButtons())));
         var body = h('div', { class: 'wpg-ins-body' });
         this.panel.appendChild(body);
         var ids = {}, active = 0, filing = [];
