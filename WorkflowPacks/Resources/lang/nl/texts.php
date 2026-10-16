@@ -98,7 +98,7 @@ return [
     'imp_no_name'              => 'geen vrije naam voor ":name".',
     'imp_unknown_choice'       => 'onbekende keuze ":choice".',
     'imp_cancelled'            => 'import geannuleerd, niets opgeslagen: :error',
-    'exp_modified'             => ':name: lokaal gewijzigd sinds de import; het sjabloon van het pack wordt geëxporteerd.',
+    'exp_modified'             => ':name: gewijzigd sinds de import van het pakket; de huidige versie wordt geëxporteerd.',
     'exp_ref_condition'        => ':name: voorwaarde ":type" → :kind :value (lokale identificatie, bij import op te lossen)',
     'exp_ref_action'           => ':name: actie ":type" → :kind :value (lokale identificatie, bij import op te lossen)',
     'exp_module_condition'     => ':name: voorwaarde ":type" komt van een andere module (Tags, Custom Fields…): declareer haar in "requires".',
