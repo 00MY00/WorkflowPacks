@@ -62,6 +62,8 @@ return [
     'close'            => 'Close',
     'sheet_expand'     => 'Whole screen',
     'sheet_shrink'     => 'Smaller',
+    'group_pack'       => 'Group into a pack',
+    'group_mailbox'    => 'Group the rules of this mailbox',
     'edit'             => 'Edit',
     'loading'          => 'Loading…',
     'kind_mailbox'     => 'Mailbox',
