@@ -130,7 +130,12 @@
             var sub = h('div', { class: 'wpg-menu wpg-menu-sub' });
             item[3].forEach(function (s) { sub.appendChild(self.item(s)); });
             var wrap = h('div', { class: 'wpg-menu-parent' }, [button, sub]);
-            button.addEventListener('click', function () { wrap.classList.toggle('open'); });
+            button.addEventListener('click', function () {
+                wrap.classList.toggle('open');
+                // the open list stays inside the window: the menu moves up when needed
+                var menu = self.el, r = menu && menu.getBoundingClientRect();
+                if (r && r.bottom > window.innerHeight - 8) { menu.style.top = Math.max(8, window.innerHeight - r.height - 8) + 'px'; }
+            });
             return wrap;
         }
         button.addEventListener('click', function () { self.close(); item[2](); });

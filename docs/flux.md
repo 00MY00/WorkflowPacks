@@ -53,6 +53,11 @@ directement : l'éditeur s'ouvre, déjà rempli, pour vérifier puis enregistrer
     l'étape (1 heure, puis 1 jour, 2 jours, puis un jour de plus) ;
   - « Ici aussi : marquer comme fermé », « classer dans un dossier », quand la règle ne le fait pas encore.
 
+- Partout (règle, étape, dossier, statut, personne, tag, boîte) : **toutes les actions du catalogue** de Workflows,
+  dans une liste « Ajouter une action… » (statut, assigner, déplacer, note, réponse, transfert, notification,
+  supprimer, tag, dossier, actions des autres modules). Sur un dossier ou une autre destination, l'action est ajoutée
+  à la règle qui envoie là (plusieurs règles : on choisit la règle).
+
 Le nouveau bloc garde les conditions du flux et de sa branche : il s'ajoute à la même chaîne.
 
 ## Les tests « assigné » et « réponse envoyée »

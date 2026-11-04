@@ -295,4 +295,10 @@ return [
     'sim_test_rule'   => 'Deze regel testen',
     'next_flow_status_close'      => 'Als 7 dagen "In afwachting": als gesloten markeren',
     'next_name_flow_status_close' => 'Tickets die 7 dagen in afwachting zijn sluiten',
+    'next_act_status'    => 'Status: :status',
+    'next_then_any'      => 'Actie toevoegen…',
+    'next_then_any_here' => 'Actie toevoegen aan ":rule"',
+    'next_pick_rule'     => 'Actie toevoegen aan een regel die hierheen stuurt',
+    'next_new_with'      => 'Nieuwe regel voor nieuwe e-mails, die…',
+    'next_name_new_with' => 'Nieuwe e-mails',
 ];

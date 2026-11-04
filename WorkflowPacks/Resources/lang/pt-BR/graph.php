@@ -295,4 +295,10 @@ return [
     'sim_test_rule'   => 'Testar esta regra',
     'next_flow_status_close'      => 'Se “Pendente” há 7 dias: marcar como fechado',
     'next_name_flow_status_close' => 'Fechar os tickets pendentes há 7 dias',
+    'next_act_status'    => 'Status: :status',
+    'next_then_any'      => 'Adicionar uma ação…',
+    'next_then_any_here' => 'Adicionar uma ação a “:rule”',
+    'next_pick_rule'     => 'Adicionar uma ação a uma regra que envia para cá',
+    'next_new_with'      => 'Nova regra para os novos e-mails, que…',
+    'next_name_new_with' => 'Novos e-mails',
 ];

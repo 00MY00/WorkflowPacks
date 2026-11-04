@@ -295,4 +295,10 @@ return [
     'sim_test_rule'   => 'Diese Regel testen',
     'next_flow_status_close'      => 'Wenn 7 Tage „Ausstehend“: als geschlossen markieren',
     'next_name_flow_status_close' => 'Seit 7 Tagen ausstehende Tickets schließen',
+    'next_act_status'    => 'Status: :status',
+    'next_then_any'      => 'Aktion hinzufügen…',
+    'next_then_any_here' => 'Aktion zu „:rule“ hinzufügen',
+    'next_pick_rule'     => 'Aktion zu einer Regel hinzufügen, die hierher sendet',
+    'next_new_with'      => 'Neue Regel für neue E-Mails, die…',
+    'next_name_new_with' => 'Neue E-Mails',
 ];

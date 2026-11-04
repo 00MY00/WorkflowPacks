@@ -295,4 +295,10 @@ return [
     'sim_test_rule'   => 'Probar esta regla',
     'next_flow_status_close'      => 'Si «Pendiente» desde hace 7 días: marcar como cerrado',
     'next_name_flow_status_close' => 'Cerrar los tickets pendientes desde hace 7 días',
+    'next_act_status'    => 'Estado: :status',
+    'next_then_any'      => 'Añadir una acción…',
+    'next_then_any_here' => 'Añadir una acción a «:rule»',
+    'next_pick_rule'     => 'Añadir una acción a una regla que envía aquí',
+    'next_new_with'      => 'Nueva regla para los correos nuevos, que…',
+    'next_name_new_with' => 'Correos nuevos',
 ];
