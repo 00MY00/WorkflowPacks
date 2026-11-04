@@ -312,4 +312,10 @@ return [
     'delete_panel'     => 'Eliminado',
     'delete_undo'      => 'Deshacer la eliminación',
     'delete_undone'    => 'Eliminación deshecha: todo ha vuelto.',
+    'next_add_timer'    => 'Añadir un temporizador',
+    'next_timer_preset' => 'Después de :delay',
+    'next_name_timer'   => 'Después de :delay',
+    'kind_dest_timer'  => 'Temporizador',
+    'timer_rule'       => 'Regla',
+    'timer_help_block' => 'Las acciones de la regla se ejecutan al superar este plazo (Workflows lo comprueba periódicamente). Eliminar este bloque quita el plazo: la regla se aplicará a la llegada.',
 ];

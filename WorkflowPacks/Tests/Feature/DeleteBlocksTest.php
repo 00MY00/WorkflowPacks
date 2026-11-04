@@ -163,6 +163,32 @@ class DeleteBlocksTest extends TestCase
         $this->assertNull(Workflow::find($bare->id));
     }
 
+    public function testTheTimerBlockOfARuleInTheOverview()
+    {
+        $a = $this->mailbox('A');
+        $admin = $this->user([], true);
+        $subject = [['type' => 'subject', 'operator' => 'contains', 'value' => 'x']];
+        $delay = [['type' => 'created', 'operator' => 'not_in_last', 'value' => ['number' => 30, 'metric' => 'd']]];
+        $wf = $this->workflow($a, 'Plus tard', [$subject, $delay], [['type' => 'status', 'value' => '3']]);
+
+        $data = $this->actingAs($admin)->getJson(route('workflowpacks.graph.data'))->json();
+        $timer = collect($data['nodes'])->firstWhere('key', 'dest:timer:wf:'.$wf->id);
+        $this->assertNotNull($timer, 'a block of its own');
+        $this->assertSame('timer', $timer['dest']);
+        $this->assertStringContainsString('30', $timer['label']);
+        $this->assertTrue(collect($data['edges'])->contains(function ($e) use ($wf) {
+            return $e['kind'] === 'timer' && $e['from'] === 'wf:'.$wf->id && $e['to'] === 'dest:timer:wf:'.$wf->id;
+        }));
+
+        // deleting it removes the delay (said in the confirmation)
+        list($plan, $done) = $this->remove($admin, ['dest:timer:wf:'.$wf->id]);
+        $this->assertNotEmpty($plan['warnings']);
+        $this->assertTrue($done['ok']);
+        $this->assertSame([$subject], $wf->fresh()->conditions);
+        $keys = array_column($this->actingAs($admin)->getJson(route('workflowpacks.graph.data'))->json()['nodes'], 'key');
+        $this->assertNotContains('dest:timer:wf:'.$wf->id, $keys);
+    }
+
     public function testRightsAndAChangeInTheMeantime()
     {
         $a = $this->mailbox('A');

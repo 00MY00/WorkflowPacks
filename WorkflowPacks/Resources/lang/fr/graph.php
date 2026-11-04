@@ -313,4 +313,10 @@ return [
     'delete_panel'     => 'Supprimé',
     'delete_undo'      => 'Annuler la suppression',
     'delete_undone'    => 'Suppression annulée : tout est revenu.',
+    'next_add_timer'    => 'Ajouter un minuteur',
+    'next_timer_preset' => 'Après :delay',
+    'next_name_timer'   => 'Après :delay',
+    'kind_dest_timer'  => 'Minuteur',
+    'timer_rule'       => 'Règle',
+    'timer_help_block' => 'Les actions de la règle se font quand ce délai est dépassé (vérifié régulièrement par Workflows). Supprimer ce bloc retire le délai : la règle s\'appliquera dès l\'arrivée.',
 ];

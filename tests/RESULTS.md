@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 2.9.2
+# Résultats des tests — Workflow Packs 2.10.0
 
 Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,14 @@ Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 2.10.0 — minuteurs
+
+| Série | Résultat |
+|---|---|
+| Intégration (106 tests, 878 assertions, instance neuve) | `DeleteBlocksTest` (+1) : règle « après 30 jours » → bloc `dest:timer:wf:<id>` relié par un lien « minuteur » ; supprimé : délai retiré (avertissement), bloc disparu |
+| JavaScript | `next.test.js` (10) : « Ajouter un minuteur » (6 délais) après le statut pour une boîte, une règle (sans son propre délai), une étape, le minuteur d'une règle ; rien sans la condition de date ni pour plusieurs règles ; règle préparée sans action, non appliquée aux tickets existants |
+| Navigateur | Vue d'ensemble : 4 blocs minuteur (« Après 1 heure », « Après 2 jours », « Après 1 jour », « Après 7 jours · en attente ») ; minuteur sélectionné → « Ajouter un bloc » : statut, « Ajouter un minuteur › » (15 min… 30 jours), actions de sa règle ; « Après 7 jours » ouvre l'éditeur avec le délai réglé ; aucune erreur |
 
 ## 2.9.2 — suppression de tous les blocs, schéma plus rapide
 

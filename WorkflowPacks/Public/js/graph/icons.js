@@ -59,7 +59,7 @@
             return { cond: 'filter', branch: 'branch', timer: 'hourglass', note: 'note', send: 'send', other: 'dots', imap: 'folder', closed: 'closed',
                 pending: 'pending', active: 'active', spam: 'spam', deleted: 'deleted', person: 'person', tag: 'tag', mailbox: 'move' }[node.dest] || 'dots';
         }
-        return { closed: 'closed', pending: 'pending', active: 'active', spam: 'spam', deleted: 'deleted', cleanup: 'deleted', person: 'person', tag: 'tag', mailbox: 'mailbox' }[node.dest] || 'folder';
+        return { closed: 'closed', pending: 'pending', active: 'active', spam: 'spam', deleted: 'deleted', cleanup: 'deleted', person: 'person', tag: 'tag', mailbox: 'mailbox', timer: 'hourglass' }[node.dest] || 'folder';
     }
 
     /** <symbol> elements in the <defs> of the diagram. */

@@ -20,6 +20,7 @@ use Modules\WorkflowPacks\Services\Workflows\Bridge;
  *         tpl:<pack>/<key>  rule of a pack (one node, linked to every mailbox where the pack created it)
  *         wf:<id>           rule created outside any pack (linked to its own mailbox)
  *         pack:<key>        pack (contains its rules)
+ *         dest:timer:<rule> the delay of a rule ("After 30 days"): a block of its own, linked to the rule
  *         dest:<kind>:<id>  where a rule sends the conversations: folder of a status (closed, pending, spam…),
  *                           Deleted, a person (assignment), a tag (Tags module), an e-mail folder on the mail server
  *                           (one block per level); moving to another mailbox links the rule to that mailbox
@@ -93,6 +94,14 @@ class GraphBuilder
                 'active' => (bool) $wf->active, 'previous' => (bool) $wf->apply_to_prev, 'state' => $state, 'name' => (string) $wf->name,
                 'sensitive' => $summary['sensitive'], 'files' => false];
             $applies = count($edges) - 1;
+            // a rule with a delay: its timer is a block of its own ("After 30 days"), linked to the rule
+            $delays = FlowBuilder::split((array) $attributes['conditions'])['delays'];
+            if ($delays && !isset($nodes['dest:timer:'.$ruleKey])) {
+                $labels = self::labels($wf->mailbox_id);
+                $nodes['dest:timer:'.$ruleKey] = ['key' => 'dest:timer:'.$ruleKey, 'kind' => 'dest', 'dest' => 'timer', 'rule' => $ruleKey,
+                    'label' => implode(' · ', array_map([$labels, 'delay'], $delays)), 'sub' => __('workflowpacks::messages.timer_block')];
+                $sends[$ruleKey.'>dest:timer:'.$ruleKey] = ['from' => $ruleKey, 'to' => 'dest:timer:'.$ruleKey, 'kind' => 'timer'];
+            }
             foreach ($this->destinations($attributes, $jsonActions, $nodes) as $dest) {
                 $chain = $dest['chain'] ?? [];
                 unset($dest['chain']);
