@@ -192,6 +192,14 @@ rectangle au clic gauche puis menu d'actions rapides.
 
 ## Exporter ou regrouper dans un pack
 
+**Le cas le plus courant** : vous avez importé un pack, puis ajouté ou modifié des règles. La page **Export** montre
+chaque pack avec ses règles **nouvelles** et **modifiées** (cochées) : **« Mettre à jour le pack »** les y ajoute et
+augmente sa version, puis **« Télécharger »** donne le fichier à jour. L'adresse de la boîte devient
+`{{mailbox.email}}` : le pack reste utilisable dans une autre boîte.
+
+Pour un nouveau pack, ou pour choisir les règles une par une, ouvrez « Créer un nouveau pack ou choisir les règles
+une par une » :
+
 Page **Export** : cochez des règles (d'une boîte ou de **toutes les boîtes**, avec « Tout sélectionner »), choisissez
 le pack de destination, puis l'aperçu propose deux actions :
 - **Télécharger** le fichier `.json` du pack ;

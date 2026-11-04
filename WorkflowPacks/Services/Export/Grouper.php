@@ -48,6 +48,70 @@ class Grouper
         return true;
     }
 
+    /**
+     * What is new for each pack, in the mailboxes where it is used (and that the user manages): the rules outside any
+     * pack ("new") and its own rules changed since the import ("modified") — what "Update the pack" adds to it.
+     * Three queries whatever the number of packs.
+     *
+     * @param \Illuminate\Support\Collection $packs
+     * @return array pack key => ['new' => [workflows], 'modified' => [workflows]]
+     */
+    public static function pendingAll($user, $packs)
+    {
+        $out = [];
+        $keys = $packs->pluck('pack_key')->all();
+        foreach ($keys as $key) {
+            $out[$key] = ['new' => [], 'modified' => []];
+        }
+        if (!$keys) {
+            return $out;
+        }
+        $links = Link::whereIn('pack_key', $keys)->get();
+        $mailboxes = [];
+        foreach ($links->pluck('mailbox_id')->unique() as $id) {
+            if (Bridge::canEdit($user, $id)) {
+                $mailboxes[] = (int) $id;
+            }
+        }
+        if (!$mailboxes) {
+            return $out;
+        }
+        $workflows = Bridge::query()->whereIn('mailbox_id', $mailboxes)->orderBy('mailbox_id')->orderBy('sort_order')->get();
+        $linked = Link::whereIn('workflow_id', $workflows->pluck('id')->all() ?: [0])->get()->groupBy('workflow_id');
+        $jsonActions = (array) Bridge::config('json_value_actions');
+        foreach ($keys as $key) {
+            $packMailboxes = $links->where('pack_key', $key)->pluck('mailbox_id')->map(function ($id) {
+                return (int) $id;
+            })->unique()->all();
+            foreach ($workflows as $workflow) {
+                if (!in_array((int) $workflow->mailbox_id, $packMailboxes, true)) {
+                    continue;
+                }
+                $own = collect($linked->get($workflow->id, []))->firstWhere('pack_key', $key);
+                if (!$linked->has($workflow->id)) {
+                    $out[$key]['new'][] = $workflow;
+                } elseif ($own && Fingerprint::of(Bridge::attributesOf($workflow), $jsonActions) !== $own->fingerprint) {
+                    $out[$key]['modified'][] = $workflow;
+                }
+            }
+        }
+
+        return $out;
+    }
+
+    /** The address of each mailbox of these rules becomes {{mailbox.email}} (the pack stays usable elsewhere). */
+    public static function mailboxReplacements($workflows)
+    {
+        $out = [];
+        foreach (\App\Mailbox::whereIn('id', collect($workflows)->pluck('mailbox_id')->unique()->all() ?: [0])->get() as $mailbox) {
+            if ((string) $mailbox->email !== '') {
+                $out[] = ['text' => (string) $mailbox->email, 'variable' => 'mailbox.email'];
+            }
+        }
+
+        return $out;
+    }
+
     /** 1.4.2 -> 1.4.3 ; anything else -> 1.0.0. */
     public static function bump($version)
     {

@@ -161,6 +161,46 @@ class GroupPackTest extends TestCase
         $this->assertNotEmpty($composed['errors']);
     }
 
+    public function testUpdatingAnImportedPackWithTheNewRulesInOneClick()
+    {
+        $a = $this->mailbox('A');
+        $admin = $this->user([], true);
+        $this->import($this->pack([$this->rule('r1'), $this->rule('r2')]), [$a], $admin);
+        $changed = $this->workflows($a)->first();
+        $changed->name = 'Règle r1 modifiée';
+        $changed->save();
+        $added = new Workflow();
+        $added->mailbox_id = $a->id;
+        $added->name = 'Nouvelle';
+        $added->conditions = [[['type' => 'to', 'operator' => 'equal', 'value' => $a->email]]];
+        $added->actions = [[['type' => 'status', 'value' => '3']]];
+        $added->save();
+        $other = $this->localRule($this->mailbox('B'), 'Ailleurs');
+
+        // the page offers the pack with its new and changed rules
+        $page = $this->actingAs($admin)->get(route('workflowpacks.export'));
+        $page->assertStatus(200);
+        $this->seeIn($page, e(__('workflowpacks::messages.pack_update_button', ['version' => '1.0.1'])));
+        $this->seeIn($page, 'value="'.$added->id.'" checked');
+        $this->seeIn($page, 'Règle r1 modifiée');
+        $this->assertStringNotContainsString('value="'.$other->id.'" checked', $page->getContent(), 'a rule of another mailbox is not offered');
+
+        // a rule not offered for this pack is ignored, whatever the form sends
+        $done = $this->actingAs($admin)->post(route('workflowpacks.export.update_pack'), ['pack_key' => 'test-pack', 'workflows' => [$added->id, $changed->id, $other->id]]);
+        $done->assertRedirect(route('workflowpacks.export', ['pack_key' => 'test-pack']));
+        $this->assertSame('1.0.1', Pack::where('pack_key', 'test-pack')->first()->pack_version);
+        $this->assertSame(0, Link::where('workflow_id', $other->id)->count());
+        $source = $this->source('test-pack');
+        $this->assertSame(['r1', 'r2', 'nouvelle'], array_column($source['workflows'], 'key'));
+        $this->assertSame('{{mailbox.email}}', $source['workflows'][2]['conditions']['all'][0]['value'], 'the address of the mailbox becomes a variable');
+
+        // up to date, and the download gives the pack with its new rule
+        $this->seeIn($this->actingAs($admin)->get(route('workflowpacks.export', ['pack_key' => 'test-pack'])), e(__('workflowpacks::messages.pack_up_to_date')));
+        $file = $this->actingAs($admin)->post(route('workflowpacks.export.download'), ['mode' => 'pack', 'pack_key' => 'test-pack']);
+        $this->seeIn($file, '"Nouvelle"');
+        $this->seeIn($file, '"pack_version": "1.0.1"');
+    }
+
     public function testGroupingThroughThePages()
     {
         $a = $this->mailbox('A');

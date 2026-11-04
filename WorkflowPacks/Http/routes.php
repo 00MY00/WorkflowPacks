@@ -29,6 +29,7 @@ Route::group([
     Route::post('/export', $users + ['uses' => 'ExportController@preview'])->name('workflowpacks.export.preview');
     Route::post('/export/download', $users + ['uses' => 'ExportController@download'])->name('workflowpacks.export.download');
     Route::post('/export/group', $users + ['uses' => 'ExportController@group'])->name('workflowpacks.export.group');
+    Route::post('/export/update-pack', $users + ['uses' => 'ExportController@updatePack'])->name('workflowpacks.export.update_pack');
 
     // diagram (page + JSON endpoints of Public/js/graph)
     Route::get('/graph', $users + ['uses' => 'GraphController@show'])->name('workflowpacks.graph');

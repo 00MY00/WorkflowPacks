@@ -2,7 +2,6 @@
 
 @section('wp_content')
     <h3>{{ __('workflowpacks::messages.export_title') }}</h3>
-    <p class="wp-muted">{{ __('workflowpacks::messages.export_intro') }}</p>
     @include('workflowpacks::partials.problems', ['problems' => $errors_list])
 
     @php
@@ -10,10 +9,55 @@
         if ($wp_target === 'existing' && !$targets->count()) {
             $wp_target = 'new';
         }
+        $wp_names = $mailboxes->pluck('name', 'id');
+        $wp_custom = !empty($old['mode']) || !$packs->count();
     @endphp
 
-    <div class="panel panel-default">
-        <div class="panel-heading"><strong>{{ __('workflowpacks::messages.export_mode_wf') }}</strong></div>
+    @foreach ($packs as $pack)
+        @php
+            $wp_new = $pending[$pack->pack_key]['new'] ?? [];
+            $wp_changed = $pending[$pack->pack_key]['modified'] ?? [];
+            $wp_can = $targets->contains('pack_key', $pack->pack_key);
+            $wp_fresh = ($old['pack_key'] ?? '') === $pack->pack_key;
+        @endphp
+        <div class="wp-pack-card @if ($wp_fresh) is-fresh @endif">
+            <div class="wp-pack-card-head">
+                <div>
+                    <strong>{{ $pack->name }}</strong>
+                    <span class="wp-muted">v{{ $pack->pack_version }}</span>
+                </div>
+                <form method="POST" action="{{ route('workflowpacks.export.download') }}" class="wp-inline" data-wp-busy="off">
+                    {{ csrf_field() }}
+                    <input type="hidden" name="mode" value="pack">
+                    <input type="hidden" name="pack_key" value="{{ $pack->pack_key }}">
+                    <button type="submit" class="btn {{ $wp_fresh || (!$wp_new && !$wp_changed) ? 'btn-primary' : 'btn-default' }}">{{ __('workflowpacks::messages.pack_download', ['version' => $pack->pack_version]) }}</button>
+                </form>
+            </div>
+            @if (($wp_new || $wp_changed) && $wp_can)
+                <form method="POST" action="{{ route('workflowpacks.export.update_pack') }}" class="wp-pack-card-update">
+                    {{ csrf_field() }}
+                    <input type="hidden" name="pack_key" value="{{ $pack->pack_key }}">
+                    <p>{{ __('workflowpacks::messages.pack_pending', ['count' => count($wp_new) + count($wp_changed)]) }}</p>
+                    @foreach ([['new', $wp_new], ['modified', $wp_changed]] as $wp_group)
+                        @foreach ($wp_group[1] as $wf)
+                            <label class="wp-pack-rule">
+                                <input type="checkbox" name="workflows[]" value="{{ $wf->id }}" checked>
+                                {{ $wf->name }}
+                                <span class="label {{ $wp_group[0] === 'new' ? 'label-success' : 'label-warning' }}">{{ __('workflowpacks::messages.pack_state_'.$wp_group[0]) }}</span>
+                                <span class="wp-muted">{{ $wp_names[$wf->mailbox_id] ?? '' }}</span>
+                            </label>
+                        @endforeach
+                    @endforeach
+                    <button type="submit" class="btn btn-primary">{{ __('workflowpacks::messages.pack_update_button', ['version' => \Modules\WorkflowPacks\Services\Export\Grouper::bump($pack->pack_version)]) }}</button>
+                </form>
+            @elseif (!$wp_new && !$wp_changed)
+                <p class="wp-muted wp-pack-ok">✓ {{ __('workflowpacks::messages.pack_up_to_date') }}</p>
+            @endif
+        </div>
+    @endforeach
+
+    <details class="panel panel-default wp-custom-export" @if ($wp_custom) open @endif>
+        <summary class="panel-heading"><strong>{{ $packs->count() ? __('workflowpacks::messages.export_custom') : __('workflowpacks::messages.export_mode_wf') }}</strong></summary>
         <div class="panel-body">
             <form method="GET" action="{{ route('workflowpacks.export') }}" class="form-inline wp-inline">
                 <label>{{ __('workflowpacks::messages.filter_mailbox') }}</label>
@@ -113,21 +157,6 @@
                 <button type="submit" class="btn btn-primary">{{ __('workflowpacks::messages.export_preview') }}</button>
             </form>
         </div>
-    </div>
+    </details>
 
-    @if ($packs->count())
-        <form method="POST" action="{{ route('workflowpacks.export.preview') }}" class="wp-form panel panel-default">
-            <div class="panel-heading"><strong>{{ __('workflowpacks::messages.export_mode_pack') }}</strong></div>
-            <div class="panel-body form-inline">
-                {{ csrf_field() }}
-                <input type="hidden" name="mode" value="pack">
-                <select name="pack_key" class="form-control">
-                    @foreach ($packs as $pack)
-                        <option value="{{ $pack->pack_key }}" @if (($old['pack_key'] ?? '') === $pack->pack_key) selected @endif>{{ $pack->name }} ({{ $pack->pack_key }}, {{ $pack->pack_version }})</option>
-                    @endforeach
-                </select>
-                <button type="submit" class="btn {{ isset($old['pack_key']) ? 'btn-primary' : 'btn-default' }}">{{ __('workflowpacks::messages.export_preview') }}</button>
-            </div>
-        </form>
-    @endif
 @endsection

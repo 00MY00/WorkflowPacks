@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 2.4.0
+# Résultats des tests — Workflow Packs 2.5.0
 
 Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,13 @@ Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 2.5.0 — export simplifié (mettre à jour un pack)
+
+| Série | Résultat |
+|---|---|
+| Intégration (99 tests, 799 assertions, instance neuve) | `GroupPackTest` (+1) : pack importé + une règle ajoutée (avec l'adresse de la boîte) + une règle modifiée : la page propose les deux (pas celle d'une autre boîte) ; « Mettre à jour le pack » : version 1.0.1, règles `r1`, `r2`, `nouvelle`, adresse devenue `{{mailbox.email}}` ; une règle non proposée envoyée par le formulaire est ignorée ; ensuite « À jour » ; le téléchargement contient la nouvelle règle et la version 1.0.1 |
+| Navigateur (pack d'exemple + 4 règles ajoutées + 1 modifiée) | Ordinateur et téléphone : carte du pack avec les 5 règles cochées ; « Mettre à jour le pack (v1.0.1) » → « À jour », « Télécharger v1.0.1 » en avant ; 68 mots visibles sur la page ; aucune erreur JavaScript |
 
 ## 2.4.0 — tester une règle, pages allégées
 
