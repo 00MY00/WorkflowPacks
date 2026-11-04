@@ -1,6 +1,6 @@
-# Résultats des tests — Workflow Packs 2.1.1
+# Résultats des tests — Workflow Packs 2.2.0
 
-Date : 2026-10-15. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
+Date : 2026-10-16. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
 ## Versions effectivement vérifiées
 
@@ -12,6 +12,14 @@ Date : 2026-10-15. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 2.2.0 — regrouper dans un pack
+
+| Série | Résultat |
+|---|---|
+| Intégration (92 tests, 733 assertions) | `GroupPackTest` (6) : export d'une règle de pack modifiée = sa version actuelle, même clé ; nouveau pack avec une règle modifiée, une règle de pack et une règle locale : règles inchangées (empreintes identiques), 3 liens, ancien pack sans règle supprimé, ré-import ici « inchangée » partout, événement d'historique ; pack existant : version 1.0.0 → 1.0.1, règles `r1` (remplacée), `r2` (gardée), `locale` (ajoutée), ré-import : boîte A « inchangée », boîte B « mise à jour » proposée pour `r1` seulement ; même règle dans deux boîtes = une règle du pack, deux liens ; un agent ne peut pas modifier un pack utilisé dans une boîte qu'il ne gère pas ; parcours par les pages (formulaire avec règles cochées, aperçu, regroupement, téléchargement du pack, historique). `ExportAndPagesTest` inchangé et vert |
+| Navigateur, ordinateur (pack d'exemple importé, une règle modifiée) | Page Export : toutes les boîtes, « Tout sélectionner » coche les 8 règles ; aperçu : tableau du regroupement (clé, effet, « quitte le pack tri-emails-multilingue »), règle modifiée exportée dans sa version actuelle ; « Regrouper » : message « 8 règle(s) reliée(s), version 1.0.0 », ancien pack supprimé, règles marquées « pack mes-regles ». Aucune erreur JavaScript |
+| Navigateur, téléphone 390 × 844 | Page Export lisible, pas de défilement horizontal ; choix du pack existant |
 
 ## 2.1.1 — fenêtres du schéma sur téléphone
 

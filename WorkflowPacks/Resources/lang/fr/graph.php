@@ -62,6 +62,8 @@ return [
     'close'            => 'Fermer',
     'sheet_expand'     => 'Plein écran',
     'sheet_shrink'     => 'Réduire',
+    'group_pack'       => 'Regrouper dans un pack',
+    'group_mailbox'    => 'Regrouper les règles de cette boîte',
     'edit'             => 'Modifier',
     'loading'          => 'Chargement…',
     'kind_mailbox'     => 'Boîte de réception',

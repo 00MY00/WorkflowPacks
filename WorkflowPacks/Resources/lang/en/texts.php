@@ -98,7 +98,7 @@ return [
     'imp_no_name'              => 'no free name for ":name".',
     'imp_unknown_choice'       => 'unknown choice ":choice".',
     'imp_cancelled'            => 'import cancelled, nothing was saved: :error',
-    'exp_modified'             => ':name: changed locally since the import; the template of the pack is exported.',
+    'exp_modified'             => ':name: changed since the import of the pack; its current version is exported.',
     'exp_ref_condition'        => ':name: condition ":type" → :kind :value (local identifier to resolve at import)',
     'exp_ref_action'           => ':name: action ":type" → :kind :value (local identifier to resolve at import)',
     'exp_module_condition'     => ':name: condition ":type" provided by another module (Tags, Custom Fields…): declare it in "requires".',

@@ -134,3 +134,11 @@
 .wp-folders { list-style: none; padding-left: 0; max-height: 320px; overflow: auto; font-size: 13px; }
 .wp-folders li { padding: 2px 0; }
 .wp-folder-managed { font-weight: 600; }
+
+/* export / group into a pack */
+.wp-check-all { display: block; font-weight: normal; margin: 4px 0 8px; }
+.wp-export-mailbox { margin: 14px 0 4px; font-weight: 700; color: var(--wp-muted, #8a94a6); text-transform: uppercase; font-size: 12px; letter-spacing: .04em; }
+.wp-target-fields { margin-left: 22px; }
+.wp-replacements-box { margin: 14px 0; }
+.wp-replacements-box summary { cursor: pointer; margin-bottom: 6px; }
+.wp-export-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 12px 0; }

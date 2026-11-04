@@ -4,6 +4,33 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [2.2.0] - 2026-10-16
+
+### Ajouté
+- **« Regrouper dans un pack »** (page Export) : les règles choisies deviennent les règles d'un pack, **nouveau ou
+  existant**, sans être recréées ni modifiées. Le pack est enregistré et chaque règle y est reliée là où elle est ;
+  il se télécharge ensuite comme un pack importé, et le ré-importer ici ne crée aucun doublon.
+  - **Version actuelle** des règles, modifications faites depuis un import comprises ; mêmes remplacements par des
+    variables et même retrait des secrets que l'export.
+  - **Même règle dans plusieurs boîtes** : une seule règle du pack, reliée dans chaque boîte.
+  - **Pack existant** : ses autres règles, paramètres et ressources sont gardés, une de ses règles choisie est
+    remplacée par sa version actuelle, sa version augmente automatiquement (1.4.2 → 1.4.3).
+  - **Règle d'un autre pack** : elle change de pack ; un pack resté sans règle disparaît.
+  - **Vérification** par le moteur d'import : le pack recompilé doit redonner chaque règle telle quelle ; sinon
+    l'aperçu le signale et la règle apparaîtra « modifiée localement ».
+  - **Droits** : un pack existant n'est modifiable que par un administrateur, ou si toutes ses règles sont dans des
+    boîtes que l'utilisateur gère.
+  - **Historique** : nouvel événement « Regroupement dans un pack ».
+- **Schéma** : boutons « Regrouper dans un pack » (plusieurs blocs sélectionnés) et « Regrouper les règles de cette
+  boîte » (panneau d'une boîte).
+
+### Modifié
+- **Page Export simplifiée** : règles de **toutes les boîtes** à la fois (par défaut) avec « Tout sélectionner »,
+  choix « Nouveau pack » / « Ajouter à un pack existant », clé du pack créée à partir du nom, remplacements par des
+  variables repliés (facultatifs).
+- **Export d'une règle de pack modifiée** : c'est sa version actuelle qui est exportée, et non plus le modèle
+  d'origine du pack (les modifications étaient perdues).
+
 ## [2.1.1] - 2026-10-15
 
 ### Corrigé

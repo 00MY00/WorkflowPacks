@@ -61,6 +61,8 @@ return [
     'close'            => 'Schließen',
     'sheet_expand'     => 'Ganzer Bildschirm',
     'sheet_shrink'     => 'Verkleinern',
+    'group_pack'       => 'In ein Paket gruppieren',
+    'group_mailbox'    => 'Regeln dieses Postfachs gruppieren',
     'edit'             => 'Bearbeiten',
     'loading'          => 'Laden…',
     'kind_mailbox'     => 'Postfach',

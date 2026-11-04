@@ -116,7 +116,7 @@ return [
     'imp_cancelled'            => 'import annulé, aucune modification enregistrée : :error',
 
     // export report
-    'exp_modified'             => ':name : modifiée localement depuis l\'import ; c\'est le modèle du pack qui est exporté.',
+    'exp_modified'             => ':name : modifiée depuis l\'import du pack ; c\'est sa version actuelle qui est exportée.',
     'exp_ref_condition'        => ':name : condition « :type » → :kind :value (identifiant local à remplacer à l\'import)',
     'exp_ref_action'           => ':name : action « :type » → :kind :value (identifiant local à remplacer à l\'import)',
     'exp_module_condition'     => ':name : condition « :type » fournie par un autre module (Tags, Custom Fields…) : déclarez-le dans « requires ».',

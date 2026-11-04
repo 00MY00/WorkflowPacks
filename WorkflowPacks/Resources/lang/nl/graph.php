@@ -61,6 +61,8 @@ return [
     'close'            => 'Sluiten',
     'sheet_expand'     => 'Volledig scherm',
     'sheet_shrink'     => 'Verkleinen',
+    'group_pack'       => 'Groeperen in een pakket',
+    'group_mailbox'    => 'Regels van deze mailbox groeperen',
     'edit'             => 'Bewerken',
     'loading'          => 'Laden…',
     'kind_mailbox'     => 'Mailbox',

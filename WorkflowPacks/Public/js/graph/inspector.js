@@ -83,6 +83,14 @@
     };
 
     /** One Workflows rule (= one link mailbox -> rule): state, on/off switch, edit. */
+    /** "Group into a pack": the Export page with these rules ticked (Grouper, on the server). */
+    Inspector.prototype.groupLink = function (label, workflowIds, mailboxId) {
+        var url = this.app.cfg.urls.export;
+        if (!url || !workflowIds.length) { return null; }
+        var query = ['mailbox_id=' + (mailboxId || 0)].concat(workflowIds.map(function (id) { return 'workflows%5B%5D=' + encodeURIComponent(id); }));
+        return h('a', { class: 'btn btn-sm btn-default', href: url + (url.indexOf('?') < 0 ? '?' : '&') + query.join('&') }, [icon('package'), ' ' + label]);
+    };
+
     Inspector.prototype.instanceRow = function (edge, showRule) {
         var app = this.app, t = this.t;
         var other = app.model.nodes[showRule ? edge.from : edge.to];
@@ -134,7 +142,8 @@
         body.appendChild(h('div', { class: 'wpg-ins-actions' }, [
             this.button(t.new_rule_here, 'plus', function () { app.editor.open({ mailboxId: node.id }); }, true),
             this.button(t.focus_mailbox, 'focus', function () { app.focusOn(node.key); }),
-            app.cfg.urls.workflows ? h('a', { class: 'btn btn-sm btn-default', href: app.cfg.urls.workflows.replace('__ID__', node.id) }, [icon('external'), ' ' + t.open_workflows]) : null
+            app.cfg.urls.workflows ? h('a', { class: 'btn btn-sm btn-default', href: app.cfg.urls.workflows.replace('__ID__', node.id) }, [icon('external'), ' ' + t.open_workflows]) : null,
+            this.groupLink(t.group_mailbox, rules.map(function (e) { return e.workflow_id; }).filter(Boolean), node.id)
         ]));
     };
 
@@ -258,6 +267,8 @@
             }));
             actions.appendChild(this.button(t.menu_prev_off.replace(':count', list.length), 'redo', function () { app.previousMany(list, false); }));
             if (filing.length) { actions.appendChild(this.button(t.menu_refile.replace(':count', filing.length), 'folder', function () { app.refileMany(filing); })); }
+            var group = this.groupLink(t.group_pack, list, 0);
+            if (group) { actions.appendChild(group); }
         } else {
             body.appendChild(h('p', { class: 'wpg-hint', text: t.multi_none }));
         }

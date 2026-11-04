@@ -98,7 +98,7 @@ return [
     'imp_no_name'              => 'nessun nome libero per «:name».',
     'imp_unknown_choice'       => 'scelta sconosciuta «:choice».',
     'imp_cancelled'            => 'importazione annullata, nulla è stato salvato: :error',
-    'exp_modified'             => ':name: modificata localmente dopo l\'importazione; viene esportato il modello del pack.',
+    'exp_modified'             => ':name: modificata dopo l\'importazione del pacchetto; viene esportata la sua versione attuale.',
     'exp_ref_condition'        => ':name: condizione «:type» → :kind :value (identificatore locale da risolvere all\'importazione)',
     'exp_ref_action'           => ':name: azione «:type» → :kind :value (identificatore locale da risolvere all\'importazione)',
     'exp_module_condition'     => ':name: condizione «:type» fornita da un altro modulo (Tags, Custom Fields…): dichiaralo in «requires».',

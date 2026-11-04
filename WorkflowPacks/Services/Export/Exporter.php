@@ -13,7 +13,8 @@ use Modules\WorkflowPacks\Services\Workflows\Bridge;
 /**
  * Export of workflows to a pack file.
  *
- *  - rules created by a pack: the original template of the pack is exported (variables kept as written);
+ *  - rules created by a pack: the original template of the pack is exported (variables kept as written), or the
+ *    current version when the rule was changed since the import (the user's changes are never lost);
  *  - other rules: their stored values, with ONLY the replacements chosen by the user (exact text -> variable).
  *    Nothing is guessed: an address equal to the mailbox's one stays as is unless the user asks for a replacement.
  *  - references to records of this instance (users, mailboxes) and types brought by other modules are reported;
@@ -29,6 +30,9 @@ class Exporter
         'body', 'headers', 'attachment', 'bounce', 'customer_viewed', 'new_or_reply', 'channel', 'waiting', 'user_reply', 'customer_reply', 'created'];
     const NATIVE_ACTIONS = ['notification', 'reply', 'email_customer', 'no_autoreply', 'forward', 'note', 'status', 'assign', 'move', 'delete', 'delete_forever'];
 
+    /** Values removed as secrets (parameter key => value), for the grouping only (Grouper): never written to a file. */
+    protected $secretValues = [];
+
     /**
      * @param \Illuminate\Support\Collection $workflows Workflow models (already filtered by permission)
      * @param array $meta         key, name, description, pack_version, requires (module aliases)
@@ -36,8 +40,15 @@ class Exporter
      *                            'type' => param type when a new parameter is declared, 'label' => …]
      * @return array ['pack' => array, 'report' => ['refs' => [], 'modules' => [], 'secrets' => [], 'replaced' => [], 'from_packs' => []]]
      */
+    /**
+     * @return array ['pack' => array, 'report' => array, 'rule_of' => [workflow id => index in pack.workflows],
+     *                'param_values' => [key => value known for the variables kept], 'secret_values' => [key => value]]
+     */
     public function exportWorkflows($workflows, array $meta, array $replacements)
     {
+        $this->secretValues = [];
+        $ruleOf = [];
+        $paramValues = [];
         $jsonActions = (array) Bridge::config('json_value_actions');
         $report = ['refs' => [], 'modules' => [], 'secrets' => [], 'replaced' => [], 'from_packs' => []];
         $params = [];
@@ -59,9 +70,17 @@ class Exporter
         $keys = [];
         foreach ($workflows as $workflow) {
             $link = Link::where('workflow_id', $workflow->id)->where('mailbox_id', $workflow->mailbox_id)->first();
-            if ($link) {
-                // created by a pack: original template with its variables
+            $modified = $link && Fingerprint::of(Bridge::attributesOf($workflow), $jsonActions) !== $link->fingerprint;
+            if ($link && $modified) {
+                // created by a pack, then changed here: the current version, under the same key
+                $rule = $this->ruleFromWorkflow($workflow, $jsonActions, $replacements, $report);
+                $rule['key'] = $link->workflow_key;
+                $report['from_packs'][] = $workflow->name.' ← '.$link->pack_key.'/'.$link->workflow_key;
+                $report['from_packs'][] = '⚠ '.Problems::t('exp_modified', ['name' => $workflow->name]);
+            } elseif ($link) {
+                // created by a pack: original template with its variables (and the values given at its import)
                 $rule = json_decode($link->template, true);
+                $paramValues += (array) json_decode((string) $link->params, true);
                 $pack = Pack::where('pack_key', $link->pack_key)->first();
                 $source = $pack ? json_decode($pack->source, true) : null;
                 foreach ((array) ($source['params'] ?? []) as $p) {
@@ -75,14 +94,12 @@ class Exporter
                     $rule['mailboxes'] = $source['mailboxes'];
                 }
                 $report['from_packs'][] = $workflow->name.' ← '.$link->pack_key.'/'.$link->workflow_key;
-                if (Fingerprint::of(Bridge::attributesOf($workflow), $jsonActions) !== $link->fingerprint) {
-                    $report['from_packs'][] = '⚠ '.Problems::t('exp_modified', ['name' => $workflow->name]);
-                }
             } else {
                 $rule = $this->ruleFromWorkflow($workflow, $jsonActions, $replacements, $report);
             }
             $rule['key'] = $this->uniqueKey($rule['key'] ?? $this->slug($workflow->name), $keys);
             $selectors = $selectors || !empty($rule['mailboxes']);
+            $ruleOf[(int) $workflow->id] = count($rules);
             $rules[] = $rule;
         }
 
@@ -110,7 +127,13 @@ class Exporter
             }
         }
 
-        return ['pack' => $pack, 'report' => $report];
+        foreach ($replacements as $r) {
+            if (strpos($r['variable'], 'param.') === 0) {
+                $paramValues[substr($r['variable'], 6)] = (string) $r['text'];
+            }
+        }
+
+        return ['pack' => $pack, 'report' => $report, 'rule_of' => $ruleOf, 'param_values' => $paramValues, 'secret_values' => $this->secretValues];
     }
 
     /** A pack exactly as it was imported (template with variables), optionally limited to some rules. */
@@ -237,6 +260,7 @@ class Exporter
             })) + 1);
             $params[$param] = ['key' => $param, 'label' => Problems::t('exp_secret_label', ['path' => $path]), 'type' => 'string', 'required' => true, 'sensitive' => true];
             $report['secrets'][] = Problems::t('exp_secret', ['path' => $path, 'param' => $param]);
+            $this->secretValues[$param] = $value;
 
             return '{{param.'.$param.'}}';
         }

@@ -45,6 +45,8 @@ remplacées pour chacune (`{{mailbox.email}}`, `{{mailbox.name}}`, `{{mailbox.id
   l'entrée se trouve dans le menu burger de FreeScout (Gérer).
 - **7 langues**, interface et messages (validation, diagnostic, erreurs) : français, anglais, allemand, espagnol,
   italien, néerlandais, portugais (Brésil). La langue suit le profil FreeScout de l'utilisateur.
+- **Regrouper dans un pack** des règles existantes (nouveau pack ou pack existant), puis l'exporter : voir
+  [Exporter ou regrouper dans un pack](#exporter-ou-regrouper-dans-un-pack).
 - **Tags d'e-mail de RefreshGlobal** (spam, boîte de réception, dossier du serveur…) : condition « Tag d'e-mail » des
   règles, avec les tags connus proposés dans l'éditeur. Voir [docs/schema.md](docs/schema.md).
 - **Mises à jour** : par la page **Gérer › Modules** de FreeScout, ou par le module
@@ -185,11 +187,37 @@ rectangle au clic gauche puis menu d'actions rapides.
 
 ![Retirer un pack](docs/screenshots/retirer-pack.png)
 
-## Exporter
+## Exporter ou regrouper dans un pack
 
-- **Un pack importé** : le modèle d'origine est exporté tel quel, avec ses variables.
-- **Une sélection de règles** d'une boîte :
-  - les règles issues d'un pack sont exportées avec leur modèle d'origine ;
+Page **Export** : cochez des règles (d'une boîte ou de **toutes les boîtes**, avec « Tout sélectionner »), choisissez
+le pack de destination, puis l'aperçu propose deux actions :
+- **Télécharger** le fichier `.json` du pack ;
+- **Regrouper dans le pack** : le pack est enregistré et les règles y sont **reliées sur place**, sans être recréées
+  ni modifiées. Il apparaît ensuite comme un pack importé : vous pouvez le télécharger à tout moment, et le
+  ré-importer ici ne crée aucun doublon (« inchangée »).
+
+Pack de destination :
+- **Nouveau pack** : un nom suffit (la clé est créée à partir du nom).
+- **Ajouter à un pack existant** : ses autres règles, paramètres et ressources sont gardés ; une de ses règles
+  choisie ici est remplacée par sa version actuelle ; sa version augmente (1.4.2 → 1.4.3) si vous n'en donnez pas une.
+
+Lors d'un regroupement :
+- la **même règle dans plusieurs boîtes** devient une seule règle du pack, reliée dans chaque boîte ;
+- une règle reliée à **un autre pack** passe dans celui-ci (une règle n'appartient qu'à un pack) ; un pack resté sans
+  règle disparaît, comme après un retrait ;
+- chaque règle est vérifiée avec le moteur d'import : le pack, recompilé pour sa boîte, doit redonner la règle
+  telle quelle. Sinon (un remplacement par une variable qui ne vaut pas pour elle…), l'aperçu le signale et la
+  règle apparaîtra « modifiée localement » : un import suivant proposera de la conserver, jamais de l'écraser sans
+  le demander.
+
+Le schéma a aussi un bouton **« Regrouper dans un pack »** (plusieurs blocs sélectionnés) et **« Regrouper les règles
+de cette boîte »** (panneau d'une boîte), qui ouvrent la page Export avec ces règles cochées.
+
+Ce qui est exporté :
+- **Un pack enregistré** : tel quel, avec ses variables.
+- **Une sélection de règles** :
+  - une règle issue d'un pack est exportée avec son modèle d'origine, ou dans sa **version actuelle** si elle a été
+    modifiée depuis l'import (vos modifications ne sont jamais perdues) ;
   - pour les autres, vous indiquez explicitement les textes à remplacer par une variable ou par un nouveau paramètre.
     Rien n'est deviné : une adresse identique à celle de la boîte reste telle quelle si vous ne la listez pas. Dans
     une regex, la forme échappée (`support@exemple\.test`) est aussi remplacée.

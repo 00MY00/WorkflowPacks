@@ -98,7 +98,7 @@ return [
     'imp_no_name'              => 'kein freier Name für „:name“.',
     'imp_unknown_choice'       => 'unbekannte Auswahl „:choice“.',
     'imp_cancelled'            => 'Import abgebrochen, nichts gespeichert: :error',
-    'exp_modified'             => ':name: seit dem Import lokal geändert; exportiert wird die Vorlage des Packs.',
+    'exp_modified'             => ':name: seit dem Import des Pakets geändert; ihre aktuelle Version wird exportiert.',
     'exp_ref_condition'        => ':name: Bedingung „:type“ → :kind :value (lokale Kennung, beim Import aufzulösen)',
     'exp_ref_action'           => ':name: Aktion „:type“ → :kind :value (lokale Kennung, beim Import aufzulösen)',
     'exp_module_condition'     => ':name: Bedingung „:type“ stammt aus einem anderen Modul (Tags, Custom Fields…): in „requires“ deklarieren.',

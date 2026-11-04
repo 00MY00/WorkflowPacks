@@ -156,7 +156,7 @@
     <form method="GET" action="{{ route('workflowpacks.history') }}" class="form-inline wp-toolbar">
         <select name="kind" class="form-control input-sm wp-autosubmit">
             <option value="">{{ $wp_t('history_all_kinds') }}</option>
-            @foreach (['imap_file', 'imap_clean', 'import', 'remove', 'rules'] as $k)
+            @foreach (['imap_file', 'imap_clean', 'import', 'remove', 'group', 'rules'] as $k)
                 <option value="{{ $k }}" @if ($filters['kind'] === $k) selected @endif>{{ $wp_t('history_kind_'.$k) }}</option>
             @endforeach
         </select>
