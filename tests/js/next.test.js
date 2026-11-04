@@ -158,15 +158,17 @@ test('timers: "Add a timer" with presets, for a mailbox, a rule (without its own
     const timer = mb[2];
     assert.deepStrictEqual(timer.sub.map((s) => s.params.delay), [{ number: 15, metric: 'i' }, { number: 1, metric: 'h' }, { number: 1, metric: 'd' },
         { number: 2, metric: 'd' }, { number: 7, metric: 'd' }, { number: 30, metric: 'd' }]);
-    const r = timer.sub[1].run.editor.rule;
+    // after the delay: the next block, chosen in the same list (never a timer without what follows)
+    assert.ok(!timer.sub[1].run && timer.sub[1].sub.length > 0);
+    const r = timer.sub[1].sub.find((s) => s.id === 'timer_1h_act_status_3').run.editor.rule;
     assert.deepStrictEqual(r.conditions.all, [{ type: 'created', operator: 'not_in_last', value: { number: 1, metric: 'h' } }]);
-    assert.deepStrictEqual(r.actions, [], 'the action is chosen in the editor');
+    assert.deepStrictEqual(r.actions, [{ type: 'status', value: '3' }], 'then: closed');
     assert.strictEqual(r.name, 'Après 1h');
     assert.strictEqual(r.settings.apply_to_prev, false);
     // a rule: its conditions without its own delay
     const ruleConditions = { all: [{ type: 'subject', operator: 'contains', value: 'x' }, { type: 'created', operator: 'not_in_last', value: { number: 2, metric: 'd' } }] };
     const fromRule = N.suggest({ kind: 'rule' }, Object.assign({ ruleConditions, ruleActions: [] }, ctx)).find((s) => s.id === 'add_timer');
-    assert.deepStrictEqual(fromRule.sub[4].run.editor.rule.conditions.all, [{ type: 'subject', operator: 'contains', value: 'x' },
+    assert.deepStrictEqual(fromRule.sub[4].sub[0].run.editor.rule.conditions.all, [{ type: 'subject', operator: 'contains', value: 'x' },
         { type: 'created', operator: 'not_in_last', value: { number: 7, metric: 'd' } }]);
     // a timer block (overview) of one rule: same; several rules or no detail: no timer
     assert.ok(ids(N.suggest({ kind: 'dest', dest: 'timer' }, Object.assign({ ruleConditions, rules: [{ workflow_id: 1, name: 'A' }] }, ctx))).includes('add_timer'));

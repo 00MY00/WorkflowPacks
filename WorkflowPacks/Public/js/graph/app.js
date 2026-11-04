@@ -72,7 +72,7 @@
 
     /**
      * @param first first load of the page
-     * @param near  key of the block a new step was added from: the new blocks go on its right (layout.beside)
+     * @param near  key of the block a new step was added from: the new blocks go on its row (layout.inColumns)
      */
     App.prototype.load = function (first, near) {
         var self = this;
@@ -96,11 +96,11 @@
             } else {
                 var before = Object.keys(self.model.pos);
                 L.placeNew(self.model.pos, nodes, self.model.edges);
-                // added from a block: on its right, in order; only the new blocks step aside, the others stay
+                // added from a block: each new block in its column, on the row of that block (rule -> timer ->
+                // destination, left to right); only the new blocks step aside, the others stay
                 var added = nodes.filter(function (n) { return before.indexOf(n.key) < 0; });
                 if (near && self.model.nodes[near] && added.length) {
-                    added.sort(function (a, b) { return (a.kind === 'rule' ? 0 : 1) - (b.kind === 'rule' ? 0 : 1); });
-                    L.beside(self.model.pos, self.model.nodes[near], added, nodes);
+                    L.inColumns(self.model.pos, nodes, self.model.nodes[near], added);
                     L.separate(self.model.pos, nodes, 120, added.map(function (n) { return n.key; }));
                 }
                 // blocks now larger than when they were placed (they fit their text): no block over another
