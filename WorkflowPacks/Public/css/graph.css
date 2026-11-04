@@ -302,3 +302,56 @@
 .wpg-tag-btn { border: 1px solid var(--g-border); background: var(--g-card); color: var(--g-text, #0f172a); border-radius: 999px; padding: 1px 9px; font-size: 12px; cursor: pointer; }
 .wpg-tag-btn:hover { border-color: var(--g-brand); }
 .wpg-tag-btn.is-on { background: var(--g-brand); border-color: var(--g-brand); color: #fff; }
+
+/* ---------------------------------------------------------------------------------------------- flow view */
+/* one block per instruction (flow.js): colour and icon say what it is */
+.wpg-app { --c-cond: #475569; --c-branch: #9333ea; --c-timer: #0284c7; --c-note: #64748b; --c-send: #e11d48; --c-other: #64748b; }
+.wpg-node.dest-cond { --c: var(--c-cond); }
+.wpg-node.dest-branch { --c: var(--c-branch); }
+.wpg-node.dest-timer { --c: var(--c-timer); }
+.wpg-node.dest-note { --c: var(--c-note); }
+.wpg-node.dest-send { --c: var(--c-send); }
+.wpg-node.dest-other { --c: var(--c-other); }
+.wpg-node.dest-active { --c: var(--c-ok); }
+/* a test that splits the flow: dashed outline; a delay: rounded like a clock */
+.wpg-node.dest-branch .wpg-box { stroke: var(--c); stroke-dasharray: 5 3; }
+.wpg-node.dest-timer .wpg-box { stroke: var(--c); }
+.wpg-edge.kind-flow .wpg-line { stroke: #94a3b8; stroke-width: 1.8; }
+.wpg-edge.kind-flow.is-inactive .wpg-line { stroke-dasharray: 6 5; }
+.wpg-app.is-flow .wpg-overview-only, .wpg-app.is-flow .wpg-legend, .wpg-app.is-flow .wpg-grip { display: none; }
+.wpg-btn.is-on { background: var(--g-brand); border-color: var(--g-brand); color: #fff; }
+.wpg-btn.is-on:hover { color: #fff; }
+
+/* ---------------------------------------------------------------------------------------------- simulation */
+.wpg-node.sim-hit .wpg-box { stroke: var(--c-ok); stroke-width: 3; }
+.wpg-node.sim-miss { opacity: .4; }
+.wpg-node.sim-unsure .wpg-box { stroke: var(--c-warn); stroke-width: 2.5; stroke-dasharray: 4 3; }
+.wpg-edge.sim-hit .wpg-line { stroke: var(--c-ok); stroke-width: 3; stroke-dasharray: none; }
+/* the "energy": a few dashes running along the link, then the link stays green (sim.js removes the class) */
+.wpg-edge.sim-energy .wpg-line { stroke: #22c55e; stroke-width: 4; stroke-dasharray: 10 12; animation: wpg-energy .45s linear 4; }
+@keyframes wpg-energy { to { stroke-dashoffset: -22; } }
+@media (prefers-reduced-motion: reduce) { .wpg-edge.sim-energy .wpg-line { animation: none; } }
+.wpg-sim-verdict { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 10px; font-weight: 600; margin-bottom: 10px; }
+.wpg-sim-verdict.is-ok { background: #ecfdf5; color: #166534; }
+.wpg-sim-verdict.is-no { background: #fffbeb; color: #92400e; }
+.wpg-sim-event { border: 1px solid var(--g-border); border-left: 4px solid var(--c-ok); border-radius: 10px; padding: 8px 10px; margin-bottom: 8px; cursor: pointer; }
+.wpg-sim-event:hover, .wpg-sim-event:focus { border-color: var(--g-brand); outline: none; }
+.wpg-sim-when { font-size: 11px; font-weight: 700; color: var(--c-timer); text-transform: uppercase; letter-spacing: .03em; margin: 0 0 2px; }
+.wpg-sim-action { display: flex; gap: 6px; align-items: center; font-size: 13px; margin-top: 6px; }
+.wpg-sim-changes, .wpg-sim-conds { margin: 2px 0 4px 22px; padding: 0; font-size: 12px; list-style: none; }
+.wpg-sim-changes li::before { content: '→ '; color: var(--g-muted); }
+.wpg-sim-recorded { color: var(--c-send); }
+.wpg-sim-conds .is-ok { color: var(--c-ok); } .wpg-sim-conds .is-no { color: var(--c-err); } .wpg-sim-conds .is-unsure, .wpg-sim-unsure-text { color: #b45309; }
+.wpg-sim-skip { font-size: 13px; margin-bottom: 4px; }
+.wpg-sim-skip summary { cursor: pointer; }
+.wpg-sim-final { width: 100%; font-size: 13px; margin-bottom: 8px; }
+.wpg-sim-final th { color: var(--g-muted); font-weight: 600; padding: 3px 8px 3px 0; vertical-align: top; width: 40%; }
+.wpg-sim-final td { padding: 3px 0; overflow-wrap: anywhere; }
+.wpg-sim-form .form-group { margin-bottom: 10px; }
+/* a rule outside any pack, in a mailbox that uses one: add it to the pack */
+.wpg-pack-hint { margin-top: 12px; padding: 10px; border-radius: 10px; background: #fff7ed; border: 1px solid #fed7aa; font-size: 13px; }
+.wpg-pack-hint p { margin: 0 0 8px; }
+.wpg-pack-hint .btn { margin: 0 6px 6px 0; white-space: normal; text-align: left; }
+@media (max-width: 767px) {
+  .wpg-views .wpg-btn span { display: inline; }
+}

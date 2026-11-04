@@ -162,7 +162,7 @@ class GraphTest extends TestCase
         $this->actingAs($one)->postJson($url, ['positions' => ['wf:7' => [5, 6]], 'settings' => ['edges' => 'curved', 'dests' => false]])->assertStatus(200);
         $layout = $this->actingAs($one)->getJson(route('workflowpacks.graph.data'))->json()['layout'];
         $this->assertEquals(['mb:'.$a->id => [10, -20], 'wf:7' => [5, 6]], $layout['positions'], 'partial updates merged');
-        $this->assertSame(['layout' => 'free', 'edges' => 'curved', 'packs' => true, 'dests' => false], $layout['settings']);
+        $this->assertSame(['layout' => 'free', 'edges' => 'curved', 'packs' => true, 'dests' => false, 'view' => 'overview'], $layout['settings']);
 
         // refused: unknown key format, bad coordinates, unknown choice (nothing written)
         $this->actingAs($one)->postJson($url, ['positions' => ['<script>' => [1, 2]]])->assertStatus(422);

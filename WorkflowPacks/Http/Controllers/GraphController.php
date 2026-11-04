@@ -125,6 +125,16 @@ class GraphController extends Controller
         return response()->json($result);
     }
 
+    /** A fake e-mail through the rules of a mailbox, in memory (Services/Flow/Simulator): nothing written or sent. */
+    public function simulate(Request $request)
+    {
+        $this->guard();
+        $input = $request->only(['mailbox_id', 'subject', 'body', 'customer_email', 'customer_name', 'cc', 'tags', 'assigned', 'replied', 'include_inactive']);
+        $result = (new \Modules\WorkflowPacks\Services\Flow\SimulationService())->run(auth()->user(), $input);
+
+        return response()->json($result, $result['ok'] ? 200 : 403);
+    }
+
     public function apply(Request $request, $id)
     {
         $this->guard();

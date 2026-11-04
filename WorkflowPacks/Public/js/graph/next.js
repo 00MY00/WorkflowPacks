@@ -23,6 +23,8 @@
     function can(node) {
         if (!node) { return false; }
         if (node.kind === 'mailbox' || node.kind === 'rule') { return true; }
+        // flow view: conditions, branch, delay or action of a rule
+        if (node.kind === 'step') { return node.dest === 'cond' || !!node.workflow_id; }
         return node.kind === 'dest' && ((node.dest === 'imap' && !!node.folder) || !!STATUS[node.dest]);
     }
 
@@ -45,6 +47,7 @@
             return { name: name, type: 'automatic', settings: { apply_to_prev: false, max_executions: 1 }, conditions: { all: conditions }, actions: actions };
         };
         var days = function (n) { return { number: n, metric: 'd' }; };
+        var closeAction = { type: 'status', value: STATUS.closed };
 
         if (node.kind === 'mailbox') {
             out.push({ id: 'new_rule', icon: 'plus', label: 'next_new_rule', run: { editor: { rule: null } } });
@@ -68,6 +71,37 @@
                         out.push({ id: 'then_' + a[0], icon: a[2], label: a[3], run: { editor: { addAction: { type: a[0], value: a[1] } } } });
                     }
                 });
+        } else if (node.kind === 'step') {
+            // flow view: the new rule keeps the conditions of the flow (and of the branch), with a delay after the step
+            var base = lanes(node.flow.base).concat((node.lane && node.lane.branch) || []);
+            var after = laterDelay(node.step && node.step.delay ? node.step.delay.seconds : 0);
+            var delayed = function (delay) { return base.concat([{ type: 'created', operator: 'not_in_last', value: delay }]); };
+            if (node.dest === 'cond') {
+                if (hasC('wp_replied') && hasC('created') && hasA('status')) {
+                    out.push({ id: 'flow_noreply', icon: 'branch', label: 'next_flow_noreply', run: { editor: { rule: rule(ctx.names.flow_noreply,
+                        lanes(node.flow.base).concat([{ type: 'wp_replied', operator: 'no' }, { type: 'created', operator: 'not_in_last', value: days(2) }]), [closeAction]) } } });
+                }
+                if (hasC('wp_assigned') && hasC('created') && hasA('assign')) {
+                    out.push({ id: 'flow_unassigned', icon: 'branch', label: 'next_flow_unassigned', run: { editor: { rule: rule(ctx.names.flow_unassigned,
+                        lanes(node.flow.base).concat([{ type: 'wp_assigned', operator: 'no' }, { type: 'created', operator: 'not_in_last', value: { number: 1, metric: 'h' } }]),
+                        [{ type: 'assign', value: '' }]) } } });
+                }
+            }
+            if (hasC('created') && hasA('status')) {
+                out.push({ id: 'flow_delay_close', icon: 'hourglass', label: 'next_flow_delay_close', params: { delay: after }, run: { editor: { rule: rule(ctx.names.flow_delay_close, delayed(after), [closeAction]) } } });
+            }
+            if (hasC('created') && hasA(FOLDER)) {
+                out.push({ id: 'flow_delay_folder', icon: 'hourglass', label: 'next_flow_delay_folder', params: { delay: after }, run: { editor: { rule: rule(ctx.names.flow_delay_folder, delayed(after), [{ type: FOLDER, value: '' }]) } } });
+            }
+            if (node.workflow_id) {
+                var has = ctx.ruleActions || [];
+                if (hasA('status') && has.indexOf('status') < 0) {
+                    out.push({ id: 'flow_here_close', icon: 'closed', label: 'next_flow_here_close', run: { editor: { addAction: closeAction } } });
+                }
+                if (hasA(FOLDER) && has.indexOf(FOLDER) < 0) {
+                    out.push({ id: 'flow_here_folder', icon: 'folder', label: 'next_then_folder', run: { editor: { addAction: { type: FOLDER, value: '' } } } });
+                }
+            }
         } else if (node.dest === 'imap') {
             if (ctx.admin) {
                 out.push({ id: 'retention', icon: 'deleted', label: node.retention ? 'next_retention_edit' : 'next_retention', run: { retention: true } });
@@ -91,6 +125,19 @@
         return out;
     }
 
+    /** Workflows' lanes [[a], [b, c]] -> conditions of the editor: a, { any: [b, c] }. */
+    function lanes(list) {
+        return (list || []).map(function (lane) { return lane.length === 1 ? lane[0] : { any: lane }; });
+    }
+
+    /** The delay of the next step: 1 hour after the arrival, then 1 day, 2 days, then one more day each time. */
+    function laterDelay(seconds) {
+        if (!seconds) { return { number: 1, metric: 'h' }; }
+        if (seconds < 86400) { return { number: 1, metric: 'd' }; }
+        if (seconds < 2 * 86400) { return { number: 2, metric: 'd' }; }
+        return { number: Math.floor(seconds / 86400) + 1, metric: 'd' };
+    }
+
     // ----------------------------------------------------------------------------------- in the application
 
     function Next(app) {
@@ -102,6 +149,7 @@
     Next.prototype.mailboxOf = function (node) {
         var model = this.app.model;
         if (node.kind === 'mailbox') { return node; }
+        if (node.kind === 'step') { return this.app.overview.nodes['mb:' + node.mailbox]; }
         var ruleKey = node.kind === 'rule' ? node.key : (model.edges.filter(function (e) { return e.kind === 'sends' && e.to === node.key; })[0] || {}).from
             || ((node.filed_by || [])[0]);
         var applies = model.edges.filter(function (e) { return e.kind === 'applies' && e.from === ruleKey && e.workflow_id; })[0];
@@ -114,7 +162,8 @@
         if (!can(node)) { return Promise.resolve([]); }
         var mailbox = this.mailboxOf(node);
         if (!mailbox) { return Promise.resolve([]); }
-        var edge = node.kind === 'rule' ? app.model.edges.filter(function (e) { return e.kind === 'applies' && e.from === key && e.workflow_id; })[0] : null;
+        var edge = node.kind === 'rule' ? app.model.edges.filter(function (e) { return e.kind === 'applies' && e.from === key && e.workflow_id; })[0]
+            : (node.workflow_id ? { workflow_id: node.workflow_id } : null);
         var detail = edge ? app.api.rule(edge.workflow_id) : Promise.resolve(null);
         var status = node.dest && STATUS[node.dest] ? node.label : '';
         return Promise.all([app.catalogOf(mailbox.id), detail]).then(function (res) {
@@ -125,11 +174,15 @@
                     file_new: t.next_name_file_new, waiting_close: t.next_name_waiting_close, tag_spam: t.next_name_tag_spam,
                     subfolder: (t.next_name_subfolder || '').replace(':folder', node.label || ''),
                     after_delete: (t.next_name_after_delete || '').replace(':status', status),
-                    after_close: (t.next_name_after_close || '').replace(':status', status)
+                    after_close: (t.next_name_after_close || '').replace(':status', status),
+                    flow_noreply: t.next_name_flow_noreply, flow_unassigned: t.next_name_flow_unassigned,
+                    flow_delay_close: t.next_name_flow_delay_close, flow_delay_folder: t.next_name_flow_delay_folder
                 }
             };
             return suggest(node, ctx).map(function (s) {
-                return [t[s.label] || s.label, s.icon, function () { self.run(node, mailbox, edge, s.run); }];
+                var label = t[s.label] || s.label;
+                if (s.params && s.params.delay) { label = label.replace(':delay', s.params.delay.number + ' ' + (t['unit_' + s.params.delay.metric] || s.params.delay.metric)); }
+                return [label, s.icon, function () { self.run(node, mailbox, edge, s.run); }];
             });
         });
     };
@@ -163,7 +216,7 @@
         }).catch(function (e) { app.toast(e.message, 'error'); });
     };
 
-    var api = { can: can, suggest: suggest, STATUS: STATUS };
+    var api = { can: can, suggest: suggest, lanes: lanes, laterDelay: laterDelay, STATUS: STATUS };
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = api;
     } else {

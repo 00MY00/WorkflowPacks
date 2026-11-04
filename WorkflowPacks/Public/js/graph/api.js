@@ -64,6 +64,8 @@
     };
     Api.prototype.removeRetention = function (folder) { return this.request('POST', this.urls.retentionRemove, { folder: folder }); };
     Api.prototype.apply = function (id, mailboxId) { return this.request('POST', this.url('apply', id), { mailbox_id: mailboxId }); };
+    // a fake e-mail through the rules of a mailbox, in memory on the server (nothing written, nothing sent)
+    Api.prototype.simulate = function (input) { return this.request('POST', this.urls.simulate, input); };
 
     WPGraph.Api = Api;
 })(window.WPGraph = window.WPGraph || {});

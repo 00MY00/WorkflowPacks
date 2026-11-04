@@ -47,6 +47,7 @@
         this.selected = {};
         this.selectedEdge = null;
         this.mode = null;
+        this.locked = false;    // flow view: the positions are computed, blocks are not moved, resized or linked by hand
         this.build();
         this.bind();
     }
@@ -193,7 +194,8 @@
                 return;
             }
             var d = this.path(a, b);
-            var cls = 'wpg-edge kind-' + e.kind + (e.kind === 'applies' ? ' state-' + e.state + (e.active ? ' is-active' : ' is-inactive') : '');
+            var cls = 'wpg-edge kind-' + e.kind + (e.kind === 'applies' ? ' state-' + e.state + (e.active ? ' is-active' : ' is-inactive') : '')
+                + (e.kind === 'flow' && e.active === false ? ' is-inactive' : '');
             var g = el('g', { class: cls, 'data-edge': i, 'data-from': e.from, 'data-to': e.to }, this.edgeLayer);
             el('path', { class: 'wpg-line', d: d, 'marker-end': e.kind === 'contains' ? '' : 'url(#wpg-arrow)' }, g);
             if (e.kind === 'sends') {
@@ -379,12 +381,12 @@
             return;
         }
         this.svg.setPointerCapture(e.pointerId);
-        if (handle && node) {
+        if (handle && node && !this.locked) {
             this.mode = { type: 'connect', from: node.getAttribute('data-key') };
             this.svg.classList.add('connecting');
             return;
         }
-        if (grip && node) {
+        if (grip && node && !this.locked) {
             var rk = node.getAttribute('data-key');
             this.mode = { type: 'resize', key: rk, start: w, origin: L.size(this.model.nodes[rk]), moved: false, size: null };
             return;
@@ -432,7 +434,7 @@
         } else if (m.type === 'drag') {
             var w = this.world(e.clientX, e.clientY);
             var ox = w[0] - m.start[0], oy = w[1] - m.start[1];
-            if (!m.moved && Math.abs(ox) + Math.abs(oy) < 3) { return; }
+            if (this.locked || (!m.moved && Math.abs(ox) + Math.abs(oy) < 3)) { return; }
             m.moved = true;
             var snap = e.altKey ? 1 : 10;
             m.keys.forEach(function (k) {
@@ -614,16 +616,16 @@
             if (this.opts.onNext) { this.opts.onNext(key, e.clientX, e.clientY); }
             return;
         }
-        if (key && this.selected[key] && e.target.closest('.wpg-handle')) {
+        if (key && this.selected[key] && !this.locked && e.target.closest('.wpg-handle')) {
             this.mode = { type: 'connect', from: key, touch: true };
             this.svg.classList.add('connecting');
             return;
         }
-        if (key && this.selected[key] && e.target.closest('.wpg-grip')) {
+        if (key && this.selected[key] && !this.locked && e.target.closest('.wpg-grip')) {
             this.mode = { type: 'resize', key: key, start: this.world(e.clientX, e.clientY), origin: L.size(this.model.nodes[key]), moved: false, size: null };
             return;
         }
-        if (key && this.selected[key]) {
+        if (key && this.selected[key] && !this.locked) {
             // selected block: one finger moves it (with the other selected blocks)
             var keys = Object.keys(this.selected);
             this.mode = { type: 'drag', key: key, start: this.world(e.clientX, e.clientY), origin: this.model.snapshot(keys), keys: keys,

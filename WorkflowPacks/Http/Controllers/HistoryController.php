@@ -16,7 +16,7 @@ use Modules\WorkflowPacks\Services\Workflows\Bridge;
 class HistoryController extends Controller
 {
     const PAGE = 100;
-    const KINDS = ['imap_file', 'imap_clean', 'import', 'remove', 'group', 'rules'];
+    const KINDS = ['imap_file', 'imap_clean', 'import', 'remove', 'group', 'simulate', 'rules'];
 
     public function index(Request $request)
     {

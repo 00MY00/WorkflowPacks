@@ -45,6 +45,9 @@ remplacées pour chacune (`{{mailbox.email}}`, `{{mailbox.name}}`, `{{mailbox.id
   l'entrée se trouve dans le menu burger de FreeScout (Gérer).
 - **7 langues**, interface et messages (validation, diagnostic, erreurs) : français, anglais, allemand, espagnol,
   italien, néerlandais, portugais (Brésil). La langue suit le profil FreeScout de l'utilisateur.
+- **Vue flux** : un bloc par instruction (conditions, tests « assigné ? » / « réponse envoyée ? », minuteurs, statut,
+  dossier…), sans chevauchement, et **simulation** d'un faux e-mail dont le parcours s'allume bloc après bloc, avec
+  ce que chaque règle a changé. Rien n'est enregistré ni envoyé. Voir [docs/flux.md](docs/flux.md).
 - **Regrouper dans un pack** des règles existantes (nouveau pack ou pack existant), puis l'exporter : voir
   [Exporter ou regrouper dans un pack](#exporter-ou-regrouper-dans-un-pack).
 - **Tags d'e-mail de RefreshGlobal** (spam, boîte de réception, dossier du serveur…) : condition « Tag d'e-mail » des

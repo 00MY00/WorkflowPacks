@@ -85,4 +85,33 @@ test('prepared rules are new and safe: automatic, not applied to existing ticket
     });
 });
 
+test('flow view: a new rule keeps the conditions of the flow and of the branch, with a later delay', () => {
+    const flowCatalog = { conditions: Object.assign({ created: {}, wp_replied: {}, wp_assigned: {} }, full.conditions), actions: full.actions };
+    const flow = { base: [[{ type: 'subject', operator: 'contains', value: 'facture' }], [{ type: 'to', operator: 'equal', value: 'a' }, { type: 'to', operator: 'equal', value: 'b' }]] };
+    const cond = { kind: 'step', dest: 'cond', flow };
+    assert.ok(N.can(cond));
+    assert.ok(!N.can({ kind: 'step', dest: 'branch' }), 'a branch alone: through its steps');
+    const fromCond = N.suggest(cond, { catalog: flowCatalog, names });
+    assert.deepStrictEqual(ids(fromCond), ['flow_noreply', 'flow_unassigned', 'flow_delay_close', 'flow_delay_folder']);
+    assert.deepStrictEqual(fromCond[0].run.editor.rule.conditions.all, [
+        { type: 'subject', operator: 'contains', value: 'facture' },
+        { any: [{ type: 'to', operator: 'equal', value: 'a' }, { type: 'to', operator: 'equal', value: 'b' }] },
+        { type: 'wp_replied', operator: 'no' },
+        { type: 'created', operator: 'not_in_last', value: { number: 2, metric: 'd' } },
+    ]);
+    assert.deepStrictEqual(fromCond[0].run.editor.rule.actions, [{ type: 'status', value: '3' }], 'mark as closed');
+
+    // after a step "+1 day" of the branch "not assigned": +2 days, branch kept; "close here" when the rule does not
+    const branch = [{ type: 'wp_assigned', operator: 'no' }];
+    const step = { kind: 'step', dest: 'timer', workflow_id: 9, flow, lane: { branch }, step: { delay: { seconds: 86400 } } };
+    const fromStep = N.suggest(step, { catalog: flowCatalog, names, ruleActions: ['note'] });
+    assert.deepStrictEqual(ids(fromStep), ['flow_delay_close', 'flow_delay_folder', 'flow_here_close', 'flow_here_folder']);
+    const all = fromStep[0].run.editor.rule.conditions.all;
+    assert.deepStrictEqual(all.slice(-2), [{ type: 'wp_assigned', operator: 'no' }, { type: 'created', operator: 'not_in_last', value: { number: 2, metric: 'd' } }]);
+    assert.deepStrictEqual(fromStep[2].run.editor.addAction, { type: 'status', value: '3' });
+    assert.ok(!ids(N.suggest(step, { catalog: flowCatalog, names, ruleActions: ['status'] })).includes('flow_here_close'), 'already closes');
+    assert.deepStrictEqual([0, 1800, 86400, 172800, 400000].map(N.laterDelay), [
+        { number: 1, metric: 'h' }, { number: 1, metric: 'd' }, { number: 2, metric: 'd' }, { number: 3, metric: 'd' }, { number: 5, metric: 'd' }]);
+});
+
 console.log(n + ' tests OK');

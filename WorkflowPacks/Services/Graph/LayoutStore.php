@@ -18,8 +18,10 @@ class LayoutStore
         'edges'  => ['orthogonal', 'curved', 'straight'],
         'packs'  => [true, false],
         'dests'  => [true, false],
+        // overview (mailboxes → rules → destinations) or flow view (one block per instruction)
+        'view'   => ['overview', 'flow'],
     ];
-    const DEFAULTS = ['layout' => 'columns', 'edges' => 'orthogonal', 'packs' => true, 'dests' => true];
+    const DEFAULTS = ['layout' => 'columns', 'edges' => 'orthogonal', 'packs' => true, 'dests' => true, 'view' => 'overview'];
 
     public function get($user, $view = 'main')
     {
