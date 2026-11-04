@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 2.9.0
+# Résultats des tests — Workflow Packs 2.9.1
 
 Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,13 @@ Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 2.9.1 — supprimer le nettoyage d'un dossier
+
+| Série | Résultat |
+|---|---|
+| Intégration | `DeleteBlocksTest` (+1) : bloc de nettoyage refusé à un non-administrateur ; supprimé par un administrateur (réglage retiré), « Annuler » le remet (30 jours, corbeille) ; suite complète 103 tests verte |
+| Navigateur | Nettoyage « Factures » 30 jours : Suppr → « Arrêter le nettoyage automatique du dossier “Factures” (30 jour(s)) » → bloc disparu ; aucune erreur |
 
 ## 2.9.0 — supprimer un bloc
 

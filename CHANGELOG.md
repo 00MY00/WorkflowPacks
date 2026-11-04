@@ -4,6 +4,13 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [2.9.1] - 2026-11-04
+
+### Corrigé
+- **Supprimer un bloc de nettoyage** (« Corbeille après 30 jours ») affichait « Rien à supprimer » : ce bloc est le
+  nettoyage automatique du dossier, un réglage et non une action de règle. Sa suppression arrête maintenant ce
+  nettoyage (administrateurs), après validation, avec sauvegarde et « Annuler la suppression ».
+
 ## [2.9.0] - 2026-11-04
 
 ### Ajouté

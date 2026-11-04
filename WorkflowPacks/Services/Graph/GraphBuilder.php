@@ -156,6 +156,12 @@ class GraphBuilder
         return ['nodes' => array_values($nodes), 'edges' => $edges, 'flows' => $this->flows($mailboxes, $flowRules)];
     }
 
+    /** Key of the block of an e-mail folder ("dest:imap:…"); its clean-up block is "dest:clean:imap:…". */
+    public static function folderKey($path)
+    {
+        return 'dest:imap:'.substr(preg_replace('/[^A-Za-z0-9._\/-]+/', '-', (string) $path), 0, 140).'-'.substr(md5((string) $path), 0, 6);
+    }
+
     /** Keys of the destination blocks of one action (with the deeper levels of a folder): what deleting them removes. */
     public function actionKeys(array $action, array $jsonActions)
     {
@@ -294,7 +300,7 @@ class GraphBuilder
             $levels[] = [
                 'folder'    => $path,
                 'retention' => $retention,
-                'key'    => 'dest:imap:'.substr(preg_replace('/[^A-Za-z0-9._\/-]+/', '-', $path), 0, 140).'-'.substr(md5($path), 0, 6),
+                'key'    => self::folderKey($path),
                 'kind'   => 'dest',
                 'dest'   => 'imap',
                 'label'  => $i ? $segment : $prefix.' '.$segment,

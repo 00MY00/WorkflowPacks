@@ -141,7 +141,7 @@ class GraphController extends Controller
         $this->guard();
         $plan = (new \Modules\WorkflowPacks\Services\Graph\BlockRemover())->plan(auth()->user(), (array) $request->input('keys', []));
 
-        return response()->json(['ok' => true, 'count' => count($plan['ops']), 'lines' => $plan['lines'], 'warnings' => $plan['warnings'],
+        return response()->json(['ok' => true, 'count' => $plan['count'], 'lines' => $plan['lines'], 'warnings' => $plan['warnings'],
             'refused' => $plan['refused'], 'token' => $plan['token']]);
     }
 
