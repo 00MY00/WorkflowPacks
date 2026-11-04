@@ -312,4 +312,10 @@ return [
     'delete_panel'     => 'Eliminato',
     'delete_undo'      => 'Annulla l\'eliminazione',
     'delete_undone'    => 'Eliminazione annullata: tutto è tornato.',
+    'next_add_timer'    => 'Aggiungi un timer',
+    'next_timer_preset' => 'Dopo :delay',
+    'next_name_timer'   => 'Dopo :delay',
+    'kind_dest_timer'  => 'Timer',
+    'timer_rule'       => 'Regola',
+    'timer_help_block' => 'Le azioni della regola si eseguono quando questo ritardo è superato (verificato regolarmente da Workflows). Eliminare questo blocco toglie il ritardo: la regola si applicherà all\'arrivo.',
 ];

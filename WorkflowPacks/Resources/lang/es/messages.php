@@ -470,4 +470,5 @@ return [
     'del_refused_cleanup' => 'Solo un administrador puede quitar la limpieza de una carpeta.',
     'del_missing'        => 'Quitar «:rule» del esquema: esta regla ya no existe en Workflows (vínculo del paquete)',
     'del_refused_rights' => 'Parte de estas reglas está en un buzón cuyos workflows usted no gestiona.',
+    'timer_block' => 'Temporizador',
 ];

@@ -4,6 +4,16 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [2.10.0] - 2026-11-04
+
+### Ajouté
+- **Blocs minuteur dans la vue d'ensemble** : une règle avec un délai (« après 30 jours », « en attente depuis 7
+  jours »…) a son bloc sablier, relié à la règle. Son panneau montre la règle ; son « + » ajoute une action après
+  ce délai ; le supprimer retire le délai (validation, « Annuler la suppression »).
+- **« Ajouter un minuteur »** dans le « + », le panneau et « Ajouter un bloc » : après 15 minutes, 1 heure, 1 jour,
+  2 jours, 7 jours ou 30 jours — une nouvelle règle des mêmes e-mails (conditions de la règle, du flux ou de la
+  boîte), l'action étant choisie dans l'éditeur.
+
 ## [2.9.2] - 2026-11-04
 
 ### Corrigé

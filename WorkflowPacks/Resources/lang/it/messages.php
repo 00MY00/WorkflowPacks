@@ -470,4 +470,5 @@ return [
     'del_refused_cleanup' => 'Solo un amministratore può rimuovere la pulizia di una cartella.',
     'del_missing'        => 'Rimuovere «:rule» dallo schema: questa regola non esiste più in Workflows (collegamento del pacchetto)',
     'del_refused_rights' => 'Parte di queste regole è in una casella di cui non gestisci i workflow.',
+    'timer_block' => 'Timer',
 ];

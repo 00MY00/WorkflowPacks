@@ -313,4 +313,10 @@ return [
     'delete_panel'     => 'Deleted',
     'delete_undo'      => 'Undo the deletion',
     'delete_undone'    => 'Deletion undone: everything is back.',
+    'next_add_timer'    => 'Add a timer',
+    'next_timer_preset' => 'After :delay',
+    'next_name_timer'   => 'After :delay',
+    'kind_dest_timer'  => 'Timer',
+    'timer_rule'       => 'Rule',
+    'timer_help_block' => 'The actions of the rule run once this delay is passed (checked again and again by Workflows). Deleting this block removes the delay: the rule then applies on arrival.',
 ];

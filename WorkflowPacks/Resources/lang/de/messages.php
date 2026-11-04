@@ -470,4 +470,5 @@ return [
     'del_refused_cleanup' => 'Die Bereinigung eines Ordners kann nur ein Administrator entfernen.',
     'del_missing'        => '„:rule“ aus dem Schema entfernen: diese Regel gibt es in Workflows nicht mehr (Verknüpfung des Pakets)',
     'del_refused_rights' => 'Ein Teil dieser Regeln liegt in einem Postfach, dessen Workflows Sie nicht verwalten.',
+    'timer_block' => 'Timer',
 ];

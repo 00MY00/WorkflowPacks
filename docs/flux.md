@@ -62,6 +62,14 @@ directement : l'éditeur s'ouvre, déjà rempli, pour vérifier puis enregistrer
 
 Le nouveau bloc garde les conditions du flux et de sa branche : il s'ajoute à la même chaîne.
 
+## Minuteurs
+
+- Dans la **vue d'ensemble**, une règle avec un délai a son **bloc minuteur** (sablier, « Après 30 jours · depuis
+  l'arrivée »), relié à la règle. Le supprimer retire le délai : la règle s'appliquera dès l'arrivée (signalé).
+- **Ajouter un minuteur** (« + », panneau, « Ajouter un bloc ») : après 15 minutes, 1 heure, 1 jour, 2 jours,
+  7 jours ou 30 jours. L'éditeur s'ouvre avec une nouvelle règle des mêmes e-mails et ce délai ; choisissez l'action
+  (fermer, classer, assigner…) puis enregistrez.
+
 ## Supprimer un bloc
 
 Sélectionnez un ou plusieurs blocs, puis touche **Suppr** (ou clic droit › **Supprimer**, ou le bouton du panneau).

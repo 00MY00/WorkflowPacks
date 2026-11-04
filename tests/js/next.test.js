@@ -94,7 +94,7 @@ test('flow view: a new rule keeps the conditions of the flow and of the branch, 
     assert.ok(N.can(cond));
     assert.ok(!N.can({ kind: 'step', dest: 'branch' }), 'a branch alone: through its steps');
     const fromCond = N.suggest(cond, { catalog: flowCatalog, names });
-    assert.deepStrictEqual(ids(fromCond), ['flow_status_close', 'flow_noreply', 'flow_unassigned', 'flow_delay_close', 'flow_delay_folder']);
+    assert.deepStrictEqual(ids(fromCond), ['flow_status_close', 'flow_noreply', 'flow_unassigned', 'flow_delay_close', 'flow_delay_folder', 'add_timer']);
     assert.deepStrictEqual(fromCond[0].run.editor.rule.conditions.all.slice(-2), [
         { type: 'status', operator: 'equal', value: '2' }, { type: 'waiting', operator: 'longer', value: { number: 7, metric: 'd' } }]);
     fromCond.shift();
@@ -110,7 +110,7 @@ test('flow view: a new rule keeps the conditions of the flow and of the branch, 
     const branch = [{ type: 'wp_assigned', operator: 'no' }];
     const step = { kind: 'step', dest: 'timer', workflow_id: 9, flow, lane: { branch }, step: { delay: { seconds: 86400 } } };
     const fromStep = N.suggest(step, { catalog: flowCatalog, names, ruleActions: ['note'] });
-    assert.deepStrictEqual(ids(fromStep), ['flow_delay_close', 'flow_delay_folder', 'flow_here_close', 'flow_here_folder', 'set_status', 'then_any']);
+    assert.deepStrictEqual(ids(fromStep), ['flow_delay_close', 'flow_delay_folder', 'flow_here_close', 'flow_here_folder', 'set_status', 'add_timer', 'then_any']);
     const all = fromStep[0].run.editor.rule.conditions.all;
     assert.deepStrictEqual(all.slice(-2), [{ type: 'wp_assigned', operator: 'no' }, { type: 'created', operator: 'not_in_last', value: { number: 2, metric: 'd' } }]);
     assert.deepStrictEqual(fromStep[2].run.editor.addAction, { type: 'status', value: '3' });
@@ -148,6 +148,30 @@ test('palette: every action of the catalog, the status in each value, labels of 
     const withAction = mb.find((s) => s.id === 'new_with');
     assert.deepStrictEqual(withAction.sub[4].run.editor.rule.actions, [{ type: 'note', value: '' }]);
     assert.strictEqual(withAction.sub[4].run.editor.rule.settings.apply_to_prev, false, 'new rule, safe');
+});
+
+test('timers: "Add a timer" with presets, for a mailbox, a rule (without its own delay), a step, one rule of a destination', () => {
+    const cat = { conditions: Object.assign({ created: {} }, full.conditions), actions: full.actions };
+    const ctx = { catalog: cat, names: Object.assign({ timer: 'Après :delay' }, names), delayText: (d) => d.number + d.metric };
+    const mb = N.suggest({ kind: 'mailbox' }, ctx);
+    assert.strictEqual(ids(mb)[2], 'add_timer', 'right after "set the status"');
+    const timer = mb[2];
+    assert.deepStrictEqual(timer.sub.map((s) => s.params.delay), [{ number: 15, metric: 'i' }, { number: 1, metric: 'h' }, { number: 1, metric: 'd' },
+        { number: 2, metric: 'd' }, { number: 7, metric: 'd' }, { number: 30, metric: 'd' }]);
+    const r = timer.sub[1].run.editor.rule;
+    assert.deepStrictEqual(r.conditions.all, [{ type: 'created', operator: 'not_in_last', value: { number: 1, metric: 'h' } }]);
+    assert.deepStrictEqual(r.actions, [], 'the action is chosen in the editor');
+    assert.strictEqual(r.name, 'Après 1h');
+    assert.strictEqual(r.settings.apply_to_prev, false);
+    // a rule: its conditions without its own delay
+    const ruleConditions = { all: [{ type: 'subject', operator: 'contains', value: 'x' }, { type: 'created', operator: 'not_in_last', value: { number: 2, metric: 'd' } }] };
+    const fromRule = N.suggest({ kind: 'rule' }, Object.assign({ ruleConditions, ruleActions: [] }, ctx)).find((s) => s.id === 'add_timer');
+    assert.deepStrictEqual(fromRule.sub[4].run.editor.rule.conditions.all, [{ type: 'subject', operator: 'contains', value: 'x' },
+        { type: 'created', operator: 'not_in_last', value: { number: 7, metric: 'd' } }]);
+    // a timer block (overview) of one rule: same; several rules or no detail: no timer
+    assert.ok(ids(N.suggest({ kind: 'dest', dest: 'timer' }, Object.assign({ ruleConditions, rules: [{ workflow_id: 1, name: 'A' }] }, ctx))).includes('add_timer'));
+    assert.ok(!ids(N.suggest({ kind: 'dest', dest: 'timer' }, Object.assign({ ruleConditions, rules: [{ workflow_id: 1 }, { workflow_id: 2 }] }, ctx))).includes('add_timer'));
+    assert.ok(!ids(N.suggest({ kind: 'mailbox' }, { catalog: full, names })).includes('add_timer'), 'not without the date condition');
 });
 
 console.log(n + ' tests OK');

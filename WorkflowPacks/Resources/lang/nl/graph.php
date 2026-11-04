@@ -312,4 +312,10 @@ return [
     'delete_panel'     => 'Verwijderd',
     'delete_undo'      => 'Verwijderen ongedaan maken',
     'delete_undone'    => 'Verwijderen ongedaan gemaakt: alles is terug.',
+    'next_add_timer'    => 'Timer toevoegen',
+    'next_timer_preset' => 'Na :delay',
+    'next_name_timer'   => 'Na :delay',
+    'kind_dest_timer'  => 'Timer',
+    'timer_rule'       => 'Regel',
+    'timer_help_block' => 'De acties van de regel lopen zodra deze termijn voorbij is (regelmatig gecontroleerd door Workflows). Dit blok verwijderen haalt de termijn weg: de regel geldt dan bij aankomst.',
 ];

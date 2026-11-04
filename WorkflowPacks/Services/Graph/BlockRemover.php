@@ -23,6 +23,7 @@ use Modules\WorkflowPacks\Services\Workflows\Bridge;
  *   ft:<id>                      the delay of the rule (it then runs on the arrival of the e-mail)
  *   fc:<mailbox>:<hash>[:<i>]    one condition of a flow: removed from every rule of the flow
  *   fb:<mailbox>:<hash>:<lane>   the test of a branch (assigned / replied): removed from the rules of the lane
+ *   dest:timer:<rule key>        the timer block of a rule (overview): its delay
  *   dest:clean:…                 the automatic clean-up of an e-mail folder (administrators: a setting, not a rule)
  *   dest:…                       a destination: the actions sending there
  * Mailboxes and packs are not deleted here (a pack: "Remove the pack", with its own preview).
@@ -68,11 +69,11 @@ class BlockRemover
             } elseif (preg_match('/^fa:(\d+):(\d+)$/', $key, $m)) {
                 $this->add($ops, $user, (int) $m[1], 'actions', (int) $m[2]);
             } elseif (preg_match('/^ft:(\d+)$/', $key, $m)) {
-                $wf = $this->workflow($user, (int) $m[1]);
-                foreach ($wf ? $this->conditionsOf($wf) : [] as $i => $lane) {
-                    if (count($lane) === 1 && FlowBuilder::isDelay($lane[0])) {
-                        $this->add($ops, $user, (int) $wf->id, 'lanes', $i);
-                    }
+                $this->removeDelay($ops, $user, (int) $m[1]);
+            } elseif (preg_match('#^dest:timer:(wf:(\d+)|tpl:([^/]+)/(.+))$#', $key, $m)) {
+                $ids = !empty($m[2]) ? [(int) $m[2]] : Link::where('pack_key', $m[3])->where('workflow_key', $m[4])->pluck('workflow_id')->filter()->all();
+                foreach ($ids as $id) {
+                    $this->removeDelay($ops, $user, (int) $id);
                 }
             } elseif (preg_match('/^(fc|fb):(\d+):/', $key, $m)) {
                 if (!$this->flowBlock($ops, $user, $key, (int) $m[2])) {
@@ -305,6 +306,17 @@ class BlockRemover
         return array_map(function ($lane) {
             return array_values(array_filter((array) $lane, 'is_array'));
         }, (array) Bridge::attributesOf($wf)['conditions']);
+    }
+
+    /** The delay of a rule (its date conditions "older than"): the rule then runs on the arrival of the e-mail. */
+    protected function removeDelay(array &$ops, $user, $id)
+    {
+        $wf = $this->workflow($user, $id);
+        foreach ($wf ? $this->conditionsOf($wf) : [] as $i => $lane) {
+            if (count($lane) === 1 && FlowBuilder::isDelay($lane[0])) {
+                $this->add($ops, $user, (int) $wf->id, 'lanes', $i);
+            }
+        }
     }
 
     /** @return bool false when the rule is not there, or in a mailbox the user does not manage */

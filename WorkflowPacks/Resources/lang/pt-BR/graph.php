@@ -312,4 +312,10 @@ return [
     'delete_panel'     => 'Excluído',
     'delete_undo'      => 'Desfazer a exclusão',
     'delete_undone'    => 'Exclusão desfeita: tudo voltou.',
+    'next_add_timer'    => 'Adicionar um temporizador',
+    'next_timer_preset' => 'Após :delay',
+    'next_name_timer'   => 'Após :delay',
+    'kind_dest_timer'  => 'Temporizador',
+    'timer_rule'       => 'Regra',
+    'timer_help_block' => 'As ações da regra acontecem quando este prazo passa (verificado regularmente pelo Workflows). Excluir este bloco remove o prazo: a regra será aplicada na chegada.',
 ];

@@ -312,4 +312,10 @@ return [
     'delete_panel'     => 'Gelöscht',
     'delete_undo'      => 'Löschen rückgängig machen',
     'delete_undone'    => 'Löschen rückgängig gemacht: alles ist wieder da.',
+    'next_add_timer'    => 'Timer hinzufügen',
+    'next_timer_preset' => 'Nach :delay',
+    'next_name_timer'   => 'Nach :delay',
+    'kind_dest_timer'  => 'Timer',
+    'timer_rule'       => 'Regel',
+    'timer_help_block' => 'Die Aktionen der Regel laufen, sobald diese Frist überschritten ist (regelmäßig von Workflows geprüft). Wird dieser Block gelöscht, entfällt die Frist: die Regel gilt dann beim Eingang.',
 ];

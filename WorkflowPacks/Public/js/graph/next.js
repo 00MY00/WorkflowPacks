@@ -148,7 +148,38 @@
             }
         }
 
+        // "Add a timer": after a delay, a new rule of the same e-mails (its action is chosen in the editor)
+        var base = timerBase(node, ctx);
+        if (base && hasC('created')) {
+            var timer = { id: 'add_timer', icon: 'hourglass', label: 'next_add_timer', sub: TIMERS.map(function (d) {
+                return { id: 'timer_' + d.number + d.metric, icon: 'hourglass', label: 'next_timer_preset', params: { delay: d },
+                    run: { editor: { rule: rule((ctx.names.timer || '').replace(':delay', ctx.delayText ? ctx.delayText(d) : d.number + d.metric),
+                        base.concat([{ type: 'created', operator: 'not_in_last', value: d }]), []) } } };
+            }) };
+            var at = out.map(function (s) { return s.id; }).filter(function (id) { return id === 'new_status' || id === 'set_status'; })[0];
+            out.splice(at ? out.map(function (s) { return s.id; }).indexOf(at) + 1 : out.length, 0, timer);
+        }
         return out;
+    }
+
+    var TIMERS = [{ number: 15, metric: 'i' }, { number: 1, metric: 'h' }, { number: 1, metric: 'd' }, { number: 2, metric: 'd' },
+        { number: 7, metric: 'd' }, { number: 30, metric: 'd' }];
+    var DATE_TYPES = ['created', 'waiting', 'user_reply', 'customer_reply'];
+
+    /**
+     * The e-mails a timer of this block is about: none for a mailbox (every e-mail), the conditions of the flow (and of
+     * the branch) for a step, the conditions of the rule (without its own delay) for a rule or the destination of one
+     * rule. null: no timer offered.
+     */
+    function timerBase(node, ctx) {
+        if (node.kind === 'mailbox') { return []; }
+        if (node.kind === 'step') { return lanes(node.flow.base).concat((node.lane && node.lane.branch) || []); }
+        var c = ctx.ruleConditions;
+        if (!c || (node.kind === 'dest' && (ctx.rules || []).length !== 1)) { return null; }
+        var list = c.all || (c.any ? [{ any: c.any }] : []);
+        return list.filter(function (item) {
+            return !(item && DATE_TYPES.indexOf(item.type) >= 0 && (item.operator === 'not_in_last' || item.operator === 'longer'));
+        });
     }
 
     /**
@@ -235,7 +266,8 @@
         var model = this.app.model;
         if (node.kind === 'mailbox') { return node; }
         if (node.kind === 'step') { return this.app.overview.nodes['mb:' + node.mailbox]; }
-        var ruleKey = node.kind === 'rule' ? node.key : (model.edges.filter(function (e) { return e.kind === 'sends' && e.to === node.key; })[0] || {}).from
+        // the rule of the block: itself, the rule of a timer block, the first rule sending to it or filing into it
+        var ruleKey = node.kind === 'rule' ? node.key : node.rule || (model.edges.filter(function (e) { return e.kind === 'sends' && e.to === node.key; })[0] || {}).from
             || ((node.filed_by || [])[0]);
         var applies = model.edges.filter(function (e) { return e.kind === 'applies' && e.from === ruleKey && e.workflow_id; })[0];
         return applies ? model.nodes[applies.to] : model.list(function (n) { return n.kind === 'mailbox'; })[0];
@@ -249,12 +281,11 @@
         if (!mailbox) { return Promise.resolve([]); }
         var edge = node.kind === 'rule' ? app.model.edges.filter(function (e) { return e.kind === 'applies' && e.from === key && e.workflow_id; })[0]
             : (node.workflow_id ? { workflow_id: node.workflow_id } : null);
-        var detail = edge ? app.api.rule(edge.workflow_id) : Promise.resolve(null);
         var status = node.dest && STATUS[node.dest] ? node.label : '';
-        // a destination: the rules of this mailbox sending there (or filing into the folder)
+        // a destination: the rules of this mailbox sending there (or filing into the folder, or whose timer it is)
         var model = app.model, rules = [];
         if (node.kind === 'dest') {
-            var ruleKeys = (node.filed_by || []).concat(model.edges.filter(function (e) { return e.kind === 'sends' && e.to === node.key; }).map(function (e) { return e.from; }));
+            var ruleKeys = (node.filed_by || []).concat(model.edges.filter(function (e) { return (e.kind === 'sends' || e.kind === 'timer') && e.to === node.key; }).map(function (e) { return e.from; }));
             model.edges.forEach(function (e) {
                 if (e.kind === 'applies' && e.workflow_id && e.to === mailbox.key && ruleKeys.indexOf(e.from) >= 0
                     && !rules.some(function (r) { return r.workflow_id === e.workflow_id; })) {
@@ -262,9 +293,14 @@
                 }
             });
         }
+        // the rule (its actions, its conditions for a timer): of the block, or the only rule sending to a destination
+        var ruleId = edge ? edge.workflow_id : (rules.length === 1 ? rules[0].workflow_id : null);
+        var detail = ruleId ? app.api.rule(ruleId) : Promise.resolve(null);
         return Promise.all([app.catalogOf(mailbox.id), detail]).then(function (res) {
             var ctx = {
                 catalog: res[0].catalog, admin: !!app.cfg.admin, rules: rules,
+                ruleConditions: res[1] ? res[1].rule.conditions : null,
+                delayText: function (d) { return d.number + ' ' + (t['unit_' + d.metric] || d.metric); },
                 ruleActions: res[1] ? (res[1].rule.actions || []).map(function (a) { return a.type; }) : [],
                 names: {
                     file_new: t.next_name_file_new, waiting_close: t.next_name_waiting_close, tag_spam: t.next_name_tag_spam,
@@ -272,7 +308,7 @@
                     after_delete: (t.next_name_after_delete || '').replace(':status', status),
                     after_close: (t.next_name_after_close || '').replace(':status', status),
                     flow_noreply: t.next_name_flow_noreply, flow_status_close: t.next_name_flow_status_close, new_with: t.next_name_new_with, flow_unassigned: t.next_name_flow_unassigned,
-                    flow_delay_close: t.next_name_flow_delay_close, flow_delay_folder: t.next_name_flow_delay_folder
+                    flow_delay_close: t.next_name_flow_delay_close, flow_delay_folder: t.next_name_flow_delay_folder, timer: t.next_name_timer
                 }
             };
             var text = function (s) {
