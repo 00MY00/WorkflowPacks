@@ -4,6 +4,25 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [2.4.0] - 2026-11-04
+
+### Ajouté
+- **Tester une règle** : dans la simulation, « Règle à tester » (ou le bouton « Tester cette règle » du panneau d'une
+  règle) prépare tout seul un faux e-mail qui remplit ses conditions : texte exact, contenu, début, fin, exemple tiré
+  d'une expression régulière (vérifié), assigné / répondu, tags, statut de départ. Ce qui ne peut pas être rempli
+  (condition d'un autre module, « réponse »…) est listé. Le résultat dit si la règle testée s'est appliquée, quand, ou
+  pourquoi pas.
+- **Statut de départ** du faux e-mail (Actif, En attente, Fermé, Spam).
+
+### Modifié
+- **Pages allégées** :
+  - règle (accueil, import, export) : un résumé d'une ligne « SI … → ALORS … » avec les noms lisibles, le détail
+    complet replié sous « Détails » (déplié pour les différences d'un import) ; actions sensibles toujours visibles ;
+  - Diagnostic : seules les vérifications en échec sont affichées, les autres et les versions sont repliées, comme
+    le catalogue de Workflows ;
+  - Schéma : l'aide (souris, tactile) repliée ; formulaire de simulation plus court (options supplémentaires repliées) ;
+  - Export : les informations du rapport repliées, les avertissements (secrets, références locales) restent visibles.
+
 ## [2.3.0] - 2026-11-04
 
 ### Ajouté
