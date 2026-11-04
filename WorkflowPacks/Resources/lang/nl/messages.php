@@ -466,4 +466,6 @@ return [
     'del_changed'           => 'De regels zijn intussen gewijzigd: probeer opnieuw.',
     'del_failed'            => 'Verwijderen geannuleerd, er is niets gewijzigd: :error',
     'del_no_backup'         => 'Back-up niet gevonden.',
+    'del_cleanup'         => 'Automatisch opruimen van de map ":folder" stoppen (:delay)',
+    'del_refused_cleanup' => 'Alleen een beheerder kan het opruimen van een map verwijderen.',
 ];

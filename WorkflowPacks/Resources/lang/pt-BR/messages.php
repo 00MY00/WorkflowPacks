@@ -466,4 +466,6 @@ return [
     'del_changed'           => 'As regras mudaram nesse meio-tempo: tente de novo.',
     'del_failed'            => 'Exclusão cancelada, nada foi alterado: :error',
     'del_no_backup'         => 'Backup não encontrado.',
+    'del_cleanup'         => 'Parar a limpeza automática da pasta “:folder” (:delay)',
+    'del_refused_cleanup' => 'Somente um administrador pode remover a limpeza de uma pasta.',
 ];

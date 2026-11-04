@@ -74,6 +74,7 @@ Une demande de validation liste ce qui va changer :
 | Minuteur | le délai de la règle : elle s'appliquera dès l'arrivée des e-mails (signalé) |
 | Condition, test | la condition, dans toutes les règles du flux qui l'ont |
 | Destination (dossier, statut, personne, tag) | les actions qui y envoient |
+| Nettoyage d'un dossier (« Corbeille après 30 jours ») | le nettoyage automatique de ce dossier (administrateurs) |
 
 Une sauvegarde est faite juste avant : **Annuler la suppression** (dans le panneau) remet tout comme avant. Les
 boîtes et les packs ne se suppriment pas ici (un pack : « Retirer le pack » sur la page Workflow Packs).

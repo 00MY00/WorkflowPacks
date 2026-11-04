@@ -466,4 +466,6 @@ return [
     'del_changed'           => 'Die Regeln haben sich inzwischen geändert: bitte erneut versuchen.',
     'del_failed'            => 'Löschen abgebrochen, nichts wurde geändert: :error',
     'del_no_backup'         => 'Sicherung nicht gefunden.',
+    'del_cleanup'         => 'Automatische Bereinigung des Ordners „:folder“ beenden (:delay)',
+    'del_refused_cleanup' => 'Die Bereinigung eines Ordners kann nur ein Administrator entfernen.',
 ];

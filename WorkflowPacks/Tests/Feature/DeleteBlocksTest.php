@@ -113,6 +113,29 @@ class DeleteBlocksTest extends TestCase
         $this->assertSame(2, Workflow::whereIn('mailbox_id', [$a->id, $b->id])->count());
     }
 
+    public function testTheCleanUpOfAFolderIsRemovedByAnAdministratorAndUndone()
+    {
+        $a = $this->mailbox('A');
+        $admin = $this->user([], true);
+        $agent = $this->user([$a], false, true);
+        $this->assertNull(\Modules\WorkflowPacks\Services\Imap\Retention::save('Discussions', ['number' => 30, 'metric' => 'd'], 'trash', $admin));
+        $key = 'dest:clean:'.substr(\Modules\WorkflowPacks\Services\Graph\GraphBuilder::folderKey('Discussions'), strlen('dest:'));
+
+        $refused = $this->deletionPlan($agent, [$key]);
+        $this->assertSame(0, $refused['count']);
+        $this->assertNotEmpty($refused['refused'], 'a setting of the administrators');
+
+        list($plan, $done) = $this->remove($admin, [$key]);
+        $this->assertSame(1, $plan['count']);
+        $this->assertStringContainsString('Discussions', $plan['lines'][0]);
+        $this->assertTrue($done['ok']);
+        $this->assertNull(\Modules\WorkflowPacks\Services\Imap\Retention::forFolder('Discussions'));
+
+        $this->actingAs($admin)->postJson(route('workflowpacks.graph.delete_undo'), ['backup_id' => $done['backup_id']])->assertStatus(200);
+        $back = \Modules\WorkflowPacks\Services\Imap\Retention::forFolder('Discussions');
+        $this->assertSame([30, 'd', 'trash'], [(int) $back->number, $back->metric, $back->mode]);
+    }
+
     public function testRightsAndAChangeInTheMeantime()
     {
         $a = $this->mailbox('A');

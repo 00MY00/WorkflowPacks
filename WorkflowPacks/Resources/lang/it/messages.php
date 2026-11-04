@@ -466,4 +466,6 @@ return [
     'del_changed'           => 'Le regole sono cambiate nel frattempo: riprova.',
     'del_failed'            => 'Eliminazione annullata, nulla è stato modificato: :error',
     'del_no_backup'         => 'Backup non trovato.',
+    'del_cleanup'         => 'Interrompere la pulizia automatica della cartella «:folder» (:delay)',
+    'del_refused_cleanup' => 'Solo un amministratore può rimuovere la pulizia di una cartella.',
 ];

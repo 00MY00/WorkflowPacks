@@ -466,4 +466,6 @@ return [
     'del_changed'           => 'Las reglas cambiaron mientras tanto: vuelva a intentarlo.',
     'del_failed'            => 'Eliminación cancelada, nada se modificó: :error',
     'del_no_backup'         => 'Copia de seguridad no encontrada.',
+    'del_cleanup'         => 'Detener la limpieza automática de la carpeta «:folder» (:delay)',
+    'del_refused_cleanup' => 'Solo un administrador puede quitar la limpieza de una carpeta.',
 ];

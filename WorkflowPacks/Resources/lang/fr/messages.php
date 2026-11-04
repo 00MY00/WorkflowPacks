@@ -474,4 +474,6 @@ return [
     'del_changed'           => 'Les règles ont changé entre-temps : recommencez.',
     'del_failed'            => 'Suppression annulée, rien n\'a été modifié : :error',
     'del_no_backup'         => 'Sauvegarde introuvable.',
+    'del_cleanup'         => 'Arrêter le nettoyage automatique du dossier « :folder » (:delay)',
+    'del_refused_cleanup' => 'Le nettoyage d\'un dossier ne peut être retiré que par un administrateur.',
 ];

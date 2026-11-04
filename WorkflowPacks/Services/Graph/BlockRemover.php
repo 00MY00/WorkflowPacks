@@ -7,6 +7,8 @@ use Modules\WorkflowPacks\Entities\Link;
 use Modules\WorkflowPacks\Services\Flow\FlowBuilder;
 use Modules\WorkflowPacks\Services\Flow\TicketConditions;
 use Modules\WorkflowPacks\Services\History;
+use Modules\WorkflowPacks\Services\Imap\Retention;
+use Modules\WorkflowPacks\Services\Pack\Timer;
 use Modules\WorkflowPacks\Services\Pack\Fingerprint;
 use Modules\WorkflowPacks\Services\Workflows\Bridge;
 
@@ -19,6 +21,7 @@ use Modules\WorkflowPacks\Services\Workflows\Bridge;
  *   ft:<id>                      the delay of the rule (it then runs on the arrival of the e-mail)
  *   fc:<mailbox>:<hash>[:<i>]    one condition of a flow: removed from every rule of the flow
  *   fb:<mailbox>:<hash>:<lane>   the test of a branch (assigned / replied): removed from the rules of the lane
+ *   dest:clean:…                 the automatic clean-up of an e-mail folder (administrators: a setting, not a rule)
  *   dest:…                       a destination: the actions sending there
  * Mailboxes and packs are not deleted here (a pack: "Remove the pack", with its own preview).
  *
@@ -34,11 +37,13 @@ class BlockRemover
 
     /**
      * @return array ['ops' => [workflow id => ['delete' => bool, 'actions' => [flat index], 'lanes' => [index]]],
-     *                'lines' => [texts], 'warnings' => [texts], 'refused' => [texts], 'token' => string]
+     *                'cleanups' => [folder settings], 'count' => int, 'lines' => [texts], 'warnings' => [texts],
+     *                'refused' => [texts], 'token' => string]
      */
     public function plan($user, array $keys)
     {
         $ops = [];
+        $cleanups = [];
         $refused = [];
         $jsonActions = (array) Bridge::config('json_value_actions');
         foreach (array_slice(array_values(array_unique(array_map('strval', $keys))), 0, 200) as $key) {
@@ -60,6 +65,14 @@ class BlockRemover
             } elseif (preg_match('/^(fc|fb):(\d+):/', $key, $m)) {
                 if (!$this->flowBlock($ops, $user, $key, (int) $m[2])) {
                     $refused[] = __('workflowpacks::messages.del_refused_all');
+                }
+            } elseif (strpos($key, 'dest:clean:') === 0) {
+                // the clean-up of a folder: a setting of the administrators (RetentionController)
+                $row = $this->cleanupOf($key);
+                if (!$user->isAdmin()) {
+                    $refused[] = __('workflowpacks::messages.del_refused_cleanup');
+                } elseif ($row) {
+                    $cleanups[$row->folder] = ['folder' => $row->folder, 'number' => (int) $row->number, 'metric' => $row->metric, 'mode' => $row->mode];
                 }
             } elseif (strpos($key, 'dest:') === 0) {
                 $builder = new GraphBuilder();
@@ -89,15 +102,20 @@ class BlockRemover
         }
 
         list($lines, $warnings) = $this->texts($ops, $jsonActions);
+        foreach ($cleanups as $c) {
+            $lines[] = __('workflowpacks::messages.del_cleanup', ['folder' => $c['folder'], 'delay' => Timer::label($c)]);
+        }
+        $cleanups = array_values($cleanups);
 
-        return ['ops' => $ops, 'lines' => $lines, 'warnings' => $warnings, 'refused' => array_values(array_unique($refused)), 'token' => $this->token($ops)];
+        return ['ops' => $ops, 'cleanups' => $cleanups, 'count' => count($ops) + count($cleanups), 'lines' => $lines, 'warnings' => $warnings,
+            'refused' => array_values(array_unique($refused)), 'token' => $this->token($ops, $cleanups)];
     }
 
     /** @return array ['ok' => bool, 'error' => string, 'backup_id' => int, 'deleted' => int, 'changed' => int] */
     public function apply($user, array $keys, $token)
     {
         $plan = $this->plan($user, $keys);
-        if (!$plan['ops']) {
+        if (!$plan['count']) {
             return ['ok' => false, 'error' => $plan['refused'] ? implode(' ', $plan['refused']) : __('workflowpacks::messages.del_nothing')];
         }
         if (!hash_equals($plan['token'], (string) $token)) {
@@ -116,9 +134,13 @@ class BlockRemover
                         })->all()];
                 }
                 $backup = Backup::create(['pack_key' => self::BACKUP_KEY, 'user_id' => $user->id, 'content' => json_encode(
-                    ['format' => 'workflowpacks-graph-delete', 'version' => 1, 'created_at' => date('c'), 'workflows' => $saved],
+                    ['format' => 'workflowpacks-graph-delete', 'version' => 1, 'created_at' => date('c'), 'workflows' => $saved, 'cleanups' => $plan['cleanups']],
                     JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)]);
                 $result['backup_id'] = (int) $backup->id;
+                foreach ($plan['cleanups'] as $c) {
+                    Retention::remove($c['folder']);
+                    $result['changed']++;
+                }
 
                 foreach ($plan['ops'] as $id => $op) {
                     $wf = $op['model'];
@@ -178,6 +200,12 @@ class BlockRemover
                             $link + ['workflow_id' => $wf->id]);
                     }
                 }
+                foreach ((array) ($content['cleanups'] ?? []) as $c) {
+                    $error = $user->isAdmin() ? Retention::save($c['folder'], ['number' => $c['number'], 'metric' => $c['metric']], $c['mode'], $user) : 'del_no_backup';
+                    if ($error !== null) {
+                        throw new \RuntimeException(__('workflowpacks::messages.del_no_backup'));
+                    }
+                }
                 $backup->delete();
             });
         } catch (\Throwable $e) {
@@ -188,6 +216,18 @@ class BlockRemover
     }
 
     // ---------------------------------------------------------------------------------------------- internals
+
+    /** The clean-up setting a block "dest:clean:…" stands for (same key as GraphBuilder gives it). */
+    protected function cleanupOf($key)
+    {
+        foreach (Retention::all() as $row) {
+            if ($key === 'dest:clean:'.substr(GraphBuilder::folderKey($row->folder), strlen('dest:'))) {
+                return $row;
+            }
+        }
+
+        return null;
+    }
 
     protected static function fields($wf)
     {
@@ -364,9 +404,9 @@ class BlockRemover
     }
 
     /** Proof that the rules did not change between the question and the confirmation. */
-    protected function token(array $ops)
+    protected function token(array $ops, array $cleanups = [])
     {
-        $state = [];
+        $state = [$cleanups];
         foreach ($ops as $id => $op) {
             $state[] = [$id, $op['delete'], $op['actions'], $op['lanes'], self::fields($op['model'])];
         }

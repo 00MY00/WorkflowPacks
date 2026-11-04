@@ -470,4 +470,6 @@ return [
     'del_changed'           => 'The rules changed in the meantime: try again.',
     'del_failed'            => 'Deletion cancelled, nothing was changed: :error',
     'del_no_backup'         => 'Backup not found.',
+    'del_cleanup'         => 'Stop the automatic clean-up of the folder “:folder” (:delay)',
+    'del_refused_cleanup' => 'The clean-up of a folder can only be removed by an administrator.',
 ];
