@@ -9,7 +9,10 @@ use Modules\WorkflowPacks\Services\Pack\Timer;
  * Flow view: the rules of a mailbox shown as chains of blocks, one block per instruction — no Laravel dependency
  * (tested by tests/unit). The rules of Workflows stay the only truth: this is a reading of them, never stored.
  *
- *   mailbox → [conditions] → [branch: assigned? replied?] → [delay] → [action] → [action] → [delay] → [action] …
+ *   mailbox → [condition] → [condition] … → [branch: assigned? replied?] → [delay] → [action] → [delay] → [action] …
+ *
+ * Each condition of the flow is a block of its own (status of the ticket, assignee, subject, customer, tag…; a lane
+ * of OR conditions is one block "a OR b").
  *
  *  - rules with the same conditions (delays and branches aside) form ONE flow: "after 1 hour → folder",
  *    "after 2 days → closed" are two rules of Workflows, one chain here;
@@ -42,7 +45,8 @@ class FlowBuilder
      * @param int   $mailboxId
      * @param array $rules list of ['id', 'name', 'active', 'conditions' (Workflows' lanes), 'actions' (decoded list),
      *                     'origin', 'pack'], in the order of Workflows
-     * @return array list of flows: ['key', 'conditions' => [labels], 'lanes' => [['key', 'label', 'steps' => [...]]]]
+     * @return array list of flows: ['key', 'conditions' => [labels], 'blocks' => [['key', 'family', 'label']],
+     *               'lanes' => [['key', 'label', 'steps' => [...]]]]
      */
     public function build($mailboxId, array $rules)
     {
@@ -55,6 +59,10 @@ class FlowBuilder
                 $flows[$flowKey] = [
                     'key'        => $flowKey,
                     'conditions' => $parts['base'] ? array_map([$this->labels, 'condition'], self::flat($parts['base'])) : [$this->labels->all()],
+                    // one block per condition: the first one has the key of the flow
+                    'blocks'     => $parts['base'] ? array_map(function ($item, $i) use ($flowKey) {
+                        return ['key' => $i ? $flowKey.':'.$i : $flowKey, 'family' => self::conditionFamily($item), 'label' => $this->labels->condition($item)];
+                    }, self::flat($parts['base']), array_keys($parts['base'])) : [['key' => $flowKey, 'family' => 'all', 'label' => $this->labels->all()]],
                     // Workflows' lanes, for the next steps of the diagram (a new rule of the same flow)
                     'base'       => $parts['base'],
                     'lanes'      => [],
@@ -117,7 +125,7 @@ class FlowBuilder
         foreach ($flows as $flow) {
             foreach ($flow['lanes'] as $lane) {
                 foreach ($lane['steps'] as $step) {
-                    $keys = ['mb:'.$mailboxId, $flow['key']];
+                    $keys = array_merge(['mb:'.$mailboxId], array_column($flow['blocks'], 'key'));
                     if ($lane['key']) {
                         $keys[] = $lane['key'];
                     }
@@ -166,6 +174,33 @@ class FlowBuilder
     {
         return Timer::isTimer($condition['type'] ?? '') && in_array($condition['operator'] ?? '', self::DELAY_OPERATORS, true)
             && Timer::check($condition['value'] ?? null)['error'] === null;
+    }
+
+    /**
+     * What a condition looks at, for its block: status-<name>, person, text, customer, new, tag, date, reply or other.
+     * A lane of OR conditions ("__or") takes the family of its first condition.
+     */
+    public static function conditionFamily(array $condition)
+    {
+        if (($condition['type'] ?? '') === '__or') {
+            return self::conditionFamily($condition['items'][0] ?? []);
+        }
+        $type = (string) ($condition['type'] ?? '');
+        if ($type === 'status') {
+            $name = self::STATUS[(string) ($condition['value'] ?? '')] ?? null;
+
+            return $name ? 'status-'.$name : 'status';
+        }
+        $map = ['user' => 'person', TicketConditions::ASSIGNED => 'person', TicketConditions::REPLIED => 'reply', 'subject' => 'text', 'body' => 'text',
+            'to' => 'text', 'cc' => 'text', 'headers' => 'text', 'customer_email' => 'customer', 'customer_name' => 'customer', 'new_or_reply' => 'new'];
+        if (isset($map[$type])) {
+            return $map[$type];
+        }
+        if (Timer::isTimer($type)) {
+            return 'date';
+        }
+
+        return stripos($type, 'tag') !== false ? 'tag' : 'other';
     }
 
     /** What an action does, for its block: status, folder, person, mailbox, tag, note, send, delete or other. */

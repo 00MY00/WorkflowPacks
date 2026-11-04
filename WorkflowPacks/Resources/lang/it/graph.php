@@ -293,4 +293,6 @@ return [
     'sim_target_ok'   => 'Regola testata «:name»: applicata (:when)',
     'sim_target_no'   => 'Regola testata «:name»: non applicata — :reason',
     'sim_test_rule'   => 'Testa questa regola',
+    'next_flow_status_close'      => 'Se «In attesa» da 7 giorni: segnare come chiuso',
+    'next_name_flow_status_close' => 'Chiudere i ticket in attesa da 7 giorni',
 ];

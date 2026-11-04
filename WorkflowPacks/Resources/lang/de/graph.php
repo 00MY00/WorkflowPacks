@@ -293,4 +293,6 @@ return [
     'sim_target_ok'   => 'Getestete Regel „:name“: angewendet (:when)',
     'sim_target_no'   => 'Getestete Regel „:name“: nicht angewendet — :reason',
     'sim_test_rule'   => 'Diese Regel testen',
+    'next_flow_status_close'      => 'Wenn 7 Tage „Ausstehend“: als geschlossen markieren',
+    'next_name_flow_status_close' => 'Seit 7 Tagen ausstehende Tickets schließen',
 ];

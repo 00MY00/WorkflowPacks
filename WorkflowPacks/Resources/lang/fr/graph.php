@@ -294,4 +294,6 @@ return [
     'sim_target_ok'   => 'Règle testée « :name » : appliquée (:when)',
     'sim_target_no'   => 'Règle testée « :name » : non appliquée — :reason',
     'sim_test_rule'   => 'Tester cette règle',
+    'next_flow_status_close'      => 'Si « En attente » depuis 7 jours : marquer comme fermé',
+    'next_name_flow_status_close' => 'Fermer les tickets en attente depuis 7 jours',
 ];

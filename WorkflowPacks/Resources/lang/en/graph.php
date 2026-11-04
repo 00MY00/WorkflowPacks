@@ -294,4 +294,6 @@ return [
     'sim_target_ok'   => 'Tested rule “:name”: applied (:when)',
     'sim_target_no'   => 'Tested rule “:name”: not applied — :reason',
     'sim_test_rule'   => 'Test this rule',
+    'next_flow_status_close'      => 'If “Pending” for 7 days: mark as closed',
+    'next_name_flow_status_close' => 'Close the tickets pending for 7 days',
 ];

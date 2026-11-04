@@ -16,8 +16,15 @@ const flows = {
         { key: 'fc:4:b', conditions: ['Tous les e-mails'], base: [], lanes: [{ key: null, label: '', branch: [], steps: [step(5, 0, [])] }] },
     ] },
     7: { flows: [] },
+    8: { flows: [
+        { key: 'fc:8:z', conditions: [], base: [], blocks: [
+            { key: 'fc:8:z', family: 'text', label: 'Sujet contient « commande »' },
+            { key: 'fc:8:z:1', family: 'status-pending', label: 'Statut = En attente' },
+            { key: 'fc:8:z:2', family: 'person', label: 'Assigné à : Alice' },
+        ], lanes: [{ key: null, label: '', branch: [], steps: [step(6, 86400, ['status-closed'])] }] },
+    ] },
 };
-const mailboxes = [{ id: 4, label: 'Support', sub: 'support@example.test' }, { id: 7, label: 'Vide', sub: '' }];
+const mailboxes = [{ id: 4, label: 'Support', sub: 'support@example.test' }, { id: 7, label: 'Vide', sub: '' }, { id: 8, label: 'Ventes', sub: '' }];
 
 const g = F.graph(flows, mailboxes);
 const keys = g.nodes.map((n) => n.key);
@@ -37,6 +44,12 @@ assert.deepStrictEqual(next('fa:3:0'), ['fa:3:1']);
 assert.deepStrictEqual(next('fb:4:a:x'), ['ft:4']);
 assert.strictEqual(g.edges.find((e) => e.to === 'ft:4').active, false, 'disabled rule: its links say so');
 assert.strictEqual(g.sections[0].flows[0].lanes[0].length, 6);
+// one block per condition, in a chain, then the steps
+assert.deepStrictEqual(g.sections[2].flows[0].conds, ['fc:8:z', 'fc:8:z:1', 'fc:8:z:2']);
+assert.deepStrictEqual(next('mb:8'), ['fc:8:z']);
+assert.deepStrictEqual(next('fc:8:z'), ['fc:8:z:1']);
+assert.deepStrictEqual(next('fc:8:z:2'), ['ft:6']);
+assert.strictEqual(g.nodes.find((n) => n.key === 'fc:8:z:1').cond_family, 'status-pending');
 
 // no overlap, whatever the sizes (random text sizes, many times)
 let seed = 7;
@@ -51,5 +64,8 @@ for (let run = 0; run < 200; run++) {
     // a lane goes from left to right
     const row = g.sections[0].flows[0].lanes[0];
     for (let i = 1; i < row.length; i++) { assert.ok(pos[row[i]][0] > pos[row[i - 1]][0] + size(g.nodes.find((n) => n.key === row[i - 1])) [0] - 1); }
+    // conditions, then the steps, from left to right
+    const chain = g.sections[2].flows[0].conds.concat(g.sections[2].flows[0].lanes[0]);
+    for (let i = 1; i < chain.length; i++) { assert.ok(pos[chain[i]][0] > pos[chain[i - 1]][0], 'chain ' + i); }
 }
 console.log('flow.test.js: OK');

@@ -87,7 +87,8 @@
     View.prototype.drawNode = function (n) {
         var p = this.model.pos[n.key] || [0, 0];
         var s = L.size(n);
-        var cls = 'wpg-node kind-' + n.kind + (n.origin ? ' origin-' + n.origin : '') + (n.dest ? ' dest-' + n.dest : '');
+        var cls = 'wpg-node kind-' + n.kind + (n.origin ? ' origin-' + n.origin : '') + (n.dest ? ' dest-' + n.dest : '')
+            + (n.cond_family ? ' cf-' + n.cond_family : '');
         var g = el('g', { class: cls, 'data-key': n.key, transform: 'translate(' + p[0] + ',' + p[1] + ')' }, this.nodeLayer);
         el('title', {}, g).textContent = n.label + (n.sub ? ' — ' + n.sub : '');
         el('rect', { class: 'wpg-box', width: s[0], height: s[1], rx: n.kind === 'mailbox' ? 12 : 8 }, g);

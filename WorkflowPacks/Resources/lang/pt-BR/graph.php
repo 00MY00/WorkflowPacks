@@ -293,4 +293,6 @@ return [
     'sim_target_ok'   => 'Regra testada “:name”: aplicada (:when)',
     'sim_target_no'   => 'Regra testada “:name”: não aplicada — :reason',
     'sim_test_rule'   => 'Testar esta regra',
+    'next_flow_status_close'      => 'Se “Pendente” há 7 dias: marcar como fechado',
+    'next_name_flow_status_close' => 'Fechar os tickets pendentes há 7 dias',
 ];

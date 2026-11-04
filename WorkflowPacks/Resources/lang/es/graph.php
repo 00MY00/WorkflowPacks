@@ -293,4 +293,6 @@ return [
     'sim_target_ok'   => 'Regla probada «:name»: aplicada (:when)',
     'sim_target_no'   => 'Regla probada «:name»: no aplicada — :reason',
     'sim_test_rule'   => 'Probar esta regla',
+    'next_flow_status_close'      => 'Si «Pendiente» desde hace 7 días: marcar como cerrado',
+    'next_name_flow_status_close' => 'Cerrar los tickets pendientes desde hace 7 días',
 ];

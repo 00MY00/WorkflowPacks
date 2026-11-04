@@ -12,7 +12,7 @@ enregistré.
 | Bloc | Symbole | Ce qu'il représente |
 |---|---|---|
 | Boîte | boîte de réception | la boîte où arrivent les e-mails |
-| Conditions | entonnoir | les e-mails concernés par le flux (« Sujet contient facture »…), ou « Tous les e-mails » |
+| Condition (une par bloc, contour pointillé) | selon ce qu'elle regarde : cercle du statut (statut du ticket), silhouette (assigné à), lignes de texte (sujet, texte, destinataire), arobase (client), boîte de réception (nouveau / réponse), étiquette (tag), sablier (date), entonnoir (autre module) | les e-mails concernés par le flux (« Sujet contient facture », « Statut = En attente »…), ou « Tous les e-mails » ; un groupe OU est un seul bloc « a OU b » |
 | Test (branche) | branche qui se sépare, contour en pointillés | « Assigné à quelqu'un : oui / non », « Une réponse a été envoyée : oui / non » |
 | Minuteur | sablier | « Après 1 heure · depuis l'arrivée » |
 | Statut | cercle (coche pour Fermé) | « Fermé », « En attente », « Actif », « Spam » |
@@ -43,7 +43,8 @@ se déplacent pas à la main : leur position est calculée.
 Le **+** d'un bloc (ou la liste « Ajouter une étape » de son panneau) propose ce qui peut suivre. Rien n'est enregistré
 directement : l'éditeur s'ouvre, déjà rempli, pour vérifier puis enregistrer (la nouvelle règle est désactivée).
 
-- Sur un bloc **Conditions** :
+- Sur un bloc **de condition** :
+  - « Si “En attente” depuis 7 jours : marquer comme fermé » ;
   - « Branche “pas de réponse” : fermer après 2 jours » ;
   - « Branche “non assigné” : assigner après 1 heure » ;
   - « Puis, après 1 heure : marquer comme fermé / classer dans un dossier ».

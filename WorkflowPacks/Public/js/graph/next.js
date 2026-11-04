@@ -77,6 +77,11 @@
             var after = laterDelay(node.step && node.step.delay ? node.step.delay.seconds : 0);
             var delayed = function (delay) { return base.concat([{ type: 'created', operator: 'not_in_last', value: delay }]); };
             if (node.dest === 'cond') {
+                // a block "status of the ticket": pending for 7 days -> closed
+                if (hasC('status') && hasC('waiting') && hasA('status')) {
+                    out.push({ id: 'flow_status_close', icon: 'pending', label: 'next_flow_status_close', run: { editor: { rule: rule(ctx.names.flow_status_close,
+                        lanes(node.flow.base).concat([{ type: 'status', operator: 'equal', value: STATUS.pending }, { type: 'waiting', operator: 'longer', value: days(7) }]), [closeAction]) } } });
+                }
                 if (hasC('wp_replied') && hasC('created') && hasA('status')) {
                     out.push({ id: 'flow_noreply', icon: 'branch', label: 'next_flow_noreply', run: { editor: { rule: rule(ctx.names.flow_noreply,
                         lanes(node.flow.base).concat([{ type: 'wp_replied', operator: 'no' }, { type: 'created', operator: 'not_in_last', value: days(2) }]), [closeAction]) } } });
@@ -175,7 +180,7 @@
                     subfolder: (t.next_name_subfolder || '').replace(':folder', node.label || ''),
                     after_delete: (t.next_name_after_delete || '').replace(':status', status),
                     after_close: (t.next_name_after_close || '').replace(':status', status),
-                    flow_noreply: t.next_name_flow_noreply, flow_unassigned: t.next_name_flow_unassigned,
+                    flow_noreply: t.next_name_flow_noreply, flow_status_close: t.next_name_flow_status_close, flow_unassigned: t.next_name_flow_unassigned,
                     flow_delay_close: t.next_name_flow_delay_close, flow_delay_folder: t.next_name_flow_delay_folder
                 }
             };

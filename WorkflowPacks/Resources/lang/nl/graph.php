@@ -293,4 +293,6 @@ return [
     'sim_target_ok'   => 'Geteste regel ":name": toegepast (:when)',
     'sim_target_no'   => 'Geteste regel ":name": niet toegepast — :reason',
     'sim_test_rule'   => 'Deze regel testen',
+    'next_flow_status_close'      => 'Als 7 dagen "In afwachting": als gesloten markeren',
+    'next_name_flow_status_close' => 'Tickets die 7 dagen in afwachting zijn sluiten',
 ];

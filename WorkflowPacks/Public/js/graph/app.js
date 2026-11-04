@@ -156,7 +156,7 @@
             // phone: the first mailbox with flows, readable; elsewhere everything
             var narrow = window.matchMedia && window.matchMedia('(max-width: 767px)').matches;
             var section = narrow ? g.sections.filter(function (s) { return s.flows.length; })[0] : null;
-            this.view.fit(section ? [section.mailbox].concat(section.flows.map(function (f) { return f.cond; })) : undefined);
+            this.view.fit(section ? [section.mailbox].concat(section.flows.map(function (f) { return f.conds[0]; })) : undefined);
         }
         this.sim.redraw();
     };
