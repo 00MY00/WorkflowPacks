@@ -302,4 +302,7 @@ return [
     'next_pick_rule'     => 'Ajouter une action à une règle qui envoie ici',
     'next_new_with'      => 'Nouvelle règle pour les nouveaux e-mails, qui…',
     'next_name_new_with' => 'Nouveaux e-mails',
+    'next_set_status' => 'Définir le statut du ticket',
+    'add_block'       => 'Ajouter un bloc',
+    'add_block_help'  => 'Statut du ticket, minuteur, action… après le bloc sélectionné (sinon : nouvelle règle)',
 ];

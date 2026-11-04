@@ -54,6 +54,7 @@
     <div class="wpg-toolbar" role="toolbar">
         <div class="wpg-group">
             <button type="button" class="wpg-btn wpg-btn-primary" data-act="new" title="{{ __('workflowpacks::graph.new_rule') }} (N)">{!! $wpg_i('plus') !!}<span>{{ __('workflowpacks::graph.new_rule') }}</span></button>
+            <button type="button" class="wpg-btn" data-act="add-block" title="{{ __('workflowpacks::graph.add_block_help') }}">{!! $wpg_i('zap') !!}<span>{{ __('workflowpacks::graph.add_block') }}</span></button>
             <button type="button" class="wpg-btn" data-act="simulate" title="{{ __('workflowpacks::graph.sim_help') }}">{!! $wpg_i('play') !!}<span>{{ __('workflowpacks::graph.sim_button') }}</span></button>
         </div>
         <div class="wpg-group wpg-views" role="group" aria-label="{{ __('workflowpacks::graph.view_label') }}">

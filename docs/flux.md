@@ -40,7 +40,9 @@ se déplacent pas à la main : leur position est calculée.
 
 ## Ajouter une étape
 
-Le **+** d'un bloc (ou la liste « Ajouter une étape » de son panneau) propose ce qui peut suivre. Rien n'est enregistré
+Le bouton **Ajouter un bloc** de la barre d'outils ouvre la liste de ce qui peut suivre le bloc sélectionné (ou une
+nouvelle règle de la boîte quand rien n'est sélectionné). **Définir le statut du ticket** (Actif, En attente, Fermé,
+Spam) est toujours en tête. Le **+** d'un bloc (ou la liste « Ajouter une étape » de son panneau) propose ce qui peut suivre. Rien n'est enregistré
 directement : l'éditeur s'ouvre, déjà rempli, pour vérifier puis enregistrer (la nouvelle règle est désactivée).
 
 - Sur un bloc **de condition** :
