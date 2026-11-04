@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 2.7.0
+# Résultats des tests — Workflow Packs 2.8.0
 
 Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,14 @@ Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 2.8.0 — « Ajouter un bloc » et statut du ticket en tête
+
+| Série | Résultat |
+|---|---|
+| JavaScript | `next.test.js` : « Définir le statut du ticket » (4 valeurs) en tête pour une boîte (nouvelle règle), une règle, une étape et un dossier (règle qui y range) ; listes existantes inchangées |
+| Intégration (99 tests, 799 assertions, instance neuve) | inchangé, vert |
+| Navigateur | « Ajouter un bloc » sans sélection : nouvelle règle de la boîte avec « Définir le statut du ticket › » ; bloc « Factures » sélectionné en vue flux : « Puis, après 1 jour : fermé », « Ici aussi : fermé », « Définir le statut du ticket › » (Actif, En attente, Fermé, Spam), « Ajouter une action… › » ; même liste dans le panneau ; aucune erreur |
 
 ## 2.7.0 — toutes les actions dans le « + »
 

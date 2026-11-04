@@ -53,6 +53,14 @@
         if (node.kind === 'mailbox') {
             out.push({ id: 'new_rule', icon: 'plus', label: 'next_new_rule', run: { editor: { rule: null } } });
             if (all.length && hasC('new_or_reply')) {
+                // "Set the status of the ticket" first: the block people look for
+                var st = all.filter(function (a) { return a.action.type === 'status'; });
+                if (st.length) {
+                    out.push({ id: 'new_status', icon: 'closed', label: 'next_set_status', sub: st.map(function (a) {
+                        return { id: 'new_' + a.id, icon: a.icon, label: a.label, params: a.params,
+                            run: { editor: { rule: rule(ctx.names.new_with, [{ type: 'new_or_reply', operator: 'new' }], [a.action]) } } };
+                    }) });
+                }
                 out.push({ id: 'new_with', icon: 'zap', label: 'next_new_with', sub: all.map(function (a) {
                     return { id: 'new_' + a.id, icon: a.icon, text: a.text, label: a.label, params: a.params,
                         run: { editor: { rule: rule(ctx.names.new_with, [{ type: 'new_or_reply', operator: 'new' }], [a.action]) } } };
@@ -78,7 +86,7 @@
                         out.push({ id: 'then_' + a[0], icon: a[2], label: a[3], run: { editor: { addAction: { type: a[0], value: a[1] } } } });
                     }
                 });
-            if (all.length) { out.push(addAny(all)); }
+            if (all.length) { out = out.concat(addTo(all)); }
         } else if (node.kind === 'step') {
             // flow view: the new rule keeps the conditions of the flow (and of the branch), with a delay after the step
             var base = lanes(node.flow.base).concat((node.lane && node.lane.branch) || []);
@@ -114,7 +122,7 @@
                 if (hasA(FOLDER) && has.indexOf(FOLDER) < 0) {
                     out.push({ id: 'flow_here_folder', icon: 'folder', label: 'next_then_folder', run: { editor: { addAction: { type: FOLDER, value: '' } } } });
                 }
-                if (all.length) { out.push(addAny(all)); }
+                if (all.length) { out = out.concat(addTo(all)); }
             }
         } else if (node.dest === 'imap') {
             out = out.concat(toRules(all, ctx.rules));
@@ -143,11 +151,22 @@
         return out;
     }
 
-    /** "Add an action…": every action of the catalog, added to the rule (editor opened, filled in). */
-    function addAny(all) {
-        return { id: 'then_any', icon: 'plus', label: 'next_then_any', sub: all.map(function (a) {
-            return { id: 'then_' + a.id, icon: a.icon, text: a.text, label: a.label, params: a.params, run: { editor: { addAction: a.action } } };
-        }) };
+    /**
+     * Actions added to a rule (editor opened, filled in): "Set the status of the ticket" (its values), then "Add an
+     * action…" (every action of the catalog). workflowId / ruleName: the rule sending to a destination.
+     */
+    function addTo(all, workflowId, ruleName) {
+        var sub = function (a) {
+            var editor = { addAction: a.action };
+            if (workflowId) { editor.workflowId = workflowId; }
+            return { id: 'then_' + a.id, icon: a.icon, text: a.text, label: a.label, params: a.params, run: { editor: editor } };
+        };
+        var out = [];
+        var st = all.filter(function (a) { return a.action.type === 'status'; });
+        if (st.length) { out.push({ id: 'set_status', icon: 'closed', label: 'next_set_status', sub: st.map(sub) }); }
+        out.push(ruleName ? { id: 'then_any', icon: 'plus', label: 'next_then_any_here', params: { rule: ruleName }, sub: all.map(sub) }
+            : { id: 'then_any', icon: 'plus', label: 'next_then_any', sub: all.map(sub) });
+        return out;
     }
 
     /**
@@ -157,11 +176,7 @@
     function toRules(all, rules) {
         rules = rules || [];
         if (!all.length || !rules.length) { return []; }
-        if (rules.length === 1) {
-            return [{ id: 'then_any', icon: 'plus', label: 'next_then_any_here', params: { rule: rules[0].name }, sub: all.map(function (a) {
-                return { id: 'then_' + a.id, icon: a.icon, text: a.text, label: a.label, params: a.params, run: { editor: { addAction: a.action, workflowId: rules[0].workflow_id } } };
-            }) }];
-        }
+        if (rules.length === 1) { return addTo(all, rules[0].workflow_id, rules[0].name); }
         return [{ id: 'pick_rule', icon: 'edit', label: 'next_pick_rule', sub: rules.map(function (r) {
             return { id: 'rule_' + r.workflow_id, icon: 'zap', text: r.name, run: { edit: r.workflow_id } };
         }) }];

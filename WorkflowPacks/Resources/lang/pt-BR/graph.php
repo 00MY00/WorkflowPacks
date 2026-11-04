@@ -301,4 +301,7 @@ return [
     'next_pick_rule'     => 'Adicionar uma ação a uma regra que envia para cá',
     'next_new_with'      => 'Nova regra para os novos e-mails, que…',
     'next_name_new_with' => 'Novos e-mails',
+    'next_set_status' => 'Definir o status do ticket',
+    'add_block'       => 'Adicionar um bloco',
+    'add_block_help'  => 'Status do ticket, temporizador, ação… após o bloco selecionado (senão: nova regra)',
 ];

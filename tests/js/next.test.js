@@ -26,28 +26,29 @@ test('which blocks get a "+"', () => {
 
 test('mailbox: new rule, file the new e-mails, close the tickets without answer — only what the catalog offers', () => {
     const all = N.suggest({ kind: 'mailbox' }, { catalog: full, names });
-    assert.deepStrictEqual(ids(all), ['new_rule', 'new_with', 'file_new', 'waiting_close']);
-    const fileNew = all[2].run.editor.rule;
+    assert.deepStrictEqual(ids(all), ['new_rule', 'new_status', 'new_with', 'file_new', 'waiting_close']);
+    assert.deepStrictEqual(all[1].sub[2].run.editor.rule.actions, [{ type: 'status', value: '3' }], 'set the status: a new rule');
+    const fileNew = all[3].run.editor.rule;
     assert.deepStrictEqual(fileNew.conditions, { all: [{ type: 'new_or_reply', operator: 'new' }] });
     assert.deepStrictEqual(fileNew.actions, [{ type: 'wp_imap_folder', value: '' }]);
-    assert.deepStrictEqual(all[3].run.editor.rule.conditions.all[0], { type: 'waiting', operator: 'longer', value: { number: 7, metric: 'd' } });
+    assert.deepStrictEqual(all[4].run.editor.rule.conditions.all[0], { type: 'waiting', operator: 'longer', value: { number: 7, metric: 'd' } });
     // option "e-mail folders" off: its action is not in the catalog
     const noFolder = N.suggest({ kind: 'mailbox' }, { catalog: { conditions: full.conditions, actions: { status: {} } }, names });
-    assert.deepStrictEqual(ids(noFolder), ['new_rule', 'new_with', 'waiting_close']);
+    assert.deepStrictEqual(ids(noFolder), ['new_rule', 'new_status', 'new_with', 'waiting_close']);
 });
 
 test('mailbox: the e-mails classified as spam, only when the e-mail tag condition is there (RefreshGlobal)', () => {
     const withTags = { conditions: Object.assign({ wp_mail_tag: {} }, full.conditions), actions: full.actions };
     const s = N.suggest({ kind: 'mailbox' }, { catalog: withTags, names });
-    assert.deepStrictEqual(ids(s), ['new_rule', 'new_with', 'file_new', 'tag_spam', 'waiting_close']);
-    const spam = s[3].run.editor.rule;
+    assert.deepStrictEqual(ids(s), ['new_rule', 'new_status', 'new_with', 'file_new', 'tag_spam', 'waiting_close']);
+    const spam = s[4].run.editor.rule;
     assert.deepStrictEqual(spam.conditions, { all: [{ type: 'wp_mail_tag', operator: 'has', value: 'classified_spam' }] });
     assert.deepStrictEqual(spam.actions, [{ type: 'status', value: '4' }]);
     assert.ok(!ids(N.suggest({ kind: 'mailbox' }, { catalog: full, names })).includes('tag_spam'), 'not without RefreshGlobal');
 });
 
 test('rule: only the actions it does not do yet', () => {
-    assert.deepStrictEqual(ids(N.suggest({ kind: 'rule' }, { catalog: full, names, ruleActions: ['status'] })), ['then_wp_imap_folder', 'then_assign', 'then_any']);
+    assert.deepStrictEqual(ids(N.suggest({ kind: 'rule' }, { catalog: full, names, ruleActions: ['status'] })), ['then_wp_imap_folder', 'then_assign', 'set_status', 'then_any']);
     const s = N.suggest({ kind: 'rule' }, { catalog: full, names, ruleActions: [] });
     assert.deepStrictEqual(s[0].run.editor.addAction, { type: 'wp_imap_folder', value: '' });
     assert.deepStrictEqual(s[1].run.editor.addAction, { type: 'status', value: '3' });
@@ -109,7 +110,7 @@ test('flow view: a new rule keeps the conditions of the flow and of the branch, 
     const branch = [{ type: 'wp_assigned', operator: 'no' }];
     const step = { kind: 'step', dest: 'timer', workflow_id: 9, flow, lane: { branch }, step: { delay: { seconds: 86400 } } };
     const fromStep = N.suggest(step, { catalog: flowCatalog, names, ruleActions: ['note'] });
-    assert.deepStrictEqual(ids(fromStep), ['flow_delay_close', 'flow_delay_folder', 'flow_here_close', 'flow_here_folder', 'then_any']);
+    assert.deepStrictEqual(ids(fromStep), ['flow_delay_close', 'flow_delay_folder', 'flow_here_close', 'flow_here_folder', 'set_status', 'then_any']);
     const all = fromStep[0].run.editor.rule.conditions.all;
     assert.deepStrictEqual(all.slice(-2), [{ type: 'wp_assigned', operator: 'no' }, { type: 'created', operator: 'not_in_last', value: { number: 2, metric: 'd' } }]);
     assert.deepStrictEqual(fromStep[2].run.editor.addAction, { type: 'status', value: '3' });
@@ -130,6 +131,9 @@ test('palette: every action of the catalog, the status in each value, labels of 
 
     // a folder filed by one rule: any action added to that rule
     const one = N.suggest({ kind: 'dest', dest: 'imap', folder: 'Pull Requests' }, { catalog: cat, names, rules: [{ workflow_id: 7, name: 'GitHub' }] });
+    const status = one.find((s) => s.id === 'set_status');
+    assert.deepStrictEqual(status.sub.map((s) => s.run.editor.addAction.value), ['1', '2', '3', '4'], 'set the status of the ticket, first');
+    assert.strictEqual(status.sub[0].run.editor.workflowId, 7);
     const any = one.find((s) => s.id === 'then_any');
     assert.strictEqual(any.params.rule, 'GitHub');
     assert.strictEqual(any.sub.length, 9);
@@ -140,6 +144,7 @@ test('palette: every action of the catalog, the status in each value, labels of 
     // a rule and a mailbox
     assert.ok(ids(N.suggest({ kind: 'rule' }, { catalog: cat, names, ruleActions: [] })).includes('then_any'));
     const mb = N.suggest({ kind: 'mailbox' }, { catalog: cat, names });
+    assert.strictEqual(ids(mb)[1], 'new_status');
     const withAction = mb.find((s) => s.id === 'new_with');
     assert.deepStrictEqual(withAction.sub[4].run.editor.rule.actions, [{ type: 'note', value: '' }]);
     assert.strictEqual(withAction.sub[4].run.editor.rule.settings.apply_to_prev, false, 'new rule, safe');

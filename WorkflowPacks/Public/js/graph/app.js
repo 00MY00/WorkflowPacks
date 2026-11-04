@@ -289,6 +289,7 @@
         on('[data-act="view-overview"]', 'click', function () { self.setView('overview'); });
         on('[data-act="view-flow"]', 'click', function () { self.setView('flow'); });
         on('[data-act="simulate"]', 'click', function () { self.sim.open(); });
+        on('[data-act="add-block"]', 'click', function () { self.addBlock(this); });
         on('#wpg-layout', 'change', function () { self.arrange(this.value); });
         on('#wpg-edges', 'change', function () { self.view.edgeStyle = this.value; self.view.render(); self.saveSettings({ edges: this.value }); });
         on('#wpg-packs', 'change', function () { self.view.showPacks = this.checked; self.view.render(); self.minimap.update(); self.saveSettings({ packs: this.checked }); });
@@ -432,6 +433,23 @@
         if (!key) { return; }
         var r = stage.getBoundingClientRect(), sheet = this.inspector.panel.getBoundingClientRect().top;
         this.view.reveal(key, Math.max(0.2, Math.min(1, (sheet - r.top) / r.height)));
+    };
+
+    /**
+     * "Add a block" (toolbar): what can follow the selected block (status of the ticket, delay, any action…), or a new
+     * rule of a mailbox when nothing is selected. The same list as the "+" of a block.
+     */
+    App.prototype.addBlock = function (button) {
+        var r = button.getBoundingClientRect();
+        var key = Object.keys(this.view.selected).filter(function (k) { return WPGraph.next.can(this.model.nodes[k]); }, this)[0];
+        if (!key) {
+            var flows = (this.data && this.data.flows) || {};
+            var mailboxes = this.model.list(function (n) { return n.kind === 'mailbox'; });
+            var mailbox = mailboxes.filter(function (m) { return ((flows[m.id] || {}).flows || []).length; })[0] || mailboxes[0];
+            if (!mailbox) { this.toast(this.texts.no_mailbox, 'error'); return; }
+            key = mailbox.key;
+        }
+        this.next.open(key, r.left, r.bottom + 4);
     };
 
     /** Selects a rule: its block in the overview, its first step (delay or action) in the flow view. */

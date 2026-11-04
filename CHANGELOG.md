@@ -4,6 +4,14 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [2.8.0] - 2026-11-04
+
+### Ajouté
+- **Bouton « Ajouter un bloc »** dans la barre d'outils du schéma : ce qui peut suivre le bloc sélectionné (statut du
+  ticket, minuteur, toute action), ou une nouvelle règle de la boîte quand rien n'est sélectionné.
+- **« Définir le statut du ticket »** en tête de chaque liste (« + », panneau, « Ajouter un bloc ») : Actif, En
+  attente, Fermé, Spam — ajouté à la règle, ou nouvelle règle pour les nouveaux e-mails sur une boîte.
+
 ## [2.7.0] - 2026-11-04
 
 ### Ajouté
