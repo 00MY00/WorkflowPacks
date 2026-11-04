@@ -4,6 +4,20 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [2.7.0] - 2026-11-04
+
+### Ajouté
+- **Toutes les actions dans le « + »** des blocs du schéma (vue d'ensemble et vue flux) : la palette reprend chaque
+  action du catalogue de Workflows de la boîte — statut (Actif, En attente, Fermé, Spam), assigner, déplacer vers une
+  autre boîte, note, réponse, transfert, e-mail au client, notification, supprimer, tag, dossier e-mail, actions des
+  autres modules.
+  - **Dossier, statut, personne, tag…** : « Ajouter une action à “règle” » (la règle qui envoie là) ; plusieurs
+    règles : on choisit d'abord la règle.
+  - **Règle, étape de la vue flux** : « Ajouter une action… ».
+  - **Boîte** : « Nouvelle règle pour les nouveaux e-mails, qui… ».
+  - L'éditeur s'ouvre avec l'action ajoutée, pour vérifier puis enregistrer.
+- Le menu reste dans la fenêtre quand une liste s'ouvre.
+
 ## [2.6.0] - 2026-11-04
 
 ### Ajouté

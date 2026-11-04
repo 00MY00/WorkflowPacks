@@ -295,4 +295,10 @@ return [
     'sim_test_rule'   => 'Testa questa regola',
     'next_flow_status_close'      => 'Se «In attesa» da 7 giorni: segnare come chiuso',
     'next_name_flow_status_close' => 'Chiudere i ticket in attesa da 7 giorni',
+    'next_act_status'    => 'Stato: :status',
+    'next_then_any'      => 'Aggiungi un\'azione…',
+    'next_then_any_here' => 'Aggiungi un\'azione a «:rule»',
+    'next_pick_rule'     => 'Aggiungi un\'azione a una regola che invia qui',
+    'next_new_with'      => 'Nuova regola per le nuove e-mail, che…',
+    'next_name_new_with' => 'Nuove e-mail',
 ];

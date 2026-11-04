@@ -371,3 +371,9 @@
 }
 .wpg-help-box { margin-top: 6px; }
 .wpg-help-box > summary { cursor: pointer; font-size: 12px; color: var(--g-muted); }
+
+/* "+" in the side panel: an entry with a list (every action of the catalog) is folded */
+.wpg-next-more { width: 100%; border: 1px solid var(--g-border); border-radius: 8px; padding: 4px 8px; }
+.wpg-next-more > summary { cursor: pointer; font-size: 13px; padding: 4px 0; }
+.wpg-next-more .btn { display: flex; width: 100%; margin: 4px 0; text-align: left; white-space: normal; }
+.wpg-menu { max-height: calc(100vh - 16px); overflow: auto; }

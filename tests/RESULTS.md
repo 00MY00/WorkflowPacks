@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 2.6.0
+# Résultats des tests — Workflow Packs 2.7.0
 
 Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,14 @@ Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 2.7.0 — toutes les actions dans le « + »
+
+| Série | Résultat |
+|---|---|
+| JavaScript | `next.test.js` (9) : palette = chaque action du catalogue (statut dans chacune de ses valeurs avec le libellé du catalogue, icônes) ; dossier rangé par une règle → ses 9 actions ajoutées à cette règle ; plusieurs règles → choix de la règle ; règle, étape et boîte ; règles préparées (sous-listes comprises) automatiques et non appliquées aux tickets existants |
+| Intégration (99 tests, 799 assertions, instance neuve) | inchangé, vert |
+| Navigateur | « + » du dossier « Factures » : « Ajouter une action à “Factures : classement” › » avec notification, transfert, note, 4 statuts, assigner, déplacer, supprimer, plus le nettoyage du dossier ; « Statut : Fermé » ouvre l'éditeur de la règle avec l'action ajoutée ; aucune erreur JavaScript |
 
 ## 2.6.0 — vue flux : un bloc par condition
 

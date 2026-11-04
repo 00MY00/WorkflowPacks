@@ -296,4 +296,10 @@ return [
     'sim_test_rule'   => 'Test this rule',
     'next_flow_status_close'      => 'If “Pending” for 7 days: mark as closed',
     'next_name_flow_status_close' => 'Close the tickets pending for 7 days',
+    'next_act_status'    => 'Status: :status',
+    'next_then_any'      => 'Add an action…',
+    'next_then_any_here' => 'Add an action to “:rule”',
+    'next_pick_rule'     => 'Add an action to a rule sending here',
+    'next_new_with'      => 'New rule for the new e-mails, that…',
+    'next_name_new_with' => 'New e-mails',
 ];

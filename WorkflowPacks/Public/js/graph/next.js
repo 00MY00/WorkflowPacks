@@ -25,7 +25,7 @@
         if (node.kind === 'mailbox' || node.kind === 'rule') { return true; }
         // flow view: conditions, branch, delay or action of a rule
         if (node.kind === 'step') { return node.dest === 'cond' || !!node.workflow_id; }
-        return node.kind === 'dest' && ((node.dest === 'imap' && !!node.folder) || !!STATUS[node.dest]);
+        return node.kind === 'dest' && node.dest !== 'cleanup';
     }
 
     /**
@@ -49,8 +49,15 @@
         var days = function (n) { return { number: n, metric: 'd' }; };
         var closeAction = { type: 'status', value: STATUS.closed };
 
+        var all = palette(cat);
         if (node.kind === 'mailbox') {
             out.push({ id: 'new_rule', icon: 'plus', label: 'next_new_rule', run: { editor: { rule: null } } });
+            if (all.length && hasC('new_or_reply')) {
+                out.push({ id: 'new_with', icon: 'zap', label: 'next_new_with', sub: all.map(function (a) {
+                    return { id: 'new_' + a.id, icon: a.icon, text: a.text, label: a.label, params: a.params,
+                        run: { editor: { rule: rule(ctx.names.new_with, [{ type: 'new_or_reply', operator: 'new' }], [a.action]) } } };
+                }) });
+            }
             if (hasA(FOLDER) && hasC('new_or_reply')) {
                 out.push({ id: 'file_new', icon: 'folder', label: 'next_file_new', run: { editor: { rule: rule(ctx.names.file_new,
                     [{ type: 'new_or_reply', operator: 'new' }], [{ type: FOLDER, value: '' }]) } } });
@@ -71,6 +78,7 @@
                         out.push({ id: 'then_' + a[0], icon: a[2], label: a[3], run: { editor: { addAction: { type: a[0], value: a[1] } } } });
                     }
                 });
+            if (all.length) { out.push(addAny(all)); }
         } else if (node.kind === 'step') {
             // flow view: the new rule keeps the conditions of the flow (and of the branch), with a delay after the step
             var base = lanes(node.flow.base).concat((node.lane && node.lane.branch) || []);
@@ -106,8 +114,10 @@
                 if (hasA(FOLDER) && has.indexOf(FOLDER) < 0) {
                     out.push({ id: 'flow_here_folder', icon: 'folder', label: 'next_then_folder', run: { editor: { addAction: { type: FOLDER, value: '' } } } });
                 }
+                if (all.length) { out.push(addAny(all)); }
             }
         } else if (node.dest === 'imap') {
+            out = out.concat(toRules(all, ctx.rules));
             if (ctx.admin) {
                 out.push({ id: 'retention', icon: 'deleted', label: node.retention ? 'next_retention_edit' : 'next_retention', run: { retention: true } });
             }
@@ -115,7 +125,10 @@
                 out.push({ id: 'subfolder', icon: 'folder', label: 'next_subfolder', run: { editor: { rule: rule(ctx.names.subfolder,
                     [{ type: 'subject', operator: 'contains', value: '' }], [{ type: FOLDER, value: node.folder + '/' }]) } } });
             }
+        } else if (node.kind === 'dest' && !STATUS[node.dest]) {
+            out = out.concat(toRules(all, ctx.rules));
         } else if (STATUS[node.dest]) {
+            out = out.concat(toRules(all, ctx.rules));
             var inState = { type: 'status', operator: 'equal', value: STATUS[node.dest] };
             if (hasC('status') && hasC('customer_reply') && hasA('delete')) {
                 out.push({ id: 'after_delete', icon: 'deleted', label: 'next_after_delete', run: { editor: { rule: rule(ctx.names.after_delete,
@@ -127,6 +140,58 @@
             }
         }
 
+        return out;
+    }
+
+    /** "Add an action…": every action of the catalog, added to the rule (editor opened, filled in). */
+    function addAny(all) {
+        return { id: 'then_any', icon: 'plus', label: 'next_then_any', sub: all.map(function (a) {
+            return { id: 'then_' + a.id, icon: a.icon, text: a.text, label: a.label, params: a.params, run: { editor: { addAction: a.action } } };
+        }) };
+    }
+
+    /**
+     * A destination: the rule sending there gets any action; several rules: the rule is chosen first (its editor
+     * opens, the action is chosen there).
+     */
+    function toRules(all, rules) {
+        rules = rules || [];
+        if (!all.length || !rules.length) { return []; }
+        if (rules.length === 1) {
+            return [{ id: 'then_any', icon: 'plus', label: 'next_then_any_here', params: { rule: rules[0].name }, sub: all.map(function (a) {
+                return { id: 'then_' + a.id, icon: a.icon, text: a.text, label: a.label, params: a.params, run: { editor: { addAction: a.action, workflowId: rules[0].workflow_id } } };
+            }) }];
+        }
+        return [{ id: 'pick_rule', icon: 'edit', label: 'next_pick_rule', sub: rules.map(function (r) {
+            return { id: 'rule_' + r.workflow_id, icon: 'zap', text: r.name, run: { edit: r.workflow_id } };
+        }) }];
+    }
+
+    var STATUS_ICON = { 1: 'active', 2: 'pending', 3: 'closed', 4: 'spam' };
+    var ACTION_ICON = { assign: 'person', move: 'move', note: 'note', reply: 'send', email_customer: 'send', forward: 'send', notification: 'send',
+        delete: 'deleted', delete_forever: 'deleted', wp_imap_folder: 'folder' };
+
+    /**
+     * Every action of the catalog of the mailbox, ready to be added: the status in each of its values, the others with
+     * an empty value (chosen in the editor). Labels come from the catalog (the names Workflows shows).
+     *
+     * @return [{ id, icon, text (shown as is) | label (text key), params, action: { type, value } }]
+     */
+    function palette(cat) {
+        var out = [];
+        var actions = (cat && cat.actions) || {};
+        Object.keys(actions).forEach(function (type) {
+            var item = actions[type] || {};
+            if (type === 'status') {
+                (item.values || ['1', '2', '3', '4']).forEach(function (value) {
+                    out.push({ id: 'act_status_' + value, icon: STATUS_ICON[value] || 'active', label: 'next_act_status',
+                        params: { status: (item.value_labels || {})[value] || value }, action: { type: 'status', value: String(value) } });
+                });
+                return;
+            }
+            var icon = ACTION_ICON[type] || (type.toLowerCase().indexOf('tag') >= 0 ? 'tag' : 'dots');
+            out.push({ id: 'act_' + type, icon: icon, text: item.title || type, action: { type: type, value: '' } });
+        });
         return out;
     }
 
@@ -171,24 +236,42 @@
             : (node.workflow_id ? { workflow_id: node.workflow_id } : null);
         var detail = edge ? app.api.rule(edge.workflow_id) : Promise.resolve(null);
         var status = node.dest && STATUS[node.dest] ? node.label : '';
+        // a destination: the rules of this mailbox sending there (or filing into the folder)
+        var model = app.model, rules = [];
+        if (node.kind === 'dest') {
+            var ruleKeys = (node.filed_by || []).concat(model.edges.filter(function (e) { return e.kind === 'sends' && e.to === node.key; }).map(function (e) { return e.from; }));
+            model.edges.forEach(function (e) {
+                if (e.kind === 'applies' && e.workflow_id && e.to === mailbox.key && ruleKeys.indexOf(e.from) >= 0
+                    && !rules.some(function (r) { return r.workflow_id === e.workflow_id; })) {
+                    rules.push({ workflow_id: e.workflow_id, name: e.name });
+                }
+            });
+        }
         return Promise.all([app.catalogOf(mailbox.id), detail]).then(function (res) {
             var ctx = {
-                catalog: res[0].catalog, admin: !!app.cfg.admin,
+                catalog: res[0].catalog, admin: !!app.cfg.admin, rules: rules,
                 ruleActions: res[1] ? (res[1].rule.actions || []).map(function (a) { return a.type; }) : [],
                 names: {
                     file_new: t.next_name_file_new, waiting_close: t.next_name_waiting_close, tag_spam: t.next_name_tag_spam,
                     subfolder: (t.next_name_subfolder || '').replace(':folder', node.label || ''),
                     after_delete: (t.next_name_after_delete || '').replace(':status', status),
                     after_close: (t.next_name_after_close || '').replace(':status', status),
-                    flow_noreply: t.next_name_flow_noreply, flow_status_close: t.next_name_flow_status_close, flow_unassigned: t.next_name_flow_unassigned,
+                    flow_noreply: t.next_name_flow_noreply, flow_status_close: t.next_name_flow_status_close, new_with: t.next_name_new_with, flow_unassigned: t.next_name_flow_unassigned,
                     flow_delay_close: t.next_name_flow_delay_close, flow_delay_folder: t.next_name_flow_delay_folder
                 }
             };
-            return suggest(node, ctx).map(function (s) {
-                var label = t[s.label] || s.label;
-                if (s.params && s.params.delay) { label = label.replace(':delay', s.params.delay.number + ' ' + (t['unit_' + s.params.delay.metric] || s.params.delay.metric)); }
-                return [label, s.icon, function () { self.run(node, mailbox, edge, s.run); }];
-            });
+            var text = function (s) {
+                var label = s.text || t[s.label] || s.label;
+                var p = s.params || {};
+                if (p.delay) { label = label.replace(':delay', p.delay.number + ' ' + (t['unit_' + p.delay.metric] || p.delay.metric)); }
+                if (p.status !== undefined) { label = label.replace(':status', p.status); }
+                if (p.rule !== undefined) { label = label.replace(':rule', p.rule); }
+                return label;
+            };
+            var item = function (s) {
+                return [text(s), s.icon, s.run ? function () { self.run(node, mailbox, edge, s.run); } : null, s.sub ? s.sub.map(item) : null];
+            };
+            return suggest(node, ctx).map(item);
         });
     };
 
@@ -204,8 +287,12 @@
             }, 50);
             return;
         }
+        if (run.edit) {
+            app.editor.open({ mailboxId: mailbox.id, workflowId: run.edit });
+            return;
+        }
         if (run.editor.addAction) {
-            app.editor.open({ mailboxId: mailbox.id, workflowId: edge.workflow_id, addAction: run.editor.addAction });
+            app.editor.open({ mailboxId: mailbox.id, workflowId: run.editor.workflowId || edge.workflow_id, addAction: run.editor.addAction });
         } else {
             app.editor.open({ mailboxId: mailbox.id, rule: run.editor.rule });
         }
@@ -221,7 +308,7 @@
         }).catch(function (e) { app.toast(e.message, 'error'); });
     };
 
-    var api = { can: can, suggest: suggest, lanes: lanes, laterDelay: laterDelay, STATUS: STATUS };
+    var api = { can: can, suggest: suggest, palette: palette, lanes: lanes, laterDelay: laterDelay, STATUS: STATUS };
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = api;
     } else {

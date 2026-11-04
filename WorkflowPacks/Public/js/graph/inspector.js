@@ -127,7 +127,11 @@
             if (!items.length || !self.current || self.current.args[0] !== key || !box.isConnected) { return; }
             self.section(box, t.next_section);
             box.appendChild(h('div', { class: 'wpg-ins-actions wpg-next-list' }, items.map(function (item) {
-                return self.button(item[0], item[1], item[2]);
+                if (!item[3]) { return self.button(item[0], item[1], item[2]); }
+                return h('details', { class: 'wpg-next-more' }, [h('summary', {}, [icon(item[1]), ' ' + item[0]])].concat(item[3].map(function (sub) {
+                    return sub[3] ? h('details', { class: 'wpg-next-more' }, [h('summary', { text: sub[0] })].concat(sub[3].map(function (s) { return self.button(s[0], s[1], s[2]); })))
+                        : self.button(sub[0], sub[1], sub[2]);
+                })));
             })));
         }).catch(function () { /* the list is only a shortcut: nothing shown */ });
     };
