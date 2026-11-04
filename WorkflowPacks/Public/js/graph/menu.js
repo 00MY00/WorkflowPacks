@@ -98,6 +98,8 @@
         blocks.push([t.menu_autosize, 'minus', function () { app.autoSize(keys); }]);
         blocks.push([t.menu_deselect, 'search', function () { app.clearSelection(); }]);
         groups.push(blocks);
+        // delete: what it does is shown and confirmed first (app.deleteBlocks)
+        groups.push([[t.menu_delete, 'deleted', function () { app.deleteBlocks(keys); }]]);
         this.render(x, y, t.menu_title.replace(':count', keys.length), groups);
     };
 

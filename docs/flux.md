@@ -62,6 +62,22 @@ directement : l'éditeur s'ouvre, déjà rempli, pour vérifier puis enregistrer
 
 Le nouveau bloc garde les conditions du flux et de sa branche : il s'ajoute à la même chaîne.
 
+## Supprimer un bloc
+
+Sélectionnez un ou plusieurs blocs, puis touche **Suppr** (ou clic droit › **Supprimer**, ou le bouton du panneau).
+Une demande de validation liste ce qui va changer :
+
+| Bloc | Ce qui est supprimé |
+|---|---|
+| Règle | la règle (pour une règle de pack : dans chaque boîte que vous gérez) |
+| Action | l'action, dans sa règle ; la règle elle-même si elle n'a plus d'action |
+| Minuteur | le délai de la règle : elle s'appliquera dès l'arrivée des e-mails (signalé) |
+| Condition, test | la condition, dans toutes les règles du flux qui l'ont |
+| Destination (dossier, statut, personne, tag) | les actions qui y envoient |
+
+Une sauvegarde est faite juste avant : **Annuler la suppression** (dans le panneau) remet tout comme avant. Les
+boîtes et les packs ne se suppriment pas ici (un pack : « Retirer le pack » sur la page Workflow Packs).
+
 ## Les tests « assigné » et « réponse envoyée »
 
 Ce sont deux conditions de Workflow Packs, proposées dans le catalogue de Workflows (groupe « État du ticket ») et

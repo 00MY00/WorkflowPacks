@@ -305,4 +305,12 @@ return [
     'next_set_status' => 'Définir le statut du ticket',
     'add_block'       => 'Ajouter un bloc',
     'add_block_help'  => 'Statut du ticket, minuteur, action… après le bloc sélectionné (sinon : nouvelle règle)',
+    'menu_delete'      => 'Supprimer',
+    'delete_title'     => 'Supprimer ? Voici ce qui va changer :',
+    'delete_undo_hint' => 'Une sauvegarde est faite : « Annuler la suppression » remet tout comme avant.',
+    'delete_nothing'   => 'Rien à supprimer pour ces blocs.',
+    'delete_done'      => 'Supprimé.',
+    'delete_panel'     => 'Supprimé',
+    'delete_undo'      => 'Annuler la suppression',
+    'delete_undone'    => 'Suppression annulée : tout est revenu.',
 ];

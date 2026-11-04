@@ -173,7 +173,8 @@
             if (node.step.delay) { body.appendChild(h('p', { class: 'wpg-hint', text: node.step.delay.label })); }
             body.appendChild(h('div', { class: 'wpg-ins-actions' }, [
                 this.button(t.edit, 'edit', function () { app.editor.open({ mailboxId: node.mailbox, workflowId: node.workflow_id }); }, true),
-                this.button(t.sim_test_rule, 'play', function () { app.sim.open({ mailboxId: node.mailbox, workflowId: node.workflow_id }); })
+                this.button(t.sim_test_rule, 'play', function () { app.sim.open({ mailboxId: node.mailbox, workflowId: node.workflow_id }); }),
+                this.button(t.menu_delete, 'deleted', function () { app.deleteBlocks([node.key]); })
             ]));
             if (node.origin === 'local') { this.packHint(body, [node.workflow_id], node.mailbox); }
         }
@@ -237,6 +238,7 @@
         body.appendChild(h('div', { class: 'wpg-ins-actions' }, [
             first ? this.button(t.edit, 'edit', function () { app.edit(first); }, true) : null,
             first ? this.button(t.sim_test_rule, 'play', function () { app.sim.open({ mailboxId: parseInt(String(first.to).replace('mb:', ''), 10), workflowId: first.workflow_id }); }) : null,
+            this.button(t.menu_delete, 'deleted', function () { app.deleteBlocks([node.key]); }),
             this.button(t.focus_rule, 'focus', function () { app.focusOn(node.key); }),
             node.origin === 'pack' && app.cfg.urls.reimport ? h('a', { class: 'btn btn-sm btn-default', href: app.cfg.urls.reimport.replace('__ID__', encodeURIComponent(node.pack)) }, [icon('package'), ' ' + t.update_pack]) : null
         ]));

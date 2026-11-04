@@ -334,6 +334,10 @@
                 var keys = Object.keys(self.view.selected);
                 if (keys.length) { self.view.fit(keys); }
             } else if (e.key.toLowerCase() === 'n') { self.newRule(); }
+            else if (e.key === 'Delete' || e.key === 'Backspace') {
+                var keys = Object.keys(self.view.selected);
+                if (keys.length) { e.preventDefault(); self.deleteBlocks(keys); }
+            }
             else if (e.key === 'Escape') { self.clearFocus(); self.clearSelection(); }
         });
     };
@@ -450,6 +454,53 @@
             key = mailbox.key;
         }
         this.next.open(key, r.left, r.bottom + 4);
+    };
+
+    /**
+     * "Delete" (Delete key, right click, side panel): the server tells what the blocks stand for in the rules, the user
+     * confirms that list, it is applied after a backup, and "Undo" brings everything back.
+     */
+    App.prototype.deleteBlocks = function (keys) {
+        var self = this, t = this.texts;
+        this.api.deletePlan(keys).then(function (plan) {
+            if (!plan.count) {
+                self.toast(plan.refused.length ? plan.refused.join('\n') : t.delete_nothing, 'error');
+                return;
+            }
+            var text = t.delete_title + '\n\n• ' + plan.lines.join('\n• ')
+                + (plan.warnings.length ? '\n\n⚠ ' + plan.warnings.join('\n⚠ ') : '')
+                + (plan.refused.length ? '\n\n' + plan.refused.join('\n') : '') + '\n\n' + t.delete_undo_hint;
+            if (!window.confirm(text)) { return; }
+            self.api.deleteBlocks(keys, plan.token).then(function (res) {
+                self.view.select([]);
+                self.reload().then(function () { self.deletedPanel(res.backup_id); });
+                self.toast(t.delete_done, 'ok');
+            }).catch(function (e) { self.toast(e.message, 'error'); });
+        }).catch(function (e) { self.toast(e.message, 'error'); });
+    };
+
+    /** After a deletion: "Undo" in the side panel. */
+    App.prototype.deletedPanel = function (backupId) {
+        var self = this, t = this.texts, ins = this.inspector;
+        ins.open();
+        ins.current = null;
+        var head = document.createElement('div');
+        head.className = 'wpg-ins-head';
+        var title = document.createElement('strong');
+        title.textContent = t.delete_panel;
+        head.appendChild(title);
+        ins.headButtons().forEach(function (b) { head.appendChild(b); });
+        ins.panel.appendChild(head);
+        var body = document.createElement('div');
+        body.className = 'wpg-ins-body';
+        body.appendChild(ins.button(t.delete_undo, 'undo', function () {
+            self.api.deleteUndo(backupId).then(function () {
+                self.toast(t.delete_undone, 'ok');
+                ins.hide();
+                self.reload();
+            }).catch(function (e) { self.toast(e.message, 'error'); });
+        }, true));
+        ins.panel.appendChild(body);
     };
 
     /** Selects a rule: its block in the overview, its first step (delay or action) in the flow view. */

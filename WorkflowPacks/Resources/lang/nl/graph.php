@@ -304,4 +304,12 @@ return [
     'next_set_status' => 'Status van het ticket instellen',
     'add_block'       => 'Blok toevoegen',
     'add_block_help'  => 'Ticketstatus, timer, actie… na het geselecteerde blok (anders: nieuwe regel)',
+    'menu_delete'      => 'Verwijderen',
+    'delete_title'     => 'Verwijderen? Dit verandert er:',
+    'delete_undo_hint' => 'Er wordt een back-up gemaakt: "Verwijderen ongedaan maken" zet alles terug.',
+    'delete_nothing'   => 'Niets te verwijderen voor deze blokken.',
+    'delete_done'      => 'Verwijderd.',
+    'delete_panel'     => 'Verwijderd',
+    'delete_undo'      => 'Verwijderen ongedaan maken',
+    'delete_undone'    => 'Verwijderen ongedaan gemaakt: alles is terug.',
 ];

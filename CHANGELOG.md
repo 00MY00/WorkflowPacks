@@ -4,6 +4,20 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [2.9.0] - 2026-11-04
+
+### Ajouté
+- **Supprimer un bloc** du schéma : touche **Suppr** (ou Retour arrière) sur la sélection, **clic droit › Supprimer**,
+  ou bouton « Supprimer » du panneau.
+  - Une **demande de validation** liste ce qui va changer, avec des avertissements (« n'aura plus de délai : elle
+    s'appliquera dès l'arrivée », « n'aura plus de condition : elle s'appliquera à tous les e-mails »).
+  - Règle : supprimée (une règle de pack : dans chaque boîte gérée, avec ses liens) ; action : retirée de sa règle
+    (la règle part si elle n'a plus d'action) ; minuteur : délai retiré ; condition ou test de la vue flux : retiré
+    de toutes les règles du flux concernées ; destination (dossier, statut, personne…) : les actions qui y envoient.
+  - **Sauvegarde avant la suppression** et bouton **« Annuler la suppression »** (règles recréées, liens au pack
+    compris). Une seule transaction ; rien n'est fait si les règles ont changé entre la question et la validation.
+  - Boîtes et packs non supprimables ici (un pack : « Retirer le pack »). Seules les boîtes que l'utilisateur gère.
+
 ## [2.8.0] - 2026-11-04
 
 ### Ajouté

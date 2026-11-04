@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 2.8.0
+# Résultats des tests — Workflow Packs 2.9.0
 
 Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,13 @@ Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 2.9.0 — supprimer un bloc
+
+| Série | Résultat |
+|---|---|
+| Intégration (103 tests) | `DeleteBlocksTest` (4) : règle supprimée puis restaurée (« Annuler », une seule fois) ; action d'une règle à deux actions, minuteur (avertissement), condition « statut » d'un flux retirée des deux règles, dernière action → règle supprimée ; destination « En attente » : action retirée des règles des deux boîtes ; règle de pack supprimée dans les deux boîtes avec ses liens, restaurée avec eux ; boîte d'un autre utilisateur, boîte et pack refusés ; règle changée entre la question et la validation → refus, rien supprimé |
+| Navigateur | Bloc « Fermé » sélectionné, touche Suppr : validation « Supprimer la règle “Factures : fermeture” (Support) : elle n'aurait plus aucune action », 38 → 36 blocs ; « Annuler la suppression » → 38 ; clic droit : « Supprimer » ; aucune erreur |
 
 ## 2.8.0 — « Ajouter un bloc » et statut du ticket en tête
 

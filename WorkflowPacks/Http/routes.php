@@ -44,6 +44,9 @@ Route::group([
     Route::post('/graph/rules/refile', $users + ['uses' => 'GraphController@refileMany'])->name('workflowpacks.graph.refile_many');
     Route::post('/graph/simulate', $users + ['uses' => 'GraphController@simulate'])->name('workflowpacks.graph.simulate');
     Route::get('/graph/sample/{id}', $users + ['uses' => 'GraphController@sample'])->name('workflowpacks.graph.sample');
+    Route::post('/graph/delete/plan', $users + ['uses' => 'GraphController@deletePlan'])->name('workflowpacks.graph.delete_plan');
+    Route::post('/graph/delete', $users + ['uses' => 'GraphController@delete'])->name('workflowpacks.graph.delete');
+    Route::post('/graph/delete/undo', $users + ['uses' => 'GraphController@undoDelete'])->name('workflowpacks.graph.delete_undo');
     Route::post('/graph/rule/{id}/apply', $users + ['uses' => 'GraphController@apply'])->name('workflowpacks.graph.apply');
 
     // history of what the module did (+ diagnostic of the e-mail filing for administrators)

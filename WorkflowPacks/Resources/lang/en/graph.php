@@ -305,4 +305,12 @@ return [
     'next_set_status' => 'Set the status of the ticket',
     'add_block'       => 'Add a block',
     'add_block_help'  => 'Status of the ticket, timer, action… after the selected block (else: new rule)',
+    'menu_delete'      => 'Delete',
+    'delete_title'     => 'Delete? This is what will change:',
+    'delete_undo_hint' => 'A backup is made: “Undo the deletion” puts everything back.',
+    'delete_nothing'   => 'Nothing to delete for these blocks.',
+    'delete_done'      => 'Deleted.',
+    'delete_panel'     => 'Deleted',
+    'delete_undo'      => 'Undo the deletion',
+    'delete_undone'    => 'Deletion undone: everything is back.',
 ];
