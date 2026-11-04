@@ -24,9 +24,10 @@ class HealthCommand extends Command
     protected $description = 'WorkflowPacks: health of the installed module (files, classes, views, routes, assets, database)';
 
     const FILES = ['module.json', 'Providers/WorkflowPacksServiceProvider.php', 'Http/routes.php', 'Config/config.php',
-        'Resources/views/layout.blade.php', 'Resources/views/graph.blade.php', 'Public/js/graph/app.js', 'Public/css/graph.css'];
+        'Resources/views/layout.blade.php', 'Resources/views/graph.blade.php', 'Public/js/graph/app.js', 'Public/js/graph/flow.js', 'Public/js/graph/sim.js', 'Public/css/graph.css'];
     const CLASSES = ['Services\Compat\Checker', 'Services\Pack\PackValidator', 'Services\Plan\Planner', 'Services\Plan\Importer',
-        'Services\Graph\GraphBuilder', 'Services\Imap\ImapFolders', 'Services\Imap\TicketFolders', 'Services\History', 'Jobs\FileIntoImapFolder'];
+        'Services\Graph\GraphBuilder', 'Services\Imap\ImapFolders', 'Services\Imap\TicketFolders', 'Services\History', 'Jobs\FileIntoImapFolder',
+        'Services\Flow\FlowBuilder', 'Services\Flow\Simulator'];
     const VIEWS = ['index', 'graph', 'history', 'diagnostic', 'settings', 'layout'];
     const ROUTES = ['workflowpacks.index', 'workflowpacks.graph', 'workflowpacks.graph.data', 'workflowpacks.history', 'workflowpacks.diagnostic',
         'workflowpacks.import'];

@@ -30,7 +30,17 @@
         external: ['M14 4h6v6', 'M20 4l-9 9', 'M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5'],
         focus:    ['M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7z', 'M12 2.5v3', 'M12 18.5v3', 'M2.5 12h3', 'M18.5 12h3'],
         search:   ['M10.5 4a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13z', 'M15.5 15.5 20 20'],
-        timer:    ['M12 6.5a7 7 0 1 0 0 14 7 7 0 0 0 0-14z', 'M12 10v3.5l2.5 1.5', 'M10 3.5h4', 'M18.2 6.8l1.3-1.3']
+        timer:    ['M12 6.5a7 7 0 1 0 0 14 7 7 0 0 0 0-14z', 'M12 10v3.5l2.5 1.5', 'M10 3.5h4', 'M18.2 6.8l1.3-1.3'],
+        // flow view: conditions (funnel), a test that splits the flow (branch), a delay (hourglass), note, sending…
+        filter:   ['M4 5h16l-6 7.5V19l-4-2v-4.5z'],
+        branch:   ['M6 4v16', 'M6 12c0-3 2.5-5 6-5h2', 'M12 4l3 3-3 3', 'M6 12c0 3 2.5 5 6 5h2', 'M12 14l3 3-3 3'],
+        hourglass: ['M7 3.5h10', 'M7 20.5h10', 'M8 3.5c0 4 8 4.5 8 8.5s-8 4.5-8 8.5', 'M16 3.5c0 4-8 4.5-8 8.5s8 4.5 8 8.5'],
+        note:     ['M6 3.5h8l4 4v13H6z', 'M14 3.5v4h4', 'M9 12h6', 'M9 15.5h6'],
+        send:     ['M20.5 3.5 3.5 10.5l6.5 2.5 2.5 6.5z', 'M20.5 3.5 10 13'],
+        dots:     ['M6 12h.01', 'M12 12h.01', 'M18 12h.01'],
+        play:     ['M7 4.5v15l12-7.5z'],
+        flow:     ['M3.5 9h5v6h-5z', 'M15.5 9h5v6h-5z', 'M8.5 12h7', 'M13 9.5l2.5 2.5-2.5 2.5'],
+        network:  ['M5 5.5a1.5 1.5 0 1 0 0 .01', 'M19 5.5a1.5 1.5 0 1 0 0 .01', 'M12 18.5a1.5 1.5 0 1 0 0 .01', 'M6.3 6.8 10.8 17', 'M17.7 6.8 13.2 17', 'M6.5 5.5h11']
     };
 
     /** Icon of a block of the diagram. */
@@ -38,6 +48,10 @@
         if (node.kind === 'mailbox') { return 'inbox'; }
         if (node.kind === 'pack') { return 'package'; }
         if (node.kind === 'rule') { return node.type === 'manual' ? 'hand' : 'zap'; }
+        if (node.kind === 'step') {
+            return { cond: 'filter', branch: 'branch', timer: 'hourglass', note: 'note', send: 'send', other: 'dots', imap: 'folder', closed: 'closed',
+                pending: 'pending', active: 'active', spam: 'spam', deleted: 'deleted', person: 'person', tag: 'tag', mailbox: 'move' }[node.dest] || 'dots';
+        }
         return { closed: 'closed', pending: 'pending', active: 'active', spam: 'spam', deleted: 'deleted', cleanup: 'deleted', person: 'person', tag: 'tag', mailbox: 'mailbox' }[node.dest] || 'folder';
     }
 
