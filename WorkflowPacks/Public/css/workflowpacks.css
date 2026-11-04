@@ -151,3 +151,17 @@
 .wp-rule-details > summary, .wp-fold > summary { cursor: pointer; color: var(--wp-brand); font-size: 12px; margin-top: 4px; }
 .wp-fold { margin: 10px 0; }
 .wp-fold > summary { font-size: 14px; font-weight: 600; }
+
+/* export: one card per pack (update it with the new rules, download it) */
+.wp-pack-card { border: 1px solid var(--wp-border); border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; background: #fff; }
+.wp-pack-card.is-fresh { border-color: var(--wp-ok); box-shadow: 0 0 0 2px rgba(60, 155, 85, .15); }
+.wp-pack-card-head { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; }
+.wp-pack-card-update { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--wp-border); }
+.wp-pack-card-update p { margin: 0 0 6px; font-weight: 600; }
+.wp-pack-rule { display: block; font-weight: normal; margin: 3px 0; }
+.wp-pack-card-update .btn { margin-top: 8px; }
+.wp-pack-ok { margin: 6px 0 0; }
+.wp-custom-export > summary { cursor: pointer; list-style: none; }
+.wp-custom-export > summary::-webkit-details-marker { display: none; }
+.wp-custom-export > summary::before { content: '▸ '; }
+.wp-custom-export[open] > summary::before { content: '▾ '; }

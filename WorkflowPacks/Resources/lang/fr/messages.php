@@ -106,9 +106,8 @@ return [
     'open_workflows'     => 'Ouvrir les workflows de la boîte',
 
     // export
-    'export_title'       => 'Exporter ou regrouper des règles',
+    'export_title'       => 'Exporter',
     'export_mode_wf'     => 'Des règles existantes',
-    'export_mode_pack'   => 'Un pack enregistré, tel quel',
     'export_select'      => 'Règles à exporter ou à regrouper',
     'from_pack'          => 'pack :pack',
     'export_meta'        => 'Identité du pack',
@@ -136,7 +135,6 @@ return [
     'export_no_name'     => 'Nom du pack obligatoire.',
     'export_no_selection'=> 'Sélectionnez au moins une règle d’une boîte que vous pouvez gérer.',
     'export_bad_param'   => 'Remplacement de « :text » : nom ou type de paramètre invalide.',
-    'export_intro'       => 'Choisissez des règles, puis téléchargez-les dans un fichier pack, ou regroupez-les dans un pack : elles y restent reliées, sans être recréées ni modifiées.',
     'select_all_rules'   => 'Tout sélectionner (:count règles)',
     'export_target'      => 'Pack de destination',
     'target_new'         => 'Nouveau pack',
@@ -455,4 +453,12 @@ return [
     'history_count_uncertain'   => 'non simulables',
     'details'   => 'Détails',
     'checks_ok' => ':count vérifications OK',
+    'pack_download'       => 'Télécharger v:version',
+    'pack_pending'        => ':count règle(s) à ajouter à ce pack :',
+    'pack_state_new'      => 'nouvelle',
+    'pack_state_modified' => 'modifiée',
+    'pack_update_button'  => 'Mettre à jour le pack (v:version)',
+    'pack_up_to_date'     => 'À jour : aucune règle nouvelle ou modifiée dans ses boîtes.',
+    'pack_updated'        => 'Pack « :name » mis à jour : :count règle(s) ajoutée(s), version :version. Vous pouvez le télécharger.',
+    'export_custom'       => 'Créer un nouveau pack ou choisir les règles une par une',
 ];

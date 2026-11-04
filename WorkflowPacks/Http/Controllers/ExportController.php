@@ -64,6 +64,43 @@ class ExportController extends Controller
         ]);
     }
 
+    /**
+     * "Update the pack": its new and changed rules (Grouper::pendingAll) go into it, its version goes up; then it is
+     * downloaded from the same page. Only the rules offered for this pack are taken, whatever the form sends.
+     */
+    public function updatePack(Request $request)
+    {
+        $this->guard();
+        if (Checker::blocking()) {
+            return $this->blockedPage();
+        }
+        $user = auth()->user();
+        $pack = Pack::where('pack_key', (string) $request->input('pack_key'))->first();
+        if (!$pack || !Grouper::canModify($user, $pack)) {
+            return $this->formPage($request, [__('workflowpacks::messages.export_no_pack')]);
+        }
+        $pending = Grouper::pendingAll($user, collect([$pack]))[$pack->pack_key];
+        $chosen = array_map('intval', (array) $request->input('workflows', []));
+        $workflows = collect(array_merge($pending['new'], $pending['modified']))->filter(function ($wf) use ($chosen) {
+            return in_array((int) $wf->id, $chosen, true);
+        })->values();
+        if ($workflows->isEmpty()) {
+            return $this->formPage($request, [__('workflowpacks::messages.export_no_selection')]);
+        }
+        $grouper = new Grouper();
+        $composed = $grouper->compose($workflows, ['mode' => 'existing', 'pack_key' => $pack->pack_key, 'pack_version' => ''], Grouper::mailboxReplacements($workflows), $user);
+        if ($composed['errors']) {
+            return $this->formPage($request, $composed['errors']);
+        }
+        $result = $grouper->apply($composed, $user);
+        if (!$result['ok']) {
+            return $this->formPage($request, [$result['error']]);
+        }
+
+        return redirect()->route('workflowpacks.export', ['pack_key' => $pack->pack_key])
+            ->with('flash_success_floating', __('workflowpacks::messages.pack_updated', ['name' => $pack->name, 'count' => $result['counts']['linked'], 'version' => $result['counts']['version']]));
+    }
+
     /** "Group into a pack": the pack is stored and the selected rules are linked to it, then it can be downloaded. */
     public function group(Request $request)
     {
@@ -116,6 +153,8 @@ class ExportController extends Controller
             'targets'   => $packs->filter(function ($pack) use ($user) {
                 return Grouper::canModify($user, $pack);
             })->values(),
+            // what "Update the pack" would add to each pack
+            'pending'   => Grouper::pendingAll($user, $packs),
             'errors_list' => $errors,
             'old'       => $old,
         ]);

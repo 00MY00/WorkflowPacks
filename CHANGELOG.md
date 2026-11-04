@@ -4,6 +4,16 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [2.5.0] - 2026-11-04
+
+### Modifié
+- **Export simplifié** : la page Export montre d'abord **vos packs**, un par carte :
+  - les règles **nouvelles** (créées hors pack dans les boîtes du pack) et **modifiées** depuis l'import, cochées ;
+  - **« Mettre à jour le pack »** : elles y sont ajoutées (sans être recréées), l'adresse de la boîte devient
+    `{{mailbox.email}}`, la version augmente (1.0.0 → 1.0.1) ;
+  - **« Télécharger »** : le fichier du pack, tel qu'il est enregistré ; « À jour » quand rien n'est nouveau.
+  - Créer un nouveau pack ou choisir les règles une par une : replié sous la liste des packs.
+
 ## [2.4.0] - 2026-11-04
 
 ### Ajouté
