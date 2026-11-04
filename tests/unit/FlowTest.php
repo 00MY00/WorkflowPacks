@@ -138,3 +138,50 @@ test('Simulation : textes du faux e-mail bornés', function () {
     same(Simulator::MAX_TEXT, mb_strlen($mail['body']));
     same(20, count($mail['tags']));
 });
+
+test('Tester une règle : un exemple pour chaque expression régulière du pack d’exemple', function () {
+    $pack = json_decode(file_get_contents(__DIR__.'/../../WorkflowPacks/Resources/packs/tri-emails-multilingue.json'), true);
+    $count = 0;
+    array_walk_recursive($pack, function ($value, $key) use (&$count) {
+        if ($key === 'value' && is_string($value) && preg_match('#^/.+/[a-z]*$#s', $value) && strpos($value, '{{') === false) {
+            $text = \Modules\WorkflowPacks\Services\Flow\SampleMail::fromRegex($value);
+            check($text !== null && preg_match($value, $text) === 1, 'exemple pour '.mb_substr($value, 0, 60));
+            $count++;
+        }
+    });
+    check($count >= 7, 'regex du pack trouvées : '.$count);
+    same('Facture 11', \Modules\WorkflowPacks\Services\Flow\SampleMail::fromRegex('/^Facture \d{2}$/'));
+    same(null, \Modules\WorkflowPacks\Services\Flow\SampleMail::fromRegex('/(/'));
+});
+
+test('Tester une règle : le faux e-mail remplit les conditions, ce qui ne peut pas l’être est listé', function () {
+    $sample = \Modules\WorkflowPacks\Services\Flow\SampleMail::forRule([
+        [['type' => 'new_or_reply', 'operator' => 'new']],
+        [['type' => 'subject', 'operator' => 'contains', 'value' => 'facture']],
+        [['type' => 'subject', 'operator' => 'starts', 'value' => '[Client]']],
+        [['type' => 'customer_email', 'operator' => 'contains', 'value' => '@shop.example.test']],
+        [['type' => 'body', 'operator' => 'regex', 'value' => '/commande n°\s?\d+/i'], ['type' => 'body', 'operator' => 'contains', 'value' => 'x']],
+        [['type' => 'wp_assigned', 'operator' => 'no']],
+        [['type' => 'wp_replied', 'operator' => 'yes']],
+        [['type' => 'status', 'operator' => 'equal', 'value' => '2']],
+        [['type' => 'wp_mail_tag', 'operator' => 'has', 'value' => 'inbox']],
+        [['type' => 'created', 'operator' => 'not_in_last', 'value' => ['number' => 2, 'metric' => 'd']]],
+    ], 'support@example.test');
+    $in = $sample['input'];
+    same('[Client] facture', $in['subject']);
+    same('client@shop.example.test', $in['customer_email']);
+    same(1, preg_match('/commande n°\s?\d+/i', $in['body']));
+    same([false, true, 2, ['inbox']], [$in['assigned'], $in['replied'], $in['status'], $in['tags']]);
+    same([], $sample['unmet']);
+
+    // the simulation then applies the rule
+    $rule = ['id' => 1, 'name' => 'R', 'active' => true, 'actions' => [['type' => 'status', 'value' => '3']], 'conditions' => [
+        [['type' => 'subject', 'operator' => 'regex', 'value' => '/\b(invoice|facture)s?\b/i']], [['type' => 'wp_replied', 'operator' => 'no']]]];
+    $made = \Modules\WorkflowPacks\Services\Flow\SampleMail::forRule($rule['conditions']);
+    same([1], array_column((new Simulator())->run([$rule], Simulator::mail($made['input']))['events'], 'workflow_id'));
+
+    $hard = \Modules\WorkflowPacks\Services\Flow\SampleMail::forRule([[['type' => 'custom_field_9', 'operator' => 'equal', 'value' => 'x']],
+        [['type' => 'new_or_reply', 'operator' => 'reply']], [['type' => 'subject', 'operator' => 'contains', 'value' => 'ok']]]);
+    same(2, count($hard['unmet']), 'autre module et « réponse » : signalés');
+    same('ok', $hard['input']['subject']);
+});

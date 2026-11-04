@@ -3,29 +3,29 @@
 @section('wp_content')
     <h3>{{ __('workflowpacks::messages.checks') }} — {{ __('workflowpacks::messages.state') }} :
         <span class="wp-state wp-state-{{ $result['state'] }}">{{ strtoupper($result['state']) }}</span></h3>
-    <table class="table table-condensed wp-checks">
-        @foreach ($result['checks'] as $check)
-            <tr class="wp-check-{{ $check['state'] }}">
-                <td><span class="wp-state wp-state-{{ $check['state'] }}">{{ strtoupper($check['state']) }}</span></td>
-                <td><code>{{ $check['code'] }}</code></td>
-                <td>{{ $check['label'] }}</td>
-                <td class="wp-muted">{{ $check['detail'] }}</td>
-            </tr>
-        @endforeach
-    </table>
-
-    <h4>{{ __('workflowpacks::messages.versions') }}</h4>
-    <ul class="wp-versions">
-        @foreach ($result['versions'] as $name => $version)
-            <li><strong>{{ $name }}</strong> : {{ $version !== '' ? $version : '—' }}</li>
-        @endforeach
-    </ul>
+    @php
+        $wp_problems = array_values(array_filter($result['checks'], function ($c) { return $c['state'] !== 'ok'; }));
+        $wp_ok = array_values(array_filter($result['checks'], function ($c) { return $c['state'] === 'ok'; }));
+    @endphp
+    @if ($wp_problems)
+        @include('workflowpacks::partials.checks', ['checks' => $wp_problems])
+    @endif
+    <details class="wp-fold">
+        <summary>{{ __('workflowpacks::messages.checks_ok', ['count' => count($wp_ok)]) }} · {{ __('workflowpacks::messages.versions') }}</summary>
+        @include('workflowpacks::partials.checks', ['checks' => $wp_ok])
+        <ul class="wp-versions">
+            @foreach ($result['versions'] as $name => $version)
+                <li><strong>{{ $name }}</strong> : {{ $version !== '' ? $version : '—' }}</li>
+            @endforeach
+        </ul>
+    </details>
 
     <h4>{{ __('workflowpacks::messages.update') }}</h4>
     @include('workflowpacks::partials.updates')
 
     @if ($catalog)
-        <h4 class="wp-section">{{ __('workflowpacks::messages.catalog') }}</h4>
+        <details class="wp-fold wp-section" @if (request()->has('mailbox_id')) open @endif>
+        <summary>{{ __('workflowpacks::messages.catalog') }}</summary>
         <p class="wp-muted">{{ __('workflowpacks::messages.catalog_help') }}</p>
         <form method="GET" action="{{ route('workflowpacks.diagnostic') }}" class="form-inline wp-inline">
             <select name="mailbox_id" class="form-control input-sm wp-autosubmit">
@@ -53,5 +53,6 @@
                 @endforeach
             </table>
         @endforeach
+        </details>
     @endif
 @endsection

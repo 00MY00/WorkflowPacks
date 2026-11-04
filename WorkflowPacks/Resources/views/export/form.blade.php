@@ -110,7 +110,6 @@
                         @endfor
                     </table>
                 </details>
-                <p class="wp-muted">{{ __('workflowpacks::messages.export_next') }}</p>
                 <button type="submit" class="btn btn-primary">{{ __('workflowpacks::messages.export_preview') }}</button>
             </form>
         </div>

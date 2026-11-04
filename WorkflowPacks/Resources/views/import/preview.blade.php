@@ -90,7 +90,7 @@
                             @endif
                             @if ($item['attributes'])
                                 <div class="wp-sub">{{ __('workflowpacks::messages.resolved') }}</div>
-                                @include('workflowpacks::partials.rule_schema', ['rule' => \Modules\WorkflowPacks\Services\Ui::ruleFromAttributes($item['attributes'], $entry['rule']), 'mailboxId' => $mailboxId])
+                                @include('workflowpacks::partials.rule_schema', ['rule' => \Modules\WorkflowPacks\Services\Ui::ruleFromAttributes($item['attributes'], $entry['rule']), 'mailboxId' => $mailboxId, 'open' => true])
                             @endif
                             @if ($item['diff'])
                                 <div class="wp-sub">{{ __('workflowpacks::messages.show_diff') }}</div>

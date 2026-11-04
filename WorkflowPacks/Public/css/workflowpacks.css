@@ -142,3 +142,12 @@
 .wp-replacements-box { margin: 14px 0; }
 .wp-replacements-box summary { cursor: pointer; margin-bottom: 6px; }
 .wp-export-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 12px 0; }
+
+/* rule card: one-line summary, details folded */
+.wp-rule-sum { margin-top: 6px; font-size: 13px; display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: center; }
+.wp-rule-sum .wp-flow-label { min-width: 0; }
+.wp-rule-arrow { color: var(--wp-muted); }
+.wp-rule-desc { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.wp-rule-details > summary, .wp-fold > summary { cursor: pointer; color: var(--wp-brand); font-size: 12px; margin-top: 4px; }
+.wp-fold { margin: 10px 0; }
+.wp-fold > summary { font-size: 14px; font-weight: 600; }

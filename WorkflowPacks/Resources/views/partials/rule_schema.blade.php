@@ -1,8 +1,22 @@
-{{-- Schematic view of one rule: IF (AND of OR groups) THEN (actions), with variables and sensitive actions marked.
-     $rule: pack-shaped rule; $mailboxId: optional (labels from the catalog); $states: optional mailbox chips. --}}
+{{-- One rule: a one-line summary (what it looks at → what it does), the full IF (AND of OR groups) THEN (actions)
+     folded under "Details", sensitive actions always visible.
+     $rule: pack-shaped rule; $mailboxId: optional (labels from the catalog); $states: optional mailbox chips;
+     $open: true to show the details unfolded. --}}
 @php
     $groups = \Modules\WorkflowPacks\Services\Ui::groups($rule['conditions'] ?? null);
     $mb = $mailboxId ?? null;
+    $wp_ifs = [];
+    foreach ($groups as $group) {
+        $wp_ifs[] = implode(' / ', array_unique(array_map(function ($c) use ($mb) {
+            return \Modules\WorkflowPacks\Services\Ui::title('conditions', $c['type'] ?? '', $mb);
+        }, $group)));
+    }
+    $wp_thens = array_map(function ($a) use ($mb) {
+        return \Modules\WorkflowPacks\Services\Ui::title('actions', $a['type'] ?? '', $mb);
+    }, $rule['actions'] ?? []);
+    $wp_sensitive = array_values(array_unique(array_filter(array_map(function ($a) {
+        return \Modules\WorkflowPacks\Services\Ui::sensitive($a['type'] ?? '');
+    }, $rule['actions'] ?? []))));
 @endphp
 <div class="wp-rule">
     <div class="wp-rule-head">
@@ -24,6 +38,16 @@
     @if (!empty($rule['description']))
         <div class="wp-rule-desc">{{ $rule['description'] }}</div>
     @endif
+    <div class="wp-rule-sum">
+        <span class="wp-flow-label">{{ __('workflowpacks::messages.if') }}</span>
+        {{ $wp_ifs ? implode(' + ', $wp_ifs) : __('workflowpacks::messages.manual_no_cond') }}
+        <span class="wp-rule-arrow" aria-hidden="true">→</span>
+        <span class="wp-flow-label">{{ __('workflowpacks::messages.then') }}</span>
+        {{ implode(', ', $wp_thens) }}
+        @foreach ($wp_sensitive as $kind)<span class="label label-danger">⚠ {{ __('workflowpacks::messages.sensitive_'.$kind) }}</span>@endforeach
+    </div>
+    <details class="wp-rule-details" @if (!empty($open)) open @endif>
+    <summary>{{ __('workflowpacks::messages.details') }}</summary>
     <div class="wp-flow">
         <div class="wp-flow-if">
             <span class="wp-flow-label">{{ __('workflowpacks::messages.if') }}</span>
@@ -56,6 +80,7 @@
             @endforeach
         </div>
     </div>
+    </details>
     @if (isset($states))
         <div class="wp-chips">
             @forelse ($states as $s)

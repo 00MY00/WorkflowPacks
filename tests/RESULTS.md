@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 2.3.0
+# Résultats des tests — Workflow Packs 2.4.0
 
 Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,14 @@ Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 2.4.0 — tester une règle, pages allégées
+
+| Série | Résultat |
+|---|---|
+| Unitaires PHP (50) | `FlowTest` (+2) : un exemple valide pour **chaque expression régulière du pack d'exemple** (vérifié par preg_match), regex invalide refusée ; faux e-mail d'une règle (égal, contient, commence par, adresse, regex dans un groupe OU, assigné, répondu, statut, tag, délai ignoré), conditions non remplissables listées, la simulation applique bien la règle |
+| Intégration (98 tests, 784 assertions, instance neuve) | `FlowViewTest` (+1) : e-mail préparé pour la règle « pas de réponse », simulation : règle testée appliquée avec son moment ; même e-mail « déjà répondu » : non appliquée, raison donnée ; droits de la boîte (403). Pages inchangées dans leurs fonctions |
+| Navigateur (ordinateur et téléphone) | « Règle à tester » = « [Tri] Alertes de sécurité » : sujet préparé « security alert », verdict « appliquée (à l'arrivée) » ; aucune erreur JavaScript. Texte visible : accueil 625 → 481 mots (règles en résumé), Diagnostic 398 → 70, Schéma 188 → 121 |
 
 ## 2.3.0 — vue flux, tests « assigné » / « réponse envoyée », simulation
 

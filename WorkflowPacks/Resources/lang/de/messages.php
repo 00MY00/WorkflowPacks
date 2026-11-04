@@ -138,7 +138,6 @@ return [
     'target_version_auto' => 'nächste Version automatisch',
     'export_key_auto'    => 'aus dem Namen erzeugt',
     'optional'           => 'optional',
-    'export_next'        => 'Die Vorschau zeigt das Paket; danach können Sie es herunterladen oder die Regeln darin gruppieren.',
     'group_title'        => 'In das Paket „:name“ gruppieren',
     'group_help'         => 'Die Regeln werden weder neu erstellt noch geändert: Sie werden mit dem gespeicherten Paket verknüpft. Ein erneuter Import hier erzeugt keine Duplikate, und Sie können es jederzeit herunterladen.',
     'group_rule'         => 'Regel',
@@ -446,4 +445,6 @@ return [
     'history_kind_simulate'     => 'Simulation',
     'history_count_applied'     => 'Regeln angewendet',
     'history_count_uncertain'   => 'nicht simulierbar',
+    'details'   => 'Details',
+    'checks_ok' => ':count Prüfungen OK',
 ];

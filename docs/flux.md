@@ -73,6 +73,17 @@ Le bouton **Simuler** envoie un **faux e-mail** dans les règles d'une boîte : 
 « déjà assigné », « l'équipe a déjà répondu », les tags d'e-mail (avec RefreshGlobal). Les règles désactivées sont
 simulées aussi (case cochée par défaut), pour tester un pack avant de l'activer.
 
+**Tester une règle** : choisissez-la dans « Règle à tester » (ou cliquez sur **Tester cette règle** dans son panneau).
+Le faux e-mail est préparé pour remplir ses conditions :
+- « est égal à » : la valeur ; « contient », « commence par », « finit par » : la valeur dans un court texte ;
+- expression régulière : un exemple tiré de ses premières alternatives, vérifié avant d'être proposé ;
+- « assigné », « réponse envoyée », tags d'e-mail, statut : les options correspondantes ;
+- dans un groupe OU, la première condition qui peut être remplie.
+
+Ce qui ne peut pas être rempli (condition d'un autre module, « Réponse », une personne précise…) est listé sous le
+choix. Les minuteurs ne concernent pas l'e-mail : la simulation attend leur délai. Le résultat commence par la règle
+testée : appliquée (et quand) ou non (et pourquoi).
+
 Le parcours s'allume ensuite dans la vue flux, bloc après bloc (une « énergie » verte suit les liens) :
 
 - **vert** : le faux e-mail est passé par ce bloc ;

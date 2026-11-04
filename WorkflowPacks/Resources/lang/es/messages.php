@@ -138,7 +138,6 @@ return [
     'target_version_auto' => 'siguiente versión automáticamente',
     'export_key_auto'    => 'creada a partir del nombre',
     'optional'           => 'opcional',
-    'export_next'        => 'La vista previa muestra el paquete; después podrá descargarlo o agrupar en él las reglas.',
     'group_title'        => 'Agrupar en el paquete «:name»',
     'group_help'         => 'Las reglas no se recrean ni se modifican: se vinculan al paquete, que queda guardado. Volver a importarlo aquí no crea duplicados, y puede descargarlo en cualquier momento.',
     'group_rule'         => 'Regla',
@@ -446,4 +445,6 @@ return [
     'history_kind_simulate'     => 'Simulación',
     'history_count_applied'     => 'reglas aplicadas',
     'history_count_uncertain'   => 'no simulables',
+    'details'   => 'Detalles',
+    'checks_ok' => ':count comprobaciones OK',
 ];

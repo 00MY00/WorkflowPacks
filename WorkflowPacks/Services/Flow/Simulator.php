@@ -25,7 +25,7 @@ class Simulator
     const MAX_CHECKS = 200;
     const MAX_TEXT = 20000;
 
-    /** @param array $input subject, body, customer_email, customer_name, to, cc, tags[], assigned, replied, mailbox_id */
+    /** @param array $input subject, body, customer_email, customer_name, to, cc, tags[], assigned, replied, status, mailbox_id */
     public static function mail(array $input)
     {
         $text = function ($key, $max) use ($input) {
@@ -45,6 +45,8 @@ class Simulator
             'assigned'       => !empty($input['assigned']),
             'replied'        => !empty($input['replied']),
             'mailbox_id'     => (int) ($input['mailbox_id'] ?? 0),
+            // status of the ticket at the arrival: active by default
+            'status'         => in_array((int) ($input['status'] ?? 1), [1, 2, 3, 4], true) ? (int) ($input['status'] ?? 1) : 1,
         ];
     }
 
@@ -52,7 +54,7 @@ class Simulator
     public static function state(array $mail)
     {
         return [
-            'status'     => 1,
+            'status'     => $mail['status'] ?? 1,
             'user_id'    => $mail['assigned'] ? -10 : 0,
             'mailbox_id' => $mail['mailbox_id'],
             'folder'     => '',

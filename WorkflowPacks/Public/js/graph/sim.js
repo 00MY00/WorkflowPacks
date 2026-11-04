@@ -36,20 +36,35 @@
         this.result = null;
         this.mailboxId = 0;
         this.timers = [];
-        this.last = { subject: '', customer_email: 'client@example.test', customer_name: '', body: '', tags: '', assigned: false, replied: false, include_inactive: true };
+        this.last = { subject: '', customer_email: 'client@example.test', customer_name: '', body: '', tags: '', assigned: false, replied: false, status: '1', include_inactive: true, target: '' };
     }
 
     // ----------------------------------------------------------------------------------- the fake e-mail
 
-    Sim.prototype.open = function () {
+    /** Rules of a mailbox, for "Rule to test": [[workflow id, name]], in the order of Workflows. */
+    Sim.prototype.rulesOf = function (mailboxId) {
+        var seen = {};
+        return this.app.overview.edges.filter(function (e) {
+            if (e.kind !== 'applies' || !e.workflow_id || e.to !== 'mb:' + mailboxId || seen[e.workflow_id]) { return false; }
+            seen[e.workflow_id] = true;
+            return true;
+        }).map(function (e) { return [e.workflow_id, e.name]; });
+    };
+
+    /**
+     * The form of the fake e-mail. opts.workflowId: "test this rule" — the rule is chosen and the e-mail is made to
+     * meet its conditions (server: SampleMail).
+     */
+    Sim.prototype.open = function (opts) {
         var self = this, t = this.t, app = this.app;
+        opts = opts || {};
         var mailboxes = app.overview.list(function (n) { return n.kind === 'mailbox'; });
         if (!mailboxes.length) { app.toast(t.no_mailbox, 'error'); return; }
         var selected = Object.keys(app.view.selected).map(function (k) { return app.mailboxOf(app.model.nodes[k]); }).filter(Boolean)[0];
         // the mailbox of the selected block, the last one simulated, else the first one with rules
         var flows = (app.data && app.data.flows) || {};
         var withRules = mailboxes.filter(function (mb) { return ((flows[mb.id] || {}).flows || []).length; })[0];
-        var current = selected || this.mailboxId || (withRules || mailboxes[0]).id;
+        var current = opts.mailboxId || selected || this.mailboxId || (withRules || mailboxes[0]).id;
         var overlay = app.root.querySelector('.wpg-overlay');
         var v = this.last;
         var field = function (name, label, input) {
@@ -64,16 +79,29 @@
         var select = h('select', { id: 'wpg-sim-mailbox_id', name: 'mailbox_id', class: 'form-control' }, mailboxes.map(function (mb) {
             return h('option', { value: mb.id, selected: mb.id === current, text: mb.label });
         }));
+        var rule = h('select', { id: 'wpg-sim-target', name: 'target', class: 'form-control' });
+        var unmet = h('div', { class: 'wpg-sim-unmet', role: 'status' });
+        var status = h('select', { id: 'wpg-sim-status', name: 'status', class: 'form-control' }, ['1', '2', '3', '4'].map(function (s) {
+            return h('option', { value: s, selected: String(v.status || '1') === s, text: t['sim_status_' + s] });
+        }));
+        var fillRules = function (mailboxId, chosen) {
+            rule.textContent = '';
+            rule.appendChild(h('option', { value: '', text: t.sim_rule_none }));
+            self.rulesOf(mailboxId).forEach(function (r) { rule.appendChild(h('option', { value: r[0], selected: String(r[0]) === String(chosen), text: r[1] })); });
+        };
         var form = h('form', { class: 'wpg-dialog wpg-sim-form', novalidate: true }, [
             h('div', { class: 'wpg-dialog-head' }, [icon('play'), h('strong', { text: t.sim_title }),
                 h('button', { type: 'button', class: 'wpg-ins-close', 'aria-label': t.close, on: { click: function () { self.closeForm(); } } }, ['×'])]),
             h('div', { class: 'wpg-dialog-body' }, [
-                h('p', { class: 'wpg-hint', text: t.sim_intro }),
-                field('mailbox_id', t.sim_mailbox, select),
+                h('p', { class: 'wpg-hint', text: t.sim_intro_short }),
+                h('div', { class: 'wpg-row2' }, [field('mailbox_id', t.sim_mailbox, select), field('target', t.sim_rule, rule)]),
+                unmet,
                 h('div', { class: 'wpg-row2' }, [field('subject', t.sim_subject, text('subject')), field('customer_email', t.sim_from, text('customer_email', 'email'))]),
-                field('customer_name', t.sim_from_name, text('customer_name')),
-                field('body', t.sim_body, h('textarea', { id: 'wpg-sim-body', name: 'body', class: 'form-control', rows: 4, maxlength: 20000 }, [v.body || ''])),
-                app.cfg.mailTags ? field('tags', t.sim_tags, text('tags')) : null,
+                h('details', { class: 'wpg-sim-more' }, [h('summary', { text: t.sim_more }),
+                    h('div', { class: 'wpg-row2' }, [field('customer_name', t.sim_from_name, text('customer_name')), field('status', t.sim_status, status)]),
+                    field('body', t.sim_body, h('textarea', { id: 'wpg-sim-body', name: 'body', class: 'form-control', rows: 3, maxlength: 20000 }, [v.body || ''])),
+                    app.cfg.mailTags ? field('tags', t.sim_tags, text('tags')) : null
+                ]),
                 check('assigned', t.sim_assigned), check('replied', t.sim_replied), check('include_inactive', t.sim_inactive)
             ]),
             h('div', { class: 'wpg-dialog-foot' }, [
@@ -81,10 +109,28 @@
                 h('button', { type: 'submit', class: 'btn btn-primary' }, [icon('play'), ' ' + t.sim_run])
             ])
         ]);
+        // a rule chosen: the fake e-mail is made for it
+        var fill = function (id) {
+            unmet.textContent = '';
+            if (!id) { return; }
+            app.api.sample(id).then(function (res) {
+                ['subject', 'customer_email', 'customer_name', 'body', 'tags'].forEach(function (k) { if (form.elements[k]) { form.elements[k].value = res.input[k] || ''; } });
+                form.elements.status.value = String(res.input.status || 1);
+                form.elements.assigned.checked = !!res.input.assigned;
+                form.elements.replied.checked = !!res.input.replied;
+                unmet.appendChild(h('p', { class: 'wpg-hint is-ok', text: t.sim_filled }));
+                if (res.unmet.length) {
+                    unmet.appendChild(h('p', { class: 'wpg-warn-text', text: t.sim_unmet + ' ' + res.unmet.join(' · ') }));
+                }
+            }).catch(function (e) { app.toast(e.message, 'error'); });
+        };
+        fillRules(current, opts.workflowId || '');
+        select.addEventListener('change', function () { fillRules(this.value, ''); unmet.textContent = ''; });
+        rule.addEventListener('change', function () { fill(this.value); });
         form.addEventListener('submit', function (e) {
             e.preventDefault();
             var input = {};
-            ['mailbox_id', 'subject', 'customer_email', 'customer_name', 'body', 'tags'].forEach(function (k) { if (form.elements[k]) { input[k] = form.elements[k].value; } });
+            ['mailbox_id', 'subject', 'customer_email', 'customer_name', 'body', 'tags', 'status', 'target'].forEach(function (k) { if (form.elements[k]) { input[k] = form.elements[k].value; } });
             ['assigned', 'replied', 'include_inactive'].forEach(function (k) { input[k] = form.elements[k].checked; });
             self.last = Object.assign({}, input);
             input.tags = String(input.tags || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
@@ -93,6 +139,7 @@
         overlay.textContent = '';
         overlay.appendChild(form);
         overlay.classList.add('open');
+        if (opts.workflowId) { fill(opts.workflowId); }
         setTimeout(function () { (form.elements.subject || select).focus(); }, 30);
     };
 
@@ -236,6 +283,12 @@
         ins.panel.appendChild(body);
         body.appendChild(h('div', { class: 'wpg-sim-verdict ' + (r.processed ? 'is-ok' : 'is-no') }, [icon(r.processed ? 'closed' : 'warn'),
             h('span', { text: r.processed ? t.sim_processed.replace(':count', r.events.length) : t.sim_not_processed })]));
+        if (r.target) {
+            var name = r.target.name || '#' + r.target.workflow_id;
+            body.appendChild(h('div', { class: 'wpg-sim-target ' + (r.target.applied ? 'is-ok' : 'is-no') }, [icon(r.target.applied ? 'closed' : 'warn'),
+                h('span', { text: r.target.applied ? t.sim_target_ok.replace(':name', name).replace(':when', r.target.when)
+                    : t.sim_target_no.replace(':name', name).replace(':reason', r.target.reason_text || t.sim_rule_none) })]));
+        }
         if (r.uncertain) { body.appendChild(h('p', { class: 'wpg-warn-text', text: t.sim_some_unsure })); }
 
         r.events.forEach(function (ev) {

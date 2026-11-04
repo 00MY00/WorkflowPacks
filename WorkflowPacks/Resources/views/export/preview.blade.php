@@ -6,10 +6,17 @@
 
     @foreach (['secrets' => 'report_secrets', 'refs' => 'report_refs', 'modules' => 'report_modules', 'from_packs' => 'report_packs', 'ignored' => 'report_ignored'] as $key => $label)
         @if (!empty($report[$key]))
-            <div class="alert {{ $key === 'secrets' || $key === 'refs' ? 'alert-warning' : 'alert-info' }}">
-                <strong>{{ __('workflowpacks::messages.'.$label) }}</strong>
-                <ul>@foreach (array_unique($report[$key]) as $line)<li>{{ $line }}</li>@endforeach</ul>
-            </div>
+            @if ($key === 'secrets' || $key === 'refs')
+                <div class="alert alert-warning">
+                    <strong>{{ __('workflowpacks::messages.'.$label) }}</strong>
+                    <ul>@foreach (array_unique($report[$key]) as $line)<li>{{ $line }}</li>@endforeach</ul>
+                </div>
+            @else
+                <details class="wp-fold">
+                    <summary>{{ __('workflowpacks::messages.'.$label) }} ({{ count(array_unique($report[$key])) }})</summary>
+                    <ul>@foreach (array_unique($report[$key]) as $line)<li>{{ $line }}</li>@endforeach</ul>
+                </details>
+            @endif
         @endif
     @endforeach
     @if (!empty($report['replaced']))
