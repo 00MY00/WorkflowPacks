@@ -239,8 +239,8 @@ class FlowBuilder
         return $out;
     }
 
-    /** Same conditions in any order give the same text. */
-    protected static function canon(array $value)
+    /** Same conditions in any order give the same text (also used to find a condition of a flow in its rules). */
+    public static function canon(array $value)
     {
         $sort = function ($v) use (&$sort) {
             if (!is_array($v)) {

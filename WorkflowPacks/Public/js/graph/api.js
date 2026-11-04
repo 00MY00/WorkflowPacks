@@ -68,6 +68,10 @@
     Api.prototype.simulate = function (input) { return this.request('POST', this.urls.simulate, input); };
     // "test this rule": a fake e-mail made to meet its conditions
     Api.prototype.sample = function (id) { return this.request('GET', this.url('sample', id)); };
+    // deletion of blocks: what it does, then done (after a backup), then undone
+    Api.prototype.deletePlan = function (keys) { return this.request('POST', this.urls.deletePlan, { keys: keys }); };
+    Api.prototype.deleteBlocks = function (keys, token) { return this.request('POST', this.urls.delete, { keys: keys, token: token }); };
+    Api.prototype.deleteUndo = function (id) { return this.request('POST', this.urls.deleteUndo, { backup_id: id }); };
 
     WPGraph.Api = Api;
 })(window.WPGraph = window.WPGraph || {});

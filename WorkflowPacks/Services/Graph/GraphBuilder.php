@@ -156,6 +156,20 @@ class GraphBuilder
         return ['nodes' => array_values($nodes), 'edges' => $edges, 'flows' => $this->flows($mailboxes, $flowRules)];
     }
 
+    /** Keys of the destination blocks of one action (with the deeper levels of a folder): what deleting them removes. */
+    public function actionKeys(array $action, array $jsonActions)
+    {
+        $keys = [];
+        foreach ($this->destinations(['actions' => [[$action]]], $jsonActions, []) as $dest) {
+            $keys[] = $dest['key'];
+            foreach ($dest['chain'] ?? [] as $child) {
+                $keys[] = $child['key'];
+            }
+        }
+
+        return $keys;
+    }
+
     /** A rule as the flow view and the simulation read it (actions decoded). */
     public static function flowRule($workflow, array $attributes, array $jsonActions, $packKey = null)
     {

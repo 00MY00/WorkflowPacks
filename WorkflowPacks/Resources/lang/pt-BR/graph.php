@@ -304,4 +304,12 @@ return [
     'next_set_status' => 'Definir o status do ticket',
     'add_block'       => 'Adicionar um bloco',
     'add_block_help'  => 'Status do ticket, temporizador, ação… após o bloco selecionado (senão: nova regra)',
+    'menu_delete'      => 'Excluir',
+    'delete_title'     => 'Excluir? Isto é o que vai mudar:',
+    'delete_undo_hint' => 'Um backup é feito: “Desfazer a exclusão” deixa tudo como antes.',
+    'delete_nothing'   => 'Nada a excluir para estes blocos.',
+    'delete_done'      => 'Excluído.',
+    'delete_panel'     => 'Excluído',
+    'delete_undo'      => 'Desfazer a exclusão',
+    'delete_undone'    => 'Exclusão desfeita: tudo voltou.',
 ];

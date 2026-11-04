@@ -304,4 +304,12 @@ return [
     'next_set_status' => 'Impostare lo stato del ticket',
     'add_block'       => 'Aggiungi un blocco',
     'add_block_help'  => 'Stato del ticket, timer, azione… dopo il blocco selezionato (altrimenti: nuova regola)',
+    'menu_delete'      => 'Elimina',
+    'delete_title'     => 'Eliminare? Ecco cosa cambierà:',
+    'delete_undo_hint' => 'Viene fatto un backup: «Annulla l\'eliminazione» rimette tutto com\'era.',
+    'delete_nothing'   => 'Niente da eliminare per questi blocchi.',
+    'delete_done'      => 'Eliminato.',
+    'delete_panel'     => 'Eliminato',
+    'delete_undo'      => 'Annulla l\'eliminazione',
+    'delete_undone'    => 'Eliminazione annullata: tutto è tornato.',
 ];

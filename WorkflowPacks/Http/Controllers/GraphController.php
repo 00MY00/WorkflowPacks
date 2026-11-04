@@ -135,6 +135,34 @@ class GraphController extends Controller
         return response()->json($result, $result['ok'] ? 200 : 403);
     }
 
+    /** "Delete" of selected blocks: what will happen (shown in the confirmation), nothing done. */
+    public function deletePlan(Request $request)
+    {
+        $this->guard();
+        $plan = (new \Modules\WorkflowPacks\Services\Graph\BlockRemover())->plan(auth()->user(), (array) $request->input('keys', []));
+
+        return response()->json(['ok' => true, 'count' => count($plan['ops']), 'lines' => $plan['lines'], 'warnings' => $plan['warnings'],
+            'refused' => $plan['refused'], 'token' => $plan['token']]);
+    }
+
+    /** "Delete", confirmed: applied after a backup ("Undo"). */
+    public function delete(Request $request)
+    {
+        $this->guard();
+        $result = (new \Modules\WorkflowPacks\Services\Graph\BlockRemover())->apply(auth()->user(), (array) $request->input('keys', []), (string) $request->input('token'));
+
+        return response()->json($result, $result['ok'] ? 200 : 422);
+    }
+
+    /** "Undo" of a deletion: the rules as they were. */
+    public function undoDelete(Request $request)
+    {
+        $this->guard();
+        $result = (new \Modules\WorkflowPacks\Services\Graph\BlockRemover())->restore(auth()->user(), (int) $request->input('backup_id'));
+
+        return response()->json($result, $result['ok'] ? 200 : 422);
+    }
+
     /** "Test this rule": the fake e-mail made for the rule (filled in the simulation form). */
     public function sample($id)
     {

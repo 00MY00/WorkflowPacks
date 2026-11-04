@@ -304,4 +304,12 @@ return [
     'next_set_status' => 'Status des Tickets festlegen',
     'add_block'       => 'Block hinzufügen',
     'add_block_help'  => 'Ticketstatus, Timer, Aktion… nach dem ausgewählten Block (sonst: neue Regel)',
+    'menu_delete'      => 'Löschen',
+    'delete_title'     => 'Löschen? Das wird sich ändern:',
+    'delete_undo_hint' => 'Eine Sicherung wird erstellt: „Löschen rückgängig machen“ stellt alles wieder her.',
+    'delete_nothing'   => 'Für diese Blöcke ist nichts zu löschen.',
+    'delete_done'      => 'Gelöscht.',
+    'delete_panel'     => 'Gelöscht',
+    'delete_undo'      => 'Löschen rückgängig machen',
+    'delete_undone'    => 'Löschen rückgängig gemacht: alles ist wieder da.',
 ];

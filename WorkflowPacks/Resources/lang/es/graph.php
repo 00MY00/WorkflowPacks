@@ -304,4 +304,12 @@ return [
     'next_set_status' => 'Definir el estado del ticket',
     'add_block'       => 'Añadir un bloque',
     'add_block_help'  => 'Estado del ticket, temporizador, acción… tras el bloque seleccionado (si no: regla nueva)',
+    'menu_delete'      => 'Eliminar',
+    'delete_title'     => '¿Eliminar? Esto es lo que cambiará:',
+    'delete_undo_hint' => 'Se hace una copia: «Deshacer la eliminación» lo deja todo como antes.',
+    'delete_nothing'   => 'Nada que eliminar para estos bloques.',
+    'delete_done'      => 'Eliminado.',
+    'delete_panel'     => 'Eliminado',
+    'delete_undo'      => 'Deshacer la eliminación',
+    'delete_undone'    => 'Eliminación deshecha: todo ha vuelto.',
 ];
