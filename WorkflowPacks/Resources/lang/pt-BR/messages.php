@@ -468,4 +468,6 @@ return [
     'del_no_backup'         => 'Backup não encontrado.',
     'del_cleanup'         => 'Parar a limpeza automática da pasta “:folder” (:delay)',
     'del_refused_cleanup' => 'Somente um administrador pode remover a limpeza de uma pasta.',
+    'del_missing'        => 'Remover “:rule” do esquema: esta regra não existe mais no Workflows (vínculo do pacote)',
+    'del_refused_rights' => 'Parte destas regras está numa caixa cujos workflows você não gerencia.',
 ];

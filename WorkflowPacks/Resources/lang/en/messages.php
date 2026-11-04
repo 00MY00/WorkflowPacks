@@ -472,4 +472,6 @@ return [
     'del_no_backup'         => 'Backup not found.',
     'del_cleanup'         => 'Stop the automatic clean-up of the folder “:folder” (:delay)',
     'del_refused_cleanup' => 'The clean-up of a folder can only be removed by an administrator.',
+    'del_missing'        => 'Remove “:rule” from the diagram: this rule no longer exists in Workflows (link of the pack)',
+    'del_refused_rights' => 'Some of these rules are in a mailbox whose workflows you do not manage.',
 ];

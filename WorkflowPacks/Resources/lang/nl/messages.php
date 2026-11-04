@@ -468,4 +468,6 @@ return [
     'del_no_backup'         => 'Back-up niet gevonden.',
     'del_cleanup'         => 'Automatisch opruimen van de map ":folder" stoppen (:delay)',
     'del_refused_cleanup' => 'Alleen een beheerder kan het opruimen van een map verwijderen.',
+    'del_missing'        => '":rule" uit het schema halen: deze regel bestaat niet meer in Workflows (koppeling van het pakket)',
+    'del_refused_rights' => 'Een deel van deze regels staat in een mailbox waarvan u de workflows niet beheert.',
 ];

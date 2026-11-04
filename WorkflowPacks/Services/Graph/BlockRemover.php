@@ -16,7 +16,9 @@ use Modules\WorkflowPacks\Services\Workflows\Bridge;
  * "Delete" of the diagram (Delete key, right click): what a selected block stands for in the Workflows rules, shown
  * before anything is done, then applied in one transaction after a backup that "Undo" restores.
  *
- *   wf:<id> / tpl:<pack>/<key>   the rule (every mailbox the user manages, for a rule of a pack)
+ *   wf:<id> / tpl:<pack>/<key>   the rule (every mailbox the user manages, for a rule of a pack); a rule of a pack
+ *                                deleted from Workflows since ("missing"): its link, so that the block goes away
+ *   fa:<id>:none                 a rule without delay nor action (its only block): the rule
  *   fa:<id>:<i>                  one action of the rule (the rule itself when it has no other action)
  *   ft:<id>                      the delay of the rule (it then runs on the arrival of the e-mail)
  *   fc:<mailbox>:<hash>[:<i>]    one condition of a flow: removed from every rule of the flow
@@ -44,14 +46,24 @@ class BlockRemover
     {
         $ops = [];
         $cleanups = [];
+        $dangling = [];
         $refused = [];
         $jsonActions = (array) Bridge::config('json_value_actions');
         foreach (array_slice(array_values(array_unique(array_map('strval', $keys))), 0, 200) as $key) {
-            if (preg_match('/^wf:(\d+)$/', $key, $m)) {
-                $this->deleteRule($ops, $user, (int) $m[1]);
+            if (preg_match('/^wf:(\d+)$/', $key, $m) || preg_match('/^fa:(\d+):none$/', $key, $m)) {
+                if (!$this->deleteRule($ops, $user, (int) $m[1])) {
+                    $refused[] = __('workflowpacks::messages.del_refused_rights');
+                }
             } elseif (preg_match('#^tpl:([^/]+)/(.+)$#', $key, $m)) {
-                foreach (Link::where('pack_key', $m[1])->where('workflow_key', $m[2])->pluck('workflow_id') as $id) {
-                    $this->deleteRule($ops, $user, (int) $id);
+                foreach (Link::where('pack_key', $m[1])->where('workflow_key', $m[2])->get() as $link) {
+                    if (!Bridge::canEdit($user, $link->mailbox_id)) {
+                        $refused[] = __('workflowpacks::messages.del_refused_rights');
+                    } elseif ($link->workflow_id && Bridge::query()->where('id', $link->workflow_id)->where('mailbox_id', $link->mailbox_id)->exists()) {
+                        $this->deleteRule($ops, $user, (int) $link->workflow_id);
+                    } else {
+                        // the rule was deleted from Workflows: only the link of the pack is left (block "missing")
+                        $dangling[$link->id] = $link;
+                    }
                 }
             } elseif (preg_match('/^fa:(\d+):(\d+)$/', $key, $m)) {
                 $this->add($ops, $user, (int) $m[1], 'actions', (int) $m[2]);
@@ -106,9 +118,15 @@ class BlockRemover
             $lines[] = __('workflowpacks::messages.del_cleanup', ['folder' => $c['folder'], 'delay' => Timer::label($c)]);
         }
         $cleanups = array_values($cleanups);
+        $links = [];
+        foreach ($dangling as $link) {
+            $template = json_decode((string) $link->template, true) ?: [];
+            $lines[] = __('workflowpacks::messages.del_missing', ['rule' => (string) ($template['name'] ?? $link->workflow_key)]);
+            $links[] = $link->only(['id', 'pack_key', 'workflow_key', 'mailbox_id', 'workflow_id', 'template', 'params', 'fingerprint', 'pack_version', 'imported_by']);
+        }
 
-        return ['ops' => $ops, 'cleanups' => $cleanups, 'count' => count($ops) + count($cleanups), 'lines' => $lines, 'warnings' => $warnings,
-            'refused' => array_values(array_unique($refused)), 'token' => $this->token($ops, $cleanups)];
+        return ['ops' => $ops, 'cleanups' => $cleanups, 'links' => $links, 'count' => count($ops) + count($cleanups) + count($links), 'lines' => $lines,
+            'warnings' => $warnings, 'refused' => array_values(array_unique($refused)), 'token' => $this->token($ops, [$cleanups, $links])];
     }
 
     /** @return array ['ok' => bool, 'error' => string, 'backup_id' => int, 'deleted' => int, 'changed' => int] */
@@ -134,11 +152,15 @@ class BlockRemover
                         })->all()];
                 }
                 $backup = Backup::create(['pack_key' => self::BACKUP_KEY, 'user_id' => $user->id, 'content' => json_encode(
-                    ['format' => 'workflowpacks-graph-delete', 'version' => 1, 'created_at' => date('c'), 'workflows' => $saved, 'cleanups' => $plan['cleanups']],
+                    ['format' => 'workflowpacks-graph-delete', 'version' => 1, 'created_at' => date('c'), 'workflows' => $saved, 'cleanups' => $plan['cleanups'], 'links' => $plan['links']],
                     JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)]);
                 $result['backup_id'] = (int) $backup->id;
                 foreach ($plan['cleanups'] as $c) {
                     Retention::remove($c['folder']);
+                    $result['changed']++;
+                }
+                foreach ($plan['links'] as $l) {
+                    Link::where('id', $l['id'])->delete();
                     $result['changed']++;
                 }
 
@@ -199,6 +221,13 @@ class BlockRemover
                         Link::updateOrCreate(['pack_key' => $link['pack_key'], 'workflow_key' => $link['workflow_key'], 'mailbox_id' => $link['mailbox_id']],
                             $link + ['workflow_id' => $wf->id]);
                     }
+                }
+                foreach ((array) ($content['links'] ?? []) as $l) {
+                    if (!Bridge::canEdit($user, $l['mailbox_id'])) {
+                        throw new \RuntimeException(__('workflowpacks::messages.del_no_backup'));
+                    }
+                    unset($l['id']);
+                    Link::updateOrCreate(['pack_key' => $l['pack_key'], 'workflow_key' => $l['workflow_key'], 'mailbox_id' => $l['mailbox_id']], $l);
                 }
                 foreach ((array) ($content['cleanups'] ?? []) as $c) {
                     $error = $user->isAdmin() ? Retention::save($c['folder'], ['number' => $c['number'], 'metric' => $c['metric']], $c['mode'], $user) : 'del_no_backup';
@@ -278,11 +307,15 @@ class BlockRemover
         }, (array) Bridge::attributesOf($wf)['conditions']);
     }
 
+    /** @return bool false when the rule is not there, or in a mailbox the user does not manage */
     protected function deleteRule(array &$ops, $user, $id)
     {
-        if ($this->entry($ops, $user, $id)) {
-            $ops[$id]['delete'] = true;
+        if (!$this->entry($ops, $user, $id)) {
+            return false;
         }
+        $ops[$id]['delete'] = true;
+
+        return true;
     }
 
     protected function add(array &$ops, $user, $id, $what, $index)

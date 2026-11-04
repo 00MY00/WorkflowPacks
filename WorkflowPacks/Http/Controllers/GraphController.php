@@ -24,15 +24,18 @@ class GraphController extends Controller
         return $this->page('graph', []);
     }
 
-    public function data()
+    public function data(Request $request)
     {
         $this->guard();
         if (Checker::blocking()) {
             return response()->json(['error' => implode("\n", Checker::blockingReasons())], 409);
         }
         $user = auth()->user();
+        $layout = (new LayoutStore())->get($user);
+        // the flows (most of the data) only for the flow view and the simulation
+        $flows = (bool) $request->input('flows') || ($layout['settings']['view'] ?? '') === 'flow';
 
-        return response()->json((new GraphBuilder())->build($user) + ['layout' => (new LayoutStore())->get($user)]);
+        return response()->json((new GraphBuilder())->build($user, $flows) + ['layout' => $layout]);
     }
 
     public function saveLayout(Request $request)

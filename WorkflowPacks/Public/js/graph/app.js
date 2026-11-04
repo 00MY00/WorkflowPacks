@@ -72,7 +72,7 @@
 
     App.prototype.load = function (first) {
         var self = this;
-        return this.api.data().then(function (data) {
+        return this.api.data(this.settings.view === 'flow').then(function (data) {
             self.data = data;
             // the overview is always loaded (positions, sizes), the flow view is drawn from it
             self.model = self.view.model = self.overview;
@@ -119,12 +119,18 @@
     // ------------------------------------------------------------------------------------- flow view
 
     /** Overview (mailboxes → rules → destinations) or flow view (one block per instruction), kept per user. */
+    /** @return Promise, resolved once the view is drawn (the flows may have to be loaded first) */
     App.prototype.setView = function (name) {
-        if (name === this.settings.view) { return; }
+        if (name === this.settings.view) { return Promise.resolve(); }
+        var self = this;
         this.saveSettings({ view: name });
         this.syncToolbar();
         this.inspector.hide();
         this.sim.clear();
+        if (name === 'flow' && !(this.data && this.data.flows)) {
+            // first time in the flow view: its data, then drawn by load()
+            return this.load(false).then(function () { self.view.fit(); self.fillGoto(); self.minimap.update(); });
+        }
         if (name === 'flow') {
             this.buildFlow(true);
         } else {
@@ -137,6 +143,7 @@
         }
         this.fillGoto();
         this.minimap.update();
+        return Promise.resolve();
     };
 
     /** The flow view from the last data: blocks, sizes from their text, then a grid where no block overlaps another. */

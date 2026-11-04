@@ -110,8 +110,11 @@
             el('title', {}, warning).textContent = n.warn;
         }
         // resize grip (bottom right corner): drag to enlarge the block, double click for the automatic size
-        var grip = el('path', { class: 'wpg-grip', d: 'M' + (s[0] - 3) + ',' + (s[1] - 15) + 'L' + (s[0] - 3) + ',' + (s[1] - 3) + 'L' + (s[0] - 15) + ',' + (s[1] - 3) + 'Z' }, g);
-        el('title', {}, grip).textContent = this.opts.texts.resize_hint || '';
+        // (not in the flow view: its blocks are placed and sized by flow.js)
+        if (!this.locked) {
+            var grip = el('path', { class: 'wpg-grip', d: 'M' + (s[0] - 3) + ',' + (s[1] - 15) + 'L' + (s[0] - 3) + ',' + (s[1] - 3) + 'L' + (s[0] - 15) + ',' + (s[1] - 3) + 'Z' }, g);
+            el('title', {}, grip).textContent = this.opts.texts.resize_hint || '';
+        }
         if (n.kind === 'rule') {
             // state: active everywhere (full green), nowhere (empty grey), in some mailboxes only (half)
             var st = this.ruleState(n.key);
@@ -134,15 +137,26 @@
             // larger area for a finger (active on a selected block of a touch screen only, graph.css)
             el('circle', { class: 'wpg-handle wpg-touch-hit', cx: 0, cy: s[1] / 2, r: 22 }, g);
         }
-        el('rect', { class: 'wpg-grip wpg-touch-hit', x: s[0] - 30, y: s[1] - 30, width: 34, height: 34 }, g);
-        // "+" on the right of a selected block: what can follow it (next.js), like the arrows of draw.io
-        if (WPGraph.next && WPGraph.next.can(n)) {
+        if (!this.locked) { el('rect', { class: 'wpg-grip wpg-touch-hit', x: s[0] - 30, y: s[1] - 30, width: 34, height: 34 }, g); }
+    };
+
+    /**
+     * "+" on the right of the selected blocks: what can follow them (next.js), like the arrows of draw.io. Drawn on the
+     * selected blocks only (not on every block: large diagrams stay light).
+     */
+    View.prototype.drawNext = function () {
+        Array.prototype.forEach.call(this.nodeLayer.querySelectorAll('.wpg-next'), function (old) { old.parentNode.removeChild(old); });
+        Object.keys(this.selected).forEach(function (key) {
+            var n = this.model.nodes[key];
+            var g = this.nodeLayer.querySelector('[data-key="' + (window.CSS && CSS.escape ? CSS.escape(key) : key) + '"]');
+            if (!n || !g || !WPGraph.next || !WPGraph.next.can(n)) { return; }
+            var s = L.size(n);
             var next = el('g', { class: 'wpg-next', transform: 'translate(' + (s[0] + 20) + ',' + (s[1] / 2) + ')' }, g);
             el('title', {}, next).textContent = this.opts.texts.next_plus || '';
             el('circle', { class: 'wpg-next-hit', r: 22 }, next);
             el('circle', { class: 'wpg-next-dot', r: 11 }, next);
             el('path', { class: 'wpg-next-plus', d: 'M-5,0H5M0,-5V5' }, next);
-        }
+        }, this);
     };
 
     /** Rule enabled in how many of its mailboxes (rules deleted from Workflows are not counted). */
@@ -235,6 +249,7 @@
             g.classList.toggle('lit', on);
             g.classList.toggle('selected', this.selectedEdge !== null && String(this.selectedEdge) === g.getAttribute('data-edge'));
         }, this);
+        this.drawNext();
     };
 
     View.prototype.moveNodes = function (keys) {

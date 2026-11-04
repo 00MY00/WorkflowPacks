@@ -105,7 +105,9 @@ class FlowViewTest extends TestCase
         $a = $this->mailbox('A');
         $admin = $this->user([], true);
         list($note, $close, $later) = $this->invoiceFlow($a);
-        $data = $this->actingAs($admin)->getJson(route('workflowpacks.graph.data'))->assertStatus(200)->json();
+        // the overview does not get the flows (most of the data); asked, or with the flow view saved, it does
+        $this->assertNull($this->actingAs($admin)->getJson(route('workflowpacks.graph.data'))->json()['flows']);
+        $data = $this->actingAs($admin)->getJson(route('workflowpacks.graph.data', ['flows' => 1]))->assertStatus(200)->json();
         $flows = $data['flows'][$a->id]['flows'];
         $this->assertCount(1, $flows, 'same conditions: one flow');
         $this->assertCount(2, $flows[0]['lanes'], 'one lane without test, one "not replied"');
@@ -190,7 +192,9 @@ class FlowViewTest extends TestCase
     {
         $admin = $this->user([], true);
         $this->actingAs($admin)->postJson(route('workflowpacks.graph.layout'), ['positions' => [], 'settings' => ['view' => 'flow']])->assertStatus(200);
-        $this->assertSame('flow', $this->actingAs($admin)->getJson(route('workflowpacks.graph.data'))->json()['layout']['settings']['view']);
+        $saved = $this->actingAs($admin)->getJson(route('workflowpacks.graph.data'))->json();
+        $this->assertSame('flow', $saved['layout']['settings']['view']);
+        $this->assertNotNull($saved['flows'], 'flow view saved: the flows come with the first load');
         $this->actingAs($admin)->postJson(route('workflowpacks.graph.layout'), ['positions' => [], 'settings' => ['view' => 'other']])->assertStatus(422);
         $page = $this->actingAs($admin)->get(route('workflowpacks.graph'));
         $this->seeIn($page, 'data-act="view-flow"');
