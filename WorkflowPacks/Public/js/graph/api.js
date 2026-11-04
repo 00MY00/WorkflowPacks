@@ -48,7 +48,8 @@
         return this.urls[name].replace('__ID__', encodeURIComponent(id));
     };
 
-    Api.prototype.data = function () { return this.request('GET', this.urls.data); };
+    // flows: the data of the flow view too (the server adds them anyway when the flow view is the saved one)
+    Api.prototype.data = function (flows) { return this.request('GET', this.urls.data + (flows ? (this.urls.data.indexOf('?') < 0 ? '?' : '&') + 'flows=1' : '')); };
     Api.prototype.saveLayout = function (positions, settings, replace, sizes) {
         return this.request('POST', this.urls.layout, { positions: positions, settings: settings || {}, replace: !!replace, sizes: sizes || {} });
     };

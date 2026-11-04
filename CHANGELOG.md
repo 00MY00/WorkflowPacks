@@ -4,6 +4,23 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [2.9.2] - 2026-11-04
+
+### Corrigé
+- **Supprimer le bloc d'une règle de pack supprimée dans Workflows** (bloc « manquante ») affichait « Rien à
+  supprimer » : son lien est maintenant retiré, le bloc disparaît (avec « Annuler la suppression »). Une règle sans
+  délai ni action (son seul bloc dans la vue flux) se supprime aussi. Une règle d'une boîte non gérée donne un
+  message sur les droits au lieu de « Rien à supprimer ».
+- Une règle de pack supprimée dans Workflows restait invisible dans le schéma quand sa boîte n'avait plus aucune
+  règle.
+
+### Amélioré
+- **Chargement du schéma plus rapide** (mesuré sur 14 boîtes, 284 règles) :
+  - serveur : 600 → 100 ms, 563 → 26 requêtes (réglages des dossiers et noms des personnes lus une fois) ;
+  - les flux (71 % des données) ne sont envoyés que pour la vue flux et la simulation ;
+  - navigateur : mini-carte en un tracé par type de bloc, « + » dessiné seulement sur le bloc sélectionné, pas de
+    poignées inutiles en vue flux (1341 blocs : 1093 → 820 ms).
+
 ## [2.9.1] - 2026-11-04
 
 ### Corrigé

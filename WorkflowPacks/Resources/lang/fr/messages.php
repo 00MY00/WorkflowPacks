@@ -476,4 +476,6 @@ return [
     'del_no_backup'         => 'Sauvegarde introuvable.',
     'del_cleanup'         => 'Arrêter le nettoyage automatique du dossier « :folder » (:delay)',
     'del_refused_cleanup' => 'Le nettoyage d\'un dossier ne peut être retiré que par un administrateur.',
+    'del_missing'        => 'Retirer « :rule » du schéma : cette règle n\'existe plus dans Workflows (lien du pack)',
+    'del_refused_rights' => 'Une partie de ces règles est dans une boîte dont vous ne gérez pas les workflows.',
 ];

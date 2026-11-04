@@ -74,7 +74,7 @@ class DeleteBlocksTest extends TestCase
         $this->assertCount(2, $later->fresh()->conditions);
 
         // the condition block "status" of the flow: removed from both rules
-        $flows = $this->actingAs($admin)->getJson(route('workflowpacks.graph.data'))->json()['flows'][$a->id]['flows'];
+        $flows = $this->actingAs($admin)->getJson(route('workflowpacks.graph.data', ['flows' => 1]))->json()['flows'][$a->id]['flows'];
         $blocks = array_column($flows[0]['blocks'], 'family', 'key');
         $statusKey = array_search('status-pending', $blocks, true);
         $this->assertNotFalse($statusKey);
@@ -134,6 +134,33 @@ class DeleteBlocksTest extends TestCase
         $this->actingAs($admin)->postJson(route('workflowpacks.graph.delete_undo'), ['backup_id' => $done['backup_id']])->assertStatus(200);
         $back = \Modules\WorkflowPacks\Services\Imap\Retention::forFolder('Discussions');
         $this->assertSame([30, 'd', 'trash'], [(int) $back->number, $back->metric, $back->mode]);
+    }
+
+    public function testABlockLeftByARuleDeletedFromWorkflowsGoesAway()
+    {
+        $a = $this->mailbox('A');
+        $admin = $this->user([], true);
+        $this->import($this->pack([$this->rule('r1')]), [$a], $admin);
+        // deleted in Workflows itself: the diagram still shows the rule of the pack ("missing")
+        $this->workflows($a)->first()->delete();
+        $nodes = array_column($this->actingAs($admin)->getJson(route('workflowpacks.graph.data'))->json()['nodes'], 'key');
+        $this->assertContains('tpl:test-pack/r1', $nodes);
+
+        list($plan, $done) = $this->remove($admin, ['tpl:test-pack/r1']);
+        $this->assertSame(1, $plan['count']);
+        $this->assertStringContainsString('Règle r1', $plan['lines'][0]);
+        $this->assertTrue($done['ok']);
+        $nodes = array_column($this->actingAs($admin)->getJson(route('workflowpacks.graph.data'))->json()['nodes'], 'key');
+        $this->assertNotContains('tpl:test-pack/r1', $nodes, 'the block went away');
+
+        $this->actingAs($admin)->postJson(route('workflowpacks.graph.delete_undo'), ['backup_id' => $done['backup_id']])->assertStatus(200);
+        $this->assertSame(1, Link::where('pack_key', 'test-pack')->where('workflow_key', 'r1')->count());
+
+        // the only block of a rule without delay nor action (flow view)
+        $bare = $this->workflow($a, 'Vide', [[['type' => 'subject', 'operator' => 'contains', 'value' => 'x']]], []);
+        list(, $done) = $this->remove($admin, ['fa:'.$bare->id.':none']);
+        $this->assertTrue($done['ok']);
+        $this->assertNull(Workflow::find($bare->id));
     }
 
     public function testRightsAndAChangeInTheMeantime()

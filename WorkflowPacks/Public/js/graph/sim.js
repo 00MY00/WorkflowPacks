@@ -153,13 +153,14 @@
         var self = this, app = this.app;
         app.api.simulate(input).then(function (result) {
             self.closeForm();
-            // the path is drawn in the flow view (switching view clears an older result)
-            if (app.settings.view !== 'flow') { app.setView('flow'); }
-            self.clear();
-            self.result = result;
-            self.mailboxId = parseInt(input.mailbox_id, 10);
-            self.panel();
-            self.animate();
+            // the path is drawn in the flow view (switching view clears an older result, and may load the flows)
+            return app.setView('flow').then(function () {
+                self.clear();
+                self.result = result;
+                self.mailboxId = parseInt(input.mailbox_id, 10);
+                self.panel();
+                self.animate();
+            });
         }).catch(function (e) { app.toast(e.message, 'error'); });
     };
 

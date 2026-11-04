@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 2.9.1
+# Résultats des tests — Workflow Packs 2.9.2
 
 Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,14 @@ Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 2.9.2 — suppression de tous les blocs, schéma plus rapide
+
+| Série | Résultat |
+|---|---|
+| Intégration (105 tests) | `DeleteBlocksTest` (+1) : règle de pack supprimée dans Workflows → bloc « manquante » visible même sans autre règle, supprimé (lien retiré, bloc disparu), « Annuler » le remet ; bloc unique d'une règle sans délai ni action → règle supprimée. `FlowViewTest` : flux absents des données de la vue d'ensemble, présents sur demande ou avec la vue flux enregistrée |
+| Mesures (14 boîtes, 284 règles, pack d'exemple + règles locales) | Données du schéma : 594 → ~100 ms, 563 → 26 requêtes ; vue d'ensemble sans les flux (459 → ~130 Ko) ; navigateur, vue flux 1341 blocs : 1093 → 820 ms jusqu'à l'affichage |
+| Navigateur | « + » d'un dossier : dessiné sur le bloc sélectionné seulement, menu et éditeur inchangés ; aucune erreur |
 
 ## 2.9.1 — supprimer le nettoyage d'un dossier
 

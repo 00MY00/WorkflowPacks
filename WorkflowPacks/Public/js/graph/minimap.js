@@ -41,18 +41,21 @@
         var g = document.createElementNS(NS, 'g');
         g.setAttribute('transform', 'translate(' + (pad - box[0] * scale) + ',' + (pad - box[1] * scale) + ') scale(' + scale + ')');
         this.svg.appendChild(g);
+        // one path per kind of block (not one element per block: large diagrams stay fast)
+        var paths = {};
         nodes.forEach(function (n) {
             var p = model.pos[n.key];
             if (!p) { return; }
             var s = L.size(n);
-            var r = document.createElementNS(NS, 'rect');
-            r.setAttribute('x', p[0]);
-            r.setAttribute('y', p[1]);
-            r.setAttribute('width', s[0]);
-            r.setAttribute('height', s[1]);
-            r.setAttribute('class', 'wpg-mini kind-' + n.kind + (this.view.selected[n.key] ? ' selected' : ''));
-            g.appendChild(r);
+            var cls = 'wpg-mini kind-' + n.kind + (this.view.selected[n.key] ? ' selected' : '');
+            paths[cls] = (paths[cls] || '') + 'M' + p[0] + ' ' + p[1] + 'h' + s[0] + 'v' + s[1] + 'h' + (-s[0]) + 'z';
         }, this);
+        Object.keys(paths).forEach(function (cls) {
+            var path = document.createElementNS(NS, 'path');
+            path.setAttribute('d', paths[cls]);
+            path.setAttribute('class', cls);
+            g.appendChild(path);
+        });
         // visible area of the main view
         var vr = this.view.svg.getBoundingClientRect(), t = this.view.t;
         var frame = document.createElementNS(NS, 'rect');

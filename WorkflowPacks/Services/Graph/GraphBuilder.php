@@ -38,7 +38,14 @@ class GraphBuilder
     /** @var \Illuminate\Support\Collection|null automatic clean-up settings, by folder */
     protected $retention = null;
 
-    public function build($user)
+    /** @var array|null [prefix, warning] of the e-mail folder blocks, read once per build (not once per block) */
+    protected $imap = null;
+
+    /** @var array user id => name, looked up once per build */
+    protected $userNames = [];
+
+    /** @param bool $withFlows the flows too (flow view, simulation): most of the data, built only when needed */
+    public function build($user, $withFlows = true)
     {
         $jsonActions = (array) Bridge::config('json_value_actions');
         $mailboxes = Bridge::editableMailboxes($user);
@@ -55,7 +62,8 @@ class GraphBuilder
         }
 
         $workflows = $mailboxIds ? Bridge::query()->whereIn('mailbox_id', $mailboxIds)->orderBy('sort_order')->get() : collect();
-        $links = $workflows->isNotEmpty() ? Link::whereIn('mailbox_id', $mailboxIds)->get() : collect();
+        // the links too when no rule is left: a rule of a pack deleted from Workflows stays visible ("missing")
+        $links = $mailboxIds ? Link::whereIn('mailbox_id', $mailboxIds)->get() : collect();
         $linkByWorkflow = $links->keyBy('workflow_id');
         $packs = Pack::whereIn('pack_key', $links->pluck('pack_key')->unique()->all() ?: [''])->get()->keyBy('pack_key');
         $flowRules = [];
@@ -153,7 +161,17 @@ class GraphBuilder
             }
         }
 
-        return ['nodes' => array_values($nodes), 'edges' => $edges, 'flows' => $this->flows($mailboxes, $flowRules)];
+        return ['nodes' => array_values($nodes), 'edges' => $edges, 'flows' => $withFlows ? $this->flows($mailboxes, $flowRules) : null];
+    }
+
+    protected function userName($id)
+    {
+        if (!array_key_exists($id, $this->userNames)) {
+            $user = \App\User::find($id);
+            $this->userNames[$id] = $user ? trim($user->getFullName()) : '#'.$id;
+        }
+
+        return $this->userNames[$id];
     }
 
     /** Key of the block of an e-mail folder ("dest:imap:…"); its clean-up block is "dest:clean:imap:…". */
@@ -246,8 +264,7 @@ class GraphBuilder
             } elseif ($type === 'delete' || $type === 'delete_forever') {
                 $out[] = ['key' => 'dest:'.$type, 'kind' => 'dest', 'dest' => 'deleted', 'label' => __('workflowpacks::messages.dest_'.$type), 'sub' => __('workflowpacks::messages.dest_folder'), 'action' => $type];
             } elseif ($type === 'assign' && is_scalar($value)) {
-                $user = (string) $value === '-1' ? null : \App\User::find((int) $value);
-                $label = (string) $value === '-1' ? __('workflowpacks::messages.dest_unassigned') : ((string) $value === '-10' ? __('workflowpacks::messages.dest_current_user') : ($user ? trim($user->getFullName()) : '#'.$value));
+                $label = (string) $value === '-1' ? __('workflowpacks::messages.dest_unassigned') : ((string) $value === '-10' ? __('workflowpacks::messages.dest_current_user') : $this->userName((int) $value));
                 $out[] = ['key' => 'dest:assign:'.preg_replace('/[^0-9-]/', '', (string) $value), 'kind' => 'dest', 'dest' => 'person', 'label' => $label, 'sub' => __('workflowpacks::messages.dest_assigned'), 'action' => $type];
             } elseif ($type === 'move' && is_scalar($value) && preg_match('/^\d+$/', (string) $value)) {
                 if (isset($nodes['mb:'.$value])) {
@@ -278,8 +295,10 @@ class GraphBuilder
      */
     protected function imapDestination($value, $type)
     {
-        $prefix = ImapFolders::prefix();
-        $warn = ImapFolders::enabled() ? '' : __('workflowpacks::messages.dest_imap_off');
+        if ($this->imap === null) {
+            $this->imap = [ImapFolders::prefix(), ImapFolders::enabled() ? '' : __('workflowpacks::messages.dest_imap_off')];
+        }
+        list($prefix, $warn) = $this->imap;
         if ($this->retention === null) {
             $this->retention = \Modules\WorkflowPacks\Services\Imap\Retention::all()->keyBy('folder');
         }
