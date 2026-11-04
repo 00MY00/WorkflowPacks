@@ -4,6 +4,17 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [2.6.0] - 2026-11-04
+
+### Ajouté
+- **Vue flux : un bloc par condition**, au lieu d'un seul bloc « Conditions » : statut du ticket (cercle de la
+  couleur du statut : Actif, En attente, Fermé, Spam), assigné à (silhouette), sujet / texte / destinataire (lignes de
+  texte), client (arobase), nouveau / réponse (boîte de réception), tag (étiquette), date (sablier), autre module
+  (entonnoir). Les blocs de condition ont un contour pointillé, les actions un contour plein. La simulation allume
+  chaque bloc de condition traversé. Toujours aucun chevauchement (vérifié sur 200 jeux de tailles aléatoires).
+- **« + » d'un bloc de condition** : « Si “En attente” depuis 7 jours : marquer comme fermé » (bloc de statut puis
+  minuteur).
+
 ## [2.5.0] - 2026-11-04
 
 ### Modifié

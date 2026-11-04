@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 2.5.0
+# Résultats des tests — Workflow Packs 2.6.0
 
 Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,15 @@ Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 2.6.0 — vue flux : un bloc par condition
+
+| Série | Résultat |
+|---|---|
+| Unitaires PHP (50) | `FlowTest` : un bloc par condition (sujet, statut « En attente », assigné à, client), un bloc pour un groupe OU, familles, chemin de simulation passant par chaque bloc |
+| JavaScript | `flow.test.js` : chaîne boîte → condition → condition → condition → minuteur → action, famille du bloc de statut ; aucun chevauchement sur 200 jeux de tailles aléatoires, chaîne de gauche à droite. `next.test.js` : « + » d'un bloc de condition → statut « En attente » + minuteur 7 jours → fermé |
+| Intégration (99 tests, 799 assertions, instance neuve) | inchangé, vert |
+| Navigateur | Flux « commande » : Sujet → Statut = En attente (cercle orange) → Client (arobase) → voies « Après 7 jours → Fermé » et « Assigné : non → Non assigné » ; 38 blocs, 0 chevauchement ; simulation inchangée (5 règles appliquées) ; tablette et téléphone sans défilement horizontal |
 
 ## 2.5.0 — export simplifié (mettre à jour un pack)
 

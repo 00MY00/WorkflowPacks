@@ -53,6 +53,16 @@ test('Flux : règles aux mêmes conditions = un flux, délais = blocs ordonnés,
     check(strpos($lanes[1]['key'], 'fb:4:') === 0 && strpos($lanes[1]['label'], 'wp_assigned') !== false, 'voie de la branche');
     same([13], array_column($lanes[1]['steps'], 'workflow_id'));
     check(strpos($flows[1]['conditions'][0], 'flow_or') !== false, 'voie OU sur une ligne');
+    same([['key' => $flows[0]['key'], 'family' => 'text']], array_map(function ($b) { return ['key' => $b['key'], 'family' => $b['family']]; }, $flows[0]['blocks']));
+    same('text', $flows[1]['blocks'][0]['family'], 'un bloc pour la voie OU');
+
+    // one block per condition: subject, status of the ticket, assignee
+    $many = (new FlowBuilder(flow_labels()))->build(4, [['id' => 7, 'name' => 'x', 'active' => true, 'actions' => [], 'conditions' => [
+        [['type' => 'subject', 'operator' => 'contains', 'value' => 'a']], [['type' => 'status', 'operator' => 'equal', 'value' => '2']],
+        [['type' => 'user', 'operator' => 'equal', 'value' => '5']], [['type' => 'customer_email', 'operator' => 'contains', 'value' => 'b']]]]]);
+    same(['text', 'status-pending', 'person', 'customer'], array_column($many[0]['blocks'], 'family'));
+    $key = $many[0]['key'];
+    same(['mb:4', $key, $key.':1', $key.':2', $key.':3'], FlowBuilder::paths(4, $many)[7], 'the simulation lights every condition block');
 
     $paths = FlowBuilder::paths(4, $flows);
     same(['mb:4', $flows[0]['key'], 'ft:11', 'fa:11:0'], $paths[11]);

@@ -92,7 +92,10 @@ test('flow view: a new rule keeps the conditions of the flow and of the branch, 
     assert.ok(N.can(cond));
     assert.ok(!N.can({ kind: 'step', dest: 'branch' }), 'a branch alone: through its steps');
     const fromCond = N.suggest(cond, { catalog: flowCatalog, names });
-    assert.deepStrictEqual(ids(fromCond), ['flow_noreply', 'flow_unassigned', 'flow_delay_close', 'flow_delay_folder']);
+    assert.deepStrictEqual(ids(fromCond), ['flow_status_close', 'flow_noreply', 'flow_unassigned', 'flow_delay_close', 'flow_delay_folder']);
+    assert.deepStrictEqual(fromCond[0].run.editor.rule.conditions.all.slice(-2), [
+        { type: 'status', operator: 'equal', value: '2' }, { type: 'waiting', operator: 'longer', value: { number: 7, metric: 'd' } }]);
+    fromCond.shift();
     assert.deepStrictEqual(fromCond[0].run.editor.rule.conditions.all, [
         { type: 'subject', operator: 'contains', value: 'facture' },
         { any: [{ type: 'to', operator: 'equal', value: 'a' }, { type: 'to', operator: 'equal', value: 'b' }] },

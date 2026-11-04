@@ -313,6 +313,13 @@
 .wpg-node.dest-send { --c: var(--c-send); }
 .wpg-node.dest-other { --c: var(--c-other); }
 .wpg-node.dest-active { --c: var(--c-ok); }
+/* condition blocks: the colour of what they look at (status of the ticket, person, customer, tag, date) */
+.wpg-node.cf-status-active { --c: var(--c-ok); } .wpg-node.cf-status-pending { --c: var(--c-pending); }
+.wpg-node.cf-status-closed { --c: var(--c-closed); } .wpg-node.cf-status-spam { --c: var(--c-spam); }
+.wpg-node.cf-person { --c: var(--c-person); } .wpg-node.cf-customer { --c: var(--c-mailbox); } .wpg-node.cf-tag { --c: var(--c-tag); }
+.wpg-node.cf-date { --c: var(--c-timer); } .wpg-node.cf-reply { --c: var(--c-branch); } .wpg-node.cf-new { --c: var(--c-imap); }
+/* a condition is a test: its outline is dotted, an action's is plain */
+.wpg-node.dest-cond .wpg-box { stroke: var(--c); stroke-dasharray: 2 3; }
 /* a test that splits the flow: dashed outline; a delay: rounded like a clock */
 .wpg-node.dest-branch .wpg-box { stroke: var(--c); stroke-dasharray: 5 3; }
 .wpg-node.dest-timer .wpg-box { stroke: var(--c); }

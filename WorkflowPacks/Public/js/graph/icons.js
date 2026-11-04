@@ -39,6 +39,8 @@
         send:     ['M20.5 3.5 3.5 10.5l6.5 2.5 2.5 6.5z', 'M20.5 3.5 10 13'],
         dots:     ['M6 12h.01', 'M12 12h.01', 'M18 12h.01'],
         play:     ['M7 4.5v15l12-7.5z'],
+        text:     ['M5 6.5h14', 'M5 10.5h14', 'M5 14.5h9', 'M5 18.5h6'],
+        at:       ['M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7z', 'M15.5 12v1.5a2.5 2.5 0 0 0 5 0V12a8.5 8.5 0 1 0-3.3 6.7'],
         flow:     ['M3.5 9h5v6h-5z', 'M15.5 9h5v6h-5z', 'M8.5 12h7', 'M13 9.5l2.5 2.5-2.5 2.5'],
         network:  ['M5 5.5a1.5 1.5 0 1 0 0 .01', 'M19 5.5a1.5 1.5 0 1 0 0 .01', 'M12 18.5a1.5 1.5 0 1 0 0 .01', 'M6.3 6.8 10.8 17', 'M17.7 6.8 13.2 17', 'M6.5 5.5h11']
     };
@@ -48,6 +50,11 @@
         if (node.kind === 'mailbox') { return 'inbox'; }
         if (node.kind === 'pack') { return 'package'; }
         if (node.kind === 'rule') { return node.type === 'manual' ? 'hand' : 'zap'; }
+        if (node.kind === 'step' && node.dest === 'cond') {
+            var f = node.cond_family || 'all';
+            if (f.indexOf('status-') === 0) { return f.slice(7); }
+            return { status: 'active', person: 'person', reply: 'send', text: 'text', customer: 'at', new: 'inbox', tag: 'tag', date: 'hourglass' }[f] || 'filter';
+        }
         if (node.kind === 'step') {
             return { cond: 'filter', branch: 'branch', timer: 'hourglass', note: 'note', send: 'send', other: 'dots', imap: 'folder', closed: 'closed',
                 pending: 'pending', active: 'active', spam: 'spam', deleted: 'deleted', person: 'person', tag: 'tag', mailbox: 'move' }[node.dest] || 'dots';

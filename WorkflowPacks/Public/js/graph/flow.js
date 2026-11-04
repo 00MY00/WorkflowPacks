@@ -1,7 +1,7 @@
 /*
  * Workflow Packs — diagram, flow view: one block per instruction (pure functions, no DOM: tests/js/flow.test.js).
  *
- *   mailbox → [conditions] → [branch: assigned? replied?] → [delay] → [action] → [action] → [delay] → [action] …
+ *   mailbox → [condition] → [condition] … → [branch: assigned? replied?] → [delay] → [action] → [delay] → [action] …
  *
  * graph()  the flows of the server (Services/Flow/FlowBuilder) -> nodes and links of the diagram's model
  * layout() positions: a grid of rows (one per lane) and columns (one per step), each cell as large as its largest
@@ -24,7 +24,7 @@
     /**
      * @param flows     { mailboxId: { flows: [...], paths: {...} } } (graph data "flows")
      * @param mailboxes [mailbox nodes of the overview] (label, sub, id)
-     * @return { nodes: [...], edges: [...], sections: [{ mailbox, flows: [{ cond, lanes: [[keys…]] }] }] }
+     * @return { nodes: [...], edges: [...], sections: [{ mailbox, flows: [{ conds: [keys…], lanes: [[keys…]] }] }] }
      */
     function graph(flows, mailboxes) {
         var nodes = [], edges = [], sections = [];
@@ -38,12 +38,16 @@
             nodes.push({ key: mbKey, kind: 'mailbox', id: mb.id, label: mb.label, sub: mb.sub });
             var section = { mailbox: mbKey, flows: [] };
             ((flows[mb.id] || {}).flows || []).forEach(function (flow) {
-                nodes.push({ key: flow.key, kind: 'step', dest: 'cond', label: flow.conditions[0] || '', sub: flow.conditions.slice(1).join(' · '),
-                    mailbox: mb.id, flow: flow });
-                link(mbKey, flow.key);
-                var block = { cond: flow.key, lanes: [] };
+                // one block per condition, in a chain: mailbox → condition → condition …
+                var block = { conds: [], lanes: [] }, last = mbKey;
+                (flow.blocks || [{ key: flow.key, family: 'all', label: flow.conditions[0] || '' }]).forEach(function (c) {
+                    nodes.push({ key: c.key, kind: 'step', dest: 'cond', cond_family: c.family, label: c.label, sub: '', mailbox: mb.id, flow: flow });
+                    link(last, c.key);
+                    block.conds.push(c.key);
+                    last = c.key;
+                });
                 flow.lanes.forEach(function (lane) {
-                    var row = [], prev = flow.key;
+                    var row = [], prev = last;
                     if (lane.key) {
                         nodes.push({ key: lane.key, kind: 'step', dest: 'branch', label: lane.label, sub: '', mailbox: mb.id, flow: flow, lane: lane });
                         link(prev, lane.key);
@@ -80,8 +84,9 @@
     }
 
     /**
-     * Positions { key: [x, y] }. Columns: 0 mailbox, 1 conditions, 2… the steps of a lane. Rows: one per lane. A
-     * spanning block (mailbox, conditions) is centred on its rows, and its rows grow when it is taller than them.
+     * Positions { key: [x, y] }. Columns: 0 mailbox, then the conditions of the flow (one column each), then the steps
+     * of a lane. Rows: one per lane. A spanning block (mailbox, condition) is centred on the rows of its flow, and the
+     * rows grow when it is taller than them.
      *
      * @param g    graph()
      * @param size function (node) -> [w, h]
@@ -92,16 +97,18 @@
         var dim = function (key) { return size(byKey[key]); };
 
         // column widths, over every mailbox (same columns for all: tidy)
-        var widths = [0, 0];
+        var widths = [0];
+        var grow = function (i, w) { widths[i] = Math.max(widths[i] || 0, w); };
         g.sections.forEach(function (s) {
-            widths[0] = Math.max(widths[0], dim(s.mailbox)[0]);
+            grow(0, dim(s.mailbox)[0]);
             s.flows.forEach(function (f) {
-                widths[1] = Math.max(widths[1], dim(f.cond)[0]);
+                f.conds.forEach(function (key, i) { grow(i + 1, dim(key)[0]); });
                 f.lanes.forEach(function (row) {
-                    row.forEach(function (key, i) { widths[i + 2] = Math.max(widths[i + 2] || 0, dim(key)[0]); });
+                    row.forEach(function (key, i) { grow(i + 1 + f.conds.length, dim(key)[0]); });
                 });
             });
         });
+        for (var w = 0; w < widths.length; w++) { widths[w] = widths[w] || 0; }
         var xs = [];
         widths.reduce(function (x, w, i) { xs[i] = x; return x + w + GAP_X; }, 0);
 
@@ -110,16 +117,16 @@
         g.sections.forEach(function (s) {
             var top = y;
             s.flows.forEach(function (f) {
-                var flowTop = y;
+                var flowTop = y, k = f.conds.length;
                 f.lanes.forEach(function (row) {
                     var h = row.reduce(function (m, key) { return Math.max(m, dim(key)[1]); }, 0);
-                    row.forEach(function (key, i) { pos[key] = [xs[i + 2], y + (h - dim(key)[1]) / 2]; });
+                    row.forEach(function (key, i) { pos[key] = [xs[i + 1 + k], y + (h - dim(key)[1]) / 2]; });
                     y += h + GAP_Y;
                 });
-                var ch = dim(f.cond)[1];
-                // the conditions block is never taller than its rows: else its rows grow
+                // a condition block is never taller than the rows of its flow: else the rows grow
+                var ch = f.conds.reduce(function (m, key) { return Math.max(m, dim(key)[1]); }, 0);
                 y = Math.max(y, flowTop + ch + GAP_Y);
-                pos[f.cond] = [xs[1], flowTop + (y - GAP_Y - flowTop - ch) / 2];
+                f.conds.forEach(function (key, i) { pos[key] = [xs[i + 1], flowTop + (y - GAP_Y - flowTop - dim(key)[1]) / 2]; });
                 y += GAP_FLOW - GAP_Y;
             });
             if (!s.flows.length) { y += GAP_Y; }
