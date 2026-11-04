@@ -70,7 +70,11 @@
 
     // ------------------------------------------------------------------------------------------------ data
 
-    App.prototype.load = function (first) {
+    /**
+     * @param first first load of the page
+     * @param near  key of the block a new step was added from: the new blocks go on its right (layout.beside)
+     */
+    App.prototype.load = function (first, near) {
         var self = this;
         return this.api.data(this.settings.view === 'flow').then(function (data) {
             self.data = data;
@@ -92,6 +96,13 @@
             } else {
                 var before = Object.keys(self.model.pos);
                 L.placeNew(self.model.pos, nodes, self.model.edges);
+                // added from a block: on its right, in order; only the new blocks step aside, the others stay
+                var added = nodes.filter(function (n) { return before.indexOf(n.key) < 0; });
+                if (near && self.model.nodes[near] && added.length) {
+                    added.sort(function (a, b) { return (a.kind === 'rule' ? 0 : 1) - (b.kind === 'rule' ? 0 : 1); });
+                    L.beside(self.model.pos, self.model.nodes[near], added, nodes);
+                    L.separate(self.model.pos, nodes, 120, added.map(function (n) { return n.key; }));
+                }
                 // blocks now larger than when they were placed (they fit their text): no block over another
                 self.unoverlap([]);
                 var fresh = {};
@@ -297,6 +308,7 @@
         on('[data-act="view-flow"]', 'click', function () { self.setView('flow'); });
         on('[data-act="simulate"]', 'click', function () { self.sim.open(); });
         on('[data-act="add-block"]', 'click', function () { self.addBlock(this); });
+        on('[data-act="fullscreen"]', 'click', function () { self.fullPage(); });
         on('#wpg-layout', 'change', function () { self.arrange(this.value); });
         on('#wpg-edges', 'change', function () { self.view.edgeStyle = this.value; self.view.render(); self.saveSettings({ edges: this.value }); });
         on('#wpg-packs', 'change', function () { self.view.showPacks = this.checked; self.view.render(); self.minimap.update(); self.saveSettings({ packs: this.checked }); });
@@ -345,7 +357,11 @@
                 var keys = Object.keys(self.view.selected);
                 if (keys.length) { e.preventDefault(); self.deleteBlocks(keys); }
             }
-            else if (e.key === 'Escape') { self.clearFocus(); self.clearSelection(); }
+            else if (e.key === 'Escape') {
+                // Escape: first the selection, then the full page
+                if (!Object.keys(self.view.selected).length && self.root.classList.contains('is-full')) { self.fullPage(false); }
+                self.clearFocus(); self.clearSelection();
+            }
         });
     };
 
@@ -444,6 +460,21 @@
         if (!key) { return; }
         var r = stage.getBoundingClientRect(), sheet = this.inspector.panel.getBoundingClientRect().top;
         this.view.reveal(key, Math.max(0.2, Math.min(1, (sheet - r.top) / r.height)));
+    };
+
+    /** "Enlarge": the diagram over the whole page; "Reduce" (or Escape) back. */
+    App.prototype.fullPage = function (on) {
+        var full = on === undefined ? !this.root.classList.contains('is-full') : !!on;
+        this.root.classList.toggle('is-full', full);
+        document.body.classList.toggle('wpg-full-open', full);
+        var button = this.root.querySelector('[data-act="fullscreen"]');
+        if (button) {
+            button.innerHTML = WPGraph.icons.html(full ? 'shrink' : 'expand') + '<span></span>';
+            button.lastChild.textContent = full ? this.texts.reduce : this.texts.enlarge;
+            button.title = full ? this.texts.reduce : this.texts.enlarge;
+            button.setAttribute('aria-pressed', full ? 'true' : 'false');
+        }
+        this.minimap.update();
     };
 
     /**

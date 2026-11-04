@@ -328,6 +328,8 @@
 
     Next.prototype.run = function (node, mailbox, edge, run) {
         var app = this.app;
+        // the new blocks go on the right of this one (of its rule, from the flow view)
+        var origin = node.kind !== 'step' ? node.key : (app.overview.edges.filter(function (e) { return e.kind === 'applies' && e.workflow_id === node.workflow_id; })[0] || {}).from;
         if (run.retention) {
             // the clean-up of the folder, in its panel (its own block when it is already set)
             var clean = 'dest:clean:' + node.key.slice('dest:'.length);
@@ -339,13 +341,13 @@
             return;
         }
         if (run.edit) {
-            app.editor.open({ mailboxId: mailbox.id, workflowId: run.edit });
+            app.editor.open({ mailboxId: mailbox.id, workflowId: run.edit, origin: origin });
             return;
         }
         if (run.editor.addAction) {
-            app.editor.open({ mailboxId: mailbox.id, workflowId: run.editor.workflowId || edge.workflow_id, addAction: run.editor.addAction });
+            app.editor.open({ mailboxId: mailbox.id, workflowId: run.editor.workflowId || edge.workflow_id, addAction: run.editor.addAction, origin: origin });
         } else {
-            app.editor.open({ mailboxId: mailbox.id, rule: run.editor.rule });
+            app.editor.open({ mailboxId: mailbox.id, rule: run.editor.rule, origin: origin });
         }
         if (run.editor.rule || run.editor.addAction) { app.toast(this.t.next_hint, 'info'); }
     };

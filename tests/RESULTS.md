@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 2.10.0
+# Résultats des tests — Workflow Packs 2.11.0
 
 Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,14 @@ Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 2.11.0 — placement des nouveaux blocs, pleine page
+
+| Série | Résultat |
+|---|---|
+| JavaScript | `layout.test.js` : bloc ajouté depuis le bloc 2 → sur sa ligne, à sa droite, après un bloc déjà là ; le suivant dessous ; les autres blocs n'ont pas bougé ; aucun chevauchement |
+| Intégration (106 tests, instance neuve) | inchangé, vert |
+| Navigateur | Boîte « Comptabilité » › « Ajouter un bloc » › statut « Fermé » › Enregistrer : nouvelle règle sur la même ligne (y identique), à droite ; « Agrandir » : schéma sur toute la page (hauteur 670 → 788 px), « Réduire » ; Échap (après la sélection) : vue normale ; aucune erreur |
 
 ## 2.10.0 — minuteurs
 

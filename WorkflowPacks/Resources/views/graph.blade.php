@@ -87,6 +87,7 @@
             <button type="button" class="wpg-btn" data-act="zoom-out" title="{{ __('workflowpacks::graph.zoom_out') }} (-)">{!! $wpg_i('minus') !!}</button>
             <button type="button" class="wpg-btn" data-act="zoom-in" title="{{ __('workflowpacks::graph.zoom_in') }} (+)">{!! $wpg_i('plus') !!}</button>
             <button type="button" class="wpg-btn" data-act="fit" title="{{ __('workflowpacks::graph.fit') }} (0)">{!! $wpg_i('fit') !!}<span>{{ __('workflowpacks::graph.fit') }}</span></button>
+            <button type="button" class="wpg-btn" data-act="fullscreen" aria-pressed="false" title="{{ __('workflowpacks::graph.enlarge') }}">{!! $wpg_i('expand') !!}<span>{{ __('workflowpacks::graph.enlarge') }}</span></button>
         </div>
         <div class="wpg-group wpg-grow">
             <select id="wpg-goto" class="wpg-select" title="{{ __('workflowpacks::graph.goto_help') }}"></select>

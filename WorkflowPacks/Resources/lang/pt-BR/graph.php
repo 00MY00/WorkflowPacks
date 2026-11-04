@@ -318,4 +318,6 @@ return [
     'kind_dest_timer'  => 'Temporizador',
     'timer_rule'       => 'Regra',
     'timer_help_block' => 'As ações da regra acontecem quando este prazo passa (verificado regularmente pelo Workflows). Excluir este bloco remove o prazo: a regra será aplicada na chegada.',
+    'enlarge' => 'Ampliar',
+    'reduce'  => 'Reduzir',
 ];

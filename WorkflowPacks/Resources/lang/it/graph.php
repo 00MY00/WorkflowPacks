@@ -318,4 +318,6 @@ return [
     'kind_dest_timer'  => 'Timer',
     'timer_rule'       => 'Regola',
     'timer_help_block' => 'Le azioni della regola si eseguono quando questo ritardo è superato (verificato regolarmente da Workflows). Eliminare questo blocco toglie il ritardo: la regola si applicherà all\'arrivo.',
+    'enlarge' => 'Ingrandisci',
+    'reduce'  => 'Riduci',
 ];

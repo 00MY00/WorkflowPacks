@@ -318,4 +318,6 @@ return [
     'kind_dest_timer'  => 'Timer',
     'timer_rule'       => 'Regel',
     'timer_help_block' => 'De acties van de regel lopen zodra deze termijn voorbij is (regelmatig gecontroleerd door Workflows). Dit blok verwijderen haalt de termijn weg: de regel geldt dan bij aankomst.',
+    'enlarge' => 'Vergroten',
+    'reduce'  => 'Verkleinen',
 ];

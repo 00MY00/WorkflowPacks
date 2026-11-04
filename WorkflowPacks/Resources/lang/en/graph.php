@@ -319,4 +319,6 @@ return [
     'kind_dest_timer'  => 'Timer',
     'timer_rule'       => 'Rule',
     'timer_help_block' => 'The actions of the rule run once this delay is passed (checked again and again by Workflows). Deleting this block removes the delay: the rule then applies on arrival.',
+    'enlarge' => 'Enlarge',
+    'reduce'  => 'Reduce',
 ];

@@ -331,6 +331,13 @@
 .wpg-btn.is-on { background: var(--g-brand); border-color: var(--g-brand); color: #fff; }
 .wpg-btn.is-on:hover { color: #fff; }
 
+/* "Enlarge": the diagram over the whole page (toolbar and diagram), "Reduce" or Escape to go back */
+.wpg-app.is-full { position: fixed; inset: 0; z-index: 1035; display: flex; flex-direction: column; padding: 8px; background: var(--fd-bg, #fff); }
+.wpg-app.is-full .wpg-toolbar { margin-bottom: 6px; }
+.wpg-app.is-full .wpg-stage { flex: 1 1 auto; height: auto; min-height: 0; }
+.wpg-app.is-full .wpg-help-box { display: none; }
+body.wpg-full-open { overflow: hidden; }
+
 /* ---------------------------------------------------------------------------------------------- simulation */
 .wpg-node.sim-hit .wpg-box { stroke: var(--c-ok); stroke-width: 3; }
 .wpg-node.sim-miss { opacity: .4; }

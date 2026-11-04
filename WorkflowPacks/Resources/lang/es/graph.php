@@ -318,4 +318,6 @@ return [
     'kind_dest_timer'  => 'Temporizador',
     'timer_rule'       => 'Regla',
     'timer_help_block' => 'Las acciones de la regla se ejecutan al superar este plazo (Workflows lo comprueba periódicamente). Eliminar este bloque quita el plazo: la regla se aplicará a la llegada.',
+    'enlarge' => 'Ampliar',
+    'reduce'  => 'Reducir',
 ];
