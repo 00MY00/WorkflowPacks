@@ -59,6 +59,8 @@ class WorkflowPacksServiceProvider extends ServiceProvider
         \Modules\WorkflowPacks\Services\Imap\TicketFolders::register();
         // condition "E-mail tag" of the rules: origin tags of RefreshGlobal (spam, inbox, folder:…), when it is installed
         \Modules\WorkflowPacks\Services\MailTags::register();
+        // conditions "Assigned" and "A reply was sent" (branch blocks of the flow view)
+        \Modules\WorkflowPacks\Services\Flow\TicketConditions::register();
     }
 
     /**

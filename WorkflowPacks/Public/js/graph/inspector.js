@@ -93,7 +93,7 @@
 
     Inspector.prototype.instanceRow = function (edge, showRule) {
         var app = this.app, t = this.t;
-        var other = app.model.nodes[showRule ? edge.from : edge.to];
+        var other = app.overview.nodes[showRule ? edge.from : edge.to];
         var row = h('div', { class: 'wpg-inst state-' + edge.state }, [
             h('span', { class: 'wpg-chip state-' + edge.state, text: t['edge_' + edge.state] }),
             h('span', { class: 'wpg-inst-name', text: other ? other.label : '' })
@@ -135,7 +135,7 @@
     Inspector.prototype.show_mailbox = function (node) {
         var app = this.app, t = this.t, self = this;
         var body = this.frame(node, t.kind_mailbox);
-        var rules = app.model.edges.filter(function (e) { return e.kind === 'applies' && e.to === node.key; });
+        var rules = app.overview.edges.filter(function (e) { return e.kind === 'applies' && e.to === node.key; });
         this.section(body, t.rules_of_mailbox.replace(':count', rules.length));
         rules.forEach(function (e) { body.appendChild(self.instanceRow(e, true)); });
         if (!rules.length) { body.appendChild(h('p', { class: 'wpg-muted', text: t.no_rules })); }
@@ -145,6 +145,58 @@
             app.cfg.urls.workflows ? h('a', { class: 'btn btn-sm btn-default', href: app.cfg.urls.workflows.replace('__ID__', node.id) }, [icon('external'), ' ' + t.open_workflows]) : null,
             this.groupLink(t.group_mailbox, rules.map(function (e) { return e.workflow_id; }).filter(Boolean), node.id)
         ]));
+    };
+
+    /**
+     * A block of the flow view: conditions, branch, delay or action. Its rule (name, state, edit), its next steps (the
+     * "+", next.js) and, after a simulation, what the fake e-mail did there (sim.js).
+     */
+    Inspector.prototype.show_step = function (node) {
+        var app = this.app, t = this.t, self = this;
+        var body = this.frame(node, t['step_' + node.dest] || t.step_action);
+        if (node.dest === 'cond') {
+            this.section(body, t.step_conditions);
+            node.flow.conditions.forEach(function (c) { body.appendChild(h('div', { class: 'wpg-inst' }, [icon('filter'), h('span', { class: 'wpg-inst-name', text: c })])); });
+            var count = node.flow.lanes.reduce(function (n, lane) { return n + lane.steps.length; }, 0);
+            body.appendChild(h('p', { class: 'wpg-hint', text: t.step_flow_rules.replace(':count', count) }));
+        } else if (node.dest === 'branch') {
+            body.appendChild(h('p', { class: 'wpg-hint', text: t.step_branch_help }));
+        }
+        if (node.workflow_id) {
+            var edge = app.overview.edges.filter(function (e) { return e.kind === 'applies' && e.workflow_id === node.workflow_id; })[0];
+            this.section(body, t.step_rule);
+            if (edge) { body.appendChild(this.instanceRow(edge, true)); }
+            if (node.step.delay) { body.appendChild(h('p', { class: 'wpg-hint', text: node.step.delay.label })); }
+            body.appendChild(h('div', { class: 'wpg-ins-actions' }, [
+                this.button(t.edit, 'edit', function () { app.editor.open({ mailboxId: node.mailbox, workflowId: node.workflow_id }); }, true)
+            ]));
+            if (node.origin === 'local') { this.packHint(body, [node.workflow_id], node.mailbox); }
+        }
+        app.sim.details(node, body);
+    };
+
+    /**
+     * A rule outside any pack, in a mailbox where a pack is used: "Add it to the pack" (Export page, the pack and the
+     * rule chosen: preview, then "Group into the pack"). How a new rule joins the pack it completes.
+     */
+    Inspector.prototype.packHint = function (body, workflowIds, mailboxId) {
+        var app = this.app, t = this.t;
+        var url = app.cfg.urls.export;
+        var packs = {};
+        app.overview.edges.forEach(function (e) {
+            var rule = app.overview.nodes[e.from];
+            if (e.kind === 'applies' && e.to === 'mb:' + mailboxId && rule && rule.origin === 'pack') { packs[rule.pack] = true; }
+        });
+        var keys = Object.keys(packs);
+        if (!url || !keys.length || !workflowIds.length) { return; }
+        var box = h('div', { class: 'wpg-pack-hint' }, [h('p', { text: keys.length === 1 ? t.pack_hint_one.replace(':pack', (app.overview.nodes['pack:' + keys[0]] || {}).label || keys[0]) : t.pack_hint_many })]);
+        keys.forEach(function (key) {
+            var query = ['mailbox_id=0', 'target=existing', 'target_pack=' + encodeURIComponent(key)]
+                .concat(workflowIds.map(function (id) { return 'workflows%5B%5D=' + encodeURIComponent(id); }));
+            var label = (app.overview.nodes['pack:' + key] || {}).label || key;
+            box.appendChild(h('a', { class: 'btn btn-sm btn-primary', href: url + (url.indexOf('?') < 0 ? '?' : '&') + query.join('&') }, [icon('package'), ' ' + t.pack_hint_button.replace(':pack', label)]));
+        });
+        body.appendChild(box);
     };
 
     Inspector.prototype.show_rule = function (node) {
@@ -161,6 +213,7 @@
         this.section(body, t.applied_to.replace(':count', instances.length));
         instances.forEach(function (e) { body.appendChild(self.instanceRow(e, false)); });
         if (node.origin === 'pack') { body.appendChild(h('p', { class: 'wpg-hint', text: t.pack_edit_hint })); }
+        if (node.origin === 'local' && first) { this.packHint(body, [first.workflow_id], parseInt(String(first.to).replace('mb:', ''), 10)); }
         var sends = app.model.edges.filter(function (e) { return e.kind === 'sends' && e.from === node.key; });
         if (sends.length) {
             this.section(body, t.sends_to);
@@ -242,9 +295,11 @@
         var body = h('div', { class: 'wpg-ins-body' });
         this.panel.appendChild(body);
         var ids = {}, active = 0, filing = [];
-        app.model.edges.forEach(function (e) {
+        // flow view: the rules of the selected steps (the overview keeps every rule and its state)
+        var stepIds = keys.map(function (k) { return (app.model.nodes[k] || {}).workflow_id; }).filter(Boolean);
+        app.overview.edges.forEach(function (e) {
             if (e.kind !== 'applies' || !e.workflow_id || ids[e.workflow_id]) { return; }
-            if (keys.indexOf(e.from) >= 0 || keys.indexOf(e.to) >= 0) {
+            if (keys.indexOf(e.from) >= 0 || keys.indexOf(e.to) >= 0 || stepIds.indexOf(e.workflow_id) >= 0) {
                 ids[e.workflow_id] = true;
                 if (e.active) { active++; }
                 if (e.files) { filing.push(e.workflow_id); }

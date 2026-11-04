@@ -4,6 +4,30 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [2.3.0] - 2026-11-04
+
+### Ajouté
+- **Vue flux** du schéma (bouton « Vue flux », gardé par utilisateur) : les règles de chaque boîte en chaînes de
+  blocs, **un bloc par instruction** : conditions (entonnoir), test (branche qui se sépare), minuteur (sablier),
+  statut, dossier e-mail, personne, note, envoi… Voir [docs/flux.md](docs/flux.md).
+  - Les règles aux mêmes conditions forment un flux : « après 1 heure → dossier », « après 2 jours → fermé » sont une
+    seule chaîne. « Nouveau » est le départ de la chaîne.
+  - Placement en grille : **deux blocs ne se chevauchent jamais** (vérifié sur 200 jeux de tailles aléatoires).
+  - Le **+** d'un bloc propose la suite : minuteur puis « marquer comme fermé » ou « classer dans un dossier »,
+    branches « pas de réponse » / « non assigné », « ici aussi : marquer comme fermé ». L'éditeur s'ouvre pré-rempli.
+- **Conditions « Assigné à quelqu'un » et « Une réponse a été envoyée »** (oui / non), évaluées par Workflows :
+  les blocs « test » de la vue flux. Exemple : « après 2 jours, pas de réponse → fermer ».
+- **Simulation** (bouton « Simuler ») : un faux e-mail passe dans les règles d'une boîte, **en mémoire** ; son
+  parcours s'allume dans la vue flux (animation le long des liens), puis le panneau donne le verdict, pour chaque
+  règle appliquée le moment (à l'arrivée, +1 h, +2 j) et ce qui a changé, les règles non appliquées avec la raison,
+  et l'état final du ticket.
+  - **Rien n'est écrit ni envoyé** : aucun ticket, client, message, tâche ni dossier ; les envois sont affichés
+    « serait envoyé à … » ; l'historique ne garde que les compteurs.
+  - Une condition ou une action d'un autre module n'est jamais devinée : « non simulée ».
+- **Nouvelle règle et pack** : une règle hors pack dans une boîte qui utilise un pack propose « Ajouter au pack … »
+  (page Export pré-remplie) ; après l'enregistrement d'une nouvelle règle, le schéma la sélectionne.
+- Contrôle de santé (`workflowpacks:health`, utilisé par UpdateGuard) : nouveaux fichiers et classes vérifiés.
+
 ## [2.2.0] - 2026-10-16
 
 ### Ajouté

@@ -19,7 +19,10 @@
         // loading indicator (toolbar) while the server works: saving a rule, applying it, loading the data…
         this.api.onBusy = function (busy) { root.classList.toggle('is-busy', busy); };
         this.model = new WPGraph.Model();
-        this.settings = { layout: 'columns', edges: 'orthogonal', packs: true, dests: true };
+        // the overview's model (positions saved); in the flow view, this.model is the flow's model (flow.js)
+        this.overview = this.model;
+        this.data = null;
+        this.settings = { layout: 'columns', edges: 'orthogonal', packs: true, dests: true, view: 'overview' };
         this.catalogs = {};
         this.queue = {};
         this.sizes = {};        // key -> [w, h] chosen by hand (resize grip); others fit their text
@@ -59,6 +62,7 @@
         this.editor = new WPGraph.Editor(root.querySelector('.wpg-overlay'), this);
         this.menu = new WPGraph.Menu(this);
         this.next = new WPGraph.Next(this);
+        this.sim = new WPGraph.Sim(this);
         this.bindToolbar();
         this.bindKeys();
         this.load(true);
@@ -69,6 +73,9 @@
     App.prototype.load = function (first) {
         var self = this;
         return this.api.data().then(function (data) {
+            self.data = data;
+            // the overview is always loaded (positions, sizes), the flow view is drawn from it
+            self.model = self.view.model = self.overview;
             if (first) {
                 self.model.pos = data.layout.positions || {};
                 self.sizes = data.layout.sizes || {};
@@ -94,8 +101,12 @@
             self.view.edgeStyle = self.settings.edges;
             self.view.showPacks = self.settings.packs;
             self.view.showDests = self.settings.dests;
-            self.view.render();
-            if (first) { self.view.fit(); }
+            if (self.settings.view === 'flow') {
+                self.buildFlow(first);
+            } else {
+                self.view.render();
+                if (first) { self.view.fit(); }
+            }
             self.fillGoto();
             self.minimap.update();
             self.inspector.refresh();
@@ -104,6 +115,58 @@
     };
 
     App.prototype.reload = function () { return this.load(false); };
+
+    // ------------------------------------------------------------------------------------- flow view
+
+    /** Overview (mailboxes → rules → destinations) or flow view (one block per instruction), kept per user. */
+    App.prototype.setView = function (name) {
+        if (name === this.settings.view) { return; }
+        this.saveSettings({ view: name });
+        this.syncToolbar();
+        this.inspector.hide();
+        this.sim.clear();
+        if (name === 'flow') {
+            this.buildFlow(true);
+        } else {
+            this.model = this.view.model = this.overview;
+            this.view.locked = false;
+            this.root.classList.remove('is-flow');
+            this.view.select([]);
+            this.view.render();
+            this.view.fit();
+        }
+        this.fillGoto();
+        this.minimap.update();
+    };
+
+    /** The flow view from the last data: blocks, sizes from their text, then a grid where no block overlaps another. */
+    App.prototype.buildFlow = function (fit) {
+        var mailboxes = this.overview.list(function (n) { return n.kind === 'mailbox'; });
+        var g = WPGraph.flow.graph((this.data && this.data.flows) || {}, mailboxes);
+        var model = new WPGraph.Model();
+        model.load({ nodes: g.nodes, edges: g.edges });
+        this.model = this.view.model = model;
+        this.flowGraph = g;
+        this.fitBoxes();
+        model.pos = WPGraph.flow.layout(g, L.size);
+        this.view.locked = true;
+        this.root.classList.add('is-flow');
+        this.view.render();
+        if (fit) {
+            // phone: the first mailbox with flows, readable; elsewhere everything
+            var narrow = window.matchMedia && window.matchMedia('(max-width: 767px)').matches;
+            var section = narrow ? g.sections.filter(function (s) { return s.flows.length; })[0] : null;
+            this.view.fit(section ? [section.mailbox].concat(section.flows.map(function (f) { return f.cond; })) : undefined);
+        }
+        this.sim.redraw();
+    };
+
+    /** Mailbox id of a block of the flow view (or of the overview). */
+    App.prototype.mailboxOf = function (node) {
+        if (!node) { return 0; }
+        if (node.kind === 'mailbox') { return node.id; }
+        return node.mailbox || 0;
+    };
 
     /**
      * Moves apart the blocks that overlap (fixed: the keys given, e.g. the blocks just moved or enlarged), saves the
@@ -223,6 +286,9 @@
         on('[data-act="redo"]', 'click', function () { self.redo(); });
         on('[data-act="new"]', 'click', function () { self.newRule(); });
         on('[data-act="unfocus"]', 'click', function () { self.clearFocus(); self.view.fit(); });
+        on('[data-act="view-overview"]', 'click', function () { self.setView('overview'); });
+        on('[data-act="view-flow"]', 'click', function () { self.setView('flow'); });
+        on('[data-act="simulate"]', 'click', function () { self.sim.open(); });
         on('#wpg-layout', 'change', function () { self.arrange(this.value); });
         on('#wpg-edges', 'change', function () { self.view.edgeStyle = this.value; self.view.render(); self.saveSettings({ edges: this.value }); });
         on('#wpg-packs', 'change', function () { self.view.showPacks = this.checked; self.view.render(); self.minimap.update(); self.saveSettings({ packs: this.checked }); });
@@ -243,6 +309,11 @@
         r.querySelector('#wpg-edges').value = s.edges;
         r.querySelector('#wpg-packs').checked = !!s.packs;
         r.querySelector('#wpg-dests').checked = !!s.dests;
+        Array.prototype.forEach.call(r.querySelectorAll('[data-act^="view-"]'), function (b) {
+            var on = b.getAttribute('data-act') === 'view-' + (s.view || 'overview');
+            b.classList.toggle('is-on', on);
+            b.setAttribute('aria-pressed', on ? 'true' : 'false');
+        });
     };
 
     App.prototype.bindKeys = function () {
@@ -363,6 +434,15 @@
         this.view.reveal(key, Math.max(0.2, Math.min(1, (sheet - r.top) / r.height)));
     };
 
+    /** Selects a rule: its block in the overview, its first step (delay or action) in the flow view. */
+    App.prototype.selectRule = function (workflowId) {
+        var key = 'wf:' + workflowId;
+        if (this.settings.view === 'flow') {
+            key = this.model.list(function (n) { return n.workflow_id === workflowId; }).map(function (n) { return n.key; })[0];
+        }
+        if (key && this.model.nodes[key]) { this.select(key); }
+    };
+
     App.prototype.clearSelection = function () {
         this.view.select([]);
         this.inspector.hide();
@@ -374,6 +454,11 @@
         if (node.kind === 'rule') {
             var first = this.model.edges.filter(function (e) { return e.kind === 'applies' && e.from === key && e.workflow_id; })[0];
             if (first) { this.edit(first); }
+        } else if (node.kind === 'step' && node.workflow_id) {
+            // flow view: a delay or an action opens its rule
+            this.editor.open({ mailboxId: node.mailbox, workflowId: node.workflow_id });
+        } else if (node.kind === 'step' || this.settings.view === 'flow') {
+            this.inspector.show(key);
         } else {
             this.focusOn(key);
         }

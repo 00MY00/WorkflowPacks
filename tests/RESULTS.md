@@ -1,6 +1,6 @@
-# Résultats des tests — Workflow Packs 2.2.0
+# Résultats des tests — Workflow Packs 2.3.0
 
-Date : 2026-10-16. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
+Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
 ## Versions effectivement vérifiées
 
@@ -12,6 +12,15 @@ Date : 2026-10-16. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 2.3.0 — vue flux, tests « assigné » / « réponse envoyée », simulation
+
+| Série | Résultat |
+|---|---|
+| Unitaires PHP | `FlowTest` (4) : règles aux mêmes conditions = un flux, délais en blocs ordonnés (arrivée, +1 h, +2 j), branche = voie, clés stables, chemins ; conditions simulées (texte en minuscules, regex sensible à la casse et invalide, HTML retiré, statut, assignation, réponse, « Nouveau » seulement à l'arrivée, dates, type inconnu = non simulable) ; simulation : ordre arrivée / délais, état après chaque règle, règle désactivée exclue sur demande, transfert « enregistré » jamais envoyé, réponse qui empêche une relance « pas de réponse », suppression qui arrête la suite ; textes du faux e-mail bornés |
+| JavaScript | `flow.test.js` : blocs et liens de la vue flux, familles d'actions, règle désactivée ; **aucun chevauchement sur 200 jeux de tailles aléatoires**, voies de gauche à droite. `next.test.js` (+1) : suites de la vue flux (conditions du flux et de la branche gardées, délai suivant, « ici aussi : fermer » seulement si absent) |
+| Intégration | `FlowViewTest` (5) : conditions dans le catalogue et évaluées (note et brouillon ne sont pas une réponse, opérateur inconnu faux), moteur de Workflows (bouchon) ; données du schéma avec les flux et les chemins ; **simulation sans aucune écriture** (tickets, messages, clients, tâches, règles comptés avant / après), historique sans le contenu du faux e-mail ; droits de la boîte (403) ; vue gardée par utilisateur, valeur invalide refusée. `GraphTest` mis à jour (réglage `view`) |
+| Navigateur (pack d'exemple + flux « facture » : note, +1 h dossier, +2 j fermé, branche « pas de réponse ») | Ordinateur 1366 × 900 : 31 blocs, **0 chevauchement** ; simulation « facture » : 5 règles appliquées, chemin allumé, panneau (moments, changements, état final). Tablette 820 × 1180 et téléphone 390 × 844 : vue flux gardée, pas de défilement horizontal, formulaire et résultat dans le panneau du bas |
 
 ## 2.2.0 — regrouper dans un pack
 

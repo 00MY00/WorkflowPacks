@@ -41,6 +41,7 @@ Route::group([
     Route::post('/graph/rules/toggle', $users + ['uses' => 'GraphController@toggleMany'])->name('workflowpacks.graph.toggle_many');
     Route::post('/graph/rules/previous', $users + ['uses' => 'GraphController@previousMany'])->name('workflowpacks.graph.previous_many');
     Route::post('/graph/rules/refile', $users + ['uses' => 'GraphController@refileMany'])->name('workflowpacks.graph.refile_many');
+    Route::post('/graph/simulate', $users + ['uses' => 'GraphController@simulate'])->name('workflowpacks.graph.simulate');
     Route::post('/graph/rule/{id}/apply', $users + ['uses' => 'GraphController@apply'])->name('workflowpacks.graph.apply');
 
     // history of what the module did (+ diagnostic of the e-mail filing for administrators)

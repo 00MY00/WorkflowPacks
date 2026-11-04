@@ -4,6 +4,8 @@ namespace Modules\WorkflowPacks\Services\Graph;
 
 use Modules\WorkflowPacks\Entities\Link;
 use Modules\WorkflowPacks\Entities\Pack;
+use Modules\WorkflowPacks\Services\Flow\FlowBuilder;
+use Modules\WorkflowPacks\Services\Flow\FlowLabels;
 use Modules\WorkflowPacks\Services\Imap\FolderPath;
 use Modules\WorkflowPacks\Services\Imap\ImapFolders;
 use Modules\WorkflowPacks\Services\Pack\Fingerprint;
@@ -27,6 +29,9 @@ use Modules\WorkflowPacks\Services\Workflows\Bridge;
  *         folder -> folder  "folder": e-mail folder -> its sub-folder ("[WP] Invoices" -> "Suppliers")
  *
  * Only identifiers, names and short summaries are sent: the full rule is loaded when a node is opened.
+ *
+ * "flows": the same rules as chains of blocks, one block per instruction, by mailbox (Services/Flow/FlowBuilder),
+ * for the flow view and the simulation.
  */
 class GraphBuilder
 {
@@ -53,6 +58,7 @@ class GraphBuilder
         $links = $workflows->isNotEmpty() ? Link::whereIn('mailbox_id', $mailboxIds)->get() : collect();
         $linkByWorkflow = $links->keyBy('workflow_id');
         $packs = Pack::whereIn('pack_key', $links->pluck('pack_key')->unique()->all() ?: [''])->get()->keyBy('pack_key');
+        $flowRules = [];
 
         foreach ($workflows as $wf) {
             $link = $linkByWorkflow->get($wf->id);
@@ -74,6 +80,7 @@ class GraphBuilder
                     'sensitive' => $summary['sensitive']];
                 $state = 'local';
             }
+            $flowRules[(int) $wf->mailbox_id][] = self::flowRule($wf, $attributes, $jsonActions, $state === 'local' ? null : $link->pack_key);
             $edges[] = ['from' => $ruleKey, 'to' => 'mb:'.$wf->mailbox_id, 'kind' => 'applies', 'workflow_id' => (int) $wf->id,
                 'active' => (bool) $wf->active, 'previous' => (bool) $wf->apply_to_prev, 'state' => $state, 'name' => (string) $wf->name,
                 'sensitive' => $summary['sensitive'], 'files' => false];
@@ -146,7 +153,58 @@ class GraphBuilder
             }
         }
 
-        return ['nodes' => array_values($nodes), 'edges' => $edges];
+        return ['nodes' => array_values($nodes), 'edges' => $edges, 'flows' => $this->flows($mailboxes, $flowRules)];
+    }
+
+    /** A rule as the flow view and the simulation read it (actions decoded). */
+    public static function flowRule($workflow, array $attributes, array $jsonActions, $packKey = null)
+    {
+        return ['id' => (int) $workflow->id, 'name' => (string) $workflow->name, 'active' => (bool) $workflow->active,
+            'conditions' => $attributes['conditions'], 'actions' => Fingerprint::decodeActions($attributes['actions'], $jsonActions),
+            'origin' => $packKey ? 'pack' : 'local', 'pack' => $packKey];
+    }
+
+    /** mailbox id => ['flows' => FlowBuilder::build(), 'paths' => FlowBuilder::paths()] */
+    protected function flows($mailboxes, array $rulesByMailbox)
+    {
+        $out = [];
+        foreach ($mailboxes as $mailbox) {
+            $id = (int) $mailbox->id;
+            $flows = (new FlowBuilder(self::labels($id)))->build($id, $rulesByMailbox[$id] ?? []);
+            $out[$id] = ['flows' => $flows, 'paths' => FlowBuilder::paths($id, $flows)];
+        }
+
+        return $out;
+    }
+
+    /** Texts of the flow blocks of a mailbox (also used by the simulation); names looked up once per request. */
+    public static function labels($mailboxId)
+    {
+        static $users = [];
+        static $mailboxes = [];
+
+        return new FlowLabels(
+            Bridge::catalog($mailboxId),
+            function ($key, array $params) {
+                return __('workflowpacks::messages.'.$key, $params);
+            },
+            function ($id) use (&$users) {
+                if (!array_key_exists($id, $users)) {
+                    $user = \App\User::find($id);
+                    $users[$id] = $user ? trim($user->getFullName()) : '#'.$id;
+                }
+
+                return $users[$id];
+            },
+            function ($id) use (&$mailboxes) {
+                if (!array_key_exists($id, $mailboxes)) {
+                    $mailbox = \App\Mailbox::find($id);
+                    $mailboxes[$id] = $mailbox ? (string) $mailbox->name : '#'.$id;
+                }
+
+                return $mailboxes[$id];
+            }
+        );
     }
 
     /**

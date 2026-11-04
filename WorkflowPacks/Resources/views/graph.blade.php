@@ -33,12 +33,15 @@
             'retention' => route('workflowpacks.retention.save'),
             'retentionRemove' => route('workflowpacks.retention.remove'),
             'apply'     => route('workflowpacks.graph.apply', ['id' => '__ID__']),
+            'simulate'  => route('workflowpacks.graph.simulate'),
             'reimport'  => route('workflowpacks.reimport', ['key' => '__ID__']),
             'workflows' => \Route::has('mailboxes.workflows') ? route('mailboxes.workflows', ['mailbox_id' => '__ID__']) : '',
         ],
         'texts' => __('workflowpacks::graph'),
         // settings of the module (automatic clean-up of the e-mail folders): administrators only, checked again server-side
         'admin' => auth()->user()->isAdmin(),
+        // e-mail tags of RefreshGlobal: the simulation can give some to the fake e-mail
+        'mailTags' => \Modules\WorkflowPacks\Services\MailTags::available(),
     ];
 @endphp
 <div class="wpg-app">
@@ -50,8 +53,13 @@
     <div class="wpg-toolbar" role="toolbar">
         <div class="wpg-group">
             <button type="button" class="wpg-btn wpg-btn-primary" data-act="new" title="{{ __('workflowpacks::graph.new_rule') }} (N)">{!! $wpg_i('plus') !!}<span>{{ __('workflowpacks::graph.new_rule') }}</span></button>
+            <button type="button" class="wpg-btn" data-act="simulate" title="{{ __('workflowpacks::graph.sim_help') }}">{!! $wpg_i('play') !!}<span>{{ __('workflowpacks::graph.sim_button') }}</span></button>
         </div>
-        <div class="wpg-group">
+        <div class="wpg-group wpg-views" role="group" aria-label="{{ __('workflowpacks::graph.view_label') }}">
+            <button type="button" class="wpg-btn" data-act="view-overview" aria-pressed="true" title="{{ __('workflowpacks::graph.view_overview_help') }}">{!! $wpg_i('network') !!}<span>{{ __('workflowpacks::graph.view_overview') }}</span></button>
+            <button type="button" class="wpg-btn" data-act="view-flow" aria-pressed="false" title="{{ __('workflowpacks::graph.view_flow_help') }}">{!! $wpg_i('flow') !!}<span>{{ __('workflowpacks::graph.view_flow') }}</span></button>
+        </div>
+        <div class="wpg-group wpg-overview-only">
             <label class="wpg-label" for="wpg-layout">{{ __('workflowpacks::graph.arrange') }}</label>
             <select id="wpg-layout" class="wpg-select">
                 <option value="columns">{{ __('workflowpacks::graph.layout_columns') }}</option>
@@ -111,7 +119,7 @@
 
 @section('javascripts')
     @parent
-    @foreach (['icons', 'layout', 'textfit', 'gestures', 'next', 'model', 'api', 'view', 'minimap', 'inspector', 'editor', 'menu', 'app'] as $wpg_js)
+    @foreach (['icons', 'layout', 'textfit', 'gestures', 'next', 'model', 'api', 'view', 'minimap', 'inspector', 'editor', 'menu', 'flow', 'sim', 'app'] as $wpg_js)
         <script src="{{ asset(\Module::getPublicPath('workflowpacks').'/js/graph/'.$wpg_js.'.js') }}?v={{ \Modules\WorkflowPacks\Services\ModuleInfo::version() }}" {!! \Helper::cspNonceAttr() !!}></script>
     @endforeach
     <script {!! \Helper::cspNonceAttr() !!}>WPGraph.icons.define(document.getElementById('wpg-toolbar-defs'));</script>
