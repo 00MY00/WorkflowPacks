@@ -319,4 +319,6 @@ return [
     'kind_dest_timer'  => 'Minuteur',
     'timer_rule'       => 'Règle',
     'timer_help_block' => 'Les actions de la règle se font quand ce délai est dépassé (vérifié régulièrement par Workflows). Supprimer ce bloc retire le délai : la règle s\'appliquera dès l\'arrivée.',
+    'enlarge' => 'Agrandir',
+    'reduce'  => 'Réduire',
 ];

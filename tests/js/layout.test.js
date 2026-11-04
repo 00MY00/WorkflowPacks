@@ -194,3 +194,23 @@ test('bounds: box of the blocks, default box when empty', () => {
 });
 
 console.log(n + ' tests OK');
+
+// a block added from block 2 goes on the right of block 2; only the new blocks move to avoid an overlap
+{
+    const pos = { 'wf:1': [0, 0], 'wf:2': [400, 0], 'dest:x': [700, 0] };
+    const nodes = [{ key: 'wf:1', kind: 'rule' }, { key: 'wf:2', kind: 'rule' }, { key: 'dest:x', kind: 'dest' }, { key: 'wf:3', kind: 'rule' }, { key: 'dest:y', kind: 'dest' }];
+    L.beside(pos, nodes[1], [nodes[3], nodes[4]], nodes);
+    assert.strictEqual(pos['wf:3'][1], 0, 'same row as block 2, further right since dest:x is there');
+    assert.ok(pos['wf:3'][0] > 700, 'past the block already there');
+    assert.ok(pos['wf:3'][0] > 400 + L.size(nodes[1])[0], 'on the right of block 2');
+    assert.strictEqual(pos['wf:3'][1], 0, 'from its top');
+    assert.ok(pos['dest:y'][1] > pos['wf:3'][1], 'the next one under it');
+    const before = JSON.stringify([pos['wf:1'], pos['wf:2'], pos['dest:x']]);
+    L.separate(pos, nodes, 120, ['wf:3', 'dest:y']);
+    assert.strictEqual(JSON.stringify([pos['wf:1'], pos['wf:2'], pos['dest:x']]), before, 'the other blocks did not move');
+    const box = (k, n) => [pos[k][0], pos[k][1], pos[k][0] + L.size(n)[0], pos[k][1] + L.size(n)[1]];
+    const a = box('wf:3', nodes[3]), b = box('dest:x', nodes[2]);
+    assert.ok(a[2] <= b[0] || b[2] <= a[0] || a[3] <= b[1] || b[3] <= a[1], 'no overlap with the block already there');
+    console.log('beside: OK');
+}
+

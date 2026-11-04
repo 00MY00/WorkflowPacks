@@ -4,6 +4,17 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [2.11.0] - 2026-11-04
+
+### Ajouté
+- **Bouton « Agrandir »** du schéma : la barre d'outils et le schéma prennent toute la page ; « Réduire » (ou
+  Échap, une fois la sélection levée) revient à la vue normale.
+
+### Modifié
+- **Les blocs ajoutés depuis un bloc se placent à sa droite** (« + », « Ajouter un bloc », vue d'ensemble) : sur la
+  même ligne, dans l'ordre — un bloc ajouté depuis le bloc 2 vient après le 2 ; si la place est prise, un peu plus
+  à droite sur la même ligne. Les autres blocs ne bougent pas. (La vue flux les place déjà dans l'ordre de la chaîne.)
+
 ## [2.10.0] - 2026-11-04
 
 ### Ajouté

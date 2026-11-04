@@ -376,7 +376,7 @@
             app.toast(res.pack_modified ? self.t.saved_pack_modified : self.t.saved_rule, 'ok');
             var created = !self.opts.workflowId && res.workflow_id;
             // a new rule is selected: its panel tells at once whether it can join the pack of the mailbox
-            app.reload().then(function () { if (created) { app.selectRule(res.workflow_id); } });
+            app.load(false, self.opts.origin).then(function () { if (created) { app.selectRule(res.workflow_id); } });
         }).catch(function (e) {
             self.errors = (e.data && e.data.errors) || [e.message];
             self.renderErrors();

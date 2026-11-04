@@ -286,6 +286,34 @@
      * collision, so it leaves each block in its way once for all: at most one step per block already placed.
      * `passes` is kept for the callers of older versions (no longer needed).
      */
+    /**
+     * Blocks added from a block ("+", "Add a block"): on its right, from its row, in the given order — block 1, 2,
+     * then 3 added from 2 comes after 2. A place taken: further right on the same row. Only these positions are set
+     * (the other blocks never move).
+     */
+    function beside(pos, origin, fresh, nodes) {
+        var p = pos[origin.key];
+        if (!p) { return pos; }
+        var freshKeys = fresh.map(function (n) { return n.key; });
+        var others = (nodes || []).filter(function (n) { return pos[n.key] && freshKeys.indexOf(n.key) < 0; });
+        var hits = function (x, y, s) {
+            return others.some(function (o) {
+                var q = pos[o.key], t = size(o);
+                return x < q[0] + t[0] + 20 && q[0] < x + s[0] + 20 && y < q[1] + t[1] + GAP_Y && q[1] < y + s[1] + GAP_Y;
+            });
+        };
+        var y = p[1];
+        fresh.forEach(function (n) {
+            var s = size(n), x = p[0] + size(origin)[0] + 90;
+            // the same row as its origin: further right while the place is taken (at most 40 steps)
+            for (var i = 0; i < 40 && hits(x, y, s); i++) { x += 120; }
+            pos[n.key] = [x, y];
+            others.push(n);
+            y += s[1] + GAP_Y;
+        });
+        return pos;
+    }
+
     function separate(pos, nodes, passes, movable) {
         var list = nodes.filter(function (n) { return pos[n.key]; });
         var canMove = function (key) { return !movable || movable.indexOf(key) >= 0; };
@@ -361,7 +389,7 @@
         return separate(pos, nodes, 40, fresh);
     }
 
-    var api = { SIZE: SIZE, columns: columns, radial: radial, grid: grid, separate: separate, bounds: bounds, placeNew: placeNew, size: size, adjacency: adjacency };
+    var api = { SIZE: SIZE, columns: columns, radial: radial, grid: grid, separate: separate, beside: beside, bounds: bounds, placeNew: placeNew, size: size, adjacency: adjacency };
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = api;
     } else {

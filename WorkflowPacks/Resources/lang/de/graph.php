@@ -318,4 +318,6 @@ return [
     'kind_dest_timer'  => 'Timer',
     'timer_rule'       => 'Regel',
     'timer_help_block' => 'Die Aktionen der Regel laufen, sobald diese Frist überschritten ist (regelmäßig von Workflows geprüft). Wird dieser Block gelöscht, entfällt die Frist: die Regel gilt dann beim Eingang.',
+    'enlarge' => 'Vergrößern',
+    'reduce'  => 'Verkleinern',
 ];
