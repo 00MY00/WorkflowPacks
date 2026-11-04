@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 2.11.0
+# Résultats des tests — Workflow Packs 2.12.0
 
 Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,14 @@ Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 2.12.0 — chaîne règle → minuteur → statut
+
+| Série | Résultat |
+|---|---|
+| JavaScript | `next.test.js` : minuteur en deux choix (délai › action, ex. « Après 1 h › Statut 3 ») ; `layout.test.js` : colonne des minuteurs (règle, minuteur, destination sur une ligne), nouveaux blocs dans leur colonne, ligne libre commune si la ligne est prise, les autres blocs immobiles |
+| Intégration (106 tests, instance neuve) | vert (les liens « sends » partent du minuteur) |
+| Navigateur | Dossier « [WP] Factures » › Ajouter un bloc › Ajouter un minuteur › Après 1 jour › Statut : Fermé › Enregistrer : éditeur avec « Changer le statut : Fermé » ; vue d'ensemble `wf` (400, 1403) → minuteur (904, 1403) → Fermé ; vue flux : Factures → ⧗ Après 1 jour → Fermé ; aucune erreur |
 
 ## 2.11.0 — placement des nouveaux blocs, pleine page
 

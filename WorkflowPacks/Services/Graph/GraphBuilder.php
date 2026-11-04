@@ -94,8 +94,10 @@ class GraphBuilder
                 'active' => (bool) $wf->active, 'previous' => (bool) $wf->apply_to_prev, 'state' => $state, 'name' => (string) $wf->name,
                 'sensitive' => $summary['sensitive'], 'files' => false];
             $applies = count($edges) - 1;
-            // a rule with a delay: its timer is a block of its own ("After 30 days"), linked to the rule
+            // a rule with a delay: its timer is a block of its own ("After 30 days") between the rule and what it does:
+            // rule -> timer -> destinations
             $delays = FlowBuilder::split((array) $attributes['conditions'])['delays'];
+            $from = $delays ? 'dest:timer:'.$ruleKey : $ruleKey;
             if ($delays && !isset($nodes['dest:timer:'.$ruleKey])) {
                 $labels = self::labels($wf->mailbox_id);
                 $nodes['dest:timer:'.$ruleKey] = ['key' => 'dest:timer:'.$ruleKey, 'kind' => 'dest', 'dest' => 'timer', 'rule' => $ruleKey,
@@ -106,7 +108,7 @@ class GraphBuilder
                 $chain = $dest['chain'] ?? [];
                 unset($dest['chain']);
                 $nodes[$dest['key']] = $nodes[$dest['key']] ?? $dest;
-                $sends[$ruleKey.'>'.$dest['key']] = ['from' => $ruleKey, 'to' => $dest['key'], 'kind' => 'sends', 'action' => $dest['action']];
+                $sends[$from.'>'.$dest['key']] = ['from' => $from, 'to' => $dest['key'], 'kind' => 'sends', 'action' => $dest['action'], 'rule' => $ruleKey];
                 // e-mail folders: the flow goes on, level by level ("[WP] Invoices" -> "Suppliers")
                 $parent = $dest['key'];
                 foreach ($chain as $child) {

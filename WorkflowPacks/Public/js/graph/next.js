@@ -150,11 +150,14 @@
 
         // "Add a timer": after a delay, a new rule of the same e-mails (its action is chosen in the editor)
         var base = timerBase(node, ctx);
-        if (base && hasC('created')) {
+        if (base && hasC('created') && all.length) {
             var timer = { id: 'add_timer', icon: 'hourglass', label: 'next_add_timer', sub: TIMERS.map(function (d) {
-                return { id: 'timer_' + d.number + d.metric, icon: 'hourglass', label: 'next_timer_preset', params: { delay: d },
-                    run: { editor: { rule: rule((ctx.names.timer || '').replace(':delay', ctx.delayText ? ctx.delayText(d) : d.number + d.metric),
-                        base.concat([{ type: 'created', operator: 'not_in_last', value: d }]), []) } } };
+                var name = (ctx.names.timer || '').replace(':delay', ctx.delayText ? ctx.delayText(d) : d.number + d.metric);
+                // after the delay: the next block (status of the ticket, assign, note, folder…), one rule of Workflows
+                return { id: 'timer_' + d.number + d.metric, icon: 'hourglass', label: 'next_timer_preset', params: { delay: d }, sub: all.map(function (a) {
+                    return { id: 'timer_' + d.number + d.metric + '_' + a.id, icon: a.icon, text: a.text, label: a.label, params: a.params,
+                        run: { editor: { rule: rule(name, base.concat([{ type: 'created', operator: 'not_in_last', value: d }]), [a.action]) } } };
+                }) };
             }) };
             var at = out.map(function (s) { return s.id; }).filter(function (id) { return id === 'new_status' || id === 'set_status'; })[0];
             out.splice(at ? out.map(function (s) { return s.id; }).indexOf(at) + 1 : out.length, 0, timer);
@@ -267,7 +270,8 @@
         if (node.kind === 'mailbox') { return node; }
         if (node.kind === 'step') { return this.app.overview.nodes['mb:' + node.mailbox]; }
         // the rule of the block: itself, the rule of a timer block, the first rule sending to it or filing into it
-        var ruleKey = node.kind === 'rule' ? node.key : node.rule || (model.edges.filter(function (e) { return e.kind === 'sends' && e.to === node.key; })[0] || {}).from
+        var sending = model.edges.filter(function (e) { return e.kind === 'sends' && e.to === node.key; })[0] || {};
+        var ruleKey = node.kind === 'rule' ? node.key : node.rule || sending.rule || sending.from
             || ((node.filed_by || [])[0]);
         var applies = model.edges.filter(function (e) { return e.kind === 'applies' && e.from === ruleKey && e.workflow_id; })[0];
         return applies ? model.nodes[applies.to] : model.list(function (n) { return n.kind === 'mailbox'; })[0];
@@ -285,7 +289,7 @@
         // a destination: the rules of this mailbox sending there (or filing into the folder, or whose timer it is)
         var model = app.model, rules = [];
         if (node.kind === 'dest') {
-            var ruleKeys = (node.filed_by || []).concat(model.edges.filter(function (e) { return (e.kind === 'sends' || e.kind === 'timer') && e.to === node.key; }).map(function (e) { return e.from; }));
+            var ruleKeys = (node.filed_by || []).concat(model.edges.filter(function (e) { return (e.kind === 'sends' || e.kind === 'timer') && e.to === node.key; }).map(function (e) { return e.rule || e.from; }));
             model.edges.forEach(function (e) {
                 if (e.kind === 'applies' && e.workflow_id && e.to === mailbox.key && ruleKeys.indexOf(e.from) >= 0
                     && !rules.some(function (r) { return r.workflow_id === e.workflow_id; })) {

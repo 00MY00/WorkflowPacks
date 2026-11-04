@@ -105,6 +105,9 @@
         // sub-folders of an e-mail folder get their own columns, after their parent ("[WP] Invoices" -> "Suppliers")
         var deep = k.dest.filter(function (n) { return (n.depth || 0) > 0; });
         k.dest = k.dest.filter(function (n) { return !((n.depth || 0) > 0); });
+        // timers of the rules ("After 30 days"): a column of their own, between the rules and the destinations
+        k.timer = k.dest.filter(function (n) { return n.dest === 'timer'; });
+        k.dest = k.dest.filter(function (n) { return n.dest !== 'timer'; });
         k.mailbox.sort(byLabel);
         k.mailbox.forEach(function (n, i) { rank[n.key] = i; });
         orderBy(k.rule, adj, rank);
@@ -118,7 +121,8 @@
         // columns as wide as their widest block (blocks fit their text)
         var x = { mailbox: 0 };
         x.rule = Math.max(400, widest(k.mailbox) + GAP_X);
-        x.dest = x.rule + Math.max(260, widest(k.rule)) + GAP_X;
+        x.timer = x.rule + Math.max(260, widest(k.rule)) + GAP_X;
+        x.dest = k.timer.length ? x.timer + widest(k.timer) + GAP_X : x.timer;
         var height = function (list) { return list.reduce(function (s, n) { return s + size(n)[1] + GAP_Y; }, -GAP_Y); };
         var top = k.pack.length ? 110 : 0;
         var pos = {};
@@ -133,12 +137,12 @@
             pos[n.key] = [x.rule, Math.round(y)];
             y += size(n)[1] + GAP_Y;
         });
-        // mailboxes and destinations face the rules they are linked to
-        ['mailbox', 'dest'].forEach(function (kind) {
+        // timers face their rule; mailboxes and destinations face the rules (or timers) they are linked to
+        ['timer', 'mailbox', 'dest'].forEach(function (kind) {
             var wanted = {};
             var fallback = top;
             k[kind].forEach(function (n) {
-                var ys = (adj[n.key] || []).filter(function (key) { return isRule[key]; }).map(middle);
+                var ys = (adj[n.key] || []).filter(function (key) { return isRule[key] || (kind === 'dest' && pos[key] && byKey[key].dest === 'timer'); }).map(middle);
                 wanted[n.key] = mean(ys, fallback + size(n)[1] / 2) - size(n)[1] / 2;
                 fallback = wanted[n.key] + size(n)[1] + GAP_Y;
             });
@@ -287,30 +291,48 @@
      * `passes` is kept for the callers of older versions (no longer needed).
      */
     /**
-     * Blocks added from a block ("+", "Add a block"): on its right, from its row, in the given order — block 1, 2,
-     * then 3 added from 2 comes after 2. A place taken: further right on the same row. Only these positions are set
-     * (the other blocks never move).
+     * Blocks added from a block ("+", "Add a block"), in the overview: each one in the column of its kind — rules,
+     * timers, destinations, the left-to-right order of the diagram — on the row of the block it was added from. A kind
+     * without a column yet: right after the previous new block. Only these positions are set (the others never move);
+     * layout.separate() then moves only them if they overlap.
      */
-    function beside(pos, origin, fresh, nodes) {
-        var p = pos[origin.key];
-        if (!p) { return pos; }
+    function inColumns(pos, nodes, origin, fresh) {
+        var o = pos[origin.key];
+        if (!o) { return pos; }
         var freshKeys = fresh.map(function (n) { return n.key; });
-        var others = (nodes || []).filter(function (n) { return pos[n.key] && freshKeys.indexOf(n.key) < 0; });
-        var hits = function (x, y, s) {
-            return others.some(function (o) {
-                var q = pos[o.key], t = size(o);
-                return x < q[0] + t[0] + 20 && q[0] < x + s[0] + 20 && y < q[1] + t[1] + GAP_Y && q[1] < y + s[1] + GAP_Y;
+        var kindOf = function (n) { return n.kind === 'dest' ? (n.dest === 'timer' ? 'timer' : (n.depth ? 'deep' : 'dest')) : n.kind; };
+        var column = function (kind) {
+            var xs = nodes.filter(function (n) { return pos[n.key] && freshKeys.indexOf(n.key) < 0 && kindOf(n) === kind; })
+                .map(function (n) { return pos[n.key][0]; }).sort(function (a, b) { return a - b; });
+            return xs.length ? xs[Math.floor(xs.length / 2)] : null;
+        };
+        var order = { mailbox: 0, rule: 1, timer: 2, dest: 3, deep: 4, pack: 1 };
+        fresh = fresh.slice().sort(function (a, b) { return order[kindOf(a)] - order[kindOf(b)]; });
+        var prev = [o[0], size(origin)[0]];
+        var xs = fresh.map(function (n) {
+            var x = column(kindOf(n));
+            if (x === null) { x = prev[0] + prev[1] + GAP_X; }
+            prev = [x, size(n)[0]];
+            return x;
+        });
+        // one row free in every column, the nearest to the row of the origin (below, then above): the new blocks
+        // stay aligned, rule -> timer -> destination
+        var others = nodes.filter(function (n) { return pos[n.key] && freshKeys.indexOf(n.key) < 0; });
+        var free = function (y) {
+            return fresh.every(function (n, i) {
+                var s = size(n);
+                return !others.some(function (m) {
+                    var q = pos[m.key], t = size(m);
+                    return xs[i] < q[0] + t[0] + 20 && q[0] < xs[i] + s[0] + 20 && y < q[1] + t[1] + GAP_Y && q[1] < y + s[1] + GAP_Y;
+                });
             });
         };
-        var y = p[1];
-        fresh.forEach(function (n) {
-            var s = size(n), x = p[0] + size(origin)[0] + 90;
-            // the same row as its origin: further right while the place is taken (at most 40 steps)
-            for (var i = 0; i < 40 && hits(x, y, s); i++) { x += 120; }
-            pos[n.key] = [x, y];
-            others.push(n);
-            y += s[1] + GAP_Y;
-        });
+        var y = o[1];
+        for (var step = 0; step < 400; step++) {
+            var d = Math.ceil(step / 2) * 20 * (step % 2 ? 1 : -1);
+            if (free(o[1] + d)) { y = o[1] + d; break; }
+        }
+        fresh.forEach(function (n, i) { pos[n.key] = [xs[i], y]; });
         return pos;
     }
 
@@ -389,7 +411,7 @@
         return separate(pos, nodes, 40, fresh);
     }
 
-    var api = { SIZE: SIZE, columns: columns, radial: radial, grid: grid, separate: separate, beside: beside, bounds: bounds, placeNew: placeNew, size: size, adjacency: adjacency };
+    var api = { SIZE: SIZE, columns: columns, radial: radial, grid: grid, separate: separate, inColumns: inColumns, bounds: bounds, placeNew: placeNew, size: size, adjacency: adjacency };
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = api;
     } else {

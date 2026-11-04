@@ -4,6 +4,16 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [2.12.0] - 2026-11-04
+
+### Modifié
+- **Minuteur = un bloc à part dans la chaîne** (vue d'ensemble) : règle → ⧗ minuteur → statut / dossier…, le
+  minuteur dans sa propre colonne ; les liens partent du minuteur, plus de la règle (fini les lignes croisées).
+- **« Ajouter un minuteur » en deux choix** : le délai, puis ce qui suit (statut, assigner, note, dossier…) ; plus de
+  minuteur créé sans action.
+- **Nouveaux blocs dans leur colonne** : la nouvelle règle dans la colonne des règles, son minuteur dans celle des
+  minuteurs, sur la ligne du bloc d'origine — ou la ligne libre la plus proche, ensemble, alignés.
+
 ## [2.11.0] - 2026-11-04
 
 ### Ajouté
