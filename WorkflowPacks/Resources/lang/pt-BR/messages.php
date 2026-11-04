@@ -138,7 +138,6 @@ return [
     'target_version_auto' => 'próxima versão automaticamente',
     'export_key_auto'    => 'criada a partir do nome',
     'optional'           => 'opcional',
-    'export_next'        => 'A pré-visualização mostra o pacote; depois você pode baixá-lo ou agrupar as regras nele.',
     'group_title'        => 'Agrupar no pacote “:name”',
     'group_help'         => 'As regras não são recriadas nem alteradas: elas são vinculadas ao pacote, que é salvo. Importá-lo novamente aqui não cria duplicatas, e você pode baixá-lo a qualquer momento.',
     'group_rule'         => 'Regra',
@@ -446,4 +445,6 @@ return [
     'history_kind_simulate'     => 'Simulação',
     'history_count_applied'     => 'regras aplicadas',
     'history_count_uncertain'   => 'não simuláveis',
+    'details'   => 'Detalhes',
+    'checks_ok' => ':count verificações OK',
 ];

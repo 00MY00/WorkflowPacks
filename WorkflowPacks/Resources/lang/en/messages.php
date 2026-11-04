@@ -141,7 +141,6 @@ return [
     'target_version_auto' => 'next version automatically',
     'export_key_auto'    => 'made from the name',
     'optional'           => 'optional',
-    'export_next'        => 'The preview shows the pack; you can then download it, or group the rules into it.',
     'group_title'        => 'Group into the pack “:name”',
     'group_help'         => 'The rules are neither recreated nor changed: they are linked to the pack, which is stored. Importing it again here creates no duplicate, and you can download it at any time.',
     'group_rule'         => 'Rule',
@@ -450,4 +449,6 @@ return [
     'history_kind_simulate'     => 'Simulation',
     'history_count_applied'     => 'rules applied',
     'history_count_uncertain'   => 'not simulable',
+    'details'   => 'Details',
+    'checks_ok' => ':count checks OK',
 ];

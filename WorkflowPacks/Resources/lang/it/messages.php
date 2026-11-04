@@ -138,7 +138,6 @@ return [
     'target_version_auto' => 'versione successiva automaticamente',
     'export_key_auto'    => 'creata dal nome',
     'optional'           => 'facoltativo',
-    'export_next'        => 'L\'anteprima mostra il pacchetto; potrai poi scaricarlo, o raggrupparvi le regole.',
     'group_title'        => 'Raggruppa nel pacchetto «:name»',
     'group_help'         => 'Le regole non vengono né ricreate né modificate: vengono collegate al pacchetto, che viene salvato. Reimportarlo qui non crea duplicati, e puoi scaricarlo in qualsiasi momento.',
     'group_rule'         => 'Regola',
@@ -446,4 +445,6 @@ return [
     'history_kind_simulate'     => 'Simulazione',
     'history_count_applied'     => 'regole applicate',
     'history_count_uncertain'   => 'non simulabili',
+    'details'   => 'Dettagli',
+    'checks_ok' => ':count verifiche OK',
 ];

@@ -138,7 +138,6 @@ return [
     'target_version_auto' => 'volgende versie automatisch',
     'export_key_auto'    => 'gemaakt op basis van de naam',
     'optional'           => 'optioneel',
-    'export_next'        => 'Het voorbeeld toont het pakket; daarna kunt u het downloaden of de regels erin groeperen.',
     'group_title'        => 'Groeperen in het pakket ":name"',
     'group_help'         => 'De regels worden niet opnieuw aangemaakt of gewijzigd: ze worden gekoppeld aan het pakket, dat wordt opgeslagen. Het hier opnieuw importeren maakt geen duplicaten, en u kunt het altijd downloaden.',
     'group_rule'         => 'Regel',
@@ -446,4 +445,6 @@ return [
     'history_kind_simulate'     => 'Simulatie',
     'history_count_applied'     => 'regels toegepast',
     'history_count_uncertain'   => 'niet simuleerbaar',
+    'details'   => 'Details',
+    'checks_ok' => ':count controles OK',
 ];

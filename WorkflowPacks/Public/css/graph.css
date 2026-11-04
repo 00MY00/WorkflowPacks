@@ -348,6 +348,13 @@
 .wpg-sim-final th { color: var(--g-muted); font-weight: 600; padding: 3px 8px 3px 0; vertical-align: top; width: 40%; }
 .wpg-sim-final td { padding: 3px 0; overflow-wrap: anywhere; }
 .wpg-sim-form .form-group { margin-bottom: 10px; }
+.wpg-sim-target { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 10px; margin-bottom: 10px; font-size: 13px; }
+.wpg-sim-target.is-ok { background: #ecfdf5; color: #166534; }
+.wpg-sim-target.is-no { background: #fef2f2; color: #991b1b; }
+.wpg-sim-unmet p { margin: 0 0 8px; }
+.wpg-hint.is-ok { color: var(--c-ok); }
+.wpg-sim-more { margin: 4px 0 8px; }
+.wpg-sim-more > summary { cursor: pointer; font-size: 13px; color: var(--g-brand); margin-bottom: 6px; }
 /* a rule outside any pack, in a mailbox that uses one: add it to the pack */
 .wpg-pack-hint { margin-top: 12px; padding: 10px; border-radius: 10px; background: #fff7ed; border: 1px solid #fed7aa; font-size: 13px; }
 .wpg-pack-hint p { margin: 0 0 8px; }
@@ -355,3 +362,5 @@
 @media (max-width: 767px) {
   .wpg-views .wpg-btn span { display: inline; }
 }
+.wpg-help-box { margin-top: 6px; }
+.wpg-help-box > summary { cursor: pointer; font-size: 12px; color: var(--g-muted); }

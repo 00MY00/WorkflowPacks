@@ -39,6 +39,23 @@ class SimulationService
         $result = (new Simulator())->run($rules, $mail, !array_key_exists('include_inactive', $input) || !empty($input['include_inactive']));
         $result['skipped'] = array_merge($result['skipped'], $manual);
 
+        // "test this rule": did it apply, when, or why not
+        $target = (int) ($input['target'] ?? 0);
+        if ($target) {
+            $result['target'] = ['workflow_id' => $target, 'applied' => false, 't' => null, 'reason' => ''];
+            foreach ($result['events'] as $event) {
+                if ($event['workflow_id'] === $target) {
+                    $result['target'] = ['workflow_id' => $target, 'name' => $event['name'], 'applied' => true, 't' => $event['t'], 'reason' => ''];
+                }
+            }
+            foreach ($result['skipped'] as $skipped) {
+                if ($skipped['workflow_id'] === $target) {
+                    $result['target'] += ['name' => $skipped['name']];
+                    $result['target']['reason'] = $skipped['reason'];
+                }
+            }
+        }
+
         $view = $this->texts($result, $mailboxId);
         $uncertain = count(array_filter($result['skipped'], function ($s) {
             return $s['reason'] === 'sim_uncertain';
@@ -78,9 +95,44 @@ class SimulationService
             $result['skipped'][$i]['reason_text'] = $t($skipped['reason']);
         }
         $result['final'] = $this->state($result['final'], $labels, $t);
+        if (!empty($result['target'])) {
+            $result['target']['when'] = $result['target']['t'] !== null ? $this->when($result['target']['t']) : '';
+            $result['target']['reason_text'] = $result['target']['reason'] !== '' ? $t($result['target']['reason']) : '';
+        }
         $result['horizon'] = $this->when((int) end($result['checks']));
 
         return $result;
+    }
+
+    /**
+     * "Test this rule": a fake e-mail made to meet its conditions (SampleMail), and the conditions it cannot meet.
+     *
+     * @return array ['ok', 'error', 'workflow_id', 'mailbox_id', 'name', 'input' => [...], 'unmet' => [texts]]
+     */
+    public function sample($user, $workflowId)
+    {
+        $workflow = Bridge::query()->find((int) $workflowId);
+        if (!$workflow || !Bridge::canEdit($user, $workflow->mailbox_id)) {
+            return ['ok' => false, 'error' => __('workflowpacks::messages.sim_denied')];
+        }
+        $mailbox = \App\Mailbox::find($workflow->mailbox_id);
+        $made = SampleMail::forRule(Bridge::attributesOf($workflow)['conditions'], $mailbox ? $mailbox->email : '');
+        $labels = GraphBuilder::labels($workflow->mailbox_id);
+        $input = $made['input'];
+        $input['tags'] = implode(', ', $input['tags']);
+        unset($input['to'], $input['cc']);
+
+        return [
+            'ok'          => true,
+            'error'       => '',
+            'workflow_id' => (int) $workflow->id,
+            'mailbox_id'  => (int) $workflow->mailbox_id,
+            'name'        => (string) $workflow->name,
+            'input'       => $input,
+            'unmet'       => array_map(function ($lane) use ($labels) {
+                return $labels->condition(count($lane) === 1 ? $lane[0] : ['type' => '__or', 'items' => $lane]);
+            }, $made['unmet']),
+        ];
     }
 
     /** "At the arrival", "+1 h", "+2 d 1 min" */

@@ -144,7 +144,6 @@ return [
     'target_version_auto' => 'version suivante automatiquement',
     'export_key_auto'    => 'créée à partir du nom',
     'optional'           => 'facultatif',
-    'export_next'        => 'L\'aperçu montre le pack ; vous pourrez ensuite le télécharger, ou y regrouper les règles.',
     'group_title'        => 'Regrouper dans le pack « :name »',
     'group_help'         => 'Les règles ne sont ni recréées ni modifiées : elles sont reliées au pack, qui est enregistré. Le ré-importer ici ne crée aucun doublon, et vous pouvez le télécharger à tout moment.',
     'group_rule'         => 'Règle',
@@ -454,4 +453,6 @@ return [
     'history_kind_simulate'     => 'Simulation',
     'history_count_applied'     => 'règles appliquées',
     'history_count_uncertain'   => 'non simulables',
+    'details'   => 'Détails',
+    'checks_ok' => ':count vérifications OK',
 ];

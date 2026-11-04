@@ -93,4 +93,25 @@ class Ui
 
         return $type;
     }
+
+    /**
+     * Readable name of a condition / action for a summary: the catalog of the given mailbox, else of the first
+     * mailbox the user manages (looked up once per request), else the identifier.
+     */
+    public static function title($kind, $type, $mailboxId = null)
+    {
+        static $fallback = null;
+        if (!$mailboxId) {
+            if ($fallback === null) {
+                try {
+                    $fallback = auth()->check() ? (int) optional(Bridge::editableMailboxes(auth()->user())->first())->id : 0;
+                } catch (\Throwable $e) {
+                    $fallback = 0;
+                }
+            }
+            $mailboxId = $fallback;
+        }
+
+        return self::label($kind, $type, $mailboxId);
+    }
 }

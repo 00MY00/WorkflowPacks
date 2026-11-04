@@ -129,8 +129,17 @@ class GraphController extends Controller
     public function simulate(Request $request)
     {
         $this->guard();
-        $input = $request->only(['mailbox_id', 'subject', 'body', 'customer_email', 'customer_name', 'cc', 'tags', 'assigned', 'replied', 'include_inactive']);
+        $input = $request->only(['mailbox_id', 'subject', 'body', 'customer_email', 'customer_name', 'cc', 'tags', 'assigned', 'replied', 'status', 'include_inactive', 'target']);
         $result = (new \Modules\WorkflowPacks\Services\Flow\SimulationService())->run(auth()->user(), $input);
+
+        return response()->json($result, $result['ok'] ? 200 : 403);
+    }
+
+    /** "Test this rule": the fake e-mail made for the rule (filled in the simulation form). */
+    public function sample($id)
+    {
+        $this->guard();
+        $result = (new \Modules\WorkflowPacks\Services\Flow\SimulationService())->sample(auth()->user(), (int) $id);
 
         return response()->json($result, $result['ok'] ? 200 : 403);
     }

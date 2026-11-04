@@ -160,6 +160,32 @@ class FlowViewTest extends TestCase
         $this->actingAs($agent)->postJson(route('workflowpacks.graph.simulate'), ['mailbox_id' => $a->id, 'subject' => 'x'])->assertStatus(200);
     }
 
+    public function testARuleIsTestedWithAFakeEmailMadeForIt()
+    {
+        $a = $this->mailbox('A');
+        $b = $this->mailbox('B');
+        $admin = $this->user([], true);
+        list(, $close, $later) = $this->invoiceFlow($a);
+
+        $sample = $this->actingAs($admin)->getJson(route('workflowpacks.graph.sample', ['id' => $later->id]))->assertStatus(200)->json();
+        $this->assertStringContainsString('facture', mb_strtolower($sample['input']['subject']));
+        $this->assertFalse($sample['input']['replied'], 'branch "not replied"');
+        $this->assertSame([], $sample['unmet']);
+
+        $result = $this->actingAs($admin)->postJson(route('workflowpacks.graph.simulate'), $sample['input'] + ['mailbox_id' => $a->id, 'target' => $later->id])->json();
+        $this->assertTrue($result['target']['applied']);
+        $this->assertSame($later->id, $result['target']['workflow_id']);
+        $this->assertNotSame('', $result['target']['when']);
+
+        // the same e-mail, the team already replied: the tested rule does not apply, and the panel says why
+        $replied = $this->actingAs($admin)->postJson(route('workflowpacks.graph.simulate'), ['replied' => 1] + $sample['input'] + ['mailbox_id' => $a->id, 'target' => $later->id])->json();
+        $this->assertFalse($replied['target']['applied']);
+        $this->assertSame(__('workflowpacks::messages.sim_no_match'), $replied['target']['reason_text']);
+
+        $agent = $this->user([$b], false, true);
+        $this->actingAs($agent)->getJson(route('workflowpacks.graph.sample', ['id' => $close->id]))->assertStatus(403);
+    }
+
     public function testTheFlowViewIsKeptPerUser()
     {
         $admin = $this->user([], true);

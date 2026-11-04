@@ -34,6 +34,7 @@
             'retentionRemove' => route('workflowpacks.retention.remove'),
             'apply'     => route('workflowpacks.graph.apply', ['id' => '__ID__']),
             'simulate'  => route('workflowpacks.graph.simulate'),
+            'sample'    => route('workflowpacks.graph.sample', ['id' => '__ID__']),
             'reimport'  => route('workflowpacks.reimport', ['key' => '__ID__']),
             'workflows' => \Route::has('mailboxes.workflows') ? route('mailboxes.workflows', ['mailbox_id' => '__ID__']) : '',
         ],
@@ -111,8 +112,11 @@
         </div>
         <div class="wpg-toasts" aria-live="polite"></div>
     </div>
-    <p class="wpg-help wpg-help-mouse">{{ __('workflowpacks::graph.help') }}</p>
-    <p class="wpg-help wpg-help-touch">{{ __('workflowpacks::graph.help_touch') }}</p>
+    <details class="wpg-help-box">
+        <summary>{{ __('workflowpacks::graph.help_title') }}</summary>
+        <p class="wpg-help wpg-help-mouse">{{ __('workflowpacks::graph.help') }}</p>
+        <p class="wpg-help wpg-help-touch">{{ __('workflowpacks::graph.help_touch') }}</p>
+    </details>
     <div class="wpg-overlay"></div>
 </div>
 @endsection
