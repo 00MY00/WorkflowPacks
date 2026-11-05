@@ -61,6 +61,7 @@ return [
     'close'            => 'Sluiten',
     'sheet_expand'     => 'Volledig scherm',
     'sheet_shrink'     => 'Verkleinen',
+    'sheet_drag'       => 'Slepen om te vergroten of verkleinen (het blok blijft geselecteerd)',
     'group_pack'       => 'Groeperen in een pakket',
     'group_mailbox'    => 'Regels van deze mailbox groeperen',
     'edit'             => 'Bewerken',

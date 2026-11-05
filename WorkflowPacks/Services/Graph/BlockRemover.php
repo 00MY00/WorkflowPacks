@@ -68,6 +68,9 @@ class BlockRemover
                 }
             } elseif (preg_match('/^fa:(\d+):(\d+)$/', $key, $m)) {
                 $this->add($ops, $user, (int) $m[1], 'actions', (int) $m[2]);
+            } elseif (preg_match('/^dest:step:(\d+):(\d+):\d+$/', $key, $m)) {
+                // a block after a timer: that action of the rule
+                $this->add($ops, $user, (int) $m[1], 'actions', (int) $m[2]);
             } elseif (preg_match('/^ft:(\d+)$/', $key, $m)) {
                 $this->removeDelay($ops, $user, (int) $m[1]);
             } elseif (preg_match('#^dest:timer:(wf:(\d+)|tpl:([^/]+)/(.+))$#', $key, $m)) {

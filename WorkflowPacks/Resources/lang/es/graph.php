@@ -61,6 +61,7 @@ return [
     'close'            => 'Cerrar',
     'sheet_expand'     => 'Pantalla completa',
     'sheet_shrink'     => 'Reducir',
+    'sheet_drag'       => 'Arrastrar para ampliar o reducir (el bloque sigue seleccionado)',
     'group_pack'       => 'Agrupar en un paquete',
     'group_mailbox'    => 'Agrupar las reglas de este buzón',
     'edit'             => 'Editar',

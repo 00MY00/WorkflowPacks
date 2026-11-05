@@ -62,6 +62,7 @@ return [
     'close'            => 'Fermer',
     'sheet_expand'     => 'Plein écran',
     'sheet_shrink'     => 'Réduire',
+    'sheet_drag'       => 'Glisser pour agrandir ou réduire (le bloc reste sélectionné)',
     'group_pack'       => 'Regrouper dans un pack',
     'group_mailbox'    => 'Regrouper les règles de cette boîte',
     'edit'             => 'Modifier',

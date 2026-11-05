@@ -62,6 +62,7 @@ return [
     'close'            => 'Close',
     'sheet_expand'     => 'Whole screen',
     'sheet_shrink'     => 'Smaller',
+    'sheet_drag'       => 'Drag to resize (the block stays selected)',
     'group_pack'       => 'Group into a pack',
     'group_mailbox'    => 'Group the rules of this mailbox',
     'edit'             => 'Edit',

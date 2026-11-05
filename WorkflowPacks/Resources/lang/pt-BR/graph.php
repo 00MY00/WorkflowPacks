@@ -61,6 +61,7 @@ return [
     'close'            => 'Fechar',
     'sheet_expand'     => 'Tela inteira',
     'sheet_shrink'     => 'Reduzir',
+    'sheet_drag'       => 'Arraste para ampliar ou reduzir (o bloco continua selecionado)',
     'group_pack'       => 'Agrupar em um pacote',
     'group_mailbox'    => 'Agrupar as regras desta caixa',
     'edit'             => 'Editar',

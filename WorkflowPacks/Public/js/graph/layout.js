@@ -292,47 +292,58 @@
      */
     /**
      * Blocks added from a block ("+", "Add a block"), in the overview: each one in the column of its kind — rules,
-     * timers, destinations, the left-to-right order of the diagram — on the row of the block it was added from. A kind
-     * without a column yet: right after the previous new block. Only these positions are set (the others never move);
-     * layout.separate() then moves only them if they overlap.
+     * timers, destinations, the left-to-right order of the diagram — on the row of the block it was added from. A block
+     * of a chain (a timer after a folder, the blocks after a timer: "parent", "depth") goes right after its parent. A
+     * kind without a column yet: right after the previous new block. The chain and the other new blocks each take the
+     * nearest free row (aligned). Only these positions are set (the others never move); layout.separate() then moves
+     * only them if they still overlap.
      */
     function inColumns(pos, nodes, origin, fresh) {
         var o = pos[origin.key];
         if (!o) { return pos; }
+        var byKey = {};
+        nodes.forEach(function (n) { byKey[n.key] = n; });
         var freshKeys = fresh.map(function (n) { return n.key; });
-        var kindOf = function (n) { return n.kind === 'dest' ? (n.dest === 'timer' ? 'timer' : (n.depth ? 'deep' : 'dest')) : n.kind; };
+        var kindOf = function (n) { return n.kind === 'dest' ? ((n.depth || 0) > 0 ? 'deep' : (n.dest === 'timer' ? 'timer' : 'dest')) : n.kind; };
         var column = function (kind) {
             var xs = nodes.filter(function (n) { return pos[n.key] && freshKeys.indexOf(n.key) < 0 && kindOf(n) === kind; })
                 .map(function (n) { return pos[n.key][0]; }).sort(function (a, b) { return a - b; });
             return xs.length ? xs[Math.floor(xs.length / 2)] : null;
         };
         var order = { mailbox: 0, rule: 1, timer: 2, dest: 3, deep: 4, pack: 1 };
-        fresh = fresh.slice().sort(function (a, b) { return order[kindOf(a)] - order[kindOf(b)]; });
+        fresh = fresh.slice().sort(function (a, b) { return (order[kindOf(a)] - order[kindOf(b)]) || ((a.depth || 0) - (b.depth || 0)); });
+        var xOf = {};
         var prev = [o[0], size(origin)[0]];
-        var xs = fresh.map(function (n) {
-            var x = column(kindOf(n));
+        fresh.forEach(function (n) {
+            var p = n.parent && byKey[n.parent];
+            var px = p ? (p.key in xOf ? xOf[p.key] : (pos[p.key] && freshKeys.indexOf(p.key) < 0 ? pos[p.key][0] : null)) : null;
+            var x = kindOf(n) === 'deep' ? (px !== null ? px + size(p)[0] + GAP_X : null) : column(kindOf(n));
             if (x === null) { x = prev[0] + prev[1] + GAP_X; }
             prev = [x, size(n)[0]];
-            return x;
+            xOf[n.key] = x;
         });
-        // one row free in every column, the nearest to the row of the origin (below, then above): the new blocks
-        // stay aligned, rule -> timer -> destination
+        // the nearest row free for every block of a group (below, then above): the blocks of a group stay aligned
         var others = nodes.filter(function (n) { return pos[n.key] && freshKeys.indexOf(n.key) < 0; });
-        var free = function (y) {
-            return fresh.every(function (n, i) {
-                var s = size(n);
-                return !others.some(function (m) {
-                    var q = pos[m.key], t = size(m);
-                    return xs[i] < q[0] + t[0] + 20 && q[0] < xs[i] + s[0] + 20 && y < q[1] + t[1] + GAP_Y && q[1] < y + s[1] + GAP_Y;
+        var place = function (group) {
+            var free = function (y) {
+                return group.every(function (n) {
+                    var s = size(n), x = xOf[n.key];
+                    return !others.some(function (m) {
+                        var q = pos[m.key], t = size(m);
+                        return x < q[0] + t[0] + 20 && q[0] < x + s[0] + 20 && y < q[1] + t[1] + GAP_Y && q[1] < y + s[1] + GAP_Y;
+                    });
                 });
-            });
+            };
+            var y = o[1];
+            for (var step = 0; step < 400; step++) {
+                var d = Math.ceil(step / 2) * 20 * (step % 2 ? 1 : -1);
+                if (free(o[1] + d)) { y = o[1] + d; break; }
+            }
+            group.forEach(function (n) { pos[n.key] = [xOf[n.key], y]; });
         };
-        var y = o[1];
-        for (var step = 0; step < 400; step++) {
-            var d = Math.ceil(step / 2) * 20 * (step % 2 ? 1 : -1);
-            if (free(o[1] + d)) { y = o[1] + d; break; }
-        }
-        fresh.forEach(function (n, i) { pos[n.key] = [xs[i], y]; });
+        var chain = fresh.filter(function (n) { return kindOf(n) === 'deep'; });
+        if (chain.length) { place(chain); }
+        if (chain.length < fresh.length) { place(fresh.filter(function (n) { return kindOf(n) !== 'deep'; })); }
         return pos;
     }
 

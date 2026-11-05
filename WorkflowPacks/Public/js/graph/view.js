@@ -312,12 +312,22 @@
 
     /**
      * A block (with its "+") brought into the part of the view that is not covered: the top `fraction` of its
-     * height (phone: the panel of the block covers the bottom). Moves smoothly, and only when needed.
+     * height (phone: the panel of the block covers the bottom). Moves smoothly, and only when needed. minZoom: zoomed
+     * in to at least this first (a block too small to be read).
      */
-    View.prototype.reveal = function (key, fraction) {
+    View.prototype.reveal = function (key, fraction, minZoom) {
         var n = this.model.nodes[key], p = this.model.pos[key];
         if (!n || !p) { return; }
-        var s = L.size(n), r = this.svg.getBoundingClientRect(), k = this.t.k;
+        var s = L.size(n), r = this.svg.getBoundingClientRect();
+        // too small to be read (phone, whole diagram shown): zoomed in around the block first
+        if (minZoom && this.t.k < minZoom) {
+            var cx = (p[0] + s[0] / 2) * this.t.k + this.t.x, cy = (p[1] + s[1] / 2) * this.t.k + this.t.y;
+            this.t.x = cx - (p[0] + s[0] / 2) * minZoom;
+            this.t.y = cy - (p[1] + s[1] / 2) * minZoom;
+            this.t.k = minZoom;
+            this.setTransform();
+        }
+        var k = this.t.k;
         var top = p[1] * k + this.t.y, bottom = (p[1] + s[1]) * k + this.t.y;
         var left = p[0] * k + this.t.x, right = (p[0] + s[0] + 44) * k + this.t.x;
         var limit = r.height * (fraction || 1);

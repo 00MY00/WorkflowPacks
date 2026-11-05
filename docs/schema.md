@@ -203,15 +203,19 @@ Sur un écran tactile, le schéma suit les gestes habituels, comme dans une appl
 | deux doigts écartés ou rapprochés | zoomer autour des doigts (et se déplacer en même temps) |
 | toucher un bloc ou un lien | le sélectionner (panneau en bas de l'écran) ; toucher le fond : plus rien de sélectionné |
 | toucher deux fois | modifier une règle, isoler une boîte ; sur le fond : zoomer |
-| appui long sur un bloc | actions rapides (comme le clic droit) |
+| appui long sur un bloc | actions rapides (comme le clic droit), dont **Supprimer** (avec confirmation) |
 | appui long sur le fond, puis glisser | rectangle de sélection, puis actions rapides |
 | glisser un bloc **sélectionné** | le déplacer (un bloc non sélectionné déplace la vue, pour pouvoir parcourir un schéma plein) |
 | tirer le ● d'une règle sélectionnée vers une boîte | l'appliquer à cette boîte (zone de toucher élargie) |
 | coin en bas à droite d'un bloc sélectionné | l'agrandir |
 
 Sur un téléphone, la barre d'outils se replie et la mini-carte est masquée. Le panneau d'un bloc s'ouvre **en bas
-de l'écran**, sur la moitié de la hauteur, et le schéma reste visible au-dessus. Les menus et boutons sont plus
-grands, et l'aide sous le schéma décrit les gestes tactiles.
+de l'écran**, sur la moitié de la hauteur, et le schéma reste visible au-dessus, le bloc agrandi s'il était trop
+petit. **Sa poignée** (la barre en haut du panneau) se glisse : vers le bas, seul le titre reste et le schéma est
+visible en entier, **le bloc reste sélectionné** ; vers le haut, la moitié puis tout l'écran. Toucher la poignée
+replie ou déplie le panneau. **Agrandir** donne tout l'écran au schéma : les boutons tiennent sur une ligne (qui
+défile sur le côté) et le schéma est recadré. Les menus et boutons sont plus grands, et l'aide sous le schéma décrit
+les gestes tactiles.
 
 ![Téléphone](screenshots/schema-telephone.png)
 

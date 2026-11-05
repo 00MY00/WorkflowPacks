@@ -456,10 +456,14 @@
     App.prototype.phoneSheet = function (key) {
         if (!(window.matchMedia && window.matchMedia('(max-width: 767px)').matches)) { return; }
         var stage = this.root.querySelector('.wpg-stage');
-        window.scrollTo(0, stage.getBoundingClientRect().top + window.pageYOffset - 8);
+        // not window.scrollTo(): FreeScout replaces it (jQuery.scrollTo) and it throws with numbers
+        if (!this.root.classList.contains('is-full')) {
+            var page = document.scrollingElement || document.documentElement;
+            page.scrollTop = stage.getBoundingClientRect().top + page.scrollTop - 8;
+        }
         if (!key) { return; }
         var r = stage.getBoundingClientRect(), sheet = this.inspector.panel.getBoundingClientRect().top;
-        this.view.reveal(key, Math.max(0.2, Math.min(1, (sheet - r.top) / r.height)));
+        this.view.reveal(key, Math.max(0.2, Math.min(1, (sheet - r.top) / r.height)), 0.55);
     };
 
     /** "Enlarge": the diagram over the whole page; "Reduce" (or Escape) back. */
@@ -474,7 +478,13 @@
             button.title = full ? this.texts.reduce : this.texts.enlarge;
             button.setAttribute('aria-pressed', full ? 'true' : 'false');
         }
-        this.minimap.update();
+        // the diagram fills its new size: the selected block stays in view, else the whole diagram
+        var self = this;
+        window.requestAnimationFrame(function () {
+            var keys = Object.keys(self.view.selected);
+            if (keys.length === 1) { self.view.reveal(keys[0]); } else { self.view.fit(); }
+            self.minimap.update();
+        });
     };
 
     /**
