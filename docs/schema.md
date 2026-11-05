@@ -217,6 +217,10 @@ replie ou déplie le panneau. **Agrandir** donne tout l'écran au schéma : les 
 défile sur le côté) et le schéma est recadré. Les menus et boutons sont plus grands, et l'aide sous le schéma décrit
 les gestes tactiles.
 
+**Menus** (clic droit, « + », « Ajouter un bloc ») : comme les menus contextuels de Windows, une entrée marquée **›**
+ouvre sa liste **à côté** (survol ou clic ; à gauche s'il n'y a pas de place à droite ; flèches du clavier : → ouvre,
+← referme). Sur un téléphone, la liste remplace le menu, avec **‹ titre** en haut pour revenir.
+
 ![Téléphone](screenshots/schema-telephone.png)
 
 ## Code

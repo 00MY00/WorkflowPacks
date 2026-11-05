@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 2.14.0
+# Résultats des tests — Workflow Packs 2.15.0
 
 Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,15 @@ Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 2.15.0 — menus en cascade
+
+| Série | Résultat |
+|---|---|
+| JavaScript | inchangé, vert |
+| Intégration (107 tests, instance neuve) | inchangé, vert |
+| Navigateur (ordinateur) | Boîte « Comptabilité » › Ajouter un bloc › survol « Add a timer » → liste des délais à droite ; survol « After 1 day(s) » → liste des actions à droite (3 menus côte à côte) ; clic « Status: Closed » → éditeur ouvert, menus fermés |
+| Navigateur (téléphone 390 px) | « Add a timer » → la liste des délais remplace le menu (« ‹ » en haut) ; « After 1 day(s) » → les actions ; « ‹ » → retour aux délais ; aucune erreur du module |
 
 ## 2.14.0 — délais du minuteur, durée personnalisée
 
