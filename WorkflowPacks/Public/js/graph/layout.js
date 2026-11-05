@@ -36,6 +36,8 @@
     function adjacency(edges) {
         var adj = {};
         edges.forEach(function (e) {
+            // a rule after another one: placed after the block before it, not facing its mailbox
+            if (e.chained) { return; }
             (adj[e.from] = adj[e.from] || []).push(e.to);
             (adj[e.to] = adj[e.to] || []).push(e.from);
         });
@@ -103,8 +105,10 @@
         var adj = adjacency(edges);
         var rank = {};
         // sub-folders of an e-mail folder get their own columns, after their parent ("[WP] Invoices" -> "Suppliers")
-        var deep = k.dest.filter(function (n) { return (n.depth || 0) > 0; });
+        // and the next steps of a flow (rule, timer, blocks after a block)
+        var deep = k.dest.concat(k.rule).filter(function (n) { return (n.depth || 0) > 0; });
         k.dest = k.dest.filter(function (n) { return !((n.depth || 0) > 0); });
+        k.rule = k.rule.filter(function (n) { return !((n.depth || 0) > 0); });
         // timers of the rules ("After 30 days"): a column of their own, between the rules and the destinations
         k.timer = k.dest.filter(function (n) { return n.dest === 'timer'; });
         k.dest = k.dest.filter(function (n) { return n.dest !== 'timer'; });
@@ -161,7 +165,8 @@
             }
             var parentOf = {};
             level.forEach(function (n) {
-                parentOf[n.key] = (adj[n.key] || []).filter(function (key) { return pos[key] && byKey[key] && byKey[key].kind === 'dest'; })[0];
+                parentOf[n.key] = n.parent && pos[n.parent] ? n.parent
+                    : (adj[n.key] || []).filter(function (key) { return pos[key] && byKey[key] && (byKey[key].kind === 'dest' || byKey[key].kind === 'rule'); })[0];
             });
             level.sort(function (a, b) {
                 var pa = parentOf[a.key], pb = parentOf[b.key];
@@ -304,7 +309,7 @@
         var byKey = {};
         nodes.forEach(function (n) { byKey[n.key] = n; });
         var freshKeys = fresh.map(function (n) { return n.key; });
-        var kindOf = function (n) { return n.kind === 'dest' ? ((n.depth || 0) > 0 ? 'deep' : (n.dest === 'timer' ? 'timer' : 'dest')) : n.kind; };
+        var kindOf = function (n) { return (n.depth || 0) > 0 ? 'deep' : (n.kind === 'dest' ? (n.dest === 'timer' ? 'timer' : 'dest') : n.kind); };
         var column = function (kind) {
             var xs = nodes.filter(function (n) { return pos[n.key] && freshKeys.indexOf(n.key) < 0 && kindOf(n) === kind; })
                 .map(function (n) { return pos[n.key][0]; }).sort(function (a, b) { return a - b; });
@@ -345,6 +350,27 @@
         if (chain.length) { place(chain); }
         if (chain.length < fresh.length) { place(fresh.filter(function (n) { return kindOf(n) !== 'deep'; })); }
         return pos;
+    }
+
+    /**
+     * Blocks of a flow (after a block: "parent") saved left of their parent — saved before the overview was a flow, or
+     * their parent moved away: put back right after it, on its row, and so are the blocks after them. The other blocks
+     * keep their place. Returns the keys moved (to be saved).
+     */
+    function afterParents(pos, nodes) {
+        var byKey = {}, moved = {};
+        nodes.forEach(function (n) { byKey[n.key] = n; });
+        nodes.filter(function (n) { return n.parent && (n.depth || 0) > 0; })
+            .sort(function (a, b) { return a.depth - b.depth; })
+            .forEach(function (n) {
+                var p = pos[n.parent], q = pos[n.key];
+                if (!p || !byKey[n.parent] || (q && !moved[n.parent] && q[0] > p[0])) { return; }
+                pos[n.key] = [p[0] + size(byKey[n.parent])[0] + GAP_X, p[1]];
+                moved[n.key] = true;
+            });
+        var keys = Object.keys(moved);
+        if (keys.length) { separate(pos, nodes, 120, keys); }
+        return keys;
     }
 
     function separate(pos, nodes, passes, movable) {
@@ -422,7 +448,7 @@
         return separate(pos, nodes, 40, fresh);
     }
 
-    var api = { SIZE: SIZE, columns: columns, radial: radial, grid: grid, separate: separate, inColumns: inColumns, bounds: bounds, placeNew: placeNew, size: size, adjacency: adjacency };
+    var api = { SIZE: SIZE, columns: columns, radial: radial, grid: grid, separate: separate, inColumns: inColumns, afterParents: afterParents, bounds: bounds, placeNew: placeNew, size: size, adjacency: adjacency };
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = api;
     } else {

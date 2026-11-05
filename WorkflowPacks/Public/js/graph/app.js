@@ -96,6 +96,9 @@
             } else {
                 var before = Object.keys(self.model.pos);
                 L.placeNew(self.model.pos, nodes, self.model.edges);
+                // blocks of a flow left of the block they follow: put back after it (saved below)
+                var back = L.afterParents(self.model.pos, nodes);
+                before = before.filter(function (k) { return back.indexOf(k) < 0; });
                 // added from a block: each new block in its column, on the row of that block (rule -> timer ->
                 // destination, left to right); only the new blocks step aside, the others stay
                 var added = nodes.filter(function (n) { return before.indexOf(n.key) < 0; });

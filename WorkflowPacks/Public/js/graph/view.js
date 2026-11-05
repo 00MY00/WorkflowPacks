@@ -204,6 +204,8 @@
         this.model.edges.forEach(function (e, i) {
             // a rule applies to a mailbox: drawn as the flow "mailbox -> rule"
             var flip = e.kind === 'applies';
+            // a rule after another one: drawn from the block before it ("then"), not from its mailbox
+            if (e.chained) { return; }
             var a = this.model.nodes[flip ? e.to : e.from], b = this.model.nodes[flip ? e.from : e.to];
             if (!this.visible(a) || !this.visible(b) || !this.model.pos[a.key] || !this.model.pos[b.key]) {
                 return;

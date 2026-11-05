@@ -94,6 +94,9 @@ class GraphTest extends TestCase
         \App\Option::set(\Modules\WorkflowPacks\Services\Imap\ImapFolders::OPTION_ENABLED, true);
         $one = $this->local($a, 'Factures fournisseurs', [['type' => 'wp_imap_folder', 'value' => 'Factures/Fournisseurs'], ['type' => 'status', 'value' => '3']]);
         $two = $this->local($a, 'Factures clients', [['type' => 'wp_imap_folder', 'value' => 'Factures/Clients']]);
+        // other e-mails (same e-mails: the second rule would follow the first one, with blocks of its own)
+        $two->conditions = [[['type' => 'subject', 'operator' => 'contains', 'value' => 'client']]];
+        $two->save();
 
         $data = $this->actingAs($admin)->getJson(route('workflowpacks.graph.data'))->json();
         $folders = [];

@@ -91,6 +91,8 @@
 .wpg-edge.kind-contains.lit .wpg-line { opacity: .85; }
 /* e-mail folder -> sub-folder: the flow of the e-mail goes on */
 .wpg-edge.kind-folder .wpg-line { stroke: var(--c-imap); stroke-width: 2; }
+/* block -> next rule about the same e-mails (flow) */
+.wpg-edge.kind-then .wpg-line { stroke: var(--c-rule); stroke-width: 1.8; }
 /* resize grip, bottom right corner of a block */
 .wpg-grip { fill: var(--c); opacity: 0; cursor: nwse-resize; transition: opacity .15s; }
 .wpg-node:hover .wpg-grip, .wpg-node.selected .wpg-grip { opacity: .55; }

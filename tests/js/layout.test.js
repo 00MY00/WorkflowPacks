@@ -246,3 +246,32 @@ console.log(n + ' tests OK');
     assert.ok(Math.abs(pos['dest:timer:wf:1'][1] - pos['wf:1'][1]) < 10 && Math.abs(pos['dest:status:closed'][1] - pos['wf:1'][1]) < 10, 'on one line');
     console.log('timer column: OK');
 }
+
+// a flow: mailbox -> rule 1 -> Pending -> rule 2 -> timer -> its block, left to right; rule 2 not in the rules column
+{
+    const nodes = [{ key: 'mb:1', kind: 'mailbox' }, { key: 'wf:1', kind: 'rule' }, { key: 'dest:status:pending', kind: 'dest', dest: 'pending' },
+        { key: 'wf:2', kind: 'rule', parent: 'dest:status:pending', depth: 1 }, { key: 'dest:timer:wf:2', kind: 'dest', dest: 'timer', parent: 'wf:2', depth: 2 },
+        { key: 'dest:step:2:0:0', kind: 'dest', dest: 'closed', parent: 'dest:timer:wf:2', depth: 3 }];
+    const edges = [{ from: 'wf:1', to: 'mb:1', kind: 'applies' }, { from: 'wf:2', to: 'mb:1', kind: 'applies', chained: true },
+        { from: 'wf:1', to: 'dest:status:pending', kind: 'sends' }, { from: 'dest:status:pending', to: 'wf:2', kind: 'then' },
+        { from: 'wf:2', to: 'dest:timer:wf:2', kind: 'timer' }, { from: 'dest:timer:wf:2', to: 'dest:step:2:0:0', kind: 'sends' }];
+    const pos = L.columns(nodes, edges);
+    const x = nodes.map((n) => pos[n.key][0]);
+    for (let i = 1; i < x.length; i++) { assert.ok(x[i] > x[i - 1], nodes[i].key + ' right of ' + nodes[i - 1].key); }
+    const y = nodes.slice(1).map((n) => pos[n.key][1]);
+    assert.ok(Math.max.apply(null, y) - Math.min.apply(null, y) < 10, 'one line');
+    console.log('flow line: OK');
+}
+
+// saved before the flow: a rule of a flow left of the block it follows goes back after it, its timer too; others stay
+{
+    const nodes = [{ key: 'mb:1', kind: 'mailbox' }, { key: 'dest:status:pending', kind: 'dest', dest: 'pending' },
+        { key: 'wf:2', kind: 'rule', parent: 'dest:status:pending', depth: 1 }, { key: 'dest:timer:wf:2', kind: 'dest', dest: 'timer', parent: 'wf:2', depth: 2 }];
+    const pos = { 'mb:1': [0, 0], 'dest:status:pending': [800, 100], 'wf:2': [400, 300], 'dest:timer:wf:2': [900, 300] };
+    const moved = L.afterParents(pos, nodes);
+    assert.deepStrictEqual(moved.sort(), ['dest:timer:wf:2', 'wf:2']);
+    assert.ok(pos['wf:2'][0] > 800 && pos['dest:timer:wf:2'][0] > pos['wf:2'][0]);
+    assert.strictEqual(pos['wf:2'][1], 100);
+    assert.deepStrictEqual(pos['mb:1'], [0, 0]);
+    console.log('afterParents: OK');
+}

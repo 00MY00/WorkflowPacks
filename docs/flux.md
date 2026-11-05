@@ -64,11 +64,16 @@ Le nouveau bloc garde les conditions du flux et de sa branche : il s'ajoute à l
 
 ## Minuteurs
 
-- Dans la **vue d'ensemble**, une règle avec un délai a son **bloc minuteur** (sablier, « Après 30 jours · depuis
-  l'arrivée »), **relié au bloc d'où il part** : le bloc de l'étape d'avant (mêmes e-mails, délai plus court), par
-  exemple **[WP] Factures → ⧗ Après 1 jour → Fermé → ⧗ Après 2 jours → …**. Ce qui suit un minuteur est fait de
-  **blocs à lui** (jamais partagés avec d'autres règles), placés à sa droite. Sans étape avant lui, le minuteur suit
-  sa règle. Supprimer le minuteur retire le délai : la règle s'appliquera dès l'arrivée (signalé) ; supprimer un bloc
+- La **vue d'ensemble** est aussi un diagramme de flux : les règles des **mêmes e-mails** (mêmes conditions, même
+  boîte) se suivent — à l'arrivée d'abord, puis par délai, puis dans l'ordre de Workflows ; une branche (assigné,
+  répondu…) part de la ligne principale. La première règle part de sa boîte ; **chaque suivante vient après le
+  dernier bloc de la précédente**, à sa droite : **Support → ⚡ classement → [WP] Factures → ⚡ relance → ⧗ Après
+  1 jour → Fermé → …** (une règle sans bloc après elle — une note — est suivie directement). Une règle après une autre,
+  ou avec un délai, a des **blocs à elle** (jamais partagés). Une règle d'un pack utilisée dans plusieurs boîtes reste
+  un seul bloc, partant de ses boîtes. Les blocs d'un flux enregistrés à gauche de leur bloc parent (positions d'avant
+  la 2.16) sont replacés après lui ; les autres gardent leur place.
+- Une règle avec un délai a son **bloc minuteur** (sablier, « Après 30 jours · depuis l'arrivée »), juste après
+  elle. Supprimer le minuteur retire le délai : la règle s'appliquera dès l'arrivée (signalé) ; supprimer un bloc
   après lui retire cette action de sa règle.
 - **Ajouter un minuteur** (« + », panneau, « Ajouter un bloc »), en deux choix : le délai (15 ou 30 minutes ; 1, 2,
   4 ou 12 heures ; 1, 2, 3, 7, 14, 30 ou 90 jours) ou **Durée personnalisée…** (l'éditeur s'ouvre sur le champ de la

@@ -4,6 +4,18 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [2.16.0] - 2026-11-05
+
+### Modifié
+- **Vue d'ensemble = vrai diagramme de flux.** Les règles (⚡) des mêmes e-mails (mêmes conditions, même boîte) se
+  suivent — à l'arrivée, puis par délai, puis dans l'ordre de Workflows ; une branche part de la ligne principale.
+  La première règle part de sa boîte, chaque suivante vient **après le dernier bloc de la précédente** et y est
+  reliée : Support → ⚡ classement → [WP] Factures → ⚡ relance → ⧗ Après 1 jour → Fermé. Avant, toutes les règles
+  restaient dans la colonne de gauche, reliées seulement à leur boîte. Une règle après une autre a des blocs à elle ;
+  son lien à la boîte reste connu (panneau, mise en évidence) sans être dessiné.
+- Les blocs d'un flux enregistrés à gauche de leur bloc parent sont replacés après lui au chargement (une fois,
+  enregistré) ; les autres blocs gardent leur place.
+
 ## [2.15.0] - 2026-11-05
 
 ### Modifié

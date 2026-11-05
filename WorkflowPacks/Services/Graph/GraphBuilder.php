@@ -20,10 +20,9 @@ use Modules\WorkflowPacks\Services\Workflows\Bridge;
  *         tpl:<pack>/<key>  rule of a pack (one node, linked to every mailbox where the pack created it)
  *         wf:<id>           rule created outside any pack (linked to its own mailbox)
  *         pack:<key>        pack (contains its rules)
- *         dest:timer:<rule> the delay of a rule ("After 30 days"): a block of its own, after the block of the step before
- *                           it (same e-mails, shorter delay: "[WP] Invoices" -> "After 1 day"), else after the rule
- *         dest:step:<id>:<i>:<n> what a rule with a delay does (action i of the rule): blocks of their own after the
- *                           timer ("After 1 day" -> "Closed"), never shared, so that each timer chain stays readable
+ *         dest:timer:<rule> the delay of a rule ("After 30 days"): a block of its own, after the rule
+ *         dest:step:<id>:<i>:<n> what a rule after another one or with a delay does (action i of the rule): blocks of
+ *                           their own, never shared, so that each line of the flow stays readable (see flow())
  *         dest:<kind>:<id>  where a rule sends the conversations: folder of a status (closed, pending, spam…),
  *                           Deleted, a person (assignment), a tag (Tags module), an e-mail folder on the mail server
  *                           (one block per level); moving to another mailbox links the rule to that mailbox
@@ -31,6 +30,8 @@ use Modules\WorkflowPacks\Services\Workflows\Bridge;
  *         pack -> rule      "contains"
  *         rule -> dest      "sends": derived from the actions of the rule (display only)
  *         folder -> folder  "folder": e-mail folder -> its sub-folder ("[WP] Invoices" -> "Suppliers")
+ *         block -> rule     "then": the next rule about the same e-mails, after the last block of the one before; its
+ *                           "applies" link is then marked "chained" (kept for the panel, not drawn)
  *
  * Only identifiers, names and short summaries are sent: the full rule is loaded when a node is opened.
  *
@@ -71,8 +72,9 @@ class GraphBuilder
         $linkByWorkflow = $links->keyBy('workflow_id');
         $packs = Pack::whereIn('pack_key', $links->pluck('pack_key')->unique()->all() ?: [''])->get()->keyBy('pack_key');
         $flowRules = [];
-        // rules with a delay, for the chains: block of the step before -> timer -> its own blocks
+        // the rules, then their blocks as a flow (flow()): one line per e-mails, block after block
         $steps = [];
+        $uses = [];
 
         foreach ($workflows as $wf) {
             $link = $linkByWorkflow->get($wf->id);
@@ -98,69 +100,15 @@ class GraphBuilder
             $edges[] = ['from' => $ruleKey, 'to' => 'mb:'.$wf->mailbox_id, 'kind' => 'applies', 'workflow_id' => (int) $wf->id,
                 'active' => (bool) $wf->active, 'previous' => (bool) $wf->apply_to_prev, 'state' => $state, 'name' => (string) $wf->name,
                 'sensitive' => $summary['sensitive'], 'files' => false];
-            $applies = count($edges) - 1;
-            // a rule with a delay: its timer is a block of its own ("After 30 days") between the rule and what it does:
-            // rule -> timer -> destinations
+            // the blocks of the rule are built with the flow (below): after the rule before it, if any
             $parts = FlowBuilder::split((array) $attributes['conditions']);
-            $delays = $parts['delays'];
-            $timerKey = 'dest:timer:'.$ruleKey;
-            $from = $delays ? $timerKey : $ruleKey;
-            // a rule of a pack in several mailboxes: one timer, drawn once
-            $newTimer = $delays && !isset($nodes[$timerKey]);
-            if ($newTimer) {
-                $labels = self::labels($wf->mailbox_id);
-                $nodes[$timerKey] = ['key' => $timerKey, 'kind' => 'dest', 'dest' => 'timer', 'rule' => $ruleKey,
-                    'label' => implode(' · ', array_map([$labels, 'delay'], $delays)), 'sub' => __('workflowpacks::messages.timer_block')];
-                $sends[$ruleKey.'>'.$timerKey] = ['from' => $ruleKey, 'to' => $timerKey, 'kind' => 'timer'];
-            }
-            $step = ['mailbox' => (int) $wf->mailbox_id, 'lane' => md5(FlowBuilder::canon([$parts['base'], $parts['branch']])),
-                'seconds' => $parts['seconds'], 'rule' => $ruleKey, 'timer' => $newTimer ? $timerKey : null, 'last' => null, 'blocks' => []];
-            foreach ($this->destinations($attributes, $jsonActions, $nodes) as $n => $dest) {
-                $chain = $dest['chain'] ?? [];
-                unset($dest['chain']);
-                if ($delays && $dest['kind'] === 'dest') {
-                    if (!$newTimer) {
-                        continue;
-                    }
-                    // after a timer: a block of its own (the deepest level of an e-mail folder), never shared
-                    $target = $chain ? end($chain) : $dest;
-                    $stepKey = 'dest:step:'.$wf->id.':'.$dest['index'].':'.$n;
-                    $nodes[$stepKey] = ['key' => $stepKey, 'rule' => $ruleKey, 'parent' => $timerKey, 'depth' => 0, 'step' => true]
-                        + array_diff_key($target, ['retention' => 1, 'filed_by' => 1, 'index' => 1]);
-                    $sends[$timerKey.'>'.$stepKey] = ['from' => $timerKey, 'to' => $stepKey, 'kind' => 'sends', 'action' => $dest['action'], 'rule' => $ruleKey];
-                    $step['last'] = $stepKey;
-                    $step['blocks'][] = $stepKey;
-                    if ($dest['dest'] === 'imap') {
-                        $edges[$applies]['files'] = true;
-                    }
-                    continue;
-                }
-                unset($dest['index']);
-                if ($dest['kind'] === 'dest') {
-                    $step['last'] = $chain ? end($chain)['key'] : $dest['key'];
-                }
-                $nodes[$dest['key']] = $nodes[$dest['key']] ?? $dest;
-                $sends[$from.'>'.$dest['key']] = ['from' => $from, 'to' => $dest['key'], 'kind' => 'sends', 'action' => $dest['action'], 'rule' => $ruleKey];
-                // e-mail folders: the flow goes on, level by level ("[WP] Invoices" -> "Suppliers")
-                $parent = $dest['key'];
-                foreach ($chain as $child) {
-                    $nodes[$child['key']] = $nodes[$child['key']] ?? $child;
-                    $sends[$parent.'>'.$child['key']] = ['from' => $parent, 'to' => $child['key'], 'kind' => 'folder'];
-                    $parent = $child['key'];
-                }
-                if (($dest['dest'] ?? '') === 'imap') {
-                    // the rule files into an e-mail folder: "File again" offered for it
-                    $edges[$applies]['files'] = true;
-                    // every level knows the rules filing into it or below (side panel, highlight)
-                    foreach (array_merge([$dest], $chain) as $folder) {
-                        $filed = $nodes[$folder['key']]['filed_by'] ?? [];
-                        $nodes[$folder['key']]['filed_by'] = array_values(array_unique(array_merge($filed, [$ruleKey])));
-                    }
-                }
-            }
-            $steps[] = $step;
+            $steps[] = ['wf' => (int) $wf->id, 'mailbox' => (int) $wf->mailbox_id, 'order' => count($steps), 'rule' => $ruleKey,
+                'base' => md5(FlowBuilder::canon($parts['base'])), 'branch' => $parts['branch'] ? md5(FlowBuilder::canon($parts['branch'])) : '',
+                'seconds' => $parts['seconds'], 'delays' => $parts['delays'], 'applies' => count($edges) - 1,
+                'dests' => $this->destinations($attributes, $jsonActions, $nodes)];
+            $uses[$ruleKey] = ($uses[$ruleKey] ?? 0) + 1;
         }
-        $this->chainTimers($steps, $nodes, $sends);
+        $this->flow($steps, $uses, $nodes, $edges, $sends);
         foreach ($sends as $edge) {
             $edges[] = $edge;
         }
@@ -339,37 +287,98 @@ class GraphBuilder
     }
 
     /**
-     * Timer chains: a timer goes after the last block of the step before it — same mailbox, same e-mails (conditions
-     * and branch), the longest shorter delay: "[WP] Invoices" -> "After 1 day" -> "Closed" -> "After 2 days" -> …
-     * Without such a step, it stays after its rule. Shortest delays first, so that each parent already has its depth.
+     * The overview as a flow diagram. Rules about the same e-mails (same conditions, same mailbox) follow each other:
+     * on arrival first, then by delay, then in the order of Workflows; a branch (assigned, replied…) goes on from the
+     * main line. The first rule comes from its mailbox; each next one comes after the last block of the one before:
+     * "[WP] Invoices" -> rule -> "After 1 day" -> "Closed" -> rule -> … A rule after another one, or with a delay, has
+     * blocks of its own (never shared), so that each line stays readable. A rule of a pack used in several mailboxes
+     * stays one block, coming from its mailboxes. Depths: the columns after the destinations (layout.columns).
      */
-    protected function chainTimers(array $steps, array &$nodes, array &$sends)
+    protected function flow(array $steps, array $uses, array &$nodes, array &$edges, array &$sends)
     {
-        $timers = array_filter($steps, function ($s) {
-            return $s['timer'] !== null;
+        usort($steps, function ($a, $b) {
+            return $a['seconds'] === $b['seconds'] ? $a['order'] - $b['order'] : ($a['seconds'] < $b['seconds'] ? -1 : 1);
         });
-        usort($timers, function ($a, $b) {
-            return $a['seconds'] - $b['seconds'];
-        });
-        foreach ($timers as $t) {
-            $prev = null;
-            foreach ($steps as $s) {
-                if ($s['last'] && $s['mailbox'] === $t['mailbox'] && $s['lane'] === $t['lane'] && $s['seconds'] < $t['seconds']
-                    && (!$prev || $s['seconds'] >= $prev['seconds'])) {
-                    $prev = $s;
+        $done = [];
+        foreach ($steps as $s) {
+            $ruleKey = $s['rule'];
+            $single = $uses[$ruleKey] === 1;
+            $parent = null;
+            for ($i = count($done) - 1; $single && $i >= 0; $i--) {
+                $p = $done[$i];
+                if ($p['end'] && $p['mailbox'] === $s['mailbox'] && $p['base'] === $s['base'] && ($p['branch'] === '' || $p['branch'] === $s['branch'])) {
+                    $parent = $p['end'];
+                    break;
                 }
             }
             $depth = 0;
-            if ($prev) {
-                $depth = ($nodes[$prev['last']]['depth'] ?? 0) + 1;
-                $nodes[$t['timer']]['parent'] = $prev['last'];
-                $nodes[$t['timer']]['depth'] = $depth;
-                unset($sends[$t['rule'].'>'.$t['timer']]);
-                $sends[$prev['last'].'>'.$t['timer']] = ['from' => $prev['last'], 'to' => $t['timer'], 'kind' => 'timer', 'rule' => $t['rule']];
+            if ($parent !== null) {
+                $depth = ($nodes[$parent]['depth'] ?? 0) + 1;
+                $nodes[$ruleKey]['parent'] = $parent;
+                $nodes[$ruleKey]['depth'] = $depth;
+                // still applied in its mailbox (panel, highlight), drawn from the block before it
+                $edges[$s['applies']]['chained'] = true;
+                $sends[$parent.'>'.$ruleKey] = ['from' => $parent, 'to' => $ruleKey, 'kind' => 'then'];
             }
-            foreach ($t['blocks'] as $key) {
-                $nodes[$key]['depth'] = $prev ? $depth + 1 : 0;
+            $own = $parent !== null || $s['delays'];
+            $from = $ruleKey;
+            $next = $parent !== null ? $depth + 1 : 0;
+            if ($s['delays']) {
+                $timerKey = 'dest:timer:'.$ruleKey;
+                if (isset($nodes[$timerKey])) {
+                    // a rule of a pack in another mailbox: its timer and blocks are drawn once
+                    $done[] = $s + ['end' => null];
+                    continue;
+                }
+                $labels = self::labels($s['mailbox']);
+                $nodes[$timerKey] = ['key' => $timerKey, 'kind' => 'dest', 'dest' => 'timer', 'rule' => $ruleKey, 'parent' => $ruleKey, 'depth' => $next,
+                    'label' => implode(' · ', array_map([$labels, 'delay'], $s['delays'])), 'sub' => __('workflowpacks::messages.timer_block')];
+                $sends[$ruleKey.'>'.$timerKey] = ['from' => $ruleKey, 'to' => $timerKey, 'kind' => 'timer'];
+                $from = $timerKey;
+                $next = $parent !== null ? $next + 1 : 0;
             }
+            $end = null;
+            foreach ($s['dests'] as $n => $dest) {
+                $chain = $dest['chain'] ?? [];
+                unset($dest['chain']);
+                if ($own && $dest['kind'] === 'dest') {
+                    // a block of its own (the deepest level of an e-mail folder), never shared
+                    $target = $chain ? end($chain) : $dest;
+                    $stepKey = 'dest:step:'.$s['wf'].':'.$dest['index'].':'.$n;
+                    $nodes[$stepKey] = ['key' => $stepKey, 'rule' => $ruleKey, 'parent' => $from, 'depth' => $next, 'step' => true]
+                        + array_diff_key($target, ['retention' => 1, 'filed_by' => 1, 'index' => 1]);
+                    $sends[$from.'>'.$stepKey] = ['from' => $from, 'to' => $stepKey, 'kind' => 'sends', 'action' => $dest['action'], 'rule' => $ruleKey];
+                    $end = $stepKey;
+                    if ($dest['dest'] === 'imap') {
+                        $edges[$s['applies']]['files'] = true;
+                    }
+                    continue;
+                }
+                unset($dest['index']);
+                if ($dest['kind'] === 'dest') {
+                    $end = $chain ? end($chain)['key'] : $dest['key'];
+                }
+                $nodes[$dest['key']] = $nodes[$dest['key']] ?? $dest;
+                $sends[$from.'>'.$dest['key']] = ['from' => $from, 'to' => $dest['key'], 'kind' => 'sends', 'action' => $dest['action'], 'rule' => $ruleKey];
+                // e-mail folders: the flow goes on, level by level ("[WP] Invoices" -> "Suppliers")
+                $up = $dest['key'];
+                foreach ($chain as $child) {
+                    $nodes[$child['key']] = $nodes[$child['key']] ?? $child;
+                    $sends[$up.'>'.$child['key']] = ['from' => $up, 'to' => $child['key'], 'kind' => 'folder'];
+                    $up = $child['key'];
+                }
+                if (($dest['dest'] ?? '') === 'imap') {
+                    // the rule files into an e-mail folder: "File again" offered for it
+                    $edges[$s['applies']]['files'] = true;
+                    // every level knows the rules filing into it or below (side panel, highlight)
+                    foreach (array_merge([$dest], $chain) as $folder) {
+                        $filed = $nodes[$folder['key']]['filed_by'] ?? [];
+                        $nodes[$folder['key']]['filed_by'] = array_values(array_unique(array_merge($filed, [$ruleKey])));
+                    }
+                }
+            }
+            // no block after the rule (a note, a notification…): the next rule comes after the rule (or its timer)
+            $done[] = $s + ['end' => $end ?: ($single ? $from : null)];
         }
     }
 
