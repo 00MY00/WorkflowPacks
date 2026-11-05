@@ -4,6 +4,16 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [2.14.0] - 2026-11-05
+
+### Ajouté
+- **Minuteur : plus de délais et durée personnalisée.** 15 et 30 minutes ; 1, 2, 4 et 12 heures ; 1, 2, 3, 7, 14, 30
+  et 90 jours, et **Durée personnalisée…** : l'éditeur s'ouvre sur le champ de la durée (nombre + minutes / heures /
+  jours). Le nom de la règle (« Après 3 heures ») suit la durée tant qu'il n'est pas changé à la main.
+
+### Modifié
+- Panneau d'un bloc, « Ajouter un minuteur » : un seul délai déplié à la fois, la liste reste courte.
+
 ## [2.13.0] - 2026-11-05
 
 ### Modifié

@@ -315,6 +315,7 @@ return [
     'delete_undone'    => 'Löschen rückgängig gemacht: alles ist wieder da.',
     'next_add_timer'    => 'Timer hinzufügen',
     'next_timer_preset' => 'Nach :delay',
+    'next_timer_custom' => 'Eigene Dauer…',
     'next_name_timer'   => 'Nach :delay',
     'kind_dest_timer'  => 'Timer',
     'timer_rule'       => 'Regel',

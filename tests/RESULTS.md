@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 2.13.0
+# Résultats des tests — Workflow Packs 2.14.0
 
 Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,14 @@ Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 2.14.0 — délais du minuteur, durée personnalisée
+
+| Série | Résultat |
+|---|---|
+| JavaScript | `next.test.js` : 13 délais (15 min à 90 jours) puis « Durée personnalisée » (1 jour au départ, champ de la durée à remplir, nom qui suit la durée) ; chaque délai mène aux actions |
+| Intégration (107 tests, instance neuve) | inchangé, vert |
+| Navigateur | Dossier « [WP] Factures » › Ajouter un minuteur : 13 délais + « Custom duration… » › Statut Fermé : éditeur avec le champ de la durée sélectionné ; 3 + heures → nom « After 3 hour(s) » ; enregistré : [WP] Factures → ⧗ → bloc Fermé ; aucune erreur |
 
 ## 2.13.0 — minuteur relié à son bloc parent, téléphone
 

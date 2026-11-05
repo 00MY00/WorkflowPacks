@@ -315,6 +315,7 @@ return [
     'delete_undone'    => 'Verwijderen ongedaan gemaakt: alles is terug.',
     'next_add_timer'    => 'Timer toevoegen',
     'next_timer_preset' => 'Na :delay',
+    'next_timer_custom' => 'Eigen duur…',
     'next_name_timer'   => 'Na :delay',
     'kind_dest_timer'  => 'Timer',
     'timer_rule'       => 'Regel',

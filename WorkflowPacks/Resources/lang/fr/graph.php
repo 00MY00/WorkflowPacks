@@ -316,6 +316,7 @@ return [
     'delete_undone'    => 'Suppression annulée : tout est revenu.',
     'next_add_timer'    => 'Ajouter un minuteur',
     'next_timer_preset' => 'Après :delay',
+    'next_timer_custom' => 'Durée personnalisée…',
     'next_name_timer'   => 'Après :delay',
     'kind_dest_timer'  => 'Minuteur',
     'timer_rule'       => 'Règle',

@@ -63,7 +63,8 @@
 
     /**
      * opts: { mailboxId, workflowId?, packRule?, rule? (new rule, filled in: next.js), addAction? (existing rule: an
-     * action added at the end, to be completed and saved) }
+     * action added at the end, to be completed and saved), timerName? ("After :delay": the name follows the delay while
+     * it is not changed by hand), focusDelay? (the delay field focused: custom duration) }
      */
     Editor.prototype.open = function (opts) {
         var self = this, app = this.app;
@@ -81,8 +82,14 @@
                 self.packInfo = null;
                 self.fromRule(opts.rule || { name: '', type: 'automatic', conditions: { all: [{ type: self.firstType('conditions', 'subject'), operator: '' }] }, actions: [] });
             }
+            self.autoName = opts.timerName ? self.state.name : null;
             self.render();
             self.overlay.classList.add('open');
+            if (opts.focusDelay) {
+                var fields = self.overlay.querySelectorAll('.wpg-timer .wpg-w-num');
+                var field = fields[fields.length - 1];
+                if (field) { field.focus(); field.select(); }
+            }
         }).catch(function (e) { app.toast(e.message, 'error'); });
     };
 
@@ -129,6 +136,7 @@
         }
         var name = h('input', { class: 'form-control', value: s.name, maxlength: 75, placeholder: t.rule_name_ph });
         name.addEventListener('input', function () { s.name = name.value; self.sync(); });
+        this.nameInput = name;
         var type = h('select', { class: 'form-control input-sm' }, ['automatic', 'manual'].map(function (v) {
             var o = h('option', { value: v, text: t['type_' + v] });
             if (s.type === v) { o.selected = true; }
@@ -255,6 +263,14 @@
         return row;
     };
 
+    /** New timer rule ("After 1 day"): its name follows its delay, as long as it was not changed by hand. */
+    Editor.prototype.renameTimer = function (delay) {
+        if (!this.opts.timerName || this.autoName === null || this.state.name !== this.autoName) { return; }
+        this.autoName = this.opts.timerName.replace(':delay', delay.number + ' ' + (this.t['unit_' + delay.metric] || delay.metric)).slice(0, 75);
+        this.state.name = this.autoName;
+        if (this.nameInput) { this.nameInput.value = this.autoName; }
+    };
+
     /** Value of a condition: closed list -> select, no value -> nothing, else text. */
     Editor.prototype.valueControl = function (cfg, item, placeholder) {
         var self = this, t = this.t;
@@ -262,9 +278,9 @@
         if ((this.catalog.timers || []).indexOf(item.type) >= 0) {
             if (!item.value || typeof item.value !== 'object') { item.value = { number: 7, metric: 'd' }; }
             var number = h('input', { type: 'number', min: 1, max: 100000, step: 1, class: 'form-control input-sm wpg-w-num', value: item.value.number,
-                'aria-label': t.timer_number, on: { input: function () { item.value.number = Math.max(1, parseInt(this.value, 10) || 1); self.sync(); } } });
+                'aria-label': t.timer_number, on: { input: function () { item.value.number = Math.max(1, parseInt(this.value, 10) || 1); self.renameTimer(item.value); self.sync(); } } });
             var unit = select([['i', t.unit_i], ['h', t.unit_h], ['d', t.unit_d]], item.value.metric || 'd',
-                function (v) { item.value.metric = v; self.sync(); }, 'wpg-w-unit');
+                function (v) { item.value.metric = v; self.renameTimer(item.value); self.sync(); }, 'wpg-w-unit');
             return h('span', { class: 'wpg-w-val wpg-timer', title: t.timer_help }, [h('span', { class: 'wpg-timer-ic' }, [icon('timer')]), number, unit]);
         }
         if (Array.isArray(cfg.values) && cfg.values.length === 0) {
