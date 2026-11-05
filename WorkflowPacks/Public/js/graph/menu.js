@@ -12,18 +12,29 @@
         this.app = app;
         this.t = app.texts;
         this.el = null;
+        // the lists open: the menu, then its sub-menus (Windows-like); phone: the lists left, for "‹ back"
+        this.panels = [];
+        this.history = [];
         var self = this;
-        document.addEventListener('pointerdown', function (e) { if (self.el && !self.el.contains(e.target)) { self.close(); } }, true);
+        document.addEventListener('pointerdown', function (e) { if (self.el && !self.contains(e.target)) { self.close(); } }, true);
         document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { self.close(); } });
         // the page scrolled (not the menu itself, nor the scroll that brings the selected block into view on a phone,
         // right after a long press): the menu no longer faces its block
         window.addEventListener('scroll', function (e) {
-            if (self.el && !self.el.contains(e.target) && Date.now() - self.shownAt > 600) { self.close(); }
+            if (self.el && !self.contains(e.target) && Date.now() - self.shownAt > 600) { self.close(); }
         }, true);
     }
 
     Menu.prototype.close = function () {
-        if (this.el) { this.el.parentNode.removeChild(this.el); this.el = null; }
+        clearTimeout(this.hoverTimer);
+        this.panels.forEach(function (p) { if (p.parentNode) { p.parentNode.removeChild(p); } });
+        this.panels = [];
+        this.history = [];
+        this.el = null;
+    };
+
+    Menu.prototype.contains = function (node) {
+        return this.panels.some(function (p) { return p.contains(node); });
     };
 
     /** Workflows rules behind the selection: a rule in every mailbox where it applies, a mailbox with all its rules. */
@@ -108,45 +119,155 @@
         this.render(x, y, t.menu_title.replace(':count', keys.length), groups);
     };
 
-    /** A menu where the pointer is: a title, then groups of items ([label, icon, action, sub-items]). */
+    /**
+     * A menu where the pointer is: a title, then groups of items ([label, icon, action, sub-items]). Sub-items open in
+     * a menu of their own next to their item, like the context menus of Windows (hover or click, keyboard arrows); on a
+     * phone (no room on the side) they replace the list, with "‹ back" at the top.
+     */
     Menu.prototype.render = function (x, y, title, groups) {
-        var app = this.app, self = this;
+        var self = this;
         this.close();
-        var menu = h('div', { class: 'wpg-menu', role: 'menu' }, [h('div', { class: 'wpg-menu-head', text: title })]);
+        var menu = this.panel([h('div', { class: 'wpg-menu-head', text: title })]);
         groups.forEach(function (items, gi) {
             if (gi) { menu.appendChild(h('div', { class: 'wpg-menu-sep' })); }
-            items.forEach(function (item) { menu.appendChild(self.item(item)); });
+            items.forEach(function (item) { menu.appendChild(self.item(item, 0)); });
         });
-        // inside the diagram (its colors), fixed where the mouse is
-        app.root.appendChild(menu);
         this.el = menu;
-        // inside the window
-        var r = menu.getBoundingClientRect();
-        menu.style.left = Math.max(8, Math.min(x, window.innerWidth - r.width - 8)) + 'px';
-        menu.style.top = Math.max(8, Math.min(y, window.innerHeight - r.height - 8)) + 'px';
+        this.place(menu, x, y);
         var first = menu.querySelector('button');
         if (first) { first.focus(); }
     };
 
-    /** [label, icon, action, sub-items] */
-    Menu.prototype.item = function (item) {
+    /** One list of the menu (the first one, or a sub-menu), inside the diagram (its colors), fixed on the screen. */
+    Menu.prototype.panel = function (children) {
+        var self = this;
+        var panel = h('div', { class: 'wpg-menu', role: 'menu' }, children);
+        panel.addEventListener('pointerenter', function () { clearTimeout(self.hoverTimer); });
+        panel.addEventListener('keydown', function (e) {
+            var buttons = Array.prototype.slice.call(panel.querySelectorAll('.wpg-menu-item'));
+            var at = buttons.indexOf(document.activeElement);
+            if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                e.preventDefault();
+                var next = buttons[(at + (e.key === 'ArrowDown' ? 1 : buttons.length - 1)) % buttons.length];
+                if (next) { next.focus(); }
+            } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                var level = self.panels.indexOf(panel);
+                if (level > 0) {
+                    var owner = panel.wpgOwner;
+                    self.closeFrom(level);
+                    if (owner) { owner.focus(); }
+                } else if (self.history.length) {
+                    self.back();
+                }
+            }
+        });
+        this.app.root.appendChild(panel);
+        this.panels.push(panel);
+        return panel;
+    };
+
+    /** Inside the window, at (x, y) or as close as possible. */
+    Menu.prototype.place = function (panel, x, y) {
+        var r = panel.getBoundingClientRect();
+        panel.style.left = Math.max(8, Math.min(x, window.innerWidth - r.width - 8)) + 'px';
+        panel.style.top = Math.max(8, Math.min(y, window.innerHeight - r.height - 8)) + 'px';
+    };
+
+    Menu.prototype.narrow = function () {
+        return window.innerWidth < 640;
+    };
+
+    /** [label, icon, action, sub-items], in the list `level` (0: the first one) */
+    Menu.prototype.item = function (item, level) {
         var self = this;
         var button = h('button', { type: 'button', class: 'wpg-menu-item', role: 'menuitem' }, [icon(item[1]), h('span', { text: item[0] })]);
+        var hover = function (fn, delay) {
+            button.addEventListener('pointerenter', function (e) {
+                if (e.pointerType !== 'mouse' || self.narrow()) { return; }
+                clearTimeout(self.hoverTimer);
+                self.hoverTimer = setTimeout(fn, delay);
+            });
+        };
         if (item[3]) {
             button.appendChild(h('span', { class: 'wpg-menu-more', text: '›' }));
-            var sub = h('div', { class: 'wpg-menu wpg-menu-sub' });
-            item[3].forEach(function (s) { sub.appendChild(self.item(s)); });
-            var wrap = h('div', { class: 'wpg-menu-parent' }, [button, sub]);
-            button.addEventListener('click', function () {
-                wrap.classList.toggle('open');
-                // the open list stays inside the window: the menu moves up when needed
-                var menu = self.el, r = menu && menu.getBoundingClientRect();
-                if (r && r.bottom > window.innerHeight - 8) { menu.style.top = Math.max(8, window.innerHeight - r.height - 8) + 'px'; }
+            button.setAttribute('aria-haspopup', 'menu');
+            button.setAttribute('aria-expanded', 'false');
+            var open = function (focus) { self.openSub(level, button, item[0], item[3], focus); };
+            button.addEventListener('click', function () { open(true); });
+            button.addEventListener('keydown', function (e) {
+                if (e.key === 'ArrowRight') { e.preventDefault(); open(true); }
             });
-            return wrap;
+            hover(function () { open(false); }, 120);
+            return button;
         }
+        // another item of this list: its sub-menu closes (after a moment, so that the mouse can go through)
+        hover(function () { self.closeFrom(level + 1); }, 250);
         button.addEventListener('click', function () { self.close(); item[2](); });
         return button;
+    };
+
+    /** The sub-menu of an item: next to it (right, or left without room), or instead of the list on a phone. */
+    Menu.prototype.openSub = function (level, button, title, items, focus) {
+        var self = this;
+        if (this.narrow()) { return this.drill(title, items); }
+        var current = this.panels[level + 1];
+        if (!current || current.wpgOwner !== button) {
+            this.closeFrom(level + 1);
+            current = this.panel([]);
+            current.classList.add('wpg-menu-fly');
+            current.wpgOwner = button;
+            items.forEach(function (s) { current.appendChild(self.item(s, level + 1)); });
+            button.classList.add('is-open');
+            button.setAttribute('aria-expanded', 'true');
+            var r = button.getBoundingClientRect(), w = current.getBoundingClientRect().width;
+            var x = r.right + 2 + w > window.innerWidth - 8 ? r.left - w - 2 : r.right + 2;
+            this.place(current, x, r.top - 7);
+        }
+        if (focus) {
+            var first = current.querySelector('.wpg-menu-item');
+            if (first) { first.focus(); }
+        }
+    };
+
+    /** Closes the sub-menus from the list `level` on (its item in the list before is no longer open). */
+    Menu.prototype.closeFrom = function (level) {
+        if (!this.panels[level]) { return; }
+        var owner = this.panels[level].wpgOwner;
+        this.panels.splice(level).forEach(function (p) { if (p.parentNode) { p.parentNode.removeChild(p); } });
+        if (owner) {
+            owner.classList.remove('is-open');
+            owner.setAttribute('aria-expanded', 'false');
+        }
+    };
+
+    /** Phone: the sub-items replace the list; "‹ title" goes back. */
+    Menu.prototype.drill = function (title, items) {
+        var self = this, menu = this.panels[0];
+        this.history.push(Array.prototype.slice.call(menu.childNodes));
+        menu.textContent = '';
+        var back = h('button', { type: 'button', class: 'wpg-menu-item wpg-menu-back' }, [h('span', { class: 'wpg-menu-arrow', text: '‹' }), h('span', { text: title })]);
+        back.addEventListener('click', function () { self.back(); });
+        menu.appendChild(back);
+        menu.appendChild(h('div', { class: 'wpg-menu-sep' }));
+        items.forEach(function (s) { menu.appendChild(self.item(s, 0)); });
+        this.drilled(menu);
+    };
+
+    Menu.prototype.back = function () {
+        var menu = this.panels[0], nodes = this.history.pop();
+        if (!menu || !nodes) { return; }
+        menu.textContent = '';
+        nodes.forEach(function (n) { menu.appendChild(n); });
+        this.drilled(menu);
+    };
+
+    Menu.prototype.drilled = function (menu) {
+        menu.scrollTop = 0;
+        var r = menu.getBoundingClientRect();
+        this.place(menu, r.left, r.top);
+        var first = menu.querySelector('.wpg-menu-item');
+        if (first) { first.focus(); }
     };
 
     WPGraph.Menu = Menu;

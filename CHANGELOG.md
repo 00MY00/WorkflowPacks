@@ -4,6 +4,14 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [2.15.0] - 2026-11-05
+
+### Modifié
+- **Menus en cascade, comme les menus contextuels de Windows** (clic droit, « + », « Ajouter un bloc ») : une entrée
+  marquée › ouvre sa liste à côté d'elle (survol ou clic, à gauche s'il n'y a pas de place, flèches du clavier), au
+  lieu de listes dépliées les unes dans les autres avec plusieurs barres de défilement. Sur un téléphone, la liste
+  remplace le menu, avec « ‹ titre » en haut pour revenir.
+
 ## [2.14.0] - 2026-11-05
 
 ### Ajouté

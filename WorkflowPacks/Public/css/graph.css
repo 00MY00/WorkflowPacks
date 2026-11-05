@@ -261,9 +261,11 @@
 .wpg-menu-item:hover, .wpg-menu-item:focus { background: rgba(99, 102, 241, .1); outline: none; }
 .wpg-menu-item .wpg-svg-icon, .wpg-menu-item .wpg-ic svg { width: 16px; height: 16px; flex: none; }
 .wpg-menu-more { margin-left: auto; color: var(--g-muted); }
-.wpg-menu-parent { position: relative; }
-.wpg-menu-sub { display: none; position: static; box-shadow: none; border: 0; padding: 0 0 0 18px; max-height: 240px; overflow: auto; }
-.wpg-menu-parent.open .wpg-menu-sub { display: block; }
+/* item whose sub-menu is open next to it (Windows-like); phone: "‹ back" at the top of a sub-list */
+.wpg-menu-item.is-open { background: rgba(99, 102, 241, .1); }
+.wpg-menu-fly { min-width: 220px; }
+.wpg-menu-back { font-weight: 600; color: var(--g-muted); }
+.wpg-menu-arrow { width: 16px; text-align: center; font-size: 16px; }
 /* left button on the background = selection rectangle; the view moves with the right / middle button or Space */
 .wpg-canvas { cursor: default; }
 .wpg-canvas.space-pan { cursor: grab; }
@@ -282,7 +284,7 @@
 @media (hover: none) and (pointer: coarse) {
   .wpg-help-mouse { display: none; }
   .wpg-help-touch { display: block; }
-  .wpg-menu { min-width: 0; max-width: calc(100vw - 16px); }
+  .wpg-menu { min-width: min(300px, calc(100vw - 16px)); max-width: calc(100vw - 16px); }
   .wpg-menu-item { padding: 11px 10px; font-size: 15px; }
   .wpg-btn { min-height: 40px; min-width: 40px; }
 }
