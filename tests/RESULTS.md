@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 2.15.0
+# Résultats des tests — Workflow Packs 2.16.0
 
 Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,14 @@ Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 2.16.0 — vue d'ensemble en flux
+
+| Série | Résultat |
+|---|---|
+| JavaScript | `layout.test.js` : boîte → règle 1 → En attente → règle 2 → minuteur → bloc, de gauche à droite sur une ligne ; une règle d'un flux enregistrée à gauche de son parent revient après lui (son minuteur aussi), les autres blocs ne bougent pas |
+| Intégration (107 tests, instance neuve) | `DeleteBlocksTest` : En attente → règle 1 → ⧗ → Fermé à elle → règle 2 → ⧗ → ses blocs (profondeurs 1 à 5), lien à la boîte marqué « chained », la première règle part de sa boîte ; `GraphTest` (dossiers) : règles d'e-mails différents |
+| Navigateur | Positions d'avant enregistrées : Support → Factures : note → Factures : classement → ⧗ Après 1 heure → [WP] Factures → fermeture / relance → ⧗ → Fermé / En attente / Non assigné, de gauche à droite (3 liens « ensuite ») ; aucune erreur |
 
 ## 2.15.0 — menus en cascade
 

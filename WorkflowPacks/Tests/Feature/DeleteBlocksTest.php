@@ -209,17 +209,27 @@ class DeleteBlocksTest extends TestCase
                 return $e['from'] === $from && $e['to'] === $to && $e['kind'] === $kind;
             });
         };
-        // Pending -> After 1 day -> Closed (its own block) -> After 2 days -> Unassigned, Active
-        $t1 = 'dest:timer:wf:'.$one->id;
-        $t2 = 'dest:timer:wf:'.$two->id;
-        $this->assertTrue($has('dest:status:pending', $t1, 'timer'), 'after the block of the rule before');
-        $this->assertFalse($has('wf:'.$one->id, $t1, 'timer'), 'no line back to the rule');
-        $this->assertTrue($has($t1, 'dest:step:'.$one->id.':0:0', 'sends'));
-        $this->assertSame('closed', $nodes['dest:step:'.$one->id.':0:0']['dest']);
+        // a flow: mailbox -> Pending -> rule 1 -> After 1 day -> Closed (its own block) -> rule 2 -> After 2 days -> its blocks
+        $r1 = 'wf:'.$one->id;
+        $r2 = 'wf:'.$two->id;
+        $t1 = 'dest:timer:'.$r1;
+        $t2 = 'dest:timer:'.$r2;
+        $s1 = 'dest:step:'.$one->id.':0:0';
+        $this->assertTrue($has('dest:status:pending', $r1, 'then'), 'the next rule after the block of the rule before');
+        $this->assertTrue($has($r1, $t1, 'timer'));
+        $this->assertTrue($has($t1, $s1, 'sends'));
+        $this->assertSame('closed', $nodes[$s1]['dest']);
         $this->assertFalse($has($t1, 'dest:status:closed', 'sends'), 'never the shared block');
-        $this->assertTrue($has('dest:step:'.$one->id.':0:0', $t2, 'timer'));
+        $this->assertTrue($has($s1, $r2, 'then'));
+        $this->assertTrue($has($r2, $t2, 'timer'));
         $this->assertTrue($has($t2, 'dest:step:'.$two->id.':1:1', 'sends'));
-        $this->assertSame([1, 2, 3], [$nodes[$t1]['depth'], $nodes['dest:step:'.$one->id.':0:0']['depth'], $nodes[$t2]['depth']]);
+        $this->assertSame([1, 2, 3, 4, 5], [$nodes[$r1]['depth'], $nodes[$t1]['depth'], $nodes[$s1]['depth'], $nodes[$r2]['depth'], $nodes[$t2]['depth']]);
+        // still applied in its mailbox (panel), not drawn from it
+        $applies = $edges->first(function ($e) use ($one) {
+            return $e['kind'] === 'applies' && $e['workflow_id'] === $one->id;
+        });
+        $this->assertTrue($applies['chained']);
+        $this->assertArrayNotHasKey('depth', $nodes['wf:'.$this->firstRuleId($a)], 'the first rule comes from its mailbox');
 
         // deleting a block after a timer removes that action only
         list(, $done) = $this->remove($admin, ['dest:step:'.$two->id.':1:1']);
@@ -227,6 +237,11 @@ class DeleteBlocksTest extends TestCase
         $this->assertSame([['type' => 'assign', 'value' => '-1']], array_values(array_map(function ($action) {
             return array_intersect_key($action, ['type' => 1, 'value' => 1]);
         }, $two->fresh()->actions[0])));
+    }
+
+    protected function firstRuleId($mailbox)
+    {
+        return (int) Workflow::where('mailbox_id', $mailbox->id)->orderBy('id')->value('id');
     }
 
     public function testRightsAndAChangeInTheMeantime()
