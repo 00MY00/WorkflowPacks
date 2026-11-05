@@ -315,6 +315,7 @@ return [
     'delete_undone'    => 'Eliminación deshecha: todo ha vuelto.',
     'next_add_timer'    => 'Añadir un temporizador',
     'next_timer_preset' => 'Después de :delay',
+    'next_timer_custom' => 'Duración personalizada…',
     'next_name_timer'   => 'Después de :delay',
     'kind_dest_timer'  => 'Temporizador',
     'timer_rule'       => 'Regla',

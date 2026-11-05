@@ -315,6 +315,7 @@ return [
     'delete_undone'    => 'Exclusão desfeita: tudo voltou.',
     'next_add_timer'    => 'Adicionar um temporizador',
     'next_timer_preset' => 'Após :delay',
+    'next_timer_custom' => 'Duração personalizada…',
     'next_name_timer'   => 'Após :delay',
     'kind_dest_timer'  => 'Temporizador',
     'timer_rule'       => 'Regra',

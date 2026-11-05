@@ -151,22 +151,28 @@
         // "Add a timer": after a delay, a new rule of the same e-mails (its action is chosen in the editor)
         var base = timerBase(node, ctx);
         if (base && hasC('created') && all.length) {
-            var timer = { id: 'add_timer', icon: 'hourglass', label: 'next_add_timer', sub: TIMERS.map(function (d) {
+            // after the delay: the next block (status of the ticket, assign, note, folder…), one rule of Workflows; the
+            // name of the rule follows the delay if it is changed in the editor
+            var then = function (id, d, focus) {
                 var name = (ctx.names.timer || '').replace(':delay', ctx.delayText ? ctx.delayText(d) : d.number + d.metric);
-                // after the delay: the next block (status of the ticket, assign, note, folder…), one rule of Workflows
-                return { id: 'timer_' + d.number + d.metric, icon: 'hourglass', label: 'next_timer_preset', params: { delay: d }, sub: all.map(function (a) {
-                    return { id: 'timer_' + d.number + d.metric + '_' + a.id, icon: a.icon, text: a.text, label: a.label, params: a.params,
-                        run: { editor: { rule: rule(name, base.concat([{ type: 'created', operator: 'not_in_last', value: d }]), [a.action]) } } };
-                }) };
-            }) };
+                return all.map(function (a) {
+                    return { id: id + '_' + a.id, icon: a.icon, text: a.text, label: a.label, params: a.params,
+                        run: { editor: { rule: rule(name, base.concat([{ type: 'created', operator: 'not_in_last', value: d }]), [a.action]),
+                            timerName: ctx.names.timer || '', focusDelay: !!focus } } };
+                });
+            };
+            var timer = { id: 'add_timer', icon: 'hourglass', label: 'next_add_timer', sub: TIMERS.map(function (d) {
+                return { id: 'timer_' + d.number + d.metric, icon: 'hourglass', label: 'next_timer_preset', params: { delay: d }, sub: then('timer_' + d.number + d.metric, d) };
+            }).concat([{ id: 'timer_custom', icon: 'timer', label: 'next_timer_custom', sub: then('timer_custom', { number: 1, metric: 'd' }, true) }]) };
             var at = out.map(function (s) { return s.id; }).filter(function (id) { return id === 'new_status' || id === 'set_status'; })[0];
             out.splice(at ? out.map(function (s) { return s.id; }).indexOf(at) + 1 : out.length, 0, timer);
         }
         return out;
     }
 
-    var TIMERS = [{ number: 15, metric: 'i' }, { number: 1, metric: 'h' }, { number: 1, metric: 'd' }, { number: 2, metric: 'd' },
-        { number: 7, metric: 'd' }, { number: 30, metric: 'd' }];
+    var TIMERS = [{ number: 15, metric: 'i' }, { number: 30, metric: 'i' }, { number: 1, metric: 'h' }, { number: 2, metric: 'h' },
+        { number: 4, metric: 'h' }, { number: 12, metric: 'h' }, { number: 1, metric: 'd' }, { number: 2, metric: 'd' }, { number: 3, metric: 'd' },
+        { number: 7, metric: 'd' }, { number: 14, metric: 'd' }, { number: 30, metric: 'd' }, { number: 90, metric: 'd' }];
     var DATE_TYPES = ['created', 'waiting', 'user_reply', 'customer_reply'];
 
     /**
@@ -351,7 +357,7 @@
         if (run.editor.addAction) {
             app.editor.open({ mailboxId: mailbox.id, workflowId: run.editor.workflowId || edge.workflow_id, addAction: run.editor.addAction, origin: origin });
         } else {
-            app.editor.open({ mailboxId: mailbox.id, rule: run.editor.rule, origin: origin });
+            app.editor.open({ mailboxId: mailbox.id, rule: run.editor.rule, origin: origin, timerName: run.editor.timerName, focusDelay: run.editor.focusDelay });
         }
         if (run.editor.rule || run.editor.addAction) { app.toast(this.t.next_hint, 'info'); }
     };

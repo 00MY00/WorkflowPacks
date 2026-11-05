@@ -315,6 +315,7 @@ return [
     'delete_undone'    => 'Eliminazione annullata: tutto è tornato.',
     'next_add_timer'    => 'Aggiungi un timer',
     'next_timer_preset' => 'Dopo :delay',
+    'next_timer_custom' => 'Durata personalizzata…',
     'next_name_timer'   => 'Dopo :delay',
     'kind_dest_timer'  => 'Timer',
     'timer_rule'       => 'Regola',

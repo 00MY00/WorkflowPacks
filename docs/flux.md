@@ -70,8 +70,10 @@ Le nouveau bloc garde les conditions du flux et de sa branche : il s'ajoute à l
   **blocs à lui** (jamais partagés avec d'autres règles), placés à sa droite. Sans étape avant lui, le minuteur suit
   sa règle. Supprimer le minuteur retire le délai : la règle s'appliquera dès l'arrivée (signalé) ; supprimer un bloc
   après lui retire cette action de sa règle.
-- **Ajouter un minuteur** (« + », panneau, « Ajouter un bloc »), en deux choix : le délai (15 minutes, 1 heure,
-  1 jour, 2 jours, 7 jours ou 30 jours), puis **ce qui suit** (statut Fermé, assigner, note, dossier…). L'éditeur
+- **Ajouter un minuteur** (« + », panneau, « Ajouter un bloc »), en deux choix : le délai (15 ou 30 minutes ; 1, 2,
+  4 ou 12 heures ; 1, 2, 3, 7, 14, 30 ou 90 jours) ou **Durée personnalisée…** (l'éditeur s'ouvre sur le champ de la
+  durée : nombre + minutes / heures / jours ; le nom de la règle suit la durée tant qu'il n'est pas changé à la main),
+  puis **ce qui suit** (statut Fermé, assigner, note, dossier…). L'éditeur
   s'ouvre avec la nouvelle règle des mêmes e-mails, ce délai et cette action ; enregistrez. Exemple : depuis le
   dossier « Factures » › Ajouter un minuteur › Après 1 jour › Statut : Fermé → Factures → ⧗ Après 1 jour → Fermé.
 

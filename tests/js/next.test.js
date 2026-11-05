@@ -156,11 +156,20 @@ test('timers: "Add a timer" with presets, for a mailbox, a rule (without its own
     const mb = N.suggest({ kind: 'mailbox' }, ctx);
     assert.strictEqual(ids(mb)[2], 'add_timer', 'right after "set the status"');
     const timer = mb[2];
-    assert.deepStrictEqual(timer.sub.map((s) => s.params.delay), [{ number: 15, metric: 'i' }, { number: 1, metric: 'h' }, { number: 1, metric: 'd' },
-        { number: 2, metric: 'd' }, { number: 7, metric: 'd' }, { number: 30, metric: 'd' }]);
+    const presets = timer.sub.filter((s) => s.params);
+    assert.deepStrictEqual(presets.map((s) => s.params.delay.number + s.params.delay.metric),
+        ['15i', '30i', '1h', '2h', '4h', '12h', '1d', '2d', '3d', '7d', '14d', '30d', '90d']);
+    // last: a custom duration (1 day to start with, the delay field focused in the editor)
+    const custom = timer.sub[timer.sub.length - 1];
+    assert.strictEqual(custom.id, 'timer_custom');
+    const c = custom.sub.find((s) => s.id === 'timer_custom_act_status_3').run.editor;
+    assert.strictEqual(c.focusDelay, true);
+    assert.strictEqual(c.timerName, 'Après :delay', 'the name follows the delay chosen');
+    assert.deepStrictEqual(c.rule.conditions.all, [{ type: 'created', operator: 'not_in_last', value: { number: 1, metric: 'd' } }]);
     // after the delay: the next block, chosen in the same list (never a timer without what follows)
-    assert.ok(!timer.sub[1].run && timer.sub[1].sub.length > 0);
-    const r = timer.sub[1].sub.find((s) => s.id === 'timer_1h_act_status_3').run.editor.rule;
+    const hour = timer.sub.find((s) => s.id === 'timer_1h');
+    assert.ok(!hour.run && hour.sub.length > 0);
+    const r = hour.sub.find((s) => s.id === 'timer_1h_act_status_3').run.editor.rule;
     assert.deepStrictEqual(r.conditions.all, [{ type: 'created', operator: 'not_in_last', value: { number: 1, metric: 'h' } }]);
     assert.deepStrictEqual(r.actions, [{ type: 'status', value: '3' }], 'then: closed');
     assert.strictEqual(r.name, 'Après 1h');
@@ -168,7 +177,7 @@ test('timers: "Add a timer" with presets, for a mailbox, a rule (without its own
     // a rule: its conditions without its own delay
     const ruleConditions = { all: [{ type: 'subject', operator: 'contains', value: 'x' }, { type: 'created', operator: 'not_in_last', value: { number: 2, metric: 'd' } }] };
     const fromRule = N.suggest({ kind: 'rule' }, Object.assign({ ruleConditions, ruleActions: [] }, ctx)).find((s) => s.id === 'add_timer');
-    assert.deepStrictEqual(fromRule.sub[4].sub[0].run.editor.rule.conditions.all, [{ type: 'subject', operator: 'contains', value: 'x' },
+    assert.deepStrictEqual(fromRule.sub.find((s) => s.id === 'timer_7d').sub[0].run.editor.rule.conditions.all, [{ type: 'subject', operator: 'contains', value: 'x' },
         { type: 'created', operator: 'not_in_last', value: { number: 7, metric: 'd' } }]);
     // a timer block (overview) of one rule: same; several rules or no detail: no timer
     assert.ok(ids(N.suggest({ kind: 'dest', dest: 'timer' }, Object.assign({ ruleConditions, rules: [{ workflow_id: 1, name: 'A' }] }, ctx))).includes('add_timer'));
