@@ -20,7 +20,10 @@ use Modules\WorkflowPacks\Services\Workflows\Bridge;
  *         tpl:<pack>/<key>  rule of a pack (one node, linked to every mailbox where the pack created it)
  *         wf:<id>           rule created outside any pack (linked to its own mailbox)
  *         pack:<key>        pack (contains its rules)
- *         dest:timer:<rule> the delay of a rule ("After 30 days"): a block of its own, linked to the rule
+ *         dest:timer:<rule> the delay of a rule ("After 30 days"): a block of its own, after the block of the step before
+ *                           it (same e-mails, shorter delay: "[WP] Invoices" -> "After 1 day"), else after the rule
+ *         dest:step:<id>:<i>:<n> what a rule with a delay does (action i of the rule): blocks of their own after the
+ *                           timer ("After 1 day" -> "Closed"), never shared, so that each timer chain stays readable
  *         dest:<kind>:<id>  where a rule sends the conversations: folder of a status (closed, pending, spam…),
  *                           Deleted, a person (assignment), a tag (Tags module), an e-mail folder on the mail server
  *                           (one block per level); moving to another mailbox links the rule to that mailbox
@@ -68,6 +71,8 @@ class GraphBuilder
         $linkByWorkflow = $links->keyBy('workflow_id');
         $packs = Pack::whereIn('pack_key', $links->pluck('pack_key')->unique()->all() ?: [''])->get()->keyBy('pack_key');
         $flowRules = [];
+        // rules with a delay, for the chains: block of the step before -> timer -> its own blocks
+        $steps = [];
 
         foreach ($workflows as $wf) {
             $link = $linkByWorkflow->get($wf->id);
@@ -96,17 +101,44 @@ class GraphBuilder
             $applies = count($edges) - 1;
             // a rule with a delay: its timer is a block of its own ("After 30 days") between the rule and what it does:
             // rule -> timer -> destinations
-            $delays = FlowBuilder::split((array) $attributes['conditions'])['delays'];
-            $from = $delays ? 'dest:timer:'.$ruleKey : $ruleKey;
-            if ($delays && !isset($nodes['dest:timer:'.$ruleKey])) {
+            $parts = FlowBuilder::split((array) $attributes['conditions']);
+            $delays = $parts['delays'];
+            $timerKey = 'dest:timer:'.$ruleKey;
+            $from = $delays ? $timerKey : $ruleKey;
+            // a rule of a pack in several mailboxes: one timer, drawn once
+            $newTimer = $delays && !isset($nodes[$timerKey]);
+            if ($newTimer) {
                 $labels = self::labels($wf->mailbox_id);
-                $nodes['dest:timer:'.$ruleKey] = ['key' => 'dest:timer:'.$ruleKey, 'kind' => 'dest', 'dest' => 'timer', 'rule' => $ruleKey,
+                $nodes[$timerKey] = ['key' => $timerKey, 'kind' => 'dest', 'dest' => 'timer', 'rule' => $ruleKey,
                     'label' => implode(' · ', array_map([$labels, 'delay'], $delays)), 'sub' => __('workflowpacks::messages.timer_block')];
-                $sends[$ruleKey.'>dest:timer:'.$ruleKey] = ['from' => $ruleKey, 'to' => 'dest:timer:'.$ruleKey, 'kind' => 'timer'];
+                $sends[$ruleKey.'>'.$timerKey] = ['from' => $ruleKey, 'to' => $timerKey, 'kind' => 'timer'];
             }
-            foreach ($this->destinations($attributes, $jsonActions, $nodes) as $dest) {
+            $step = ['mailbox' => (int) $wf->mailbox_id, 'lane' => md5(FlowBuilder::canon([$parts['base'], $parts['branch']])),
+                'seconds' => $parts['seconds'], 'rule' => $ruleKey, 'timer' => $newTimer ? $timerKey : null, 'last' => null, 'blocks' => []];
+            foreach ($this->destinations($attributes, $jsonActions, $nodes) as $n => $dest) {
                 $chain = $dest['chain'] ?? [];
                 unset($dest['chain']);
+                if ($delays && $dest['kind'] === 'dest') {
+                    if (!$newTimer) {
+                        continue;
+                    }
+                    // after a timer: a block of its own (the deepest level of an e-mail folder), never shared
+                    $target = $chain ? end($chain) : $dest;
+                    $stepKey = 'dest:step:'.$wf->id.':'.$dest['index'].':'.$n;
+                    $nodes[$stepKey] = ['key' => $stepKey, 'rule' => $ruleKey, 'parent' => $timerKey, 'depth' => 0, 'step' => true]
+                        + array_diff_key($target, ['retention' => 1, 'filed_by' => 1, 'index' => 1]);
+                    $sends[$timerKey.'>'.$stepKey] = ['from' => $timerKey, 'to' => $stepKey, 'kind' => 'sends', 'action' => $dest['action'], 'rule' => $ruleKey];
+                    $step['last'] = $stepKey;
+                    $step['blocks'][] = $stepKey;
+                    if ($dest['dest'] === 'imap') {
+                        $edges[$applies]['files'] = true;
+                    }
+                    continue;
+                }
+                unset($dest['index']);
+                if ($dest['kind'] === 'dest') {
+                    $step['last'] = $chain ? end($chain)['key'] : $dest['key'];
+                }
                 $nodes[$dest['key']] = $nodes[$dest['key']] ?? $dest;
                 $sends[$from.'>'.$dest['key']] = ['from' => $from, 'to' => $dest['key'], 'kind' => 'sends', 'action' => $dest['action'], 'rule' => $ruleKey];
                 // e-mail folders: the flow goes on, level by level ("[WP] Invoices" -> "Suppliers")
@@ -126,7 +158,9 @@ class GraphBuilder
                     }
                 }
             }
+            $steps[] = $step;
         }
+        $this->chainTimers($steps, $nodes, $sends);
         foreach ($sends as $edge) {
             $edges[] = $edge;
         }
@@ -264,8 +298,9 @@ class GraphBuilder
     protected function destinations(array $attributes, array $jsonActions, array $nodes)
     {
         $out = [];
-        foreach (Fingerprint::decodeActions($attributes['actions'], $jsonActions) as $action) {
+        foreach (array_values(Fingerprint::decodeActions($attributes['actions'], $jsonActions)) as $index => $action) {
             $type = (string) ($action['type'] ?? '');
+            $first = count($out);
             $value = $action['value'] ?? null;
             if ($type === 'status' && is_scalar($value)) {
                 $status = ['1' => 'active', '2' => 'pending', '3' => 'closed', '4' => 'spam'][(string) $value] ?? null;
@@ -294,9 +329,48 @@ class GraphBuilder
                     }
                 }
             }
+            // the action behind each block (blocks after a timer: "dest:step:<id>:<index>")
+            for ($k = $first; $k < count($out); $k++) {
+                $out[$k]['index'] = $index;
+            }
         }
 
         return $out;
+    }
+
+    /**
+     * Timer chains: a timer goes after the last block of the step before it — same mailbox, same e-mails (conditions
+     * and branch), the longest shorter delay: "[WP] Invoices" -> "After 1 day" -> "Closed" -> "After 2 days" -> …
+     * Without such a step, it stays after its rule. Shortest delays first, so that each parent already has its depth.
+     */
+    protected function chainTimers(array $steps, array &$nodes, array &$sends)
+    {
+        $timers = array_filter($steps, function ($s) {
+            return $s['timer'] !== null;
+        });
+        usort($timers, function ($a, $b) {
+            return $a['seconds'] - $b['seconds'];
+        });
+        foreach ($timers as $t) {
+            $prev = null;
+            foreach ($steps as $s) {
+                if ($s['last'] && $s['mailbox'] === $t['mailbox'] && $s['lane'] === $t['lane'] && $s['seconds'] < $t['seconds']
+                    && (!$prev || $s['seconds'] >= $prev['seconds'])) {
+                    $prev = $s;
+                }
+            }
+            $depth = 0;
+            if ($prev) {
+                $depth = ($nodes[$prev['last']]['depth'] ?? 0) + 1;
+                $nodes[$t['timer']]['parent'] = $prev['last'];
+                $nodes[$t['timer']]['depth'] = $depth;
+                unset($sends[$t['rule'].'>'.$t['timer']]);
+                $sends[$prev['last'].'>'.$t['timer']] = ['from' => $prev['last'], 'to' => $t['timer'], 'kind' => 'timer', 'rule' => $t['rule']];
+            }
+            foreach ($t['blocks'] as $key) {
+                $nodes[$key]['depth'] = $prev ? $depth + 1 : 0;
+            }
+        }
     }
 
     /**

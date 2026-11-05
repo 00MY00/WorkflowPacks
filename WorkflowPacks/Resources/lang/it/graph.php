@@ -61,6 +61,7 @@ return [
     'close'            => 'Chiudi',
     'sheet_expand'     => 'Schermo intero',
     'sheet_shrink'     => 'Riduci',
+    'sheet_drag'       => 'Trascina per ingrandire o ridurre (il blocco resta selezionato)',
     'group_pack'       => 'Raggruppa in un pacchetto',
     'group_mailbox'    => 'Raggruppa le regole di questa casella',
     'edit'             => 'Modifica',

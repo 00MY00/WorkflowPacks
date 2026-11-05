@@ -4,6 +4,22 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [2.13.0] - 2026-11-05
+
+### Modifié
+- **Minuteur relié à son bloc parent** (vue d'ensemble) : un minuteur créé depuis un bloc (dossier « Factures »,
+  statut…) part de ce bloc — [WP] Factures → ⧗ Après 1 jour → Fermé → ⧗ Après 2 jours → … Ce qui suit un minuteur est
+  fait de blocs à lui, à sa droite, jamais partagés avec d'autres règles ; supprimer l'un d'eux retire cette action.
+- **Téléphone — panneau à poignée** : glisser vers le bas pour voir le schéma (le bloc reste sélectionné), vers le
+  haut pour la moitié ou tout l'écran ; toucher la poignée replie / déplie. Le bloc sélectionné est agrandi s'il était
+  trop petit.
+- **Téléphone — Agrandir** : les boutons sur une seule ligne, le schéma prend tout l'écran et est recadré (aussi sur
+  ordinateur).
+
+### Corrigé
+- **Téléphone — appui long** sur un bloc : le menu (avec **Supprimer**) ne s'affichait pas. Le défilement vers le
+  schéma utilisait `window.scrollTo`, remplacé par FreeScout (erreur), puis refermait le menu.
+
 ## [2.12.0] - 2026-11-04
 
 ### Modifié

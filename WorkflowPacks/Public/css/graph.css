@@ -198,6 +198,13 @@
     transform: translateY(105%); z-index: 1045; overscroll-behavior: contain; transition: transform .2s, height .2s; }
   .wpg-inspector.open { transform: none; }
   .wpg-inspector.is-full { height: 100vh; height: 100dvh; border-radius: 0; }
+  /* folded: the handle and the title only, the diagram above stays visible and the block selected */
+  .wpg-inspector.is-peek { height: 92px; overflow: hidden; }
+  .wpg-inspector.is-dragging { transition: none; }
+  .wpg-sheet-handle { display: flex; justify-content: center; align-items: center; height: 22px; position: sticky; top: 0; z-index: 2;
+    background: var(--g-card); cursor: grab; touch-action: none; }
+  .wpg-sheet-handle span { width: 44px; height: 5px; border-radius: 3px; background: #cbd5e1; }
+  .wpg-inspector .wpg-ins-head { top: 22px; }
   .wpg-ins-head { position: sticky; top: 0; z-index: 1; background: var(--g-card); }
   .wpg-ins-grow { display: inline-flex; }
   /* room under the page so that the diagram can be scrolled to the top of the screen, above the sheet */
@@ -336,6 +343,19 @@
 .wpg-app.is-full .wpg-toolbar { margin-bottom: 6px; }
 .wpg-app.is-full .wpg-stage { flex: 1 1 auto; height: auto; min-height: 0; }
 .wpg-app.is-full .wpg-help-box { display: none; }
+/* the sheet's handle: phone only */
+.wpg-sheet-handle { display: none; }
+@media (max-width: 767px) {
+  .wpg-sheet-handle { display: flex; }
+  /* "Enlarge" on a phone: one row of buttons (scrolls sideways), the diagram takes the rest of the screen */
+  .wpg-app.is-full { padding: 4px; height: 100vh; height: 100dvh; }
+  .wpg-app.is-full .wpg-toolbar { flex-wrap: nowrap; overflow-x: auto; gap: 6px; padding: 4px 6px; margin-bottom: 4px; scrollbar-width: none; }
+  .wpg-app.is-full .wpg-toolbar::-webkit-scrollbar { display: none; }
+  .wpg-app.is-full .wpg-toolbar > .wpg-group { flex: 0 0 auto; flex-wrap: nowrap; }
+  .wpg-app.is-full .wpg-overview-only, .wpg-app.is-full #wpg-goto, .wpg-app.is-full .wpg-status, .wpg-app.is-full .wpg-views .wpg-btn span { display: none; }
+  .wpg-app.is-full .wpg-toolbar .wpg-search { flex: 0 0 140px; }
+  .wpg-app.is-full .wpg-stage { min-height: 0; border-radius: 10px; }
+}
 body.wpg-full-open { overflow: hidden; }
 
 /* ---------------------------------------------------------------------------------------------- simulation */

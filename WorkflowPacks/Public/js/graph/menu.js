@@ -15,7 +15,11 @@
         var self = this;
         document.addEventListener('pointerdown', function (e) { if (self.el && !self.el.contains(e.target)) { self.close(); } }, true);
         document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { self.close(); } });
-        window.addEventListener('scroll', function () { self.close(); }, true);
+        // the page scrolled (not the menu itself, nor the scroll that brings the selected block into view on a phone,
+        // right after a long press): the menu no longer faces its block
+        window.addEventListener('scroll', function (e) {
+            if (self.el && !self.el.contains(e.target) && Date.now() - self.shownAt > 600) { self.close(); }
+        }, true);
     }
 
     Menu.prototype.close = function () {
@@ -36,6 +40,7 @@
 
     Menu.prototype.show = function (x, y, keys) {
         this.close();
+        this.shownAt = Date.now();
         if (!keys.length) { return; }
         var app = this.app, t = this.t, self = this;
         var nodes = keys.map(function (k) { return app.model.nodes[k]; }).filter(Boolean);

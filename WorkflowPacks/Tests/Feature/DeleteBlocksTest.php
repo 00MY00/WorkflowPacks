@@ -189,6 +189,46 @@ class DeleteBlocksTest extends TestCase
         $this->assertNotContains('dest:timer:wf:'.$wf->id, $keys);
     }
 
+    public function testATimerGoesAfterTheBlockOfTheStepBefore()
+    {
+        $a = $this->mailbox('A');
+        $admin = $this->user([], true);
+        $subject = [['type' => 'subject', 'operator' => 'contains', 'value' => 'x']];
+        $delay = function ($days) {
+            return [['type' => 'created', 'operator' => 'not_in_last', 'value' => ['number' => $days, 'metric' => 'd']]];
+        };
+        $this->workflow($a, 'Pending', [$subject], [['type' => 'status', 'value' => '2']]);
+        $one = $this->workflow($a, 'After 1 day', [$subject, $delay(1)], [['type' => 'status', 'value' => '3']]);
+        $two = $this->workflow($a, 'After 2 days', [$subject, $delay(2)], [['type' => 'assign', 'value' => '-1'], ['type' => 'status', 'value' => '1']]);
+
+        $data = $this->actingAs($admin)->getJson(route('workflowpacks.graph.data'))->json();
+        $nodes = collect($data['nodes'])->keyBy('key');
+        $edges = collect($data['edges']);
+        $has = function ($from, $to, $kind) use ($edges) {
+            return $edges->contains(function ($e) use ($from, $to, $kind) {
+                return $e['from'] === $from && $e['to'] === $to && $e['kind'] === $kind;
+            });
+        };
+        // Pending -> After 1 day -> Closed (its own block) -> After 2 days -> Unassigned, Active
+        $t1 = 'dest:timer:wf:'.$one->id;
+        $t2 = 'dest:timer:wf:'.$two->id;
+        $this->assertTrue($has('dest:status:pending', $t1, 'timer'), 'after the block of the rule before');
+        $this->assertFalse($has('wf:'.$one->id, $t1, 'timer'), 'no line back to the rule');
+        $this->assertTrue($has($t1, 'dest:step:'.$one->id.':0:0', 'sends'));
+        $this->assertSame('closed', $nodes['dest:step:'.$one->id.':0:0']['dest']);
+        $this->assertFalse($has($t1, 'dest:status:closed', 'sends'), 'never the shared block');
+        $this->assertTrue($has('dest:step:'.$one->id.':0:0', $t2, 'timer'));
+        $this->assertTrue($has($t2, 'dest:step:'.$two->id.':1:1', 'sends'));
+        $this->assertSame([1, 2, 3], [$nodes[$t1]['depth'], $nodes['dest:step:'.$one->id.':0:0']['depth'], $nodes[$t2]['depth']]);
+
+        // deleting a block after a timer removes that action only
+        list(, $done) = $this->remove($admin, ['dest:step:'.$two->id.':1:1']);
+        $this->assertTrue($done['ok']);
+        $this->assertSame([['type' => 'assign', 'value' => '-1']], array_values(array_map(function ($action) {
+            return array_intersect_key($action, ['type' => 1, 'value' => 1]);
+        }, $two->fresh()->actions[0])));
+    }
+
     public function testRightsAndAChangeInTheMeantime()
     {
         $a = $this->mailbox('A');

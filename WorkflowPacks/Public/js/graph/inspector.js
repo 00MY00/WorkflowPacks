@@ -33,7 +33,7 @@
 
     Inspector.prototype.hide = function () {
         this.current = null;
-        this.panel.classList.remove('open', 'is-full');
+        this.panel.classList.remove('open', 'is-full', 'is-peek');
         this.panel.textContent = '';
         document.body.classList.remove('wpg-sheet-open');
     };
@@ -43,16 +43,71 @@
         this.panel.textContent = '';
         this.panel.classList.add('open');
         document.body.classList.add('wpg-sheet-open');
+        this.panel.appendChild(this.sheetHandle());
+    };
+
+    /**
+     * Phone: the bar at the top of the sheet (hidden on larger screens, graph.css). Dragged down: only the title stays,
+     * the diagram is visible and the block stays selected; up: half, then the whole screen. A tap folds / unfolds it.
+     */
+    Inspector.prototype.sheetHandle = function () {
+        var self = this, panel = this.panel, drag = null;
+        var bar = h('div', { class: 'wpg-sheet-handle', role: 'button', tabindex: '0', title: this.t.sheet_drag, 'aria-label': this.t.sheet_drag }, [h('span')]);
+        var end = function () {
+            if (!drag) { return; }
+            var moved = drag.moved;
+            drag = null;
+            var ratio = panel.getBoundingClientRect().height / window.innerHeight;
+            panel.classList.remove('is-dragging');
+            panel.style.height = '';
+            if (!moved) { return self.sheetState(panel.classList.contains('is-peek') ? 'half' : 'peek'); }
+            self.sheetState(ratio < 0.3 ? 'peek' : (ratio < 0.78 ? 'half' : 'full'));
+        };
+        bar.addEventListener('pointerdown', function (e) {
+            drag = { y: e.clientY, h: panel.getBoundingClientRect().height, moved: false };
+            try { bar.setPointerCapture(e.pointerId); } catch (err) { /* old browser: the moves still come */ }
+            panel.classList.add('is-dragging');
+            e.preventDefault();
+        });
+        bar.addEventListener('pointermove', function (e) {
+            if (!drag) { return; }
+            var dy = e.clientY - drag.y;
+            if (Math.abs(dy) > 6) { drag.moved = true; }
+            if (drag.moved) { panel.style.height = Math.round(Math.max(64, Math.min(window.innerHeight, drag.h - dy))) + 'px'; }
+        });
+        bar.addEventListener('pointerup', end);
+        bar.addEventListener('pointercancel', end);
+        bar.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                self.sheetState(panel.classList.contains('is-peek') ? 'half' : 'peek');
+            }
+        });
+        return bar;
+    };
+
+    /** peek (title only) | half | full; then the selected block is moved above the sheet. */
+    Inspector.prototype.sheetState = function (state) {
+        var panel = this.panel, t = this.t, app = this.app;
+        panel.classList.toggle('is-peek', state === 'peek');
+        panel.classList.toggle('is-full', state === 'full');
+        var grow = panel.querySelector('.wpg-ins-grow');
+        if (grow) {
+            grow.title = state === 'full' ? t.sheet_shrink : t.sheet_expand;
+            grow.setAttribute('aria-label', grow.title);
+        }
+        var keys = Object.keys(app.view.selected || {});
+        // after the transition of the sheet (graph.css: .2s)
+        setTimeout(function () { app.phoneSheet(keys.length === 1 ? keys[0] : null); }, 230);
     };
 
     /** Buttons of the panel's title bar: whole screen (phone only, graph.css) and close. */
     Inspector.prototype.headButtons = function () {
         var panel = this.panel, t = this.t;
         var label = function () { return panel.classList.contains('is-full') ? t.sheet_shrink : t.sheet_expand; };
+        var self = this;
         var grow = h('button', { type: 'button', class: 'wpg-ins-close wpg-ins-grow', title: label(), 'aria-label': label(), on: { click: function () {
-            panel.classList.toggle('is-full');
-            grow.title = label();
-            grow.setAttribute('aria-label', label());
+            self.sheetState(panel.classList.contains('is-full') ? 'half' : 'full');
         } } }, [icon('fit')]);
         return [grow, h('button', { type: 'button', class: 'wpg-ins-close', title: t.close, 'aria-label': t.close, on: { click: this.app.clearSelection.bind(this.app) } }, ['×'])];
     };

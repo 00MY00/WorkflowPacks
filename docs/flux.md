@@ -65,9 +65,11 @@ Le nouveau bloc garde les conditions du flux et de sa branche : il s'ajoute à l
 ## Minuteurs
 
 - Dans la **vue d'ensemble**, une règle avec un délai a son **bloc minuteur** (sablier, « Après 30 jours · depuis
-  l'arrivée ») dans une colonne à lui, entre la règle et ce qu'elle fait : **règle → minuteur → statut / dossier…**,
-  chacun son bloc, sur une même ligne. Supprimer le minuteur retire le délai : la règle s'appliquera dès l'arrivée
-  (signalé).
+  l'arrivée »), **relié au bloc d'où il part** : le bloc de l'étape d'avant (mêmes e-mails, délai plus court), par
+  exemple **[WP] Factures → ⧗ Après 1 jour → Fermé → ⧗ Après 2 jours → …**. Ce qui suit un minuteur est fait de
+  **blocs à lui** (jamais partagés avec d'autres règles), placés à sa droite. Sans étape avant lui, le minuteur suit
+  sa règle. Supprimer le minuteur retire le délai : la règle s'appliquera dès l'arrivée (signalé) ; supprimer un bloc
+  après lui retire cette action de sa règle.
 - **Ajouter un minuteur** (« + », panneau, « Ajouter un bloc »), en deux choix : le délai (15 minutes, 1 heure,
   1 jour, 2 jours, 7 jours ou 30 jours), puis **ce qui suit** (statut Fermé, assigner, note, dossier…). L'éditeur
   s'ouvre avec la nouvelle règle des mêmes e-mails, ce délai et cette action ; enregistrez. Exemple : depuis le

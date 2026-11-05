@@ -219,6 +219,23 @@ console.log(n + ' tests OK');
     console.log('inColumns: OK');
 }
 
+// a timer added from a folder: the timer right after the folder, its block right after the timer, on the folder's row;
+// the new rule in the rules column
+{
+    const pos = { 'mb:1': [0, 0], 'wf:1': [400, 0], 'dest:imap:f': [750, 0], 'wf:7': [400, 200] };
+    const nodes = [{ key: 'mb:1', kind: 'mailbox' }, { key: 'wf:1', kind: 'rule' }, { key: 'dest:imap:f', kind: 'dest', dest: 'imap' }, { key: 'wf:7', kind: 'rule' },
+        { key: 'wf:2', kind: 'rule' }, { key: 'dest:timer:wf:2', kind: 'dest', dest: 'timer', parent: 'dest:imap:f', depth: 1 },
+        { key: 'dest:step:2:0:0', kind: 'dest', dest: 'closed', parent: 'dest:timer:wf:2', depth: 2 }];
+    L.inColumns(pos, nodes, nodes[2], [nodes[6], nodes[4], nodes[5]]);
+    const t = pos['dest:timer:wf:2'], st = pos['dest:step:2:0:0'];
+    assert.ok(t[0] > 750 && st[0] > t[0], 'folder -> timer -> block, left to right');
+    assert.strictEqual(t[1], 0, 'on the row of the folder');
+    assert.strictEqual(st[1], 0);
+    assert.strictEqual(pos['wf:2'][0], 400, 'the rule in the rules column');
+    assert.ok(Math.abs(pos['wf:2'][1]) >= 100, 'not over the rule already there');
+    console.log('chain after a folder: OK');
+}
+
 
 // a rule with a delay: rule -> its timer -> its destination, three columns from left to right
 {

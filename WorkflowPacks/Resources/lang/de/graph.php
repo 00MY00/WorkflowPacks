@@ -61,6 +61,7 @@ return [
     'close'            => 'Schließen',
     'sheet_expand'     => 'Ganzer Bildschirm',
     'sheet_shrink'     => 'Verkleinern',
+    'sheet_drag'       => 'Ziehen zum Vergrößern oder Verkleinern (der Block bleibt ausgewählt)',
     'group_pack'       => 'In ein Paket gruppieren',
     'group_mailbox'    => 'Regeln dieses Postfachs gruppieren',
     'edit'             => 'Bearbeiten',

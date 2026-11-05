@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 2.12.0
+# Résultats des tests — Workflow Packs 2.13.0
 
 Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,15 @@ Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 2.13.0 — minuteur relié à son bloc parent, téléphone
+
+| Série | Résultat |
+|---|---|
+| JavaScript | `layout.test.js` : minuteur ajouté depuis un dossier → juste à droite du dossier, son bloc à droite du minuteur, sur la ligne du dossier ; la règle dans sa colonne, sans recouvrir |
+| Intégration (107 tests, instance neuve) | `DeleteBlocksTest` : En attente → ⧗ 1 jour → bloc Fermé à lui → ⧗ 2 jours → ses blocs (profondeurs 1, 2, 3), plus de lien règle → minuteur ni vers le bloc partagé ; supprimer un bloc après un minuteur retire cette action seule |
+| Navigateur (ordinateur) | Dossier « [WP] Factures » › Ajouter un minuteur › Après 1 jour › Fermé : [WP] Factures → ⧗ → bloc Fermé à lui ; un minuteur plus long part du bloc du précédent |
+| Navigateur (téléphone 390 px, tactile) | toucher un bloc : panneau en bas ; poignée glissée vers le bas : titre seul (haut à 752 px), bloc toujours sélectionné ; vers le haut : tout l'écran ; appui long : menu avec « Supprimer » visible, puis confirmation détaillée ; Agrandir : schéma de 498 à 782 px de haut, recadré ; aucune erreur (avant : `r.getClientRects is not a function`) |
 
 ## 2.12.0 — chaîne règle → minuteur → statut
 
