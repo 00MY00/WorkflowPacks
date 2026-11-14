@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 3.2.0
+# Résultats des tests — Workflow Packs 3.2.1
 
 Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,12 @@ Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 3.2.1 — sans le module Workflows
+
+| Série | Résultat |
+|---|---|
+| Intégration (instance neuve) | `SafetyTest` : Workflows désactivé + moteur actif → plus de blocage, packs indisponibles (message « Les packs de règles Workflows ne sont pas disponibles » + moteur actif), pages Packs, Flux et Assistant IA : 200 ; Workflows désactivé + moteur coupé → blocage expliqué (inchangé) |
 
 ## 3.2.0 — agents IA connectés (API)
 

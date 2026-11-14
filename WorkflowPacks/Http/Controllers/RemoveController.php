@@ -16,7 +16,7 @@ class RemoveController extends Controller
     public function preview(Request $request, $key)
     {
         $this->guard();
-        if (Checker::blocking()) {
+        if (Checker::packsBlocked()) {
             return $this->blockedPage();
         }
         $plan = (new Remover())->plan($key, auth()->user(), $this->selected($request));
@@ -28,7 +28,7 @@ class RemoveController extends Controller
     public function confirm(Request $request, $key)
     {
         $this->guard();
-        if (Checker::blocking()) {
+        if (Checker::packsBlocked()) {
             return $this->blockedPage();
         }
         $user = auth()->user();

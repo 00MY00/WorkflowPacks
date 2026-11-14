@@ -38,7 +38,7 @@
     @if (!empty($compat) && $compat['state'] === 'warning' && Auth::user()->isAdmin())
         <div class="alert alert-warning">
             @foreach ($compat['checks'] as $check)
-                @if ($check['state'] === 'warning')<div>[{{ $check['code'] }}] {{ $check['label'] }} — {{ $check['detail'] }}</div>@endif
+                @if ($check['state'] === 'warning' && (strpos($check['code'], 'WP-WF-') !== 0 || \Modules\WorkflowPacks\Services\Compat\Checker::workflowsReady()))<div>[{{ $check['code'] }}] {{ $check['label'] }} — {{ $check['detail'] }}</div>@endif
             @endforeach
         </div>
     @endif

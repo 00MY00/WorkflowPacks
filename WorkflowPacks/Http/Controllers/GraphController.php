@@ -17,7 +17,7 @@ class GraphController extends Controller
     public function show()
     {
         $this->guard();
-        if (Checker::blocking()) {
+        if (Checker::packsBlocked()) {
             return $this->blockedPage();
         }
 
@@ -27,7 +27,7 @@ class GraphController extends Controller
     public function data(Request $request)
     {
         $this->guard();
-        if (Checker::blocking()) {
+        if (Checker::packsBlocked()) {
             return response()->json(['error' => implode("\n", Checker::blockingReasons())], 409);
         }
         $user = auth()->user();
