@@ -324,6 +324,7 @@ return [
     'history_kind_remove'      => 'Pack retirado',
     'history_kind_rules'       => 'Regla',
     'history_kind_flow'        => 'Flujo (motor interno)',
+    'history_kind_agent'       => 'Agente IA conectado',
     'history_status_queued'    => 'solicitado',
     'history_status_moved'     => 'archivado',
     'history_status_already'   => 'ya archivado',

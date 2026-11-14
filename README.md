@@ -26,7 +26,8 @@ remplacées pour chacune (`{{mailbox.email}}`, `{{mailbox.name}}`, `{{mailbox.id
   qui propose les variables possibles, publication par versions, simulation animée et parcours d'un ticket. Voir
   [docs/flux-internes.md](docs/flux-internes.md). **Assistant IA** sans connexion : un dossier de tickets anonymisés
   pour une IA, sa réponse testée sur ces tickets, puis enregistrée en brouillon
-  ([docs/assistant-ia.md](docs/assistant-ia.md)).
+  ([docs/assistant-ia.md](docs/assistant-ia.md)). **Agents IA connectés** par une API à jeton (usage unique ou
+  continu, déconnexion d'un clic, publication seulement si autorisée) : [docs/agent-api.md](docs/agent-api.md).
 - **Rangement dans les dossiers e-mail** (option, désactivée par défaut) : action « Ranger dans un dossier e-mail
   [WP] » qui déplace l'e-mail reçu dans un dossier de la boîte e-mail (serveur IMAP), créé s'il manque, toujours sous
   le préfixe `[WP]`. Voir [docs/dossiers-email.md](docs/dossiers-email.md). Le dossier actuel de chaque ticket

@@ -324,6 +324,7 @@ return [
     'history_kind_remove'      => 'Pack entfernt',
     'history_kind_rules'       => 'Regel',
     'history_kind_flow'        => 'Ablauf (interne Engine)',
+    'history_kind_agent'       => 'Verbundener KI-Agent',
     'history_status_queued'    => 'angefordert',
     'history_status_moved'     => 'abgelegt',
     'history_status_already'   => 'bereits abgelegt',

@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 3.1.0
+# Résultats des tests — Workflow Packs 3.2.0
 
 Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,13 @@ Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 3.2.0 — agents IA connectés (API)
+
+| Série | Résultat |
+|---|---|
+| Intégration (instance neuve) | `AgentApiTest` (2) : jeton jamais gardé en clair ; sans jeton / jeton faux : 401 ; usage unique : expiration, boîte non autorisée : 403, tickets anonymisés, flux fautif : 422 avec problèmes, flux proposé en brouillon désactivé, puis jeton fermé : 401, historique ; usage continu : modifier, tester, publier refusé (403), autre agent : pas son flux (404), agent autorisé : publié et activé (version 1), 60 requêtes / minute dépassées : 429, déconnecté : 401, moteur coupé : 404 |
+| Navigateur | agent créé : jeton `wpa_…` affiché une fois, `GET /api/v1/me` : 200 (sans cookie), jeton absent après rechargement, Déconnecter : 401 ; aucune erreur |
 
 ## 3.1.0 — assistant IA sans connexion, « Ressemble à… »
 

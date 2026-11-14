@@ -980,8 +980,8 @@ modification.
 ## 15. Plan par étapes
 
 > Livré : 3.0.0 (moteur et éditeur), 3.0.1 (style « G »), 3.1.0 (**assistant IA sans connexion** et bloc
-> « Ressemble à… » par numéros de tickets, voir [assistant-ia.md](assistant-ia.md)). Les numéros ci-dessous sont
-> indicatifs.
+> « Ressemble à… » par numéros de tickets, voir [assistant-ia.md](assistant-ia.md)), 3.2.0 (**API des agents IA
+> connectés**, voir [agent-api.md](agent-api.md)). Les numéros ci-dessous sont indicatifs.
 
 | Version | Contenu | Livrable |
 |---|---|---|

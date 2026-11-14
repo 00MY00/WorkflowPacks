@@ -45,11 +45,7 @@ Collez la réponse (un objet JSON, même entouré de ```json … ```), puis **V�
   ticket avec ces exemples (sujet et texte, poids réglables). **Aucun vecteur ni aucun texte ne quitte le serveur.**
   La variable `similar.score` (en %) est ensuite disponible pour les blocs suivants.
 
-## Prévu ensuite
+## Agent connecté
 
-- Un **agent connecté** par une API, en usage unique ou continu, que l'on peut déconnecter d'un clic.
-- La **publication par l'agent** si l'option est activée (désactivée par défaut).
-- Le même choix d'anonymisation.
-- Un serveur MCP ensuite.
-
-Voir [moteur-autonome.md](moteur-autonome.md).
+Un agent peut aussi faire tout cela lui-même, par l'API du module : jeton, usage unique ou continu, déconnexion d'un
+clic, publication seulement si elle est autorisée. Voir [agent-api.md](agent-api.md).
