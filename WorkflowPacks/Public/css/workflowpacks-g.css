@@ -121,7 +121,7 @@
 .wp-mini-switch { width: 22px; height: 12px; border-radius: 999px; background: var(--g-off); position: relative; display: inline-block; }
 .wp-mini-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 8px; height: 8px; border-radius: 50%; background: #fff; }
 .wp-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 8px; margin-top: 10px; }
-.wp-tile { display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 6px 8px 6px 12px; border: 1px solid var(--g-tile); border-radius: 12px; background: #fff; }
+.wp-tile { min-width: 0; display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 6px 8px 6px 12px; border: 1px solid var(--g-tile); border-radius: 12px; background: #fff; }
 .wp-tile.is-selected { border-color: var(--g-primary); box-shadow: 0 0 0 1px var(--g-primary); background: var(--g-selected); }
 .wp-tile > input[type=checkbox] { width: 16px; height: 16px; margin: 0; flex: none; }
 .wp-initials { position: relative; width: 32px; height: 32px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center;
@@ -176,7 +176,7 @@
   .wp-ifthen { grid-template-columns: 1fr; }
   .wp-ifthen-arrow { transform: rotate(90deg); }
   .wp-pack-head, .wp-pack-body { padding: 14px; }
-  .wp-tiles { grid-template-columns: 1fr; }
+  .wp-tiles { grid-template-columns: minmax(0, 1fr); }
   .wp-js .wp-selbar { left: 12px; right: 12px; transform: none; width: auto; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
   .wp-selbar .wp-selbar-btn, .wp-selbar > span { white-space: nowrap; flex: none; }
 }

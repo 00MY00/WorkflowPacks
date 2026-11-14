@@ -13,11 +13,12 @@ Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
 
-## 3.3.0 — retirer un pack sans Workflows
+## 3.3.0 — retirer un pack sans Workflows, packs de flux, moteur activé par défaut
 
 | Série | Résultat |
 |---|---|
 | Intégration (instance neuve) | `SafetyTest` : avec Workflows, ce retrait est refusé (le retrait normal s'applique) ; sans Workflows, bouton présent sur la page des packs, refusé aux non-administrateurs, pack, liens et ressources effacés, sauvegarde contenant le pack |
+| Intégration (instance neuve) | `FlowPackTest` : moteur activé sans option enregistrée ; pack fourni lu (8 flux, aucun problème une fois le paramètre renseigné, `{{param.…}}` remplacé) ; import en brouillons désactivés, non publiés, boîtes inconnues ignorées, réimport qui met à jour sans doubler ; export (sans boîtes) réimporté ; réservé aux administrateurs, refusé moteur désactivé, format invalide et nom de fichier forgé refusés |
 
 ## 3.2.2 — message sans Workflows, moteur désactivé
 

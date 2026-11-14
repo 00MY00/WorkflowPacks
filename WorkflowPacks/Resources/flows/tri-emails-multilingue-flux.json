@@ -1,0 +1,373 @@
+{
+  "format": "workflowpacks-flows",
+  "version": 1,
+  "key": "tri-emails-multilingue-flux",
+  "name": "Tri des e-mails (multilingue) — flux",
+  "description": "Équivalent, pour le moteur de flux interne, du pack « Tri des e-mails (multilingue) » : alertes de sécurité, codes de connexion, factures et reçus, échecs de paiement, demandes d'action, alertes techniques, newsletters d'un expéditeur choisi et tests FreeScout. Chaque flux ajoute une note interne « [Tri] … » ; les newsletters choisies et les tests FreeScout sont fermés. Les flux sont importés en brouillon, désactivés. Différence : les alertes de sécurité ne sont pas transférées par e-mail (pas encore de bloc « Transférer ») ; la note le rappelle.",
+  "pack_version": "1.0.0",
+  "params": [
+    {
+      "key": "newsletter_sender",
+      "label": "Expéditeur de newsletter à classer",
+      "description": "Adresse exacte d'un expéditeur de newsletter. Vide : le flux « Newsletters » reste à compléter avant publication.",
+      "required": false
+    }
+  ],
+  "flows": [
+    {
+      "key": "alertes-securite",
+      "name": "[Tri] Alertes de sécurité",
+      "once": true,
+      "blocks": [
+        {
+          "id": "b1",
+          "type": "trigger.new_mail"
+        },
+        {
+          "id": "b2",
+          "type": "condition.ticket",
+          "params": {
+            "var": "ticket.subject",
+            "operator": "regex",
+            "value": "(security alert|alerte de s[ée]curit[ée]|sicherheitswarnung|alerta de seguridad|avviso di sicurezza|оповещение (системы )?безопасности|предупреждение (системы )?безопасности|2-step verification|two-step verification|validation en deux [ée]tapes|2-schritt-verifizierung|verificaci[óo]n en dos pasos|двухэтапн|new sign-in|nouvelle connexion|neue anmeldung|password (was )?(changed|reset)|mot de passe (a [ée]t[ée] )?modifi[ée])"
+          }
+        },
+        {
+          "id": "b3",
+          "type": "action.note",
+          "params": {
+            "text": "[Tri] Alerte de sécurité reçue sur {{mailbox.name}} : vérifier qu'elle est légitime. À transférer à la personne responsable de la sécurité."
+          }
+        }
+      ],
+      "links": [
+        {
+          "from": "b1",
+          "port": "next",
+          "to": "b2"
+        },
+        {
+          "from": "b2",
+          "port": "yes",
+          "to": "b3"
+        }
+      ]
+    },
+    {
+      "key": "codes-connexion",
+      "name": "[Tri] Codes de connexion",
+      "once": true,
+      "blocks": [
+        {
+          "id": "b1",
+          "type": "trigger.new_mail"
+        },
+        {
+          "id": "b2",
+          "type": "condition.ticket",
+          "params": {
+            "var": "ticket.subject",
+            "operator": "regex",
+            "value": "(verification code|code de v[ée]rification|best[äa]tigungscode|verifizierungscode|c[óo]digo de verificaci[óo]n|codice di verifica|код подтверждения|проверочный код|one-time (pass)?code|login code|sign-in code|code de connexion|anmeldecode|security code|code de s[ée]curit[ée])"
+          }
+        },
+        {
+          "id": "b3",
+          "type": "action.note",
+          "params": {
+            "text": "[Tri] Code de connexion : valable peu de temps, ne jamais le transmettre."
+          }
+        }
+      ],
+      "links": [
+        {
+          "from": "b1",
+          "port": "next",
+          "to": "b2"
+        },
+        {
+          "from": "b2",
+          "port": "yes",
+          "to": "b3"
+        }
+      ]
+    },
+    {
+      "key": "factures-recus",
+      "name": "[Tri] Factures et reçus",
+      "once": true,
+      "blocks": [
+        {
+          "id": "b1",
+          "type": "trigger.new_mail"
+        },
+        {
+          "id": "b2",
+          "type": "condition.ticket",
+          "params": {
+            "var": "ticket.subject",
+            "operator": "regex",
+            "value": "(\\b(invoices?|factures?|receipts?|re[çc]us?|quittances?|rechnung(en)?|quittung(en)?|belege?|facturas?|recibos?|fattur[ae]|ricevut[ae])\\b|чек|сч[её]т|квитанци|накладн)"
+          }
+        },
+        {
+          "id": "b3",
+          "type": "condition.ticket",
+          "params": {
+            "var": "ticket.subject",
+            "operator": "regex",
+            "value": "\\d[\\d\\s\\x{00A0}\\x{202F}.]*[.,]\\d{2}\\s?(₽|€|\\$|£|chf|руб)"
+          }
+        },
+        {
+          "id": "b4",
+          "type": "action.note",
+          "params": {
+            "text": "[Tri] Document comptable (facture / reçu) : à conserver pour la comptabilité."
+          }
+        }
+      ],
+      "links": [
+        {
+          "from": "b1",
+          "port": "next",
+          "to": "b2"
+        },
+        {
+          "from": "b2",
+          "port": "no",
+          "to": "b3"
+        },
+        {
+          "from": "b2",
+          "port": "yes",
+          "to": "b4"
+        },
+        {
+          "from": "b3",
+          "port": "yes",
+          "to": "b4"
+        }
+      ]
+    },
+    {
+      "key": "echecs-paiement",
+      "name": "[Tri] Échecs de paiement",
+      "once": true,
+      "blocks": [
+        {
+          "id": "b1",
+          "type": "trigger.new_mail"
+        },
+        {
+          "id": "b2",
+          "type": "condition.ticket",
+          "params": {
+            "var": "ticket.subject",
+            "operator": "regex",
+            "value": "(payment (has )?failed|failed payment|payment declined|card (was )?declined|unable to (process|charge)|past due|[ée]chec (du |de )?paiement|paiement (refus[ée]|[ée]chou[ée]|rejet[ée])|carte refus[ée]e|impay[ée]|zahlung (fehlgeschlagen|abgelehnt)|pago (fallido|rechazado)|pagamento (non riuscito|rifiutato)|платеж не (прош[её]л|выполнен)|оплата не прошла)"
+          }
+        },
+        {
+          "id": "b3",
+          "type": "action.note",
+          "params": {
+            "text": "[Tri] Échec de paiement : action nécessaire pour éviter une interruption de service."
+          }
+        }
+      ],
+      "links": [
+        {
+          "from": "b1",
+          "port": "next",
+          "to": "b2"
+        },
+        {
+          "from": "b2",
+          "port": "yes",
+          "to": "b3"
+        }
+      ]
+    },
+    {
+      "key": "action-requise",
+      "name": "[Tri] Action demandée",
+      "once": true,
+      "blocks": [
+        {
+          "id": "b1",
+          "type": "trigger.new_mail"
+        },
+        {
+          "id": "b2",
+          "type": "condition.ticket",
+          "params": {
+            "var": "ticket.subject",
+            "operator": "regex",
+            "value": "(\\[action (required|advised|needed)\\]|action (required|needed|advised)|action requise|action recommand[ée]e|intervention requise|handlung erforderlich|aktion erforderlich|acci[óo]n (requerida|necesaria)|azione richiesta|требуется действие|please (review|confirm|verify)|veuillez (v[ée]rifier|confirmer))"
+          }
+        },
+        {
+          "id": "b3",
+          "type": "action.note",
+          "params": {
+            "text": "[Tri] Action demandée : lire le message et traiter la demande."
+          }
+        }
+      ],
+      "links": [
+        {
+          "from": "b1",
+          "port": "next",
+          "to": "b2"
+        },
+        {
+          "from": "b2",
+          "port": "yes",
+          "to": "b3"
+        }
+      ]
+    },
+    {
+      "key": "alertes-techniques",
+      "name": "[Tri] Alertes techniques",
+      "once": true,
+      "blocks": [
+        {
+          "id": "b1",
+          "type": "trigger.new_mail"
+        },
+        {
+          "id": "b2",
+          "type": "condition.ticket",
+          "params": {
+            "var": "ticket.subject",
+            "operator": "regex",
+            "value": "\\b((is )?down\\b|outage|incident|panne|monitor(ing)?|uptime|downtime|cron|backup (failed|error)|sauvegarde (en )?[ée]chec|[ée]chec de (la )?sauvegarde|disk (space|full)|disque (plein|satur[ée])|ssl certificate|certificat (ssl|tls)|certificate (expir|will expire)|expiration du certificat|server (error|alert)|erreur (du )?serveur|alerte serveur|5\\d\\d error|high (cpu|load|memory))"
+          }
+        },
+        {
+          "id": "b3",
+          "type": "action.note",
+          "params": {
+            "text": "[Tri] Alerte technique : vérifier le service concerné."
+          }
+        }
+      ],
+      "links": [
+        {
+          "from": "b1",
+          "port": "next",
+          "to": "b2"
+        },
+        {
+          "from": "b2",
+          "port": "yes",
+          "to": "b3"
+        }
+      ]
+    },
+    {
+      "key": "newsletters",
+      "name": "[Tri] Newsletters (expéditeur choisi)",
+      "once": true,
+      "blocks": [
+        {
+          "id": "b1",
+          "type": "trigger.new_mail"
+        },
+        {
+          "id": "b2",
+          "type": "condition.ticket",
+          "params": {
+            "var": "ticket.from",
+            "operator": "equal",
+            "value": "{{param.newsletter_sender}}"
+          }
+        },
+        {
+          "id": "b3",
+          "type": "action.note",
+          "params": {
+            "text": "[Tri] Newsletter d'un expéditeur choisi : fermée automatiquement."
+          }
+        },
+        {
+          "id": "b4",
+          "type": "action.status",
+          "params": {
+            "status": "closed"
+          }
+        }
+      ],
+      "links": [
+        {
+          "from": "b1",
+          "port": "next",
+          "to": "b2"
+        },
+        {
+          "from": "b2",
+          "port": "yes",
+          "to": "b3"
+        },
+        {
+          "from": "b3",
+          "port": "next",
+          "to": "b4"
+        }
+      ]
+    },
+    {
+      "key": "tests-freescout",
+      "name": "[Tri] Tests FreeScout",
+      "once": true,
+      "blocks": [
+        {
+          "id": "b1",
+          "type": "trigger.new_mail"
+        },
+        {
+          "id": "b2",
+          "type": "condition.ticket",
+          "params": {
+            "var": "ticket.subject",
+            "operator": "regex",
+            "value": "freescout.{0,3}(e-?mail de test|test e-?mail|testmail|test-e-?mail|correo de prueba|email di prova|тестовое письмо)"
+          }
+        },
+        {
+          "id": "b3",
+          "type": "action.note",
+          "params": {
+            "text": "[Tri] Message de test FreeScout : fermé automatiquement."
+          }
+        },
+        {
+          "id": "b4",
+          "type": "action.status",
+          "params": {
+            "status": "closed"
+          }
+        }
+      ],
+      "links": [
+        {
+          "from": "b1",
+          "port": "next",
+          "to": "b2"
+        },
+        {
+          "from": "b2",
+          "port": "yes",
+          "to": "b3"
+        },
+        {
+          "from": "b3",
+          "port": "next",
+          "to": "b4"
+        }
+      ]
+    }
+  ]
+}

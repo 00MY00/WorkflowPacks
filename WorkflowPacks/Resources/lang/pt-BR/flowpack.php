@@ -1,0 +1,31 @@
+<?php
+
+// Packs of flows of the internal engine (FlowPackController, Services/Engine/FlowPack).
+return [
+    'intro'          => 'Importe um pacote de fluxos para o motor interno (arquivo, colado ou incluído): os fluxos chegam em rascunho, desativados, para verificar e publicar.',
+    'button_import'  => 'Importar um pacote de fluxos',
+    'button_export'  => 'Exportar os fluxos',
+    'export_name'    => 'Meus fluxos',
+    'bundled'        => 'Pacotes incluídos no módulo',
+    'file'           => 'Arquivo do pacote (.json)',
+    'paste'          => 'Ou colar o JSON',
+    'preview'        => 'Pré-visualização',
+    'invalid'        => 'Este pacote não pode ser lido:',
+    'not_json'       => 'Não é um JSON legível.',
+    'bad_format'     => 'Formato esperado: “workflowpacks-flows”, versão 1 (ou um fluxo só).',
+    'bad_pack'       => 'Identificador de pacote inválido ou nenhum fluxo (no máximo :max).',
+    'bad_flow_key'   => 'Fluxo n.º :n: identificador ausente ou duplicado.',
+    'flows_count'    => ':count fluxo(s)',
+    'mailboxes'      => 'Caixas dos fluxos',
+    'mailboxes_help' => 'Nenhuma marcada: todas as caixas. Pode ser alterado depois em cada fluxo.',
+    'required'       => 'obrigatório',
+    'recheck'        => 'Verificar de novo com estes valores',
+    'flows_title'    => 'Fluxos do pacote',
+    'create'         => 'será criado',
+    'update'         => 'rascunho atualizado',
+    'problems'       => ':count problema(s)',
+    'drafts_note'    => 'Os fluxos são salvos em rascunho, desativados. Um fluxo já importado mantém sua versão publicada até a próxima publicação.',
+    'import'         => 'Importar',
+    'done'           => 'Pacote importado: :created fluxo(s) criado(s), :updated atualizado(s) (rascunhos, desativados).',
+    'history'        => ':created criado(s), :updated atualizado(s)',
+];

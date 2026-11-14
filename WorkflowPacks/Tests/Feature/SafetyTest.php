@@ -102,6 +102,7 @@ class SafetyTest extends TestCase
     public function testWorkflowsMissingBlocksWithAnExplicitMessage()
     {
         $admin = $this->user([], true);
+        \Option::set(\Modules\WorkflowPacks\Services\Engine\Engine::OPTION, false);
         \App\Module::setActive('workflows', false);
         \App\Module::clearModulesCache();
         Checker::forget();

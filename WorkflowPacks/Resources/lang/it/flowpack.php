@@ -1,0 +1,31 @@
+<?php
+
+// Packs of flows of the internal engine (FlowPackController, Services/Engine/FlowPack).
+return [
+    'intro'          => 'Importate un pacchetto di flussi per il motore interno (file, incollato o incluso): i flussi arrivano in bozza, disattivati, da verificare e pubblicare.',
+    'button_import'  => 'Importa un pacchetto di flussi',
+    'button_export'  => 'Esporta i flussi',
+    'export_name'    => 'I miei flussi',
+    'bundled'        => 'Pacchetti inclusi nel modulo',
+    'file'           => 'File del pacchetto (.json)',
+    'paste'          => 'Oppure incolla il JSON',
+    'preview'        => 'Anteprima',
+    'invalid'        => 'Questo pacchetto non può essere letto:',
+    'not_json'       => 'Non è un JSON leggibile.',
+    'bad_format'     => 'Formato atteso: «workflowpacks-flows», versione 1 (o un solo flusso).',
+    'bad_pack'       => 'Identificativo del pacchetto non valido o nessun flusso (al massimo :max).',
+    'bad_flow_key'   => 'Flusso n. :n: identificativo mancante o duplicato.',
+    'flows_count'    => ':count flusso/i',
+    'mailboxes'      => 'Caselle dei flussi',
+    'mailboxes_help' => 'Nessuna selezionata: tutte le caselle. Modificabile poi in ogni flusso.',
+    'required'       => 'obbligatorio',
+    'recheck'        => 'Riverifica con questi valori',
+    'flows_title'    => 'Flussi del pacchetto',
+    'create'         => 'sarà creato',
+    'update'         => 'bozza aggiornata',
+    'problems'       => ':count problema/i',
+    'drafts_note'    => 'I flussi sono salvati in bozza, disattivati. Un flusso già importato mantiene la versione pubblicata fino alla prossima pubblicazione.',
+    'import'         => 'Importa',
+    'done'           => 'Pacchetto importato: :created flusso/i creato/i, :updated aggiornato/i (bozze, disattivati).',
+    'history'        => ':created creato/i, :updated aggiornato/i',
+];

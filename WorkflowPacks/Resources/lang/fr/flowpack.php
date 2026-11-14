@@ -1,0 +1,31 @@
+<?php
+
+// Packs of flows of the internal engine (FlowPackController, Services/Engine/FlowPack).
+return [
+    'intro'          => 'Importez un pack de flux pour le moteur interne (fichier, collage ou pack fourni) : les flux arrivent en brouillon, désactivés, à vérifier puis publier.',
+    'button_import'  => 'Importer un pack de flux',
+    'button_export'  => 'Exporter les flux',
+    'export_name'    => 'Mes flux',
+    'bundled'        => 'Packs fournis avec le module',
+    'file'           => 'Fichier du pack (.json)',
+    'paste'          => 'Ou coller le JSON',
+    'preview'        => 'Aperçu',
+    'invalid'        => 'Ce pack ne peut pas être lu :',
+    'not_json'       => 'Ce n’est pas un JSON lisible.',
+    'bad_format'     => 'Format attendu : « workflowpacks-flows », version 1 (ou un flux seul).',
+    'bad_pack'       => 'Identifiant de pack invalide, ou aucun flux (au plus :max).',
+    'bad_flow_key'   => 'Flux n° :n : identifiant manquant ou en double.',
+    'flows_count'    => ':count flux',
+    'mailboxes'      => 'Boîtes des flux',
+    'mailboxes_help' => 'Aucune cochée : toutes les boîtes. Modifiable ensuite dans chaque flux.',
+    'required'       => 'obligatoire',
+    'recheck'        => 'Revérifier avec ces valeurs',
+    'flows_title'    => 'Flux du pack',
+    'create'         => 'sera créé',
+    'update'         => 'brouillon mis à jour',
+    'problems'       => ':count problème(s)',
+    'drafts_note'    => 'Les flux sont enregistrés en brouillon, désactivés. Un flux déjà importé garde la version publiée jusqu’à sa prochaine publication.',
+    'import'         => 'Importer',
+    'done'           => 'Pack importé : :created flux créé(s), :updated mis à jour (brouillons, désactivés).',
+    'history'        => ':created flux créé(s), :updated mis à jour',
+];

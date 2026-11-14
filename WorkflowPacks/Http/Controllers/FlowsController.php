@@ -12,7 +12,7 @@ use Modules\WorkflowPacks\Services\Engine\Engine;
 use Modules\WorkflowPacks\Services\Engine\Publisher;
 
 /**
- * Flows of the internal engine (3.0, experimental): page of the editor (Public/js/flows/editor.js) and its JSON
+ * Flows of the internal engine (3.0): page of the editor (Public/js/flows/editor.js) and its JSON
  * endpoints. Administrators only for now; everything is checked again on the server (publishing: Definition).
  */
 class FlowsController extends Controller

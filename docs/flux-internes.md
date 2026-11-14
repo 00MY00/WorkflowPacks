@@ -1,4 +1,4 @@
-# Flux du moteur interne (expérimental, 3.0)
+# Flux du moteur interne
 
 Le moteur interne exécute des **flux** sans le module Workflows. Chaque bloc est un objet indépendant : un
 déclencheur, des conditions, des attentes et des actions, reliés entre eux. Ce que montre le schéma est exactement
@@ -6,8 +6,9 @@ ce qui s'exécute. Conception complète : [moteur-autonome.md](moteur-autonome.m
 
 ## Activer
 
-**Gérer › Paramètres › Workflow Packs › Moteur de flux interne** : interrupteur, désactivé par défaut. Une fois
-activé, l'onglet **Flux (expérimental)** apparaît, pour les administrateurs.
+**Gérer › Paramètres › Workflow Packs › Moteur de flux interne** : interrupteur, **activé par défaut**
+depuis 3.3 (sans flux actif, il ne fait rien). L'onglet **Flux** apparaît pour les administrateurs. Une installation
+qui l'avait désactivé explicitement le garde désactivé.
 
 **Sans le module Workflows** : activez ce moteur. Le module fonctionne alors entièrement (Flux, Assistant IA, agents
 connectés) ; seules les pages des packs de règles Workflows (import, export, schéma des règles) indiquent qu'elles ont
@@ -42,6 +43,41 @@ un flux et une règle Workflows qui visent les mêmes tickets agissent **tous le
 | Assigner | à un utilisateur ou à personne | suite / erreur |
 | Note interne | texte ; `{{ticket.subject}}` est remplacé | suite / erreur |
 | Classer dans un dossier | dossier du serveur de messagerie (option « Classer dans un dossier e-mail ») | suite / erreur |
+
+## Packs de flux (import, export)
+
+**Flux › Importer un pack de flux** : un pack fourni avec le module, un fichier `.json` (512 Ko au plus) ou le JSON
+collé. L'aperçu montre chaque flux (créé ou brouillon mis à jour), ses problèmes éventuels, les **paramètres** du
+pack à renseigner et les boîtes concernées (aucune cochée = toutes). Les flux sont enregistrés **en brouillon,
+désactivés** : vérifiez-les, publiez-les puis activez-les un par un. Réimporter le même pack met à jour les
+brouillons ; la version publiée continue de tourner jusqu'à la prochaine publication.
+
+**Exporter les flux** télécharge tous les flux comme pack (blocs et liens, sans les boîtes).
+
+Format :
+
+```json
+{"format": "workflowpacks-flows", "version": 1, "key": "mon-pack", "name": "Mon pack", "description": "…",
+ "pack_version": "1.0.0",
+ "params": [{"key": "newsletter_sender", "label": "Expéditeur", "description": "…", "required": false}],
+ "flows": [{"key": "factures", "name": "Factures", "once": true,
+            "blocks": [{"id": "b1", "type": "trigger.new_mail"}, {"id": "b2", "type": "action.note",
+                        "params": {"body": "Facture de {{param.newsletter_sender}} — {{mailbox.name}}"}}],
+            "links": [{"from": "b1", "port": "next", "to": "b2"}]}]}
+```
+
+- `key` (pack et flux) : minuscules, chiffres, `.`, `_`, `-` ; c'est elle qui retrouve un flux déjà importé.
+- `{{param.<clé>}}` est remplacé, à l'import, par la valeur saisie (texte simple).
+- Un flux seul (réponse de l'Assistant IA) est accepté comme pack d'un flux.
+- Positions des blocs facultatives : ils sont placés automatiquement.
+
+**Passer d'un pack de règles Workflows au pack de flux** (exemple : « Tri des e-mails (multilingue) ») :
+
+1. Packs › **Retirer le pack** (une sauvegarde est proposée).
+2. Flux › **Importer un pack de flux** › *tri-emails-multilingue-flux.json* ; renseignez l'expéditeur de newsletter.
+3. Ouvrez chaque flux, vérifiez-le, **Publier**, puis activez-le.
+
+Le transfert par e-mail des alertes de sécurité n'existe pas encore comme bloc : la note ajoutée le rappelle.
 
 ## Simuler
 

@@ -56,9 +56,14 @@ Route::group([
     Route::get('/history/inspect', $admins + ['uses' => 'HistoryController@inspect'])->name('workflowpacks.history.inspect');
     Route::get('/history/trace', $admins + ['uses' => 'HistoryController@trace'])->name('workflowpacks.history.trace');
     Route::get('/diagnostic', $admins + ['uses' => 'DiagnosticController@index'])->name('workflowpacks.diagnostic');
-    // flows of the internal engine (3.0, experimental; administrators, when the engine is on)
+    // flows of the internal engine (administrators, when the engine is on)
     Route::get('/flows', $admins + ['uses' => 'FlowsController@show'])->name('workflowpacks.flows');
     Route::get('/flows/data', $admins + ['uses' => 'FlowsController@data'])->name('workflowpacks.flows.data');
+    // packs of flows: import (preview, then drafts switched off) and export
+    Route::get('/flows/import', $admins + ['uses' => 'FlowPackController@show'])->name('workflowpacks.flowpack');
+    Route::post('/flows/import/preview', $admins + ['uses' => 'FlowPackController@preview'])->name('workflowpacks.flowpack.preview');
+    Route::post('/flows/import/confirm', $admins + ['uses' => 'FlowPackController@confirm'])->name('workflowpacks.flowpack.confirm');
+    Route::get('/flows/export', $admins + ['uses' => 'FlowPackController@export'])->name('workflowpacks.flowpack.export');
     Route::post('/flows', $admins + ['uses' => 'FlowsController@store'])->name('workflowpacks.flows.store');
     Route::post('/flows/{id}', $admins + ['uses' => 'FlowsController@save'])->name('workflowpacks.flows.save');
     Route::post('/flows/{id}/publish', $admins + ['uses' => 'FlowsController@publish'])->name('workflowpacks.flows.publish');

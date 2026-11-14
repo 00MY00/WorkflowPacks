@@ -2,10 +2,10 @@
 
 // Editor of the flows of the internal engine (Workflow Packs › Flows, Public/js/flows/editor.js).
 return [
-    'tab'             => 'Flows (experimental)',
-    'settings_title'  => 'Internal flow engine (experimental)',
+    'tab'             => 'Flows',
+    'settings_title'  => 'Internal flow engine',
     'settings_label'  => 'Enable',
-    'settings_help'   => 'Each block is an object of its own, without the Workflows module. Adds the “Flows” tab. Off: nothing changes, the Workflows rules work as before.',
+    'settings_help'   => 'Each block is an object of its own, without the Workflows module; adds the “Flows” and “AI assistant” tabs. On by default: with no active flow it does nothing. Off: only the Workflows rules work.',
     'intro'           => 'A flow = linked blocks: trigger, conditions, waits, actions. It only runs once published and switched on.',
     'empty'           => 'No flow yet.',
     'new_flow'        => 'New flow',
@@ -61,7 +61,6 @@ return [
     'published_ok'    => 'Published.',
     'trigger_fixed'   => 'The trigger is the starting point: it cannot be deleted.',
     'select_hint'     => 'Click a block to see its settings.',
-    'experimental'    => 'experimental',
     'zoom_fit'        => 'Fit all',
     'path_title'      => 'Path of a ticket',
     'path_ticket'     => 'Ticket number',

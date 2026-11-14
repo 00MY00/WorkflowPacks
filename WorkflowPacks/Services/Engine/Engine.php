@@ -30,7 +30,8 @@ class Engine
 
     public static function enabled()
     {
-        return (bool) \App\Option::get(self::OPTION, false, true, false);
+        // on by default: with no active flow it does nothing (an event no flow listens to costs no query)
+        return (bool) \App\Option::get(self::OPTION, true, true, false);
     }
 
     public function registry()

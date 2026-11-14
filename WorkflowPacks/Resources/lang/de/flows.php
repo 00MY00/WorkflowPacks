@@ -2,10 +2,10 @@
 
 // Editor of the flows of the internal engine (Workflow Packs › Flows, Public/js/flows/editor.js).
 return [
-    'tab'             => 'Abläufe (experimentell)',
-    'settings_title'  => 'Interne Ablauf-Engine (experimentell)',
+    'tab'             => 'Abläufe',
+    'settings_title'  => 'Interne Ablauf-Engine',
     'settings_label'  => 'Aktivieren',
-    'settings_help'   => 'Jeder Block ist ein eigenes Objekt, ohne das Workflows-Modul. Fügt den Reiter „Abläufe“ hinzu. Aus: nichts ändert sich, die Workflows-Regeln laufen wie bisher.',
+    'settings_help'   => 'Jeder Block ist ein eigenes Objekt, ohne das Workflows-Modul; fügt die Reiter „Abläufe“ und „KI-Assistent“ hinzu. Standardmäßig an: ohne aktiven Ablauf tut sie nichts. Aus: nur die Workflows-Regeln laufen.',
     'intro'           => 'Ein Ablauf = verbundene Blöcke: Auslöser, Bedingungen, Wartezeiten, Aktionen. Er läuft erst, wenn er veröffentlicht und eingeschaltet ist.',
     'empty'           => 'Noch kein Ablauf.',
     'new_flow'        => 'Neuer Ablauf',
@@ -61,7 +61,6 @@ return [
     'published_ok'    => 'Veröffentlicht.',
     'trigger_fixed'   => 'Der Auslöser ist der Startpunkt: er kann nicht gelöscht werden.',
     'select_hint'     => 'Klicken Sie auf einen Block, um seine Einstellungen zu sehen.',
-    'experimental'    => 'experimentell',
     'zoom_fit'        => 'Alles zeigen',
     'path_title'      => 'Weg eines Tickets',
     'path_ticket'     => 'Ticketnummer',

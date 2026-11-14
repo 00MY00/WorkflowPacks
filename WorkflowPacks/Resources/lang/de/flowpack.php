@@ -1,0 +1,31 @@
+<?php
+
+// Packs of flows of the internal engine (FlowPackController, Services/Engine/FlowPack).
+return [
+    'intro'          => 'Importieren Sie ein Ablaufpaket für die interne Engine (Datei, eingefügt oder mitgeliefert): die Abläufe kommen als Entwurf, ausgeschaltet, zum Prüfen und Veröffentlichen.',
+    'button_import'  => 'Ablaufpaket importieren',
+    'button_export'  => 'Abläufe exportieren',
+    'export_name'    => 'Meine Abläufe',
+    'bundled'        => 'Mit dem Modul gelieferte Pakete',
+    'file'           => 'Paketdatei (.json)',
+    'paste'          => 'Oder JSON einfügen',
+    'preview'        => 'Vorschau',
+    'invalid'        => 'Dieses Paket kann nicht gelesen werden:',
+    'not_json'       => 'Kein lesbares JSON.',
+    'bad_format'     => 'Erwartetes Format: „workflowpacks-flows“, Version 1 (oder ein einzelner Ablauf).',
+    'bad_pack'       => 'Ungültige Paket-ID oder kein Ablauf (höchstens :max).',
+    'bad_flow_key'   => 'Ablauf Nr. :n: ID fehlt oder doppelt.',
+    'flows_count'    => ':count Ablauf/Abläufe',
+    'mailboxes'      => 'Postfächer der Abläufe',
+    'mailboxes_help' => 'Keines angekreuzt: alle Postfächer. Später in jedem Ablauf änderbar.',
+    'required'       => 'erforderlich',
+    'recheck'        => 'Mit diesen Werten erneut prüfen',
+    'flows_title'    => 'Abläufe des Pakets',
+    'create'         => 'wird erstellt',
+    'update'         => 'Entwurf aktualisiert',
+    'problems'       => ':count Problem(e)',
+    'drafts_note'    => 'Die Abläufe werden als Entwurf gespeichert, ausgeschaltet. Ein bereits importierter Ablauf behält seine veröffentlichte Version bis zur nächsten Veröffentlichung.',
+    'import'         => 'Importieren',
+    'done'           => 'Paket importiert: :created Ablauf/Abläufe erstellt, :updated aktualisiert (Entwürfe, ausgeschaltet).',
+    'history'        => ':created erstellt, :updated aktualisiert',
+];

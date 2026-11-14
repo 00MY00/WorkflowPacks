@@ -75,6 +75,12 @@ class Context
             return $this->ticket[$field] ?? null;
         }
 
+        if (($key === 'mailbox.name' || $key === 'mailbox.email') && $this->conversation) {
+            $mailbox = $this->conversation->mailbox;
+
+            return $mailbox ? (string) $mailbox->{substr($key, 8)} : '';
+        }
+
         return $this->vars[$key] ?? null;
     }
 

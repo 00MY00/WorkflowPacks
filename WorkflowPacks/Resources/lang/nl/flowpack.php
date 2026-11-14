@@ -1,0 +1,31 @@
+<?php
+
+// Packs of flows of the internal engine (FlowPackController, Services/Engine/FlowPack).
+return [
+    'intro'          => 'Importeer een stroompakket voor de interne engine (bestand, geplakt of meegeleverd): de stromen komen als concept, uitgeschakeld, om te controleren en te publiceren.',
+    'button_import'  => 'Stroompakket importeren',
+    'button_export'  => 'Stromen exporteren',
+    'export_name'    => 'Mijn stromen',
+    'bundled'        => 'Met de module meegeleverde pakketten',
+    'file'           => 'Pakketbestand (.json)',
+    'paste'          => 'Of plak de JSON',
+    'preview'        => 'Voorbeeld',
+    'invalid'        => 'Dit pakket kan niet gelezen worden:',
+    'not_json'       => 'Geen leesbare JSON.',
+    'bad_format'     => 'Verwacht formaat: „workflowpacks-flows”, versie 1 (of één stroom).',
+    'bad_pack'       => 'Ongeldige pakket-id of geen stroom (hoogstens :max).',
+    'bad_flow_key'   => 'Stroom nr. :n: id ontbreekt of dubbel.',
+    'flows_count'    => ':count stroom/stromen',
+    'mailboxes'      => 'Mailboxen van de stromen',
+    'mailboxes_help' => 'Geen aangevinkt: alle mailboxen. Later per stroom aan te passen.',
+    'required'       => 'verplicht',
+    'recheck'        => 'Opnieuw controleren met deze waarden',
+    'flows_title'    => 'Stromen van het pakket',
+    'create'         => 'wordt aangemaakt',
+    'update'         => 'concept bijgewerkt',
+    'problems'       => ':count probleem/problemen',
+    'drafts_note'    => 'De stromen worden opgeslagen als concept, uitgeschakeld. Een al geïmporteerde stroom houdt zijn gepubliceerde versie tot de volgende publicatie.',
+    'import'         => 'Importeren',
+    'done'           => 'Pakket geïmporteerd: :created stroom/stromen aangemaakt, :updated bijgewerkt (concepten, uitgeschakeld).',
+    'history'        => ':created aangemaakt, :updated bijgewerkt',
+];

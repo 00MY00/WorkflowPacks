@@ -1,0 +1,31 @@
+<?php
+
+// Packs of flows of the internal engine (FlowPackController, Services/Engine/FlowPack).
+return [
+    'intro'          => 'Importe un paquete de flujos para el motor interno (archivo, pegado o incluido): los flujos llegan en borrador, desactivados, para revisar y publicar.',
+    'button_import'  => 'Importar un paquete de flujos',
+    'button_export'  => 'Exportar los flujos',
+    'export_name'    => 'Mis flujos',
+    'bundled'        => 'Paquetes incluidos con el módulo',
+    'file'           => 'Archivo del paquete (.json)',
+    'paste'          => 'O pegar el JSON',
+    'preview'        => 'Vista previa',
+    'invalid'        => 'Este paquete no se puede leer:',
+    'not_json'       => 'No es un JSON legible.',
+    'bad_format'     => 'Formato esperado: «workflowpacks-flows», versión 1 (o un flujo solo).',
+    'bad_pack'       => 'Identificador de paquete no válido o ningún flujo (como máximo :max).',
+    'bad_flow_key'   => 'Flujo n.º :n: identificador ausente o duplicado.',
+    'flows_count'    => ':count flujo(s)',
+    'mailboxes'      => 'Buzones de los flujos',
+    'mailboxes_help' => 'Ninguno marcado: todos los buzones. Se puede cambiar luego en cada flujo.',
+    'required'       => 'obligatorio',
+    'recheck'        => 'Volver a comprobar con estos valores',
+    'flows_title'    => 'Flujos del paquete',
+    'create'         => 'se creará',
+    'update'         => 'borrador actualizado',
+    'problems'       => ':count problema(s)',
+    'drafts_note'    => 'Los flujos se guardan en borrador, desactivados. Un flujo ya importado conserva su versión publicada hasta la próxima publicación.',
+    'import'         => 'Importar',
+    'done'           => 'Paquete importado: :created flujo(s) creado(s), :updated actualizado(s) (borradores, desactivados).',
+    'history'        => ':created creado(s), :updated actualizado(s)',
+];

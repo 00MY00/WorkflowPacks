@@ -1,5 +1,5 @@
 {{--
-    Workflow Packs › Flows (internal engine, experimental): each block an object, linked into a flow. Everything
+    Workflow Packs › Flows (internal engine): each block an object, linked into a flow. Everything
     happens in Public/js/flows/editor.js; the data comes from FlowsController (JSON), the draft is saved as it goes.
 --}}
 @extends('workflowpacks::layout')
@@ -13,7 +13,9 @@
 
 @section('wp_content')
 <div class="wpf-app" id="wpf-app">
-    <p class="wpf-intro">{{ __('workflowpacks::flows.intro') }} <span class="label label-warning">{{ __('workflowpacks::flows.experimental') }}</span></p>
+    <p class="wpf-intro">{{ __('workflowpacks::flows.intro') }}
+        <a class="btn btn-default btn-sm" href="{{ route('workflowpacks.flowpack') }}">{{ __('workflowpacks::flowpack.button_import') }}</a>
+        <a class="btn btn-default btn-sm" href="{{ route('workflowpacks.flowpack.export') }}">{{ __('workflowpacks::flowpack.button_export') }}</a></p>
     <div class="wpf-toolbar" role="toolbar">
         <select class="form-control input-sm wpf-flow-select" aria-label="{{ __('workflowpacks::flows.tab') }}"></select>
         <button type="button" class="btn btn-default btn-sm" data-act="new">+ {{ __('workflowpacks::flows.new_flow') }}</button>

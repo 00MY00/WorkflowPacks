@@ -2,10 +2,10 @@
 
 // Editor of the flows of the internal engine (Workflow Packs › Flows, Public/js/flows/editor.js).
 return [
-    'tab'             => 'Fluxos (experimental)',
-    'settings_title'  => 'Motor de fluxos interno (experimental)',
+    'tab'             => 'Fluxos',
+    'settings_title'  => 'Motor de fluxos interno',
     'settings_label'  => 'Ativar',
-    'settings_help'   => 'Cada bloco é um objeto independente, sem o módulo Workflows. Adiciona a aba “Fluxos”. Desativado: nada muda, as regras do Workflows funcionam como antes.',
+    'settings_help'   => 'Cada bloco é um objeto independente, sem o módulo Workflows; adiciona as abas “Fluxos” e “Assistente de IA”. Ativado por padrão: sem fluxo ativo não faz nada. Desativado: só as regras do Workflows funcionam.',
     'intro'           => 'Um fluxo = blocos ligados: gatilho, condições, esperas, ações. Só é executado depois de publicado e ativado.',
     'empty'           => 'Nenhum fluxo ainda.',
     'new_flow'        => 'Novo fluxo',
@@ -61,7 +61,6 @@ return [
     'published_ok'    => 'Publicado.',
     'trigger_fixed'   => 'O gatilho é o ponto de partida: não pode ser excluído.',
     'select_hint'     => 'Clique em um bloco para ver suas configurações.',
-    'experimental'    => 'experimental',
     'zoom_fit'        => 'Ver tudo',
     'path_title'      => 'Percurso de um ticket',
     'path_ticket'     => 'N.º do ticket',
