@@ -28,7 +28,7 @@ class PacksController extends Controller
     {
         $this->guard();
         $user = auth()->user();
-        $mailboxes = Checker::blocking() ? collect() : Bridge::editableMailboxes($user);
+        $mailboxes = Checker::packsBlocked() ? collect() : Bridge::editableMailboxes($user);
         $mailboxIds = $mailboxes->pluck('id')->all();
         $filter = (int) $request->input('mailbox_id');
         $jsonActions = (array) Bridge::config('json_value_actions');
@@ -44,7 +44,7 @@ class PacksController extends Controller
                 continue;
             }
             $workflows = $links->pluck('workflow_id')->filter()->all();
-            $existing = $workflows && !Checker::blocking() ? Bridge::query()->whereIn('id', $workflows)->get()->keyBy('id') : collect();
+            $existing = $workflows && !Checker::packsBlocked() ? Bridge::query()->whereIn('id', $workflows)->get()->keyBy('id') : collect();
             $rules = [];
             foreach ((array) ($source['workflows'] ?? []) as $rule) {
                 $states = [];
@@ -110,7 +110,7 @@ class PacksController extends Controller
     public function upload(Request $request)
     {
         $this->guard();
-        if (Checker::blocking()) {
+        if (Checker::packsBlocked()) {
             return $this->blockedPage();
         }
 
@@ -123,7 +123,7 @@ class PacksController extends Controller
         $this->guard();
         // before anything reads the Workflows catalog (Workflows keeps it for the whole request)
         $this->enableImapOnRequest($request);
-        if (Checker::blocking()) {
+        if (Checker::packsBlocked()) {
             return $this->blockedPage();
         }
         list($json, $result) = $this->loadPack($request);
@@ -138,7 +138,7 @@ class PacksController extends Controller
     public function reimport($key)
     {
         $this->guard();
-        if (Checker::blocking()) {
+        if (Checker::packsBlocked()) {
             return $this->blockedPage();
         }
         $pack = Pack::where('pack_key', $key)->firstOrFail();
@@ -156,7 +156,7 @@ class PacksController extends Controller
         $this->guard();
         // before anything reads the Workflows catalog (Workflows keeps it for the whole request)
         $this->enableImapOnRequest($request);
-        if (Checker::blocking()) {
+        if (Checker::packsBlocked()) {
             return $this->blockedPage();
         }
         list($json, $result) = $this->loadPack($request);
@@ -188,7 +188,7 @@ class PacksController extends Controller
     public function confirm(Request $request)
     {
         $this->guard();
-        if (Checker::blocking()) {
+        if (Checker::packsBlocked()) {
             return $this->blockedPage();
         }
         list($json, $result) = $this->loadPack($request);

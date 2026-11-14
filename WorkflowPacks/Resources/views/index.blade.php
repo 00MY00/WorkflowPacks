@@ -20,11 +20,11 @@
 @endsection
 
 @section('wp_content')
-    @if ($compat['state'] === 'blocking')
+    @if (\Modules\WorkflowPacks\Services\Compat\Checker::packsBlocked())
         @include('workflowpacks::partials.blocked_inline')
     @endif
 
-    @if ($packs && $compat['state'] !== 'blocking')
+    @if ($packs && !\Modules\WorkflowPacks\Services\Compat\Checker::packsBlocked())
         {{-- the ticked rules (form="wp-bulk"): a floating bar, only while something is ticked (workflowpacks.js) --}}
         <form id="wp-bulk" method="POST" action="{{ route('workflowpacks.rules.toggle') }}" class="wp-selbar" aria-live="polite">
             {{ csrf_field() }}
@@ -49,7 +49,7 @@
     @forelse ($packs as $entry)
         <section class="wp-pack-g wp-pack">
             <div class="wp-pack-head">
-                @if ($compat['state'] !== 'blocking')
+                @if (!\Modules\WorkflowPacks\Services\Compat\Checker::packsBlocked())
                     <input type="checkbox" class="wp-bulk-pack" data-wp-check-all=".wp-bulk-check" data-wp-scope=".wp-pack" title="{{ __('workflowpacks::messages.select_pack') }}" aria-label="{{ __('workflowpacks::messages.select_pack') }}">
                 @endif
                 <span class="wp-square wp-square-40 wp-square-pack">{!! $wp_ui::icon('package') !!}</span>
@@ -61,7 +61,7 @@
                         <span class="wp-pill wp-pill-indigo">{{ count($entry['rules']) }} {{ __('workflowpacks::messages.rules') }}</span>
                     </div>
                 </div>
-                @if ($compat['state'] !== 'blocking')
+                @if (!\Modules\WorkflowPacks\Services\Compat\Checker::packsBlocked())
                     <div class="wp-pack-actions">
                         <a class="btn btn-default" href="{{ route('workflowpacks.reimport', ['key' => $entry['pack']->pack_key]) }}">{!! $wp_ui::icon('refresh') !!} {{ __('workflowpacks::messages.reimport') }}</a>
                         <a class="btn btn-danger-soft" href="{{ route('workflowpacks.remove', ['key' => $entry['pack']->pack_key]) }}">{!! $wp_ui::icon('trash') !!} {{ __('workflowpacks::messages.remove') }}</a>
@@ -84,7 +84,7 @@
                     </div>
                 @endif
                 @foreach ($entry['rules'] as $r)
-                    @include('workflowpacks::partials.rule_schema', ['rule' => $r['rule'], 'states' => $r['states'], 'mailboxId' => null, 'toggles' => $compat['state'] !== 'blocking', 'filter' => $filter])
+                    @include('workflowpacks::partials.rule_schema', ['rule' => $r['rule'], 'states' => $r['states'], 'mailboxId' => null, 'toggles' => !\Modules\WorkflowPacks\Services\Compat\Checker::packsBlocked(), 'filter' => $filter])
                 @endforeach
             </div>
         </section>

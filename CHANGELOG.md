@@ -4,6 +4,16 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [3.2.1] - 2026-11-15
+
+### Corrigé
+- **Sans le module Workflows**, Workflow Packs n'est plus bloqué quand le moteur de flux interne est activé :
+  Flux, Assistant IA et agents connectés fonctionnent ; Workflows manquant devient une remarque du diagnostic (plus
+  un blocage, aussi pour UpdateGuard). Les pages des packs de règles Workflows (import, export, schéma des règles)
+  affichent un message clair au lieu de « ne peut pas fonctionner », avec un lien vers Flux et l'Assistant IA.
+- Moteur désactivé et Workflows absent : le message explique qu'il suffit d'activer le moteur interne (Gérer ›
+  Paramètres › Workflow Packs), avec un lien direct.
+
 ## [3.2.0] - 2026-11-15
 
 ### Ajouté

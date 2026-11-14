@@ -21,7 +21,7 @@ class ExportController extends Controller
     public function form(Request $request)
     {
         $this->guard();
-        if (Checker::blocking()) {
+        if (Checker::packsBlocked()) {
             return $this->blockedPage();
         }
 
@@ -31,7 +31,7 @@ class ExportController extends Controller
     public function preview(Request $request)
     {
         $this->guard();
-        if (Checker::blocking()) {
+        if (Checker::packsBlocked()) {
             return $this->blockedPage();
         }
         $built = $this->build($request);
@@ -48,7 +48,7 @@ class ExportController extends Controller
     public function download(Request $request)
     {
         $this->guard();
-        if (Checker::blocking()) {
+        if (Checker::packsBlocked()) {
             return $this->blockedPage();
         }
         $built = $this->build($request);
@@ -71,7 +71,7 @@ class ExportController extends Controller
     public function updatePack(Request $request)
     {
         $this->guard();
-        if (Checker::blocking()) {
+        if (Checker::packsBlocked()) {
             return $this->blockedPage();
         }
         $user = auth()->user();
@@ -105,7 +105,7 @@ class ExportController extends Controller
     public function group(Request $request)
     {
         $this->guard();
-        if (Checker::blocking()) {
+        if (Checker::packsBlocked()) {
             return $this->blockedPage();
         }
         $built = $this->build($request);

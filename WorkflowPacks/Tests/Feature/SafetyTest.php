@@ -114,6 +114,30 @@ class SafetyTest extends TestCase
         \App\Module::clearModulesCache();
     }
 
+    public function testWithoutWorkflowsTheInternalEngineKeepsTheModuleWorking()
+    {
+        $admin = $this->user([], true);
+        \Option::set(\Modules\WorkflowPacks\Services\Engine\Engine::OPTION, true);
+        \App\Module::setActive('workflows', false);
+        \App\Module::clearModulesCache();
+        Checker::forget();
+        try {
+            $this->assertFalse(Checker::blocking(), 'not a blocking state any more');
+            $this->assertFalse(Checker::workflowsReady());
+            $this->assertTrue(Checker::packsBlocked(), 'the packs of Workflows rules still need it');
+            $import = $this->actingAs($admin)->get(route('workflowpacks.import'))->assertStatus(200);
+            $this->seeIn($import, e(__('workflowpacks::messages.wf_missing_title')));
+            $this->seeIn($import, e(__('workflowpacks::messages.wf_missing_engine_on')));
+            $this->actingAs($admin)->get(route('workflowpacks.index'))->assertStatus(200);
+            $this->actingAs($admin)->get(route('workflowpacks.flows'))->assertStatus(200);
+            $this->actingAs($admin)->get(route('workflowpacks.ai'))->assertStatus(200);
+        } finally {
+            \App\Module::setActive('workflows', true);
+            \App\Module::clearModulesCache();
+            Checker::forget();
+        }
+    }
+
     public function testAnErrorCancelsTheWholeImport()
     {
         $a = $this->mailbox('A');

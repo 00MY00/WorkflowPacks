@@ -9,6 +9,10 @@ ce qui s'exécute. Conception complète : [moteur-autonome.md](moteur-autonome.m
 **Gérer › Paramètres › Workflow Packs › Moteur de flux interne** : interrupteur, désactivé par défaut. Une fois
 activé, l'onglet **Flux (expérimental)** apparaît, pour les administrateurs.
 
+**Sans le module Workflows** : activez ce moteur. Le module fonctionne alors entièrement (Flux, Assistant IA, agents
+connectés) ; seules les pages des packs de règles Workflows (import, export, schéma des règles) indiquent qu'elles ont
+besoin de Workflows. Le diagnostic (et UpdateGuard) le note comme une simple remarque.
+
 Tant qu'il est désactivé, rien ne change : les règles Workflows fonctionnent comme avant, aucune tâche planifiée
 du moteur ne tourne, et les événements de FreeScout ne coûtent rien. Les deux peuvent fonctionner en même temps :
 un flux et une règle Workflows qui visent les mêmes tickets agissent **tous les deux**.

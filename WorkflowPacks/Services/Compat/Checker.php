@@ -98,6 +98,20 @@ class Checker
         $refresh = self::refreshActive();
         $add('WP-REF-01', 'ok', Problems::t('chk_refresh'), $refresh ? Problems::t('chk_refresh_on') : Problems::t('chk_refresh_off'));
 
+        // Workflows is needed only by the packs of Workflows rules (import, export, diagram of the rules). With the
+        // internal engine on, the module works without it: its checks are then remarks, not a blocking state.
+        $workflowsReady = true;
+        $workflowsReasons = [];
+        foreach ($checks as $i => $check) {
+            if (strpos($check['code'], 'WP-WF-') === 0 && $check['state'] === 'blocking') {
+                $workflowsReady = false;
+                $workflowsReasons[] = '['.$check['code'].'] '.$check['label'].' — '.$check['detail'];
+                if (\Modules\WorkflowPacks\Services\Engine\Engine::enabled()) {
+                    $checks[$i]['state'] = 'warning';
+                }
+            }
+        }
+
         $state = 'ok';
         foreach ($checks as $check) {
             if (self::STATES[$check['state']] > self::STATES[$state]) {
@@ -113,6 +127,8 @@ class Checker
         return self::$cached = [
             'state'    => $state,
             'checks'   => $checks,
+            'workflows_ready'   => $workflowsReady,
+            'workflows_reasons' => $workflowsReasons,
             'versions' => [
                 'freescout'     => $app,
                 'php'           => PHP_VERSION,
@@ -127,6 +143,18 @@ class Checker
         return self::run()['state'] === 'blocking';
     }
 
+    /** The official Workflows module is there and usable (needed only for the packs of Workflows rules). */
+    public static function workflowsReady()
+    {
+        return self::run()['workflows_ready'];
+    }
+
+    /** The pages of the packs of Workflows rules cannot work (Workflows missing, or a blocking problem). */
+    public static function packsBlocked()
+    {
+        return self::blocking() || !self::workflowsReady();
+    }
+
     /** Lines describing the blocking checks (shown instead of the import / export forms). */
     public static function blockingReasons()
     {
@@ -134,6 +162,12 @@ class Checker
         foreach (self::run()['checks'] as $check) {
             if ($check['state'] === 'blocking') {
                 $out[] = '['.$check['code'].'] '.$check['label'].' — '.$check['detail'];
+            }
+        }
+        // Workflows missing with the engine on: not blocking for the module, still the reason for the packs pages
+        foreach (self::run()['workflows_reasons'] as $reason) {
+            if (!in_array($reason, $out, true)) {
+                $out[] = $reason;
             }
         }
 
