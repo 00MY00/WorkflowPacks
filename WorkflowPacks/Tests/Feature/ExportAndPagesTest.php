@@ -114,7 +114,7 @@ class ExportAndPagesTest extends TestCase
         $index = $this->actingAs($admin)->get(route('workflowpacks.index'));
         $index->assertStatus(200);
         $this->seeIn($index, 'tri-emails-multilingue');
-        $this->seeIn($index, 'wp-chip-synced');
+        $this->seeIn($index, 'wp-state-dot is-synced');
 
         $this->actingAs($admin)->get(route('workflowpacks.reimport', ['key' => 'tri-emails-multilingue']))->assertStatus(200);
         $this->actingAs($admin)->get(route('workflowpacks.export'))->assertStatus(200);

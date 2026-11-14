@@ -19,13 +19,31 @@
         }
     });
 
-    /** Number of ticked rules in the bar; its buttons only usable when at least one is ticked. */
+    /**
+     * Number of ticked rules in the selection bar; the bar only exists while something is ticked (not greyed, not
+     * shown with "0"); a ticked mailbox tile is highlighted.
+     */
     function updateBulk() {
         var count = document.querySelectorAll('.wp-bulk-check:checked').length;
         Array.prototype.forEach.call(document.querySelectorAll('[data-wp-bulk-count]'), function (el) { el.textContent = count; });
         Array.prototype.forEach.call(document.querySelectorAll('[data-wp-bulk-action]'), function (b) { b.disabled = count === 0; });
+        Array.prototype.forEach.call(document.querySelectorAll('.wp-selbar'), function (bar) { bar.classList.toggle('has-selection', count > 0); });
+        Array.prototype.forEach.call(document.querySelectorAll('.wp-tile'), function (tile) {
+            var box = tile.querySelector('.wp-bulk-check');
+            tile.classList.toggle('is-selected', !!(box && box.checked));
+        });
     }
-    document.addEventListener('DOMContentLoaded', updateBulk);
+    document.addEventListener('DOMContentLoaded', function () {
+        // with JavaScript: the selection bar floats and hides itself when empty (without: it stays in the page)
+        Array.prototype.forEach.call(document.querySelectorAll('.wp-page'), function (p) { p.classList.add('wp-js'); });
+        updateBulk();
+    });
+    document.addEventListener('click', function (e) {
+        if (e.target && e.target.closest && e.target.closest('[data-wp-clear]')) {
+            Array.prototype.forEach.call(document.querySelectorAll('.wp-bulk-check:checked, [data-wp-check-all]:checked'), function (b) { b.checked = false; });
+            updateBulk();
+        }
+    });
     // last confirmation before an irreversible action (no inline handler: FreeScout's Content-Security-Policy)
     document.addEventListener('click', function (e) {
         var el = e.target && e.target.closest ? e.target.closest('[data-wp-confirm]') : null;

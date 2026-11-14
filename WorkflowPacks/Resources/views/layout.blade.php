@@ -5,12 +5,19 @@
 
 @section('stylesheets')
     <link href="{{ asset(\Module::getPublicPath('workflowpacks').'/css/workflowpacks.css') }}?v={{ \Modules\WorkflowPacks\Services\ModuleInfo::version() }}" rel="stylesheet" type="text/css">
+    <link href="{{ asset(\Module::getPublicPath('workflowpacks').'/css/workflowpacks-g.css') }}?v={{ \Modules\WorkflowPacks\Services\ModuleInfo::version() }}" rel="stylesheet" type="text/css">
 @endsection
 
 @section('content')
 <div class="@yield('wp_container', 'container') wp-page @if (!empty($wpRefresh)) wp-refresh @endif">
     <div class="wp-header">
-        <h1>{{ __('workflowpacks::messages.title') }}</h1>
+        {{-- title + description on the left, the actions of the page on the right (one primary button) --}}
+        <div class="wp-header-text">
+            <h1>{{ __('workflowpacks::messages.title') }}</h1>
+            @hasSection('wp_description')<p class="wp-header-desc">@yield('wp_description')</p>@endif
+        </div>
+        @hasSection('wp_actions')<div class="wp-header-actions">@yield('wp_actions')</div>@endif
+        <div class="wp-header-row">
         <ul class="nav nav-tabs wp-tabs">
             <li class="{{ Route::is('workflowpacks.index') ? 'active' : '' }}"><a href="{{ route('workflowpacks.index') }}">{{ __('workflowpacks::messages.menu') }}</a></li>
             <li class="{{ Route::is('workflowpacks.import*') || Route::is('workflowpacks.reimport') ? 'active' : '' }}"><a href="{{ route('workflowpacks.import') }}">{{ __('workflowpacks::messages.import') }}</a></li>
@@ -25,6 +32,7 @@
                 <li><a href="{{ route('settings', ['section' => 'workflowpacks']) }}">{{ __('workflowpacks::messages.settings') }}</a></li>
             @endif
         </ul>
+        </div>
     </div>
     @if (!empty($compat) && $compat['state'] === 'warning' && Auth::user()->isAdmin())
         <div class="alert alert-warning">

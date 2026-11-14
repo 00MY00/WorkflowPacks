@@ -10,7 +10,14 @@
         — {{ count($pack['workflows']) }} {{ __('workflowpacks::messages.rules') }}
         @if ($existing)<div>{{ __('workflowpacks::messages.already_imported', ['version' => $existing->pack_version ?: '—']) }}</div>@endif
     </div>
-    @if ($pack['description'] !== '')<p class="wp-muted">{{ $pack['description'] }}</p>@endif
+    @if ($pack['description'] !== '')
+        <div class="wp-infos">
+            @foreach (\Modules\WorkflowPacks\Services\Ui::infoBlocks($pack['description']) as $info)
+                <div class="wp-info"><span class="wp-square">{!! \Modules\WorkflowPacks\Services\Ui::icon($info['icon']) !!}</span>
+                    <div>@if ($info['title'] !== '')<strong class="wp-info-title">{{ $info['title'] }}</strong>@endif<span class="wp-info-text">{{ $info['text'] }}</span></div></div>
+            @endforeach
+        </div>
+    @endif
 
     <form method="POST" action="{{ route('workflowpacks.import.preview') }}" class="wp-form">
         {{ csrf_field() }}
@@ -26,7 +33,7 @@
         @endif
 
         <h4>{{ __('workflowpacks::messages.mailboxes') }}</h4>
-        <p class="wp-muted">{{ __('workflowpacks::messages.mailboxes_help') }}</p>
+        @include('workflowpacks::partials.help', ['text' => __('workflowpacks::messages.mailboxes_help')])
         @foreach ($selectors as $ruleKey => $sel)
             <div class="wp-selector">
                 <strong>{{ __('workflowpacks::messages.selector') }}</strong>
@@ -74,7 +81,7 @@
 
         @if ($resources)
             <h4>{{ __('workflowpacks::messages.resources') }}</h4>
-            <p class="wp-muted">{{ __('workflowpacks::messages.resources_help') }}</p>
+            @include('workflowpacks::partials.help', ['text' => __('workflowpacks::messages.resources_help')])
             @foreach ($resources as $key => $r)
                 <div class="form-group wp-resource">
                     <label>{{ $r['decl']['name'] }} <code>{{ '{'.'{resource.'.$key.'}'.'}' }}</code> <span class="label label-default">{{ $r['decl']['type'] }}</span></label>
@@ -98,8 +105,10 @@
         @include('workflowpacks::partials.imap_off')
     </form>
 
-    <h4 class="wp-section">{{ __('workflowpacks::messages.rules') }}</h4>
-    @foreach ($pack['workflows'] as $rule)
-        @include('workflowpacks::partials.rule_schema', ['rule' => $rule, 'mailboxId' => null])
-    @endforeach
+    <details class="wp-fold wp-section">
+        <summary>{{ __('workflowpacks::messages.pack_rules_count', ['count' => count($pack['workflows'])]) }}</summary>
+        @foreach ($pack['workflows'] as $rule)
+            @include('workflowpacks::partials.rule_schema', ['rule' => $rule, 'mailboxId' => null])
+        @endforeach
+    </details>
 @endsection
