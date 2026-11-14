@@ -1,0 +1,122 @@
+<?php
+
+// Blocks of the internal flow engine (Blocks/, Services/Engine). Titles are composed when shown, never stored.
+return [
+    'families'  => [
+        'trigger'   => 'Déclencheurs',
+        'condition' => 'Conditions',
+        'wait'      => 'Attentes',
+        'action'    => 'Actions',
+        'util'      => 'Outils',
+    ],
+    'outputs'   => [
+        'next'  => 'suite',
+        'yes'   => 'oui',
+        'no'    => 'non',
+        'error' => 'erreur',
+    ],
+    'already'   => 'déjà fait, rien à changer',
+    'trigger'   => [
+        'new_mail' => [
+            'name'  => 'Nouvel e-mail',
+            'title' => 'Nouvel e-mail',
+            'help'  => 'Un client écrit un nouvel e-mail dans une boîte du flux.',
+        ],
+    ],
+    'condition' => [
+        'ticket' => [
+            'name'       => 'Si…',
+            'title'      => 'Si :var :operator « :value »',
+            'title_bool' => 'Si :var : :operator',
+            'decision'   => ':var « :actual » :operator « :value » → :output',
+            'help'       => 'Teste le ticket ou le résultat d’un bloc précédent.',
+        ],
+    ],
+    'wait'      => [
+        'duration' => [
+            'name'  => 'Attendre',
+            'title' => 'Attendre :delay',
+            'help'  => 'Le ticket attend, puis continue.',
+        ],
+    ],
+    'action'    => [
+        'status'      => [
+            'name'  => 'Statut',
+            'title' => 'Statut : :status',
+            'help'  => 'Change le statut du ticket.',
+        ],
+        'assign'      => [
+            'name'  => 'Assigner',
+            'title' => 'Assigner à :user',
+            'help'  => 'Assigne le ticket à un utilisateur de la boîte, ou à personne.',
+        ],
+        'note'        => [
+            'name'  => 'Note interne',
+            'title' => 'Note : :text',
+            'help'  => 'Ajoute une note interne ; {{ticket.subject}} est remplacé.',
+        ],
+        'imap_folder' => [
+            'name'  => 'Classer dans un dossier',
+            'title' => 'Dossier : :folder',
+            'help'  => 'Classe l’e-mail dans un dossier du serveur de messagerie.',
+        ],
+    ],
+    'vars'      => [
+        'ticket' => [
+            'subject'  => 'Sujet',
+            'body'     => 'Texte de l’e-mail',
+            'from'     => 'Expéditeur',
+            'status'   => 'Statut',
+            'assigned' => 'Assigné',
+            'replied'  => 'L’équipe a répondu',
+        ],
+    ],
+    'ops'       => [
+        'contains'     => 'contient',
+        'not_contains' => 'ne contient pas',
+        'equal'        => 'est égal à',
+        'not_equal'    => 'est différent de',
+        'starts'       => 'commence par',
+        'ends'         => 'finit par',
+        'regex'        => 'correspond à l’expression',
+        'is'           => 'est',
+        'is_not'       => 'n’est pas',
+        'yes'          => 'oui',
+        'no'           => 'non',
+        'gte'          => '≥',
+        'lte'          => '≤',
+        'eq'           => '=',
+    ],
+    'values'    => [
+        'status' => [
+            'active'  => 'Ouvert',
+            'pending' => 'En attente',
+            'closed'  => 'Fermé',
+            'spam'    => 'Indésirable',
+        ],
+        'nobody' => 'personne',
+    ],
+    'errors'    => [
+        'required'     => 'À remplir.',
+        'choice'       => 'Valeur non permise.',
+        'id'           => 'Identifiant de bloc invalide ou en double.',
+        'link'         => 'Lien invalide (bloc inconnu ou sortie déjà reliée).',
+        'count'        => 'Un flux a de 1 à :max blocs.',
+        'type'         => 'Type de bloc inconnu : « :type ».',
+        'var'          => 'Cette variable n’est pas fournie par un bloc placé avant.',
+        'trigger'      => 'Un flux a exactement un déclencheur.',
+        'port'         => 'Ce bloc n’a pas de sortie « :port ».',
+        'into_trigger' => 'Un lien ne peut pas aller vers un déclencheur.',
+        'unreached'    => 'Ce bloc n’est pas relié au déclencheur.',
+        'loop'         => 'Boucle sans attente : elle tournerait sans fin.',
+        'steps'        => 'Arrêt après :max blocs d’affilée (boucle ?).',
+        'internal'     => 'Erreur interne, nouvel essai plus tard.',
+        'delay'        => 'Durée invalide (1 à 100 000 minutes, heures ou jours).',
+        'regex'        => 'Expression invalide ou trop longue (:max caractères au plus).',
+        'long'         => 'Texte trop long (:max octets au plus).',
+        'user'         => 'Cet utilisateur n’a plus accès à la boîte.',
+        'folder'       => 'Nom de dossier invalide.',
+        'imap_off'     => 'Option « Classer dans un dossier e-mail » désactivée (Gérer › Paramètres › Workflow Packs).',
+        'imap_nothing' => 'Aucun e-mail à classer (voir l’historique).',
+    ],
+];

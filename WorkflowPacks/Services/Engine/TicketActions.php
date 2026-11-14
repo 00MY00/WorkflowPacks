@@ -1,0 +1,94 @@
+<?php
+
+namespace Modules\WorkflowPacks\Services\Engine;
+
+use Modules\WorkflowPacks\Services\Imap\ImapFolders;
+
+/**
+ * The only place where a block changes a ticket. Each action updates the state seen by the next blocks and records
+ * the change (before -> after); in a dry run it stops there. FreeScout's own methods are used, so the ticket shows
+ * the usual lines ("status changed…") and the other modules are told.
+ */
+class TicketActions
+{
+    /** @var Context */
+    protected $ctx;
+
+    public function __construct(Context $ctx)
+    {
+        $this->ctx = $ctx;
+    }
+
+    /** @param string $status active | pending | closed | spam */
+    public function status($status)
+    {
+        $before = $this->ctx->ticket['status'] ?? null;
+        if ($before === $status) {
+            return false;
+        }
+        if (!$this->ctx->dryRun) {
+            $this->ctx->conversation->changeStatus((int) array_search($status, Context::STATUS, true), $this->ctx->actor, true);
+        }
+        $this->ctx->ticket['status'] = $status;
+        $this->ctx->change('status', $before, $status);
+
+        return true;
+    }
+
+    /** @param int $userId -1: nobody */
+    public function assign($userId)
+    {
+        $userId = (int) $userId;
+        $before = (int) ($this->ctx->ticket['user_id'] ?? 0);
+        if ($before === max(0, $userId)) {
+            return false;
+        }
+        if (!$this->ctx->dryRun) {
+            $this->ctx->conversation->changeUser($userId > 0 ? $userId : null, $this->ctx->actor, true);
+        }
+        $this->ctx->ticket['user_id'] = max(0, $userId);
+        $this->ctx->change('assignee', self::userName($before), self::userName($userId));
+
+        return true;
+    }
+
+    /** Internal note (HTML already escaped by Context::render). */
+    public function note($html)
+    {
+        if (!$this->ctx->dryRun) {
+            $actor = $this->ctx->actor;
+            \App\Thread::create($this->ctx->conversation, \App\Thread::TYPE_NOTE, $html, [
+                'user_id'            => $this->ctx->conversation->user_id,
+                'created_by_user_id' => $actor ? $actor->id : null,
+                'source_via'         => \App\Thread::PERSON_USER,
+                'source_type'        => \App\Thread::SOURCE_TYPE_WEB,
+            ]);
+        }
+        $this->ctx->change('note', '', mb_substr(strip_tags($html), 0, 60));
+
+        return true;
+    }
+
+    /** E-mail folder on the mail server (queued, as the action of the rules). False: nothing to move (reason in History). */
+    public function imapFolder($path)
+    {
+        $before = $this->ctx->ticket['folder'] ?? '';
+        if (!$this->ctx->dryRun && !ImapFolders::queue($this->ctx->conversation, $path)) {
+            return false;
+        }
+        $this->ctx->ticket['folder'] = $path;
+        $this->ctx->change('folder', $before, $path);
+
+        return true;
+    }
+
+    protected static function userName($id)
+    {
+        if ((int) $id <= 0) {
+            return '—';
+        }
+        $user = \App\User::find((int) $id);
+
+        return $user ? $user->getFullName() : '#'.(int) $id;
+    }
+}
