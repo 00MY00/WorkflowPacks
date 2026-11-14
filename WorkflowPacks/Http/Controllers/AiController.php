@@ -3,6 +3,7 @@
 namespace Modules\WorkflowPacks\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Modules\WorkflowPacks\Entities\Agent;
 use Modules\WorkflowPacks\Entities\Flow;
 use Modules\WorkflowPacks\Services\Ai\Answer;
 use Modules\WorkflowPacks\Services\Ai\Brief;
@@ -79,9 +80,45 @@ class AiController extends Controller
         return redirect()->route('workflowpacks.flows', ['flow' => $flow->id]);
     }
 
+    /** A connected agent: its token is shown once, on this page, never again. */
+    public function createAgent(Request $request)
+    {
+        $this->guardAi();
+        $mailboxes = array_values(array_intersect(array_map('intval', (array) $request->input('mailbox_ids', [])),
+            \App\Mailbox::pluck('id')->map(function ($id) {
+                return (int) $id;
+            })->all()));
+        list($agent, $token) = Agent::issue([
+            'name'        => mb_substr(trim((string) $request->input('name')) ?: 'Agent', 0, 100),
+            'mode'        => $request->input('mode') === Agent::CONTINUOUS ? Agent::CONTINUOUS : Agent::ONCE,
+            'mailbox_ids' => $mailboxes,
+            'anonymise'   => !$request->input('full_text'),
+            'can_publish' => (bool) $request->input('can_publish'),
+            'created_by'  => auth()->id(),
+        ]);
+        \Modules\WorkflowPacks\Services\History::add('agent', 'ok', ['subject' => $agent->name, 'message' => 'connected ('.$agent->mode.')']);
+
+        return $this->page('ai', $this->data(['newToken' => $token, 'newAgent' => $agent]));
+    }
+
+    /** Disconnected at once: its token no longer works. */
+    public function revokeAgent($id)
+    {
+        $this->guardAi();
+        $agent = Agent::findOrFail((int) $id);
+        $agent->revoke();
+        \Modules\WorkflowPacks\Services\History::add('agent', 'ok', ['subject' => $agent->name, 'message' => 'disconnected']);
+
+        return redirect()->route('workflowpacks.ai');
+    }
+
     protected function data(array $extra = [])
     {
         return $extra + [
+            'agents'    => Agent::orderBy('id', 'desc')->limit(50)->get(),
+            'newToken'  => null,
+            'newAgent'  => null,
+            'apiUrl'    => url(\Helper::getSubdirectory().'/workflow-packs/api/v1'),
             'mailboxes' => \App\Mailbox::orderBy('name')->get(['id', 'name']),
             'brief'     => null,
             'count'     => 0,

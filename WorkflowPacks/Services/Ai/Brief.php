@@ -44,6 +44,23 @@ class Brief
      */
     public function build(array $options)
     {
+        $anonymise = (bool) ($options['anonymise'] ?? true);
+
+        return [
+            'format'     => self::FORMAT,
+            'version'    => 1,
+            'task'       => mb_substr(trim((string) ($options['task'] ?? '')), 0, 4000),
+            'anonymised' => $anonymise,
+            'rules'      => self::RULES,
+            'blocks'     => $this->blocks(),
+            'example'    => self::example(),
+            'tickets'    => $this->tickets($options),
+        ];
+    }
+
+    /** The tickets (id + text), newest first, anonymised unless $options['anonymise'] is false. */
+    public function tickets(array $options)
+    {
         $limit = max(1, min(self::MAX_TICKETS, (int) ($options['limit'] ?? 100)));
         $query = \App\Conversation::whereIn('mailbox_id', (array) $options['mailbox_ids'])
             ->where('state', \App\Conversation::STATE_PUBLISHED)
@@ -69,20 +86,11 @@ class Brief
             });
         }
 
-        return [
-            'format'     => self::FORMAT,
-            'version'    => 1,
-            'task'       => mb_substr(trim((string) ($options['task'] ?? '')), 0, 4000),
-            'anonymised' => $anonymise,
-            'rules'      => self::RULES,
-            'blocks'     => $this->blocks(),
-            'example'    => self::example(),
-            'tickets'    => $tickets,
-        ];
+        return $tickets;
     }
 
     /** The blocks, as the AI needs them: type, family, what it does, fields, outputs, variables. */
-    protected function blocks()
+    public function blocks()
     {
         $out = [];
         foreach ($this->registry->types() as $type => $class) {

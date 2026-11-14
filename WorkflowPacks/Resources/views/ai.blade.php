@@ -51,6 +51,67 @@
         </form>
     </section>
 
+    {{-- connected agents (API) --}}
+    <section class="wp-pack-g">
+        <div class="wp-pack-head">
+            <span class="wp-square wp-square-40 wp-square-pack">{!! $wp_ui::icon('power') !!}</span>
+            <div class="wp-pack-title"><h2 class="wp-pack-name">{{ __('workflowpacks::ai.agents') }}</h2>
+                <div class="wp-pills"><span class="wp-pill">{{ __('workflowpacks::ai.agents_count', ['count' => $agents->filter->usable()->count()]) }}</span></div></div>
+        </div>
+        <div class="wp-pack-body">
+            @include('workflowpacks::partials.help', ['text' => __('workflowpacks::ai.agents_help')])
+            @if ($newToken)
+                <div class="alert alert-success">
+                    <strong>{{ __('workflowpacks::ai.token_once') }}</strong>
+                    <input type="text" class="form-control wp-mono" id="wp-ai-token" value="{{ $newToken }}" readonly aria-label="{{ __('workflowpacks::ai.token_once') }}">
+                    <button type="button" class="btn btn-default btn-sm" data-wp-copy="#wp-ai-token" data-wp-copied="{{ __('workflowpacks::ai.copied') }}">{!! $wp_ui::icon('note') !!} {{ __('workflowpacks::ai.copy') }}</button>
+                    <p>{{ __('workflowpacks::ai.api_url') }} <code>{{ $apiUrl }}</code></p>
+                </div>
+            @endif
+            @if ($agents->count())
+                <div class="wp-tiles">
+                    @foreach ($agents as $ag)
+                        <div class="wp-tile" title="{{ $ag->token_hint }}…">
+                            <span class="wp-initials wp-fam-{{ $wp_ui::family($ag->name) }}" aria-hidden="true">{{ $wp_ui::initials($ag->name) }}<span class="wp-state-dot {{ $ag->usable() ? 'is-synced' : 'is-missing' }}"></span></span>
+                            <span class="wp-tile-name">{{ $ag->name }}
+                                <span class="wp-tile-note">{{ __('workflowpacks::ai.mode_'.$ag->mode) }}{{ $ag->can_publish ? ' · '.__('workflowpacks::ai.can_publish_short') : '' }}{{ $ag->anonymise ? '' : ' · '.__('workflowpacks::ai.full_text_short') }} · {{ $ag->usable() ? ($ag->last_used_at ? __('workflowpacks::ai.last_used', ['time' => $ag->last_used_at->diffForHumans()]) : __('workflowpacks::ai.never_used')) : __('workflowpacks::ai.disconnected') }}</span>
+                            </span>
+                            @if ($ag->usable())
+                                <form method="POST" action="{{ route('workflowpacks.ai.agents.revoke', ['id' => $ag->id]) }}">
+                                    {{ csrf_field() }}
+                                    <button type="submit" class="btn btn-danger-soft btn-sm" data-wp-confirm="{{ __('workflowpacks::ai.revoke_confirm') }}">{!! $wp_ui::icon('x') !!} {{ __('workflowpacks::ai.revoke') }}</button>
+                                </form>
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+            <details class="wp-fold" @if (!$agents->count()) open @endif>
+                <summary>{{ __('workflowpacks::ai.agent_new') }}</summary>
+                <form method="POST" action="{{ route('workflowpacks.ai.agents.create') }}">
+                    {{ csrf_field() }}
+                    <div class="wp-ai-grid">
+                        <label class="wp-ai-field"><span>{{ __('workflowpacks::ai.agent_name') }}</span>
+                            <input type="text" name="name" class="form-control" maxlength="100" required placeholder="Claude"></label>
+                        <label class="wp-ai-field"><span>{{ __('workflowpacks::ai.mode') }}</span>
+                            <select name="mode" class="form-control">
+                                <option value="once">{{ __('workflowpacks::ai.mode_once') }}</option>
+                                <option value="continuous">{{ __('workflowpacks::ai.mode_continuous') }}</option>
+                            </select></label>
+                        <label class="wp-ai-field"><span>{{ __('workflowpacks::ai.mailboxes') }}</span>
+                            <select name="mailbox_ids[]" class="form-control" multiple size="3" required>
+                                @foreach ($mailboxes as $m)<option value="{{ $m->id }}">{{ $m->name }}</option>@endforeach
+                            </select></label>
+                    </div>
+                    <label class="wp-ai-check"><input type="checkbox" name="full_text" value="1"> {{ __('workflowpacks::ai.full_text') }}</label>
+                    <label class="wp-ai-check"><input type="checkbox" name="can_publish" value="1"> {{ __('workflowpacks::ai.can_publish') }}</label>
+                    <p class="wp-ai-warn">{!! $wp_ui::icon('shield') !!} {{ __('workflowpacks::ai.can_publish_warn') }}</p>
+                    <div class="wp-pack-actions"><button type="submit" class="btn btn-default">{!! $wp_ui::icon('power') !!} {{ __('workflowpacks::ai.agent_create') }}</button></div>
+                </form>
+            </details>
+        </div>
+    </section>
+
     {{-- 2. the answer of the AI --}}
     <section class="wp-pack-g">
         <div class="wp-pack-head">

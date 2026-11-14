@@ -69,7 +69,28 @@ Route::group([
     Route::post('/ai/brief', $admins + ['uses' => 'AiController@brief'])->name('workflowpacks.ai.brief');
     Route::post('/ai/check', $admins + ['uses' => 'AiController@check'])->name('workflowpacks.ai.check');
     Route::post('/ai/create', $admins + ['uses' => 'AiController@create'])->name('workflowpacks.ai.create');
+    // connected AI agents: created and disconnected by an administrator
+    Route::post('/ai/agents', $admins + ['uses' => 'AiController@createAgent'])->name('workflowpacks.ai.agents.create');
+    Route::post('/ai/agents/{id}/revoke', $admins + ['uses' => 'AiController@revokeAgent'])->name('workflowpacks.ai.agents.revoke');
     // automatic clean-up of a managed e-mail folder (diagram: side panel of the folder; settings: list)
     Route::post('/retention', $admins + ['uses' => 'RetentionController@save'])->name('workflowpacks.retention.save');
     Route::post('/retention/remove', $admins + ['uses' => 'RetentionController@remove'])->name('workflowpacks.retention.remove');
+});
+
+/*
+ * API of the connected AI agents (AgentApiController, docs/agent-api.md): a token in "Authorization: Bearer", no
+ * session, no cookie, so outside the "web" group (and its CSRF check, which is for forms of the browser).
+ */
+Route::group([
+    'prefix'    => \Helper::getSubdirectory().'/workflow-packs/api/v1',
+    'namespace' => 'Modules\WorkflowPacks\Http\Controllers',
+], function () {
+    Route::get('/me', 'AgentApiController@me')->name('workflowpacks.api.me');
+    Route::get('/catalog', 'AgentApiController@catalog')->name('workflowpacks.api.catalog');
+    Route::get('/tickets', 'AgentApiController@tickets')->name('workflowpacks.api.tickets');
+    Route::get('/flows', 'AgentApiController@flows')->name('workflowpacks.api.flows');
+    Route::post('/flows', 'AgentApiController@propose')->name('workflowpacks.api.propose');
+    Route::put('/flows/{id}', 'AgentApiController@update')->name('workflowpacks.api.update');
+    Route::post('/flows/{id}/test', 'AgentApiController@test')->name('workflowpacks.api.test');
+    Route::post('/flows/{id}/publish', 'AgentApiController@publish')->name('workflowpacks.api.publish');
 });

@@ -4,6 +4,19 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [3.2.0] - 2026-11-15
+
+### Ajouté
+- **Agents IA connectés** ([docs/agent-api.md](docs/agent-api.md)) : Assistant IA › Agents IA connectés.
+  - **Jeton** `wpa_…` affiché une seule fois (seule son empreinte SHA-256 est gardée), **usage unique** (fermé après
+    la première proposition ou au bout de 24 h) ou **continu**, **Déconnecter** d'un clic.
+  - Réglages par agent : boîtes lisibles, **anonymisation activée par défaut** (option pour la désactiver), **droit
+    de publier désactivé par défaut** (activé : seulement ses propres flux).
+  - **API JSON** `workflow-packs/api/v1` : `me`, `catalog`, `tickets`, `flows` (lire, proposer en brouillon, modifier
+    les siens), `test` (à blanc), `publish` (si autorisé). 60 requêtes par minute, aucune session ni cookie,
+    réponses d'erreur à code stable.
+  - Chaque action de l'agent est notée dans l'**Historique** (type « Agent IA connecté »).
+
 ## [3.1.0] - 2026-11-14
 
 ### Ajouté
