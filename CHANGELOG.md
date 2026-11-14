@@ -4,6 +4,27 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [2.17.0] - 2026-11-14
+
+### Ajouté
+- **Guide pour l'IA** ([docs/guide-ia.md](docs/guide-ia.md)) : tout ce qu'une IA doit savoir pour écrire un pack
+  importable du premier coup (format, conditions, actions, minuteurs, variables, erreurs fréquentes, modèle de
+  demande), et comment lui faire corriger les erreurs signalées (chemin + code).
+- **Projet de moteur autonome** ([docs/moteur-autonome.md](docs/moteur-autonome.md)) : document de conception de la
+  version 3 (chaque bloc = un objet, sans Workflows).
+
+### Modifié
+- **Aperçu d'un grand pack plus lisible** : filtre des règles, « Tout déplier / Tout replier » (mémorisé), détail
+  des règles replié sauf celles à regarder (conflit, blocage, mise à jour), qui restent dépliées et marquées, matrice
+  avec en-tête fixe au-delà de 10 règles.
+- **Barre d'action toujours visible en bas de l'écran** (aperçu d'import, d'export et de retrait) : plus besoin de
+  défiler jusqu'en bas pour confirmer. Sur téléphone, elle se place au-dessus d'une barre d'onglets du thème (Refresh).
+
+### Compatibilité
+- **FreeScout 1.8.250** vérifié. Cette version active `AuthenticateSession` (une session liée au mot de passe de
+  l'utilisateur) : aucun effet sur le module ; les tests qui changent d'utilisateur repartent d'une nouvelle session,
+  comme un nouveau navigateur.
+
 ## [2.16.0] - 2026-11-05
 
 ### Modifié

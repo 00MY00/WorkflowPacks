@@ -38,7 +38,8 @@ remplacées pour chacune (`{{mailbox.email}}`, `{{mailbox.name}}`, `{{mailbox.id
   - **ressources logiques** (`{{resource.billing-user}}`) associées par leur clé à un élément local, jamais par
     leur nom.
 
-  Voir [docs/format.md](docs/format.md) et [docs/resources.md](docs/resources.md).
+  Voir [docs/format.md](docs/format.md) et [docs/resources.md](docs/resources.md). Pour faire écrire un pack
+  par une IA : [docs/guide-ia.md](docs/guide-ia.md).
 - L'interface suit le style du module **Refresh** s'il est installé, et le style standard de FreeScout sinon.
 - **Téléphone** : la matrice devient une carte par règle. Avec Refresh, l'entrée du module est placée dans le
   panneau **Profil**, qui sert de menu burger, car la barre d'onglets du bas n'a pas de place libre. Sans Refresh,

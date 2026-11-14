@@ -52,6 +52,98 @@
         }, 0);
     });
 
+    var each = function (list, fn) { Array.prototype.forEach.call(list, fn); };
+    var store = function (key, value) {
+        try {
+            if (value === undefined) { return window.localStorage.getItem(key); }
+            window.localStorage.setItem(key, value);
+        } catch (err) { /* private window, blocked storage: not remembered */ }
+        return null;
+    };
+
+    // long lists: filter by text (data-wp-filter = selector of the items, each with data-wp-text in lower case)
+    document.addEventListener('input', function (e) {
+        var el = e.target, selector = el && el.getAttribute ? el.getAttribute('data-wp-filter') : null;
+        if (!selector) {
+            return;
+        }
+        var q = el.value.trim().toLowerCase(), shown = 0;
+        each(document.querySelectorAll(selector), function (item) {
+            var ok = !q || (item.getAttribute('data-wp-text') || '').indexOf(q) >= 0;
+            item.hidden = !ok;
+            if (ok) { shown++; }
+        });
+        var empty = el.parentNode.querySelector('[data-wp-filter-empty]');
+        if (empty) { empty.hidden = shown > 0; }
+    });
+
+    /** Fold / unfold the details of a list; the ones to look at (data-wp-keep-open) stay open. Remembered per page. */
+    function foldAll(container, open) {
+        each(document.querySelectorAll(container + ' details'), function (d) {
+            if (open || !d.hasAttribute('data-wp-keep-open')) { d.open = open; }
+        });
+        store('wp-fold:' + location.pathname + container, open ? '1' : '0');
+    }
+    document.addEventListener('click', function (e) {
+        var el = e.target && e.target.closest ? e.target.closest('[data-wp-fold-all]') : null;
+        if (el) {
+            foldAll(el.getAttribute('data-wp-fold-all'), el.getAttribute('data-wp-open') === '1');
+        }
+        // link to a folded item of the page: unfolded first, then the browser scrolls to it
+        var link = e.target && e.target.closest ? e.target.closest('a[data-wp-open-target]') : null;
+        var target = link ? document.querySelector(link.getAttribute('href')) : null;
+        if (target && target.tagName === 'DETAILS') { target.open = true; }
+    });
+
+    /**
+     * The action bar stays at the bottom of the screen, above a bar fixed there by the theme (Refresh's tab bar on a
+     * phone): its height is measured, the action bar is placed above it.
+     */
+    function actionBarOffset() {
+        var bars = document.querySelectorAll('.wp-actionbar');
+        if (!bars.length) {
+            return;
+        }
+        each(bars, function (b) { b.style.visibility = 'hidden'; });
+        var offset = 0, el = document.elementFromPoint(window.innerWidth / 2, window.innerHeight - 2);
+        while (el && el !== document.body && el !== document.documentElement) {
+            var r = el.getBoundingClientRect();
+            if (window.getComputedStyle(el).position === 'fixed' && r.bottom >= window.innerHeight - 1 && r.height < window.innerHeight / 3) {
+                offset = Math.round(r.height);
+                break;
+            }
+            el = el.parentElement;
+        }
+        each(bars, function (b) { b.style.visibility = ''; });
+        document.documentElement.style.setProperty('--wp-bottom-offset', offset + 'px');
+        // FreeScout's #app hides its overflow, so "position: sticky" does not work: the bar is fixed to the screen,
+        // as wide as its form, and a spacer keeps the end of the page reachable. Without JavaScript: in the page.
+        each(bars, function (bar) {
+            var host = bar.parentElement, r = host.getBoundingClientRect();
+            var spacer = bar.nextElementSibling && bar.nextElementSibling.classList.contains('wp-actionbar-spacer') ? bar.nextElementSibling : null;
+            if (!spacer) {
+                spacer = document.createElement('div');
+                spacer.className = 'wp-actionbar-spacer';
+                bar.parentNode.insertBefore(spacer, bar.nextSibling);
+            }
+            bar.classList.add('is-fixed');
+            bar.style.left = Math.round(r.left) + 'px';
+            bar.style.width = Math.round(r.width) + 'px';
+            spacer.style.height = bar.offsetHeight + 'px';
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        each(document.querySelectorAll('[data-wp-fold-all][data-wp-open="1"]'), function (b) {
+            var container = b.getAttribute('data-wp-fold-all'), saved = store('wp-fold:' + location.pathname + container);
+            if (saved !== null) { foldAll(container, saved === '1'); }
+        });
+        actionBarOffset();
+        // the theme may add its bar after this script
+        setTimeout(actionBarOffset, 600);
+    });
+    window.addEventListener('resize', actionBarOffset);
+
     // back to the page with the browser's "back" button: buttons usable again
     window.addEventListener('pageshow', function (e) {
         if (!e.persisted) {

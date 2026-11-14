@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 2.16.0
+# Résultats des tests — Workflow Packs 2.17.0
 
 Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,14 @@ Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 2.17.0 — aperçu d'import lisible, guide IA
+
+| Série | Résultat |
+|---|---|
+| JavaScript | inchangé, vert |
+| Intégration (107 tests, instance neuve, **FreeScout 1.8.250**) | vert (tests adaptés à `AuthenticateSession`) |
+| Navigateur (PC 1366 px et téléphone 390 px) | pack « tri-emails » (8 règles) : filtre, 8 détails dont 1 déplié (conflit) ; « sécurité » → 1 règle ; Tout déplier → 8, Tout replier → 1 (le conflit reste) ; barre « Confirmer l'import » visible en bas de l'écran ; aucune erreur |
 
 ## 2.16.0 — vue d'ensemble en flux
 

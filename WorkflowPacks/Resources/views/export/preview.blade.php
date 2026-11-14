@@ -71,11 +71,13 @@
                 <input type="hidden" name="{{ $k }}" value="{{ $v }}">
             @endif
         @endforeach
+        <div class="wp-actionbar">
         <button type="submit" class="btn {{ empty($composed) ? 'btn-primary' : 'btn-default' }}" @if ($problems) disabled @endif>{{ __('workflowpacks::messages.download') }}</button>
         @if (!empty($composed))
             <button type="submit" class="btn btn-primary" formaction="{{ route('workflowpacks.export.group') }}" @if ($problems) disabled @endif>{{ __('workflowpacks::messages.group_button', ['name' => $pack['name']]) }}</button>
         @endif
         <a href="{{ route('workflowpacks.export') }}" class="btn btn-link">{{ __('workflowpacks::messages.back') }}</a>
+        </div>
     </form>
     <textarea class="form-control wp-mono wp-json" rows="18" readonly>{{ $json }}</textarea>
 @endsection

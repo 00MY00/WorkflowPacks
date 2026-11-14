@@ -43,8 +43,23 @@
             </table>
         @endif
 
+        @php
+            // a rule to look at (unfolded, never hidden by "Fold all"): something to decide or that will change
+            $wpAttention = function ($entry) {
+                return collect($entry['items'])->contains(function ($item) {
+                    return in_array($item['status'], ['conflict', 'blocked', 'update', 'conflict_name', 'denied'], true);
+                });
+            };
+            $wpText = function ($entry) {
+                return mb_strtolower(strip_tags(\Modules\WorkflowPacks\Services\Ui::value($entry['rule']['name'])));
+            };
+        @endphp
+        @if (count($plan['rules']) > 3)
+            @include('workflowpacks::partials.listbar', ['items' => '.wp-filter-item', 'fold' => '#wp-rules'])
+        @endif
+
         {{-- schematic matrix: rules x mailboxes, with the choice for every cell --}}
-        <div class="table-responsive wp-matrix-wrap">
+        <div class="table-responsive wp-matrix-wrap @if (count($plan['rules']) > 10) is-long @endif">
             <table class="table table-bordered wp-matrix">
                 <thead>
                     <tr>
@@ -56,8 +71,8 @@
                 </thead>
                 <tbody>
                     @foreach ($plan['rules'] as $ruleKey => $entry)
-                        <tr>
-                            <th><a href="#wp-rule-{{ $loop->index }}">{!! \Modules\WorkflowPacks\Services\Ui::value($entry['rule']['name']) !!}</a></th>
+                        <tr class="wp-filter-item" data-wp-text="{{ $wpText($entry) }}">
+                            <th><a href="#wp-rule-{{ $loop->index }}" data-wp-open-target>{!! \Modules\WorkflowPacks\Services\Ui::value($entry['rule']['name']) !!}</a></th>
                             @foreach ($entry['items'] as $mailboxId => $item)
                                 <td class="wp-cell wp-status-{{ $item['status'] }}" data-label="{{ $plan['mailboxes'][$mailboxId]['name'] }}">
                                     <div class="wp-cell-status">{{ __('workflowpacks::messages.status_'.$item['status']) }}
@@ -77,9 +92,19 @@
             </table>
         </div>
 
-        {{-- details per rule: template, then per mailbox the resolved rule, the reasons and the differences --}}
+        {{-- details per rule (folded, except the ones to look at): template, then per mailbox the resolved rule, the
+             reasons and the differences --}}
+        <div id="wp-rules">
+        <h4 class="wp-list-title">{{ __('workflowpacks::messages.rules_detail', ['count' => count($plan['rules'])]) }}</h4>
         @foreach ($plan['rules'] as $ruleKey => $entry)
-            <div class="panel panel-default" id="wp-rule-{{ $loop->index }}">
+            @php $attention = $wpAttention($entry); @endphp
+            <details class="wp-fold wp-rule-detail wp-filter-item" id="wp-rule-{{ $loop->index }}" data-wp-text="{{ $wpText($entry) }}" @if ($attention) open data-wp-keep-open @endif>
+                <summary>{!! \Modules\WorkflowPacks\Services\Ui::value($entry['rule']['name']) !!}
+                    @foreach (array_count_values(array_column($entry['items'], 'status')) as $status => $n)
+                        <span class="wp-status wp-status-{{ $status }}">{{ $n }} × {{ __('workflowpacks::messages.status_'.$status) }}</span>
+                    @endforeach
+                </summary>
+            <div class="panel panel-default">
                 <div class="panel-body">
                     @include('workflowpacks::partials.rule_schema', ['rule' => $entry['rule'], 'mailboxId' => null])
                     @foreach ($entry['items'] as $mailboxId => $item)
@@ -105,7 +130,9 @@
                     @endforeach
                 </div>
             </div>
+            </details>
         @endforeach
+        </div>
 
         <div class="panel panel-default">
             <div class="panel-heading"><strong>{{ __('workflowpacks::messages.options') }}</strong></div>
@@ -145,9 +172,12 @@
                 <p class="wp-muted">{{ __('workflowpacks::messages.atomic') }} {{ __('workflowpacks::messages.no_processing') }}</p>
             </div>
         </div>
-        <button type="submit" class="btn btn-primary">{{ __('workflowpacks::messages.confirm') }}</button>
-        {{-- after the main button: it stays the default one (Enter key) --}}
-        @include('workflowpacks::partials.imap_off')
-        <a href="{{ route('workflowpacks.import') }}" class="btn btn-link">{{ __('workflowpacks::messages.back') }}</a>
+        {{-- always visible at the bottom of the screen: no scrolling down a long pack to go on --}}
+        <div class="wp-actionbar">
+            <button type="submit" class="btn btn-primary">{{ __('workflowpacks::messages.confirm') }}</button>
+            {{-- after the main button: it stays the default one (Enter key) --}}
+            @include('workflowpacks::partials.imap_off')
+            <a href="{{ route('workflowpacks.import') }}" class="btn btn-link">{{ __('workflowpacks::messages.back') }}</a>
+        </div>
     </form>
 @endsection

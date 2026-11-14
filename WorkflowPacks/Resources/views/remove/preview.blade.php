@@ -65,9 +65,11 @@
             </div>
         @endif
         <p class="alert alert-info">{{ __('workflowpacks::messages.remove_backup_note') }}</p>
+        <div class="wp-actionbar">
         <button type="submit" class="btn btn-danger" @if (!$wp_todo && !$plan['counts']['modified']) disabled @endif
             data-wp-confirm="{{ __('workflowpacks::messages.remove_confirm_js') }}">{{ __('workflowpacks::messages.remove_confirm') }}</button>
         <a class="btn btn-link" href="{{ route('workflowpacks.index') }}">{{ __('workflowpacks::messages.back') }}</a>
         @if (!$wp_todo && !$plan['counts']['modified'])<span class="wp-muted">{{ __('workflowpacks::messages.remove_nothing') }}</span>@endif
+        </div>
     </form>
 @endsection

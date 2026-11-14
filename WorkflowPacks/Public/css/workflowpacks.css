@@ -165,3 +165,24 @@
 .wp-custom-export > summary::-webkit-details-marker { display: none; }
 .wp-custom-export > summary::before { content: '▸ '; }
 .wp-custom-export[open] > summary::before { content: '▾ '; }
+
+/* long lists (import preview…): filter, fold / unfold, a title; the matrix of a big pack scrolls with its header */
+.wp-listbar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 10px 0; }
+.wp-listbar input[type=search] { flex: 1 1 220px; max-width: 360px; }
+.wp-list-title { margin: 18px 0 6px; font-size: 15px; }
+.wp-matrix-wrap.is-long { max-height: 60vh; overflow: auto; }
+.wp-matrix-wrap.is-long thead th { position: sticky; top: 0; z-index: 1; background: var(--fd-surface, #fff); }
+.wp-rule-detail { margin: 4px 0; }
+.wp-rule-detail > summary { padding: 6px 0; }
+.wp-rule-detail > summary .wp-status { margin-left: 6px; font-weight: normal; font-size: 12px; }
+.wp-rule-detail > .panel { margin: 6px 0 10px; }
+/* the buttons of a long page stay visible at the bottom of the screen, above a bar of the theme (--wp-bottom-offset) */
+.wp-actionbar { position: relative; z-index: 20; display: flex; flex-wrap: wrap; gap: 8px;
+  align-items: center; padding: 10px 12px; margin: 14px -12px 0; background: var(--fd-surface, #fff);
+  border-top: 1px solid var(--wp-border); box-shadow: 0 -6px 16px rgba(15, 23, 42, .06); }
+.wp-actionbar.is-fixed { position: fixed; bottom: var(--wp-bottom-offset, 0px); margin: 0; box-sizing: border-box; }
+@media (max-width: 767px) {
+  .wp-matrix-wrap.is-long { max-height: none; overflow: visible; }
+  .wp-actionbar { margin: 14px -15px 0; }
+  .wp-actionbar .btn-primary { flex: 1 1 100%; }
+}
