@@ -314,6 +314,7 @@ return [
     'history_kind_import'      => 'Pack importato',
     'history_kind_remove'      => 'Pack rimosso',
     'history_kind_rules'       => 'Regola',
+    'history_kind_flow'        => 'Flusso (motore interno)',
     'history_status_queued'    => 'richiesta',
     'history_status_moved'     => 'archiviata',
     'history_status_already'   => 'già archiviata',

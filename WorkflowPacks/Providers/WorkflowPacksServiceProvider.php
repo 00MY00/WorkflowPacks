@@ -85,6 +85,7 @@ class WorkflowPacksServiceProvider extends ServiceProvider
             }
 
             return array_merge($settings, [
+                \Modules\WorkflowPacks\Services\Engine\Engine::OPTION => \Modules\WorkflowPacks\Services\Engine\Engine::enabled(),
                 \Modules\WorkflowPacks\Services\Imap\ImapFolders::OPTION_ENABLED => \Modules\WorkflowPacks\Services\Imap\ImapFolders::enabled(),
                 \Modules\WorkflowPacks\Services\Imap\ImapFolders::OPTION_PREFIX => \Modules\WorkflowPacks\Services\Imap\ImapFolders::prefix(),
                 \Modules\WorkflowPacks\Services\Imap\ImapFolders::OPTION_PARENT => \Modules\WorkflowPacks\Services\Imap\ImapFolders::parentMode(),

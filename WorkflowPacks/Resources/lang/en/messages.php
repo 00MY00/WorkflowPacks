@@ -318,6 +318,7 @@ return [
     'history_kind_import'      => 'Pack imported',
     'history_kind_remove'      => 'Pack removed',
     'history_kind_rules'       => 'Rule',
+    'history_kind_flow'        => 'Flow (internal engine)',
     'history_status_queued'    => 'requested',
     'history_status_moved'     => 'filed',
     'history_status_already'   => 'already filed',

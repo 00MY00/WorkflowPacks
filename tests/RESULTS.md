@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 2.17.0
+# Résultats des tests — Workflow Packs 3.0.0
 
 Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,15 @@ Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 3.0.0 — moteur de flux interne (expérimental)
+
+| Série | Résultat |
+|---|---|
+| JavaScript | `flows-editor.test.js` : variables offertes par le « Si » (celles du déclencheur, valeurs d'une liste fermée, « peut être vide » sur une seule branche) ; les autres séries inchangées |
+| Intégration (instance neuve) | `EngineTest` (7) : contrat des blocs dans les 7 langues, ticket → note → attente 2 h → fermé, une fois par ticket, autre branche / boîtes / flux coupé, sortie erreur + Historique, validation, simulation sans écriture, réclamation concurrente ; `FlowsEditorTest` (2) : droits (administrateurs, moteur actif), brouillon, problèmes, titres composés, simulation, publication, activation, parcours d'un ticket, suppression |
+| Navigateur (PC) | Flux › Nouveau flux › « + » → Si… (propose Sujet, Texte, Expéditeur, Statut, Assigné, Réponse) › contient « PR » › « + » oui → Attendre › Statut : Fermé › Publier (version 1) › Actif › Simuler : 4 étapes, « +2 h Statut : Ouvert → Fermé » ; aucune erreur |
+| Mise à jour | migrations : tables créées seulement si absentes ; option désactivée par défaut ; tables ajoutées au diagnostic (UpdateGuard) |
 
 ## 2.17.0 — aperçu d'import lisible, guide IA
 

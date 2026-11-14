@@ -18,6 +18,15 @@ class EngineTest extends TestCase
 {
     const LANGS = ['fr', 'en', 'de', 'es', 'it', 'nl', 'pt-BR'];
 
+    /** Flows already on the instance (rolled back after the test) do not take part. */
+    protected function setUp(): void
+    {
+        parent::setUp();
+        Flow::query()->update(['active' => false]);
+        \Modules\WorkflowPacks\Services\Engine\Listener::forget();
+    }
+
+
     protected function conversation($mailbox, $subject = 'PR #42 corrigée')
     {
         $conversation = new \App\Conversation();
@@ -143,6 +152,7 @@ class EngineTest extends TestCase
         $run = FlowRun::where('flow_id', $flow->id)->first();
         $this->assertSame(FlowRun::FAILED, $run->state, 'option off, no "error" link');
         $this->assertSame(3, (int) FlowEvent::where('run_id', $run->id)->where('block', 'f')->value('level'));
+        $this->assertTrue(\Modules\WorkflowPacks\Entities\Activity::where('kind', 'flow')->where('status', 'failed')->where('subject', 'PR')->exists(), 'written in History');
 
         $data['blocks'][] = ['id' => 'n', 'type' => 'action.note', 'params' => ['text' => 'Classement impossible']];
         $data['links'][] = ['from' => 'f', 'port' => 'error', 'to' => 'n'];
