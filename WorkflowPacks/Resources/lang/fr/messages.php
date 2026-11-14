@@ -322,6 +322,7 @@ return [
     'history_kind_import'      => 'Import d\'un pack',
     'history_kind_remove'      => 'Retrait d\'un pack',
     'history_kind_rules'       => 'Règle',
+    'history_kind_flow'        => 'Flux (moteur interne)',
     'history_status_queued'    => 'demandé',
     'history_status_moved'     => 'rangé',
     'history_status_already'   => 'déjà rangé',

@@ -21,6 +21,10 @@ remplacées pour chacune (`{{mailbox.email}}`, `{{mailbox.name}}`, `{{mailbox.id
   - application d'une règle à une autre boîte en tirant un lien.
 
   Voir [docs/schema.md](docs/schema.md).
+- **Moteur de flux interne** (3.0, expérimental, désactivé par défaut) : des flux où **chaque bloc est un objet**
+  (déclencheur, « Si… », attente, statut, assignation, note, dossier), sans le module Workflows ; éditeur visuel, « Si »
+  qui propose les variables possibles, publication par versions, simulation animée et parcours d'un ticket. Voir
+  [docs/flux-internes.md](docs/flux-internes.md).
 - **Rangement dans les dossiers e-mail** (option, désactivée par défaut) : action « Ranger dans un dossier e-mail
   [WP] » qui déplace l'e-mail reçu dans un dossier de la boîte e-mail (serveur IMAP), créé s'il manque, toujours sous
   le préfixe `[WP]`. Voir [docs/dossiers-email.md](docs/dossiers-email.md). Le dossier actuel de chaque ticket

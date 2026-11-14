@@ -995,8 +995,9 @@ Refresh, sans / avec RefreshGlobal**), 7 langues, documentation, CHANGELOG, Upda
 
 ## 16. Risques et points à vérifier
 
-- **Événements FreeScout** : `conversation.created_by_customer` est confirmé (RefreshGlobal s'y accroche déjà). Les
-  autres (réponses, statut, assignation) sont à confirmer sur 1.8.x avant de coder : c'est la première tâche de la 3.0.
+- **Événements FreeScout** : confirmés sur 1.8.250 — `conversation.created_by_customer` (utilisé en 3.0),
+  `conversation.customer_replied`, `conversation.user_replied`, `conversation.status_changed`,
+  `conversation.user_changed`, `conversation.moved`, `conversation.merged`, `conversation.deleted`.
 - **Envoi d'e-mails** : il faut réutiliser le mécanisme de FreeScout (fils de conversation, signatures, modules de
   traduction) pour que les réponses apparaissent normalement dans le ticket.
 - **Planificateur absent** chez certains : le diagnostic le détecte et l'affiche, car les attentes en dépendent.

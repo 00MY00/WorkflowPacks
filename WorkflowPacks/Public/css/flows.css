@@ -1,0 +1,93 @@
+/* Workflow Packs — editor of the flows (internal engine). Colours follow Refresh (--fd-*) when it is installed. */
+.wpf-app { --f-border: var(--fd-border, #dfe3e8); --f-card: var(--fd-surface, #fff); --f-text: var(--fd-text, #1f2937);
+  --f-muted: var(--fd-muted, #6b7280); --f-brand: var(--fd-brand, #4f46e5); --f-bg: var(--fd-bg, #f6f7fb);
+  --c-trigger: #2563eb; --c-condition: #d97706; --c-wait: #0891b2; --c-action: #059669; --c-util: #6b7280; --c-err: #dc2626; }
+.wpf-intro, .wpf-help, .wpf-muted { color: var(--f-muted); font-size: 13px; }
+.wpf-toolbar { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; padding: 8px 10px; background: var(--f-card);
+  border: 1px solid var(--f-border); border-radius: 12px; margin-bottom: 8px; }
+.wpf-toolbar .form-control { width: auto; display: inline-block; }
+.wpf-flow-select { max-width: 240px; }
+.wpf-name { width: 220px !important; }
+.wpf-sep { width: 1px; height: 22px; background: var(--f-border); }
+.wpf-grow { flex: 1; }
+.wpf-check { font-weight: normal; margin: 0; display: inline-flex; gap: 4px; align-items: center; }
+.wpf-status { font-size: 12px; color: var(--f-muted); }
+.wpf-status.is-warn { color: #b45309; }
+.wpf-status.is-error { color: var(--c-err); }
+.wpf-status.is-ok { color: #059669; }
+.wpf-boxes { position: relative; display: inline-block; }
+.wpf-boxes > summary { list-style: none; }
+.wpf-boxes > summary::-webkit-details-marker { display: none; }
+.wpf-boxes-list { position: absolute; z-index: 30; top: 100%; left: 0; min-width: 220px; max-height: 300px; overflow: auto; padding: 8px;
+  background: var(--f-card); border: 1px solid var(--f-border); border-radius: 10px; box-shadow: 0 12px 32px rgba(15, 23, 42, .15);
+  display: flex; flex-direction: column; gap: 4px; }
+.wpf-main { display: flex; gap: 8px; height: calc(100vh - 290px); min-height: 420px; }
+.wpf-stage { position: relative; flex: 1; background: var(--f-bg); border: 1px solid var(--f-border); border-radius: 12px; overflow: hidden;
+  background-image: radial-gradient(rgba(100, 116, 139, .18) 1px, transparent 1px); background-size: 20px 20px; }
+.wpf-canvas { width: 100%; height: 100%; display: block; touch-action: none; user-select: none; cursor: grab; }
+.wpf-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--f-muted); margin: 0; pointer-events: none; }
+.wpf-empty[hidden] { display: none; }
+.wpf-panel { width: 320px; flex: none; overflow: auto; padding: 12px; background: var(--f-card); border: 1px solid var(--f-border); border-radius: 12px; }
+.wpf-panel h4 { margin: 0 0 6px; font-size: 15px; }
+.wpf-field { display: block; margin: 10px 0; font-weight: normal; }
+.wpf-field > span { display: block; font-size: 12px; color: var(--f-muted); margin-bottom: 3px; }
+.wpf-inline { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.wpf-inline .form-control { flex: 1; min-width: 70px; }
+.wpf-problem { display: block; width: 100%; text-align: left; border: 0; background: #fff7ed; color: #9a3412; border-radius: 8px;
+  padding: 6px 8px; margin: 4px 0; font-size: 12px; }
+.wpf-problem-text { color: #b45309; font-size: 12px; margin: 6px 0; }
+.wpf-del { margin-top: 12px; }
+/* blocks */
+.wpf-card { fill: var(--f-card); stroke: var(--f-border); stroke-width: 1.2; filter: drop-shadow(0 2px 4px rgba(15, 23, 42, .08)); }
+.wpf-block { cursor: pointer; --c: var(--c-util); }
+.wpf-block.fam-trigger { --c: var(--c-trigger); }
+.wpf-block.fam-condition { --c: var(--c-condition); }
+.wpf-block.fam-wait { --c: var(--c-wait); }
+.wpf-block.fam-action { --c: var(--c-action); }
+.wpf-stripe { fill: var(--c); }
+.wpf-icon { fill: none; stroke: var(--c); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.wpf-kind { font-size: 11px; fill: var(--f-muted); }
+.wpf-title { font-size: 13px; font-weight: 600; fill: var(--f-text); }
+.wpf-block.is-selected .wpf-card { stroke: var(--f-brand); stroke-width: 2.4; }
+.wpf-block.has-problem .wpf-card { stroke: #f59e0b; stroke-width: 2.4; stroke-dasharray: 5 3; }
+.wpf-block.was-sim .wpf-card { fill: #ecfdf5; }
+.wpf-block.is-sim .wpf-card { stroke: #10b981; stroke-width: 3; fill: #d1fae5; }
+.wpf-in { fill: var(--f-card); stroke: var(--f-muted); stroke-width: 1.5; }
+.wpf-port { fill: var(--c); stroke: #fff; stroke-width: 2; cursor: crosshair; }
+.wpf-port.port-no { fill: #9ca3af; }
+.wpf-port.port-error { fill: var(--c-err); }
+.wpf-port-label { font-size: 10px; fill: var(--f-muted); text-anchor: end; }
+.wpf-plus { cursor: pointer; opacity: .25; }
+.wpf-plus circle { fill: var(--f-brand); }
+.wpf-plus path { stroke: #fff; stroke-width: 1.8; }
+.wpf-block:hover .wpf-plus, .wpf-block.is-selected .wpf-plus { opacity: 1; }
+/* links */
+.wpf-link-hit { fill: none; stroke: transparent; stroke-width: 14; cursor: pointer; }
+.wpf-link-line { fill: none; stroke: #94a3b8; stroke-width: 2; pointer-events: none; }
+.wpf-link.port-yes .wpf-link-line { stroke: var(--c-action); }
+.wpf-link.port-no .wpf-link-line { stroke: #9ca3af; stroke-dasharray: 6 4; }
+.wpf-link.port-error .wpf-link-line { stroke: var(--c-err); stroke-dasharray: 4 3; }
+.wpf-link.is-selected .wpf-link-line { stroke: var(--f-brand); stroke-width: 3; }
+.wpf-link.is-sim .wpf-link-line { stroke: #10b981; stroke-width: 3.2; }
+.wpf-link-label { font-size: 11px; fill: var(--f-muted); text-anchor: middle; paint-order: stroke; stroke: var(--f-bg); stroke-width: 4px; }
+.wpf-temp { fill: none; stroke: var(--f-brand); stroke-width: 2; stroke-dasharray: 5 4; }
+.wpf-packet { fill: #10b981; stroke: #fff; stroke-width: 2; filter: drop-shadow(0 0 6px rgba(16, 185, 129, .8)); }
+/* menu */
+.wpf-menu { position: fixed; z-index: 1050; min-width: 220px; max-height: calc(100vh - 16px); overflow: auto; padding: 6px; background: var(--fd-surface, #fff);
+  border: 1px solid var(--fd-border, #dfe3e8); border-radius: 10px; box-shadow: 0 12px 32px rgba(15, 23, 42, .18); font-size: 13px; }
+.wpf-menu-head, .wpf-menu-group { padding: 4px 8px; color: #6b7280; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+.wpf-menu-item { display: block; width: 100%; text-align: left; border: 0; background: none; padding: 6px 10px; border-radius: 6px; }
+.wpf-menu-item:hover, .wpf-menu-item:focus { background: rgba(99, 102, 241, .1); outline: none; }
+/* simulation */
+.wpf-events { padding-left: 18px; font-size: 12px; }
+.wpf-events li { margin: 6px 0; }
+.wpf-events li.lvl-3 { color: var(--c-err); }
+.wpf-at { display: inline-block; min-width: 54px; color: var(--f-muted); margin-right: 4px; }
+.wpf-change { color: #047857; }
+@media (max-width: 767px) {
+  .wpf-main { flex-direction: column; height: auto; }
+  .wpf-stage { height: 60vh; min-height: 320px; }
+  .wpf-panel { width: auto; }
+  .wpf-name { width: 100% !important; }
+  .wpf-menu-item { padding: 10px; font-size: 15px; }
+}

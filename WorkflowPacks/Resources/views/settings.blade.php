@@ -13,6 +13,24 @@
 <form class="form-horizontal margin-top margin-bottom" method="POST" action="" autocomplete="off" id="wp-settings-form">
     {{ csrf_field() }}
 
+    @php $wp_E = '\Modules\WorkflowPacks\Services\Engine\Engine'; @endphp
+    <h3 class="subheader">{{ __('workflowpacks::flows.settings_title') }}</h3>
+    <div class="form-group">
+        <label for="wp-engine" class="col-sm-2 control-label">{{ __('workflowpacks::flows.settings_label') }}</label>
+        <div class="col-sm-6">
+            <input type="hidden" name="settings[{{ $wp_E::OPTION }}]" value="0">
+            <div class="controls">
+                <div class="onoffswitch-wrap">
+                    <div class="onoffswitch">
+                        <input type="checkbox" name="settings[{{ $wp_E::OPTION }}]" value="1" id="wp-engine" class="onoffswitch-checkbox" @if (!empty($settings[$wp_E::OPTION])) checked="checked" @endif>
+                        <label class="onoffswitch-label" for="wp-engine"></label>
+                    </div>
+                </div>
+            </div>
+            <p class="form-help">{{ __('workflowpacks::flows.settings_help') }}</p>
+        </div>
+    </div>
+
     @php $wp_I = '\Modules\WorkflowPacks\Services\Imap\ImapFolders'; @endphp
     <h3 class="subheader">{{ __('workflowpacks::messages.imap_title') }}</h3>
     <div class="form-group">

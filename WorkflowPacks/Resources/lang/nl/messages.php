@@ -314,6 +314,7 @@ return [
     'history_kind_import'      => 'Pack geïmporteerd',
     'history_kind_remove'      => 'Pack verwijderd',
     'history_kind_rules'       => 'Regel',
+    'history_kind_flow'        => 'Stroom (interne engine)',
     'history_status_queued'    => 'gevraagd',
     'history_status_moved'     => 'opgeborgen',
     'history_status_already'   => 'al opgeborgen',

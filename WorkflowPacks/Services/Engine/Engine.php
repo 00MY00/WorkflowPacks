@@ -87,6 +87,12 @@ class Engine
                 'level' => $level]);
         };
         $end = $this->walk($def, $ctx, $run->block, $resume, (int) $run->attempts, $log);
+        if ($end['state'] === FlowRun::FAILED) {
+            $flow = Flow::find($run->flow_id);
+            $last = FlowEvent::where('run_id', $run->id)->where('level', 3)->orderBy('id', 'desc')->value('summary');
+            \Modules\WorkflowPacks\Services\History::add('flow', 'failed', ['mailbox_id' => $conversation->mailbox_id,
+                'conversation_id' => $conversation->id, 'subject' => $flow ? $flow->name : '#'.$run->flow_id, 'message' => $last]);
+        }
         $run->fill([
             'block'      => $end['block'],
             'state'      => $end['state'],

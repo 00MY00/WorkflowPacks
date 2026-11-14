@@ -4,9 +4,23 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
-## [Non publié] — 3.0 en cours
+## [3.0.0] - 2026-11-14
 
-### Ajouté (pas encore visible : option désactivée, sans écran)
+Mise à jour sans risque : le moteur est **désactivé par défaut**. Tant qu'il l'est, rien ne change (règles
+Workflows, schéma, packs, historique) ; les nouvelles tables sont seulement créées.
+
+### Ajouté
+- **Moteur de flux interne (expérimental)** — [docs/flux-internes.md](docs/flux-internes.md). À activer dans Gérer ›
+  Paramètres › Workflow Packs ; ajoute l'onglet **Flux (expérimental)** (administrateurs).
+  - **Éditeur visuel** : chaque bloc est un objet ; « + » sur une sortie pour ajouter le bloc suivant, tirer une
+    sortie vers un bloc pour relier, Suppr pour supprimer ; enregistrement au fil des modifications.
+  - **« Si… » intelligent** : seulement les variables des blocs placés avant, opérateurs selon leur type, valeurs
+    d'une liste fermée proposées.
+  - **Publication par versions** (vérifiée), activation, une fois par ticket, boîtes du flux.
+  - **Simulation** façon Packet Tracer : un point suit les liens, chaque étape avec sa décision et ses changements,
+    horloge virtuelle ; rien n'est écrit ni envoyé.
+  - **Parcours d'un ticket** : blocs traversés allumés, liens colorés, vrais changements, attente en cours.
+  - Un ticket arrêté sur une erreur est noté dans **Historique** (type « Flux (moteur interne) »).
 - **Fondations du moteur de flux interne** (docs/moteur-autonome.md) : tables des flux, versions publiées, tickets en
   cours et historique ; moteur (bloc après bloc, attentes réveillées chaque minute par lots, réclamation sûre pour
   MySQL et PostgreSQL, nouvelles tentatives, sortie « erreur ») ; registre de blocs extensible (filtre
