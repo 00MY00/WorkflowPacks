@@ -1,6 +1,7 @@
 {{-- The packs of Workflows rules cannot work here: why, and what still works (the internal engine). --}}
 @php
-    $wp_wfMissing = !\Modules\WorkflowPacks\Services\Compat\Checker::workflowsReady() && !\Modules\WorkflowPacks\Services\Compat\Checker::blocking();
+    // only Workflows is missing (engine on or off): say what still works, or how to make it work
+    $wp_wfMissing = !\Modules\WorkflowPacks\Services\Compat\Checker::workflowsReady() && !\Modules\WorkflowPacks\Services\Compat\Checker::coreBlocking();
     $wp_engine = \Modules\WorkflowPacks\Services\Engine\Engine::enabled();
 @endphp
 @if ($wp_wfMissing)

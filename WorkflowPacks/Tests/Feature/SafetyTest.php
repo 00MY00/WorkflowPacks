@@ -110,6 +110,9 @@ class SafetyTest extends TestCase
         $response = $this->actingAs($admin)->get(route('workflowpacks.import'));
         $response->assertStatus(200);
         $this->seeIn($response, 'WP-WF-01');
+        // engine off: not a dead end, the way to work without Workflows is given
+        $this->seeIn($response, e(__('workflowpacks::messages.wf_missing_engine_off')));
+        $this->assertStringNotContainsString(e(__('workflowpacks::messages.blocked_title')), $response->getContent());
         \App\Module::setActive('workflows', true);
         \App\Module::clearModulesCache();
     }
