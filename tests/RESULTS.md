@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 3.0.1
+# Résultats des tests — Workflow Packs 3.1.0
 
 Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,13 @@ Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 3.1.0 — assistant IA sans connexion, « Ressemble à… »
+
+| Série | Résultat |
+|---|---|
+| Intégration (instance neuve) | `AiAssistantTest` (3) : vecteurs (textes proches > éloignés), anonymisation (adresse, téléphone, IBAN, lien), signature retirée ; dossier réservé aux administrateurs, anonymisé par défaut (sujet « Commande de [email] », sans adresse), texte complet sur option ; réponse entourée de ```json lue, jouée à blanc (la newsletter qui ressemble à l'exemple est fermée, l'autre ticket non, rien d'écrit), réponse fautive → problèmes, brouillon désactivé non publié, blocs placés de gauche à droite ; contrat des blocs (« Ressemble à » dans les 7 langues) ; aucun motif UpdateGuard dans le code |
+| Navigateur | Assistant IA : dossier de 6 tickets fictifs anonymisés, réponse « Ressemble à » + attente + fermé → « 4 aucune action · 2 Statut : Fermé », brouillon créé et ouvert dans l'éditeur ; aucune erreur |
 
 ## 3.0.1 — style « G »
 

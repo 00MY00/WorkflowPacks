@@ -88,7 +88,7 @@ class ExportAndPagesTest extends TestCase
         $this->seeIn($step2, '[Tri] Alertes de sécurité');
         $this->seeIn($step2, 'param.security_email');
 
-        $input = ['pack_b64' => base64_encode($json), 'mailboxes' => [$a->id], 'params' => ['security_email' => 'secu@example.test', 'newsletter_sender' => '']];
+        $input = ['pack_carry' => $json, 'mailboxes' => [$a->id], 'params' => ['security_email' => 'secu@example.test', 'newsletter_sender' => '']];
         $step3 = $this->actingAs($admin)->post(route('workflowpacks.import.preview'), $input);
         $step3->assertStatus(200);
         $this->seeIn($step3, 'wp-matrix');
@@ -144,7 +144,7 @@ class ExportAndPagesTest extends TestCase
             $this->rule('new', ['name' => 'Nouveaux seulement', 'settings' => ['apply_to_prev' => false, 'max_executions' => 1]]),
         ]);
         $response = $this->actingAs($admin)->post(route('workflowpacks.import.preview'), [
-            'pack_b64' => base64_encode(json_encode($pack)), 'mailboxes' => [$a->id],
+            'pack_carry' => json_encode($pack), 'mailboxes' => [$a->id],
         ]);
         $response->assertStatus(200);
         $html = $response->getContent();

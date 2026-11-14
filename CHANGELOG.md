@@ -4,6 +4,24 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [3.1.0] - 2026-11-14
+
+### Ajouté
+- **Assistant IA, sans connexion** ([docs/assistant-ia.md](docs/assistant-ia.md)), onglet visible quand le moteur
+  interne est activé (administrateurs). Le module n'envoie rien.
+  - **Dossier pour l'IA** : tickets choisis (boîtes, jours, nombre, mot du sujet) avec leur **numéro** et leur texte,
+    **anonymisés par défaut** (adresses, téléphones, IBAN, liens, longs numéros masqués) ; option explicite pour ne
+    pas anonymiser, avec avertissement. Avec la demande, les règles de la réponse, le catalogue des blocs et un
+    exemple. Copier ou télécharger (.json).
+  - **Réponse de l'IA** vérifiée (problèmes avec bloc et champ), puis **jouée à blanc sur les tickets du dossier**,
+    résultat groupé par effet ; **création du flux en brouillon désactivé**, ouvert dans l'éditeur.
+- **Bloc « Ressemble à… »** : le ticket comparé à des tickets d'exemple désignés par leur numéro, **en local**
+  (vecteurs du sujet et du texte, jamais envoyés), seuil en %, poids réglables, variable `similar.score`.
+
+### Sécurité
+- Plus aucun motif surveillé par UpdateGuard : le pack passe d'une étape d'import à l'autre en texte simple (plus de
+  `base64_decode`) et les appels de fonctions sont directs (plus de `call_user_func`). Aucun appel réseau.
+
 ## [3.0.1] - 2026-11-14
 
 ### Modifié

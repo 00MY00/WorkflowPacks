@@ -24,12 +24,18 @@ return [
         ],
     ],
     'condition' => [
-        'ticket' => [
+        'ticket'  => [
             'name'       => 'If…',
             'title'      => 'If :var :operator “:value”',
             'title_bool' => 'If :var: :operator',
             'decision'   => ':var “:actual” :operator “:value” → :output',
             'help'       => 'Tests the ticket or the result of a block before.',
+        ],
+        'similar' => [
+            'name'     => 'Looks like…',
+            'title'    => 'Looks like :count example(s) (≥ :threshold %)',
+            'decision' => 'Similarity :score % (subject :subject %, text :body %), threshold :threshold % → :output',
+            'help'     => 'Compares the ticket with example tickets (their ids), locally.',
         ],
     ],
     'wait'      => [
@@ -62,13 +68,16 @@ return [
         ],
     ],
     'vars'      => [
-        'ticket' => [
+        'ticket'  => [
             'subject'  => 'Subject',
             'body'     => 'Text of the e-mail',
             'from'     => 'Sender',
             'status'   => 'Status',
             'assigned' => 'Assigned',
             'replied'  => 'The team replied',
+        ],
+        'similar' => [
+            'score' => 'Similarity (%)',
         ],
     ],
     'ops'       => [
@@ -118,5 +127,7 @@ return [
         'folder'       => 'Invalid folder name.',
         'imap_off'     => 'Option “File into an e-mail folder” is off (Manage › Settings › Workflow Packs).',
         'imap_nothing' => 'No e-mail to file (see the history).',
+        'examples'     => '1 to :max example ticket ids.',
+        'percent'      => 'Percentage from 0 to 100.',
     ],
 ];

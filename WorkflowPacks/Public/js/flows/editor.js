@@ -114,7 +114,7 @@
         var defs = svg('defs', {}, this.svg);
         if (root.WPGraph && root.WPGraph.icons) { root.WPGraph.icons.define(defs); }
         this.bind();
-        this.load();
+        this.load(cfg.open || undefined);
     }
 
     Editor.prototype.request = function (url, data) {

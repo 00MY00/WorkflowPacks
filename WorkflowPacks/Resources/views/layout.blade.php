@@ -26,6 +26,7 @@
             <li class="{{ Route::is('workflowpacks.history*') ? 'active' : '' }}"><a href="{{ route('workflowpacks.history') }}">{{ __('workflowpacks::messages.history') }}</a></li>
             @if (Auth::user()->isAdmin() && \Modules\WorkflowPacks\Services\Engine\Engine::enabled())
                 <li class="{{ Route::is('workflowpacks.flows') ? 'active' : '' }}"><a href="{{ route('workflowpacks.flows') }}">{{ __('workflowpacks::flows.tab') }}</a></li>
+                <li class="{{ Route::is('workflowpacks.ai*') ? 'active' : '' }}"><a href="{{ route('workflowpacks.ai') }}">{{ __('workflowpacks::ai.tab') }}</a></li>
             @endif
             @if (Auth::user()->isAdmin())
                 <li class="{{ Route::is('workflowpacks.diagnostic') ? 'active' : '' }}"><a href="{{ route('workflowpacks.diagnostic') }}">{{ __('workflowpacks::messages.diagnostic') }}</a></li>

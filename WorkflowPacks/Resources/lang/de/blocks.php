@@ -24,12 +24,18 @@ return [
         ],
     ],
     'condition' => [
-        'ticket' => [
+        'ticket'  => [
             'name'       => 'Wenn…',
             'title'      => 'Wenn :var :operator „:value“',
             'title_bool' => 'Wenn :var: :operator',
             'decision'   => ':var „:actual“ :operator „:value“ → :output',
             'help'       => 'Prüft das Ticket oder das Ergebnis eines vorherigen Blocks.',
+        ],
+        'similar' => [
+            'name'     => 'Ähnelt…',
+            'title'    => 'Ähnelt :count Beispiel(en) (≥ :threshold %)',
+            'decision' => 'Ähnlichkeit :score % (Betreff :subject %, Text :body %), Schwelle :threshold % → :output',
+            'help'     => 'Vergleicht das Ticket lokal mit Beispieltickets (ihren IDs).',
         ],
     ],
     'wait'      => [
@@ -62,13 +68,16 @@ return [
         ],
     ],
     'vars'      => [
-        'ticket' => [
+        'ticket'  => [
             'subject'  => 'Betreff',
             'body'     => 'Text der E-Mail',
             'from'     => 'Absender',
             'status'   => 'Status',
             'assigned' => 'Zugewiesen',
             'replied'  => 'Das Team hat geantwortet',
+        ],
+        'similar' => [
+            'score' => 'Ähnlichkeit (%)',
         ],
     ],
     'ops'       => [
@@ -118,5 +127,7 @@ return [
         'folder'       => 'Ungültiger Ordnername.',
         'imap_off'     => 'Option „In einen E-Mail-Ordner ablegen“ ist aus (Verwalten › Einstellungen › Workflow Packs).',
         'imap_nothing' => 'Keine E-Mail zum Ablegen (siehe Verlauf).',
+        'examples'     => '1 bis :max Beispiel-Ticket-IDs.',
+        'percent'      => 'Prozentsatz von 0 bis 100.',
     ],
 ];

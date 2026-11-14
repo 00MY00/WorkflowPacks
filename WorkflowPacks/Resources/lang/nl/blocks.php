@@ -24,12 +24,18 @@ return [
         ],
     ],
     'condition' => [
-        'ticket' => [
+        'ticket'  => [
             'name'       => 'Als…',
             'title'      => 'Als :var :operator „:value”',
             'title_bool' => 'Als :var: :operator',
             'decision'   => ':var „:actual” :operator „:value” → :output',
             'help'       => 'Test het ticket of het resultaat van een eerder blok.',
+        ],
+        'similar' => [
+            'name'     => 'Lijkt op…',
+            'title'    => 'Lijkt op :count voorbeeld(en) (≥ :threshold %)',
+            'decision' => 'Gelijkenis :score % (onderwerp :subject %, tekst :body %), drempel :threshold % → :output',
+            'help'     => 'Vergelijkt het ticket lokaal met voorbeeldtickets (hun id).',
         ],
     ],
     'wait'      => [
@@ -62,13 +68,16 @@ return [
         ],
     ],
     'vars'      => [
-        'ticket' => [
+        'ticket'  => [
             'subject'  => 'Onderwerp',
             'body'     => 'Tekst van de e-mail',
             'from'     => 'Afzender',
             'status'   => 'Status',
             'assigned' => 'Toegewezen',
             'replied'  => 'Het team heeft geantwoord',
+        ],
+        'similar' => [
+            'score' => 'Gelijkenis (%)',
         ],
     ],
     'ops'       => [
@@ -118,5 +127,7 @@ return [
         'folder'       => 'Ongeldige mapnaam.',
         'imap_off'     => 'Optie „In een e-mailmap opbergen” staat uit (Beheren › Instellingen › Workflow Packs).',
         'imap_nothing' => 'Geen e-mail om op te bergen (zie de geschiedenis).',
+        'examples'     => '1 tot :max id’s van voorbeeldtickets.',
+        'percent'      => 'Percentage van 0 tot 100.',
     ],
 ];

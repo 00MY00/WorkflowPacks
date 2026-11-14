@@ -162,6 +162,23 @@
     });
     window.addEventListener('resize', actionBarOffset);
 
+    // "Copy": the text of a field to the clipboard (the brief for the AI)
+    document.addEventListener('click', function (e) {
+        var button = e.target && e.target.closest ? e.target.closest('[data-wp-copy]') : null;
+        var field = button ? document.querySelector(button.getAttribute('data-wp-copy')) : null;
+        if (!field) {
+            return;
+        }
+        field.select();
+        var done = function () { button.setAttribute('aria-label', button.getAttribute('data-wp-copied')); button.lastChild.textContent = ' ' + button.getAttribute('data-wp-copied'); };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(field.value).then(done, function () { document.execCommand('copy'); done(); });
+        } else {
+            document.execCommand('copy');
+            done();
+        }
+    });
+
     // back to the page with the browser's "back" button: buttons usable again
     window.addEventListener('pageshow', function (e) {
         if (!e.persisted) {

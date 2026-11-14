@@ -156,7 +156,7 @@ class SafetyTest extends TestCase
         $wf->save();
 
         $response = $this->actingAs($admin)->post(route('workflowpacks.import.confirm'), [
-            'pack_b64' => base64_encode($json), 'mailboxes' => [$a->id], 'token' => $plan['token'],
+            'pack_carry' => $json, 'mailboxes' => [$a->id], 'token' => $plan['token'],
         ]);
         $response->assertStatus(200);
         $this->seeIn($response, e(__('workflowpacks::messages.plan_changed')));

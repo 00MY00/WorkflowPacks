@@ -24,12 +24,18 @@ return [
         ],
     ],
     'condition' => [
-        'ticket' => [
+        'ticket'  => [
             'name'       => 'Se…',
             'title'      => 'Se :var :operator “:value”',
             'title_bool' => 'Se :var: :operator',
             'decision'   => ':var “:actual” :operator “:value” → :output',
             'help'       => 'Testa o ticket ou o resultado de um bloco anterior.',
+        ],
+        'similar' => [
+            'name'     => 'Parece com…',
+            'title'    => 'Parece com :count exemplo(s) (≥ :threshold %)',
+            'decision' => 'Semelhança :score % (assunto :subject %, texto :body %), limiar :threshold % → :output',
+            'help'     => 'Compara o ticket com tickets de exemplo (seus ids), localmente.',
         ],
     ],
     'wait'      => [
@@ -62,13 +68,16 @@ return [
         ],
     ],
     'vars'      => [
-        'ticket' => [
+        'ticket'  => [
             'subject'  => 'Assunto',
             'body'     => 'Texto do e-mail',
             'from'     => 'Remetente',
             'status'   => 'Status',
             'assigned' => 'Atribuído',
             'replied'  => 'A equipe respondeu',
+        ],
+        'similar' => [
+            'score' => 'Semelhança (%)',
         ],
     ],
     'ops'       => [
@@ -118,5 +127,7 @@ return [
         'folder'       => 'Nome de pasta inválido.',
         'imap_off'     => 'Opção “Arquivar em uma pasta de e-mail” desativada (Gerenciar › Configurações › Workflow Packs).',
         'imap_nothing' => 'Nenhum e-mail a arquivar (veja o histórico).',
+        'examples'     => 'De 1 a :max ids de tickets de exemplo.',
+        'percent'      => 'Porcentagem de 0 a 100.',
     ],
 ];

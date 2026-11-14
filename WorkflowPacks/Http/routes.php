@@ -64,6 +64,11 @@ Route::group([
     Route::post('/flows/{id}/delete', $admins + ['uses' => 'FlowsController@destroy'])->name('workflowpacks.flows.destroy');
     Route::post('/flows/{id}/simulate', $admins + ['uses' => 'FlowsController@simulate'])->name('workflowpacks.flows.simulate');
     Route::get('/flows/{id}/path', $admins + ['uses' => 'FlowsController@path'])->name('workflowpacks.flows.path');
+    // AI assistant without connection: brief for the AI, its answer checked and played, flow saved as a draft
+    Route::get('/ai', $admins + ['uses' => 'AiController@show'])->name('workflowpacks.ai');
+    Route::post('/ai/brief', $admins + ['uses' => 'AiController@brief'])->name('workflowpacks.ai.brief');
+    Route::post('/ai/check', $admins + ['uses' => 'AiController@check'])->name('workflowpacks.ai.check');
+    Route::post('/ai/create', $admins + ['uses' => 'AiController@create'])->name('workflowpacks.ai.create');
     // automatic clean-up of a managed e-mail folder (diagram: side panel of the folder; settings: list)
     Route::post('/retention', $admins + ['uses' => 'RetentionController@save'])->name('workflowpacks.retention.save');
     Route::post('/retention/remove', $admins + ['uses' => 'RetentionController@remove'])->name('workflowpacks.retention.remove');

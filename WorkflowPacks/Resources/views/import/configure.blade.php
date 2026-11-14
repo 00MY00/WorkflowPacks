@@ -21,7 +21,7 @@
 
     <form method="POST" action="{{ route('workflowpacks.import.preview') }}" class="wp-form">
         {{ csrf_field() }}
-        <input type="hidden" name="pack_b64" value="{{ base64_encode($json) }}">
+        <input type="hidden" name="pack_carry" value="{{ $json }}">
 
         @if ($modules)
             <h4>{{ __('workflowpacks::messages.dependencies') }}</h4>

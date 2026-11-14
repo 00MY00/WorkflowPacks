@@ -979,6 +979,10 @@ modification.
 
 ## 15. Plan par étapes
 
+> Livré : 3.0.0 (moteur et éditeur), 3.0.1 (style « G »), 3.1.0 (**assistant IA sans connexion** et bloc
+> « Ressemble à… » par numéros de tickets, voir [assistant-ia.md](assistant-ia.md)). Les numéros ci-dessous sont
+> indicatifs.
+
 | Version | Contenu | Livrable |
 |---|---|---|
 | **2.17** (avant le moteur, utile tout de suite) | interfaces simplifiées : listes repliées avec résumé et recherche, barre d'action fixe en bas (aperçu d'import en premier), page de réglages par interrupteurs ; **guide IA pour le format actuel** (+ messages de validation avec chemin et suggestion) | les grands packs se lisent sans défiler jusqu'en bas |

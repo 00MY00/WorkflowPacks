@@ -28,12 +28,13 @@ class FlowsController extends Controller
         $this->registry = new BlockRegistry();
     }
 
-    public function show()
+    public function show(Request $request)
     {
         $this->guardEngine();
 
         return $this->page('flows', [
             'config' => [
+                'open'      => (int) $request->input('flow') ?: null,
                 'urls'      => [
                     'data'     => route('workflowpacks.flows.data'),
                     'store'    => route('workflowpacks.flows.store'),

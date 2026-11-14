@@ -305,8 +305,9 @@ class PacksController extends Controller
         } elseif (is_string($request->input('bundled')) && in_array($request->input('bundled'), array_keys(self::bundledPacks()), true)) {
             // packs shipped with the module, chosen by name only (never a path)
             $json = (string) file_get_contents(self::bundledPacks()[$request->input('bundled')]);
-        } elseif (is_string($request->input('pack_b64')) && $request->input('pack_b64') !== '') {
-            $json = (string) base64_decode($request->input('pack_b64'), true);
+        } elseif (is_string($request->input('pack_carry')) && $request->input('pack_carry') !== '') {
+            // the pack of the previous step, sent back as it was (plain text, escaped by the page)
+            $json = $request->input('pack_carry');
         } elseif (is_string($request->input('pack_json'))) {
             $json = $request->input('pack_json');
         }

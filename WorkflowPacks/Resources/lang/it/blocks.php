@@ -24,12 +24,18 @@ return [
         ],
     ],
     'condition' => [
-        'ticket' => [
+        'ticket'  => [
             'name'       => 'Se…',
             'title'      => 'Se :var :operator «:value»',
             'title_bool' => 'Se :var: :operator',
             'decision'   => ':var «:actual» :operator «:value» → :output',
             'help'       => 'Verifica il ticket o il risultato di un blocco precedente.',
+        ],
+        'similar' => [
+            'name'     => 'Somiglia a…',
+            'title'    => 'Somiglia a :count esempio/i (≥ :threshold %)',
+            'decision' => 'Somiglianza :score % (oggetto :subject %, testo :body %), soglia :threshold % → :output',
+            'help'     => 'Confronta il ticket con ticket di esempio (i loro id), in locale.',
         ],
     ],
     'wait'      => [
@@ -62,13 +68,16 @@ return [
         ],
     ],
     'vars'      => [
-        'ticket' => [
+        'ticket'  => [
             'subject'  => 'Oggetto',
             'body'     => 'Testo dell’e-mail',
             'from'     => 'Mittente',
             'status'   => 'Stato',
             'assigned' => 'Assegnato',
             'replied'  => 'Il team ha risposto',
+        ],
+        'similar' => [
+            'score' => 'Somiglianza (%)',
         ],
     ],
     'ops'       => [
@@ -118,5 +127,7 @@ return [
         'folder'       => 'Nome di cartella non valido.',
         'imap_off'     => 'Opzione «Archivia in una cartella e-mail» disattivata (Gestisci › Impostazioni › Workflow Packs).',
         'imap_nothing' => 'Nessuna e-mail da archiviare (vedi la cronologia).',
+        'examples'     => 'Da 1 a :max id di ticket di esempio.',
+        'percent'      => 'Percentuale da 0 a 100.',
     ],
 ];

@@ -206,7 +206,8 @@ class RuleCompiler
                 if (is_scalar($v) && in_array((string) $v, $this->config['user_specials'] ?? [], true) && $ref === 'user') {
                     continue;
                 }
-                $error = call_user_func($this->refCheck, $ref, $v, $mailboxId);
+                $check = $this->refCheck;
+                $error = $check($ref, $v, $mailboxId);
                 if ($error !== null) {
                     $problems->add($path.'.value', 'WP-REF-01', 'raw', ['text' => $error]);
                 }
