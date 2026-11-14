@@ -171,14 +171,18 @@ class Engine
 
     /**
      * Simulation: the flow from its trigger, for a ticket state (sample e-mail or copy of a ticket), in a dry run with
-     * a virtual clock (waits are passed at once). Nothing is written, nothing is sent.
+     * a virtual clock (waits are passed at once). Nothing is written, nothing is sent. $ctx: a real ticket (in a
+     * dry run), else the state $ticket.
      *
      * @return array ['events' => [[at (seconds), block, output, summary, changes, level, ticket]], 'end' => state]
      */
-    public function simulate(Definition $def, array $ticket, $maxSeconds = 31536000)
+    public function simulate(Definition $def, array $ticket, $maxSeconds = 31536000, Context $ctx = null)
     {
         $start = \Carbon\Carbon::now();
-        $ctx = new Context($ticket, [], true, $start->copy());
+        // a real ticket can be given (its own Context), always in a dry run: nothing written
+        $ctx = $ctx ?: new Context($ticket, [], true, $start->copy());
+        $ctx->dryRun = true;
+        $ctx->now = $start->copy();
         $trigger = $def->trigger($this->registry);
         $events = [];
         if (!$trigger) {

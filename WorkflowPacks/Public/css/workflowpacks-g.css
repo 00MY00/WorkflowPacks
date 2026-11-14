@@ -202,3 +202,15 @@
 .wp-page .wp-fold-panel:not([open]) > .panel-heading { border-radius: 12px; border-bottom: 0; }
 .wp-page .table > thead > tr > th { color: var(--g-text); font-weight: 600; border-bottom-color: var(--g-border); }
 .wp-page .table > tbody > tr > td { border-top-color: var(--g-sep); }
+
+/* AI assistant */
+.wp-ai { display: flex; flex-direction: column; gap: 16px; }
+.wp-ai-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.wp-ai-field { display: block; font-weight: 400; margin: 0; }
+.wp-ai-field > span { display: block; font-size: 13px; font-weight: 600; color: var(--g-text); margin-bottom: 4px; }
+.wp-ai-check { display: inline-flex; gap: 8px; align-items: center; font-weight: 600; color: var(--g-text); min-height: 44px; }
+.wp-ai-warn { display: flex; gap: 6px; align-items: flex-start; font-size: 12px; color: var(--g-text-2); margin: 0; }
+.wp-ai-brief { font-size: 12px; }
+.wp-ai-group > summary { gap: 8px; font-size: 14px; font-weight: 600; }
+.wp-ai-tickets { list-style: none; padding: 0 0 0 4px; margin: 6px 0 0; font-size: 13px; }
+.wp-ai-tickets li { padding: 3px 0; }

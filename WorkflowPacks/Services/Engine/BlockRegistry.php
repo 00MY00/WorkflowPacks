@@ -13,6 +13,7 @@ class BlockRegistry
     const BUILT_IN = [
         \Modules\WorkflowPacks\Blocks\Triggers\NewMail::class,
         \Modules\WorkflowPacks\Blocks\Conditions\Ticket::class,
+        \Modules\WorkflowPacks\Blocks\Conditions\Similar::class,
         \Modules\WorkflowPacks\Blocks\Waits\Duration::class,
         \Modules\WorkflowPacks\Blocks\Actions\SetStatus::class,
         \Modules\WorkflowPacks\Blocks\Actions\Assign::class,

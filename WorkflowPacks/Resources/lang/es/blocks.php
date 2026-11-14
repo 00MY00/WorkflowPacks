@@ -24,12 +24,18 @@ return [
         ],
     ],
     'condition' => [
-        'ticket' => [
+        'ticket'  => [
             'name'       => 'Si…',
             'title'      => 'Si :var :operator «:value»',
             'title_bool' => 'Si :var: :operator',
             'decision'   => ':var «:actual» :operator «:value» → :output',
             'help'       => 'Comprueba el ticket o el resultado de un bloque anterior.',
+        ],
+        'similar' => [
+            'name'     => 'Se parece a…',
+            'title'    => 'Se parece a :count ejemplo(s) (≥ :threshold %)',
+            'decision' => 'Parecido :score % (asunto :subject %, texto :body %), umbral :threshold % → :output',
+            'help'     => 'Compara el ticket con tickets de ejemplo (sus id), en local.',
         ],
     ],
     'wait'      => [
@@ -62,13 +68,16 @@ return [
         ],
     ],
     'vars'      => [
-        'ticket' => [
+        'ticket'  => [
             'subject'  => 'Asunto',
             'body'     => 'Texto del correo',
             'from'     => 'Remitente',
             'status'   => 'Estado',
             'assigned' => 'Asignado',
             'replied'  => 'El equipo ha respondido',
+        ],
+        'similar' => [
+            'score' => 'Parecido (%)',
         ],
     ],
     'ops'       => [
@@ -118,5 +127,7 @@ return [
         'folder'       => 'Nombre de carpeta no válido.',
         'imap_off'     => 'La opción «Archivar en una carpeta de correo» está desactivada (Administrar › Ajustes › Workflow Packs).',
         'imap_nothing' => 'Ningún correo que archivar (ver el historial).',
+        'examples'     => 'De 1 a :max id de tickets de ejemplo.',
+        'percent'      => 'Porcentaje de 0 a 100.',
     ],
 ];

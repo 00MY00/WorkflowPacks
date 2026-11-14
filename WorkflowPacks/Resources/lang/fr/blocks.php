@@ -24,12 +24,18 @@ return [
         ],
     ],
     'condition' => [
-        'ticket' => [
+        'ticket'  => [
             'name'       => 'Si…',
             'title'      => 'Si :var :operator « :value »',
             'title_bool' => 'Si :var : :operator',
             'decision'   => ':var « :actual » :operator « :value » → :output',
             'help'       => 'Teste le ticket ou le résultat d’un bloc précédent.',
+        ],
+        'similar' => [
+            'name'     => 'Ressemble à…',
+            'title'    => 'Ressemble à :count exemple(s) (≥ :threshold %)',
+            'decision' => 'Ressemblance :score % (sujet :subject %, texte :body %), seuil :threshold % → :output',
+            'help'     => 'Compare le ticket à des tickets d’exemple (leurs n°), en local.',
         ],
     ],
     'wait'      => [
@@ -62,13 +68,16 @@ return [
         ],
     ],
     'vars'      => [
-        'ticket' => [
+        'ticket'  => [
             'subject'  => 'Sujet',
             'body'     => 'Texte de l’e-mail',
             'from'     => 'Expéditeur',
             'status'   => 'Statut',
             'assigned' => 'Assigné',
             'replied'  => 'L’équipe a répondu',
+        ],
+        'similar' => [
+            'score' => 'Ressemblance (%)',
         ],
     ],
     'ops'       => [
@@ -118,5 +127,7 @@ return [
         'folder'       => 'Nom de dossier invalide.',
         'imap_off'     => 'Option « Classer dans un dossier e-mail » désactivée (Gérer › Paramètres › Workflow Packs).',
         'imap_nothing' => 'Aucun e-mail à classer (voir l’historique).',
+        'examples'     => 'De 1 à :max n° de tickets d’exemple.',
+        'percent'      => 'Pourcentage de 0 à 100.',
     ],
 ];

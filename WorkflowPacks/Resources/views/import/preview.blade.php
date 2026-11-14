@@ -13,7 +13,7 @@
 
     <form method="POST" action="{{ route('workflowpacks.import.confirm') }}" class="wp-form">
         {{ csrf_field() }}
-        <input type="hidden" name="pack_b64" value="{{ base64_encode($json) }}">
+        <input type="hidden" name="pack_carry" value="{{ $json }}">
         <input type="hidden" name="token" value="{{ $plan['token'] }}">
         @foreach (array_keys($plan['mailboxes']) as $id)
             <input type="hidden" name="mailboxes[]" value="{{ $id }}">

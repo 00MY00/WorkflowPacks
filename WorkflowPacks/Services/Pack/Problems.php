@@ -24,7 +24,8 @@ class Problems
     public static function t($key, array $params = [])
     {
         if (self::$translator) {
-            $text = call_user_func(self::$translator, $key, $params);
+            $translate = self::$translator;
+            $text = $translate($key, $params);
             if (is_string($text) && $text !== '') {
                 return $text;
             }

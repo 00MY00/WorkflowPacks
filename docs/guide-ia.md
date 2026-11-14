@@ -1,5 +1,9 @@
 # Guide pour l'IA — écrire un pack Workflow Packs importable
 
+> Pour les **flux du moteur interne**, le plus simple est l'**Assistant IA** du module, qui prépare le dossier
+> complet pour l'IA et teste sa réponse : voir [assistant-ia.md](assistant-ia.md). Ce guide-ci concerne les **packs**
+> (règles Workflows).
+>
 > À donner tel quel à une IA (Claude, ChatGPT…) avec votre demande. Format actuel : `freescout-workflow-pack`,
 > schéma **version 1** (version 2 pour les sélecteurs de boîtes et les ressources). Référence complète :
 > [format.md](format.md), schéma JSON : [`schema/freescout-workflow-pack.schema.json`](../schema/freescout-workflow-pack.schema.json).

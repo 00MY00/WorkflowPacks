@@ -203,7 +203,7 @@ class PortableTest extends TestCase
         $json = json_encode($this->v2(['resources' => [['key' => 'billing-user', 'type' => 'user']]],
             [$this->rule('r1', ['actions' => [['type' => 'assign', 'value' => '{{resource.billing-user}}'], ['type' => 'delete']]])]));
         $page = $this->actingAs($admin)->post(route('workflowpacks.import.preview'), [
-            'pack_b64' => base64_encode($json), 'mailboxes' => [$a->id], 'resources' => ['billing-user' => (string) $billing->id],
+            'pack_carry' => $json, 'mailboxes' => [$a->id], 'resources' => ['billing-user' => (string) $billing->id],
         ]);
         $page->assertStatus(200);
         $this->seeIn($page, 'wp-resources');

@@ -94,7 +94,8 @@ class Context
         if ($field === 'body') {
             $thread = $this->conversation->threads()->where('type', \App\Thread::TYPE_CUSTOMER)->orderBy('id')->first();
 
-            return $thread ? trim(html_entity_decode(strip_tags((string) $thread->body), ENT_QUOTES, 'UTF-8')) : '';
+            // without the quoted messages and the signature (the same text as for the similarity and the AI)
+            return $thread ? \Modules\WorkflowPacks\Services\Ai\TicketText::clean((string) $thread->body) : '';
         }
         if ($field === 'replied') {
             return $this->conversation->threads()->where('type', \App\Thread::TYPE_MESSAGE)->exists();
