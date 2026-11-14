@@ -61,6 +61,23 @@ abstract class TestCase extends \Illuminate\Foundation\Testing\TestCase
     }
 
     /** @param bool|null $workflows true: "manage workflows" permission (Workflow::PERM_EDIT_WORKFLOWS = 6) */
+    /** @var mixed the user of the previous actingAs() */
+    protected $wpActingId;
+
+    /**
+     * FreeScout ≥ 1.8.250 checks the session against the user's password (AuthenticateSession): a test that changes
+     * user starts a new session, as a new browser would. The same user keeps the session.
+     */
+    public function actingAs(\Illuminate\Contracts\Auth\Authenticatable $user, $driver = null)
+    {
+        if ($this->wpActingId !== null && $this->wpActingId !== $user->getAuthIdentifier()) {
+            $this->flushSession();
+        }
+        $this->wpActingId = $user->getAuthIdentifier();
+
+        return parent::actingAs($user, $driver);
+    }
+
     protected function user(array $mailboxes = [], $admin = false, $workflows = false)
     {
         $user = new \App\User();
