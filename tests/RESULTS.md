@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 3.2.1
+# Résultats des tests — Workflow Packs 3.2.2
 
 Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,12 @@ Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 3.2.2 — message sans Workflows, moteur désactivé
+
+| Série | Résultat |
+|---|---|
+| Intégration (instance neuve) | `SafetyTest` : Workflows désactivé + moteur coupé → message « activez le moteur interne », plus le titre rouge « ne peut pas fonctionner » ; détail WP-WF-01 toujours disponible |
 
 ## 3.2.1 — sans le module Workflows
 

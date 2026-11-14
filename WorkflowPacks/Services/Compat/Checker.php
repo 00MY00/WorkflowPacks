@@ -143,6 +143,18 @@ class Checker
         return self::run()['state'] === 'blocking';
     }
 
+    /** A blocking problem other than Workflows (PHP, tables of the module): nothing of the module can work. */
+    public static function coreBlocking()
+    {
+        foreach (self::run()['checks'] as $check) {
+            if ($check['state'] === 'blocking' && strpos($check['code'], 'WP-WF-') !== 0) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /** The official Workflows module is there and usable (needed only for the packs of Workflows rules). */
     public static function workflowsReady()
     {

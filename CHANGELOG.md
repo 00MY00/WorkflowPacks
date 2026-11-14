@@ -4,6 +4,14 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [3.2.2] - 2026-11-15
+
+### Corrigé
+- Workflows absent et **moteur interne désactivé** : l'ancien message rouge « ne peut pas fonctionner » s'affichait
+  encore. Il est remplacé par le message clair, qui indique d'activer le moteur interne (Gérer › Paramètres ›
+  Workflow Packs) pour utiliser le module sans Workflows. Seul un vrai problème (PHP, tables du module) garde le
+  message rouge.
+
 ## [3.2.1] - 2026-11-15
 
 ### Corrigé
