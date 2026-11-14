@@ -23,6 +23,8 @@ Route::group([
     // remove a pack: preview -> confirmation (with a backup first) -> backup download
     Route::get('/packs/{key}/remove', $users + ['uses' => 'RemoveController@preview'])->name('workflowpacks.remove');
     Route::post('/packs/{key}/remove', $users + ['uses' => 'RemoveController@confirm'])->name('workflowpacks.remove.confirm');
+    // without the Workflows module: the pack forgotten by Workflow Packs (its rules cannot be reached)
+    Route::post('/packs/{key}/forget', $admins + ['uses' => 'RemoveController@forget'])->name('workflowpacks.forget');
     Route::get('/backups/{id}', $users + ['uses' => 'RemoveController@backup'])->name('workflowpacks.backup');
 
     Route::get('/export', $users + ['uses' => 'ExportController@form'])->name('workflowpacks.export');

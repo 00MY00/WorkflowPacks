@@ -4,6 +4,15 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [3.3.0] - 2026-11-15
+
+### Ajouté
+- **Retirer un pack sans le module Workflows** : sur la page des packs, « Retirer le pack » (administrateurs) efface
+  en un clic, après confirmation, ce que Workflow Packs garde du pack (fiche, liens vers ses règles, ressources), avec
+  une **sauvegarde téléchargeable** comme pour un retrait normal. Les règles éventuellement restées dans les tables de
+  Workflows ne sont pas touchées (le module n'est pas là pour les supprimer proprement). Avec Workflows, le retrait
+  habituel (aperçu, règles supprimées, sauvegarde) reste utilisé.
+
 ## [3.2.2] - 2026-11-15
 
 ### Corrigé

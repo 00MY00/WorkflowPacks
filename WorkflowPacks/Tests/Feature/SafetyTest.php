@@ -141,6 +141,33 @@ class SafetyTest extends TestCase
         }
     }
 
+    public function testWithoutWorkflowsAPackIsRemovedFromWorkflowPacksAfterABackup()
+    {
+        $a = $this->mailbox('A');
+        $admin = $this->user([$a], true);
+        $this->import($this->pack([$this->rule('r1')]), [$a], $admin);
+        $key = \Modules\WorkflowPacks\Entities\Pack::first()->pack_key;
+        // Workflows there: the normal removal (preview, rules deleted), not this one
+        $this->actingAs($admin)->post(route('workflowpacks.forget', ['key' => $key]))->assertStatus(403);
+
+        \App\Module::setActive('workflows', false);
+        \App\Module::clearModulesCache();
+        Checker::forget();
+        try {
+            $this->seeIn($this->actingAs($admin)->get(route('workflowpacks.index')), route('workflowpacks.forget', ['key' => $key]));
+            $this->actingAs($this->user([$a]))->post(route('workflowpacks.forget', ['key' => $key]))->assertStatus(403);
+            $this->actingAs($admin)->post(route('workflowpacks.forget', ['key' => $key]))->assertRedirect(route('workflowpacks.index'));
+            $this->assertNull(\Modules\WorkflowPacks\Entities\Pack::where('pack_key', $key)->first());
+            $this->assertSame(0, Link::where('pack_key', $key)->count());
+            $backup = \Modules\WorkflowPacks\Entities\Backup::where('pack_key', $key)->latest('id')->first();
+            $this->assertSame($key, json_decode($backup->content, true)['pack']['key']);
+        } finally {
+            \App\Module::setActive('workflows', true);
+            \App\Module::clearModulesCache();
+            Checker::forget();
+        }
+    }
+
     public function testAnErrorCancelsTheWholeImport()
     {
         $a = $this->mailbox('A');
