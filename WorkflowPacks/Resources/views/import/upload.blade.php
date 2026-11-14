@@ -10,10 +10,10 @@
             <label for="wp-file">{{ __('workflowpacks::messages.file') }}</label>
             <input type="file" id="wp-file" name="pack_file" accept=".json,application/json" class="form-control">
         </div>
-        <div class="form-group">
-            <label for="wp-json">{{ __('workflowpacks::messages.or_paste') }}</label>
-            <textarea id="wp-json" name="pack_json" rows="10" class="form-control wp-mono" spellcheck="false">{{ old('pack_json', '') }}</textarea>
-        </div>
+        <details class="wp-fold" @if (old('pack_json')) open @endif>
+            <summary>{{ __('workflowpacks::messages.or_paste') }}</summary>
+            <textarea id="wp-json" name="pack_json" rows="10" class="form-control wp-mono" spellcheck="false" aria-label="{{ __('workflowpacks::messages.or_paste') }}">{{ old('pack_json', '') }}</textarea>
+        </details>
         <button type="submit" class="btn btn-primary">{{ __('workflowpacks::messages.validate') }}</button>
     </form>
 
@@ -25,7 +25,7 @@
                 {{ csrf_field() }}
                 <input type="hidden" name="mailbox_id" value="{{ $mailbox_id }}">
                 <input type="hidden" name="bundled" value="{{ $file }}">
-                <button type="submit" class="btn btn-default">{{ $file }}</button>
+                <button type="submit" class="btn btn-default">{!! \Modules\WorkflowPacks\Services\Ui::icon('package') !!} {{ $file }}</button>
             </form>
         @endforeach
     @endif

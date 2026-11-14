@@ -1,7 +1,8 @@
 @extends('workflowpacks::layout')
 
+@section('wp_description'){{ __('workflowpacks::messages.export_title') }}@endsection
+
 @section('wp_content')
-    <h3>{{ __('workflowpacks::messages.export_title') }}</h3>
     @include('workflowpacks::partials.problems', ['problems' => $errors_list])
 
     @php

@@ -22,8 +22,8 @@ class BulkToggleTest extends TestCase
         $page = $this->actingAs($admin)->get(route('workflowpacks.index'))->assertStatus(200);
         $this->seeIn($page, 'id="wp-bulk"');
         $this->seeIn($page, 'name="workflow_ids[]" value="'.$wf->id.'" class="wp-bulk-check"');
-        $this->seeIn($page, 'wp-dot is-off');
-        $this->seeIn($page, e(__('workflowpacks::messages.enable')));
+        $this->seeIn($page, 'class="wp-switch "');
+        $this->seeIn($page, e(__('workflowpacks::messages.switch_off')));
 
         // one click on the switch of a rule: that rule only
         $this->actingAs($admin)->post(route('workflowpacks.rules.toggle'), ['workflow_ids' => [$wf->id], 'active' => '1'])

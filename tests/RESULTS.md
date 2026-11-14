@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 3.0.0
+# Résultats des tests — Workflow Packs 3.0.1
 
 Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,13 @@ Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 3.0.1 — style « G »
+
+| Série | Résultat |
+|---|---|
+| Intégration (instance neuve) | vert ; `BulkToggleTest` et `ExportAndPagesTest` vérifient le nouveau balisage (interrupteur, point d'état) |
+| Navigateur (PC 1440 px, téléphone 390 px) | page des packs : 1 section, 3 blocs d'info, 8 tuiles ; barre de sélection absente à 0, affichée avec « 1 » après un clic (tuile mise en évidence), absente après « Vider » ; aucun bouton sans libellé, aucune zone cliquable de moins de 44 px ; Import, Export, Historique, Diagnostic, Schéma : aucune erreur |
 
 ## 3.0.0 — moteur de flux interne (expérimental)
 

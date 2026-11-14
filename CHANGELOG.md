@@ -4,6 +4,24 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [3.0.1] - 2026-11-14
+
+### Modifié
+- **Nouveau style des pages** (guide « G », [docs/style.md](docs/style.md)) : toute information a une forme (pastille,
+  tuile, icône, interrupteur), rien n'est retiré.
+  - En-tête : titre, description et actions à droite (un seul bouton principal) ; onglets en contrôle segmenté.
+  - **Packs** : une section par pack (pastilles identifiant / version / nombre de règles), description découpée en
+    blocs d'info, règles avec catégorie et **SI → ALORS** côte à côte.
+  - **Boîtes d'une règle** : une ligne de synthèse (conformes, actives / inactives, tickets existants) écrite une
+    seule fois, puis une **tuile par boîte** (initiales colorées, point d'état, horloge « tickets existants »,
+    interrupteur). Couleur d'une boîte calculée à partir de son nom.
+  - **Barre de sélection flottante**, seulement quand une règle est cochée, avec « Vider la sélection ».
+  - Boutons et zones cliquables de 44 px, infobulles et libellés accessibles pour les boutons sans texte, pas
+    d'emoji.
+- **Pages allégées** (rien de supprimé, replié) : Historique (introduction en description, diagnostic du rangement
+  replié sauf problème), Export, Import (packs du module en premier, « Coller le JSON » replié, aide sous « En savoir
+  plus », description en blocs d'info, règles du pack repliées).
+
 ## [3.0.0] - 2026-11-14
 
 Mise à jour sans risque : le moteur est **désactivé par défaut**. Tant qu'il l'est, rien ne change (règles

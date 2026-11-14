@@ -44,7 +44,8 @@ remplacées pour chacune (`{{mailbox.email}}`, `{{mailbox.name}}`, `{{mailbox.id
 
   Voir [docs/format.md](docs/format.md) et [docs/resources.md](docs/resources.md). Pour faire écrire un pack
   par une IA : [docs/guide-ia.md](docs/guide-ia.md).
-- L'interface suit le style du module **Refresh** s'il est installé, et le style standard de FreeScout sinon.
+- L'interface suit le guide de style « G » ([docs/style.md](docs/style.md)) : chaque information a une forme
+  (pastille, tuile, icône, interrupteur), sans rien retirer.
 - **Téléphone** : la matrice devient une carte par règle. Avec Refresh, l'entrée du module est placée dans le
   panneau **Profil**, qui sert de menu burger, car la barre d'onglets du bas n'a pas de place libre. Sans Refresh,
   l'entrée se trouve dans le menu burger de FreeScout (Gérer).

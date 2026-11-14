@@ -1,6 +1,8 @@
 @extends('workflowpacks::layout')
 
 {{-- Workflow Packs › History: what the module did, newest first (HistoryController). --}}
+@section('wp_description'){{ __('workflowpacks::messages.history_intro') }}@endsection
+
 @section('wp_content')
     @php
         $wp_t = function ($key, array $params = []) { return __('workflowpacks::messages.'.$key, $params); };
@@ -33,11 +35,11 @@
         };
     @endphp
 
-    <p class="wp-muted">{{ $wp_t('history_intro') }}</p>
 
     @if ($diagnostic)
-        <div class="panel panel-default">
-            <div class="panel-heading"><strong>{{ $wp_t('history_diag_title') }}</strong></div>
+        @php $wp_diagOpen = $diagnostic['failed'] || ($diagnostic['pending'] && $diagnostic['oldest'] > 10) || Route::is('workflowpacks.history.inspect', 'workflowpacks.history.trace'); @endphp
+        <details class="panel panel-default wp-fold-panel" @if ($wp_diagOpen) open @endif>
+            <summary class="panel-heading"><strong>{{ $wp_t('history_diag_title') }}</strong></summary>
             <div class="panel-body">
                 <ul class="wp-diag">
                     <li>
@@ -150,7 +152,7 @@
                     </div>
                 @endif
             </div>
-        </div>
+        </details>
     @endif
 
     <form method="GET" action="{{ route('workflowpacks.history') }}" class="form-inline wp-toolbar">
