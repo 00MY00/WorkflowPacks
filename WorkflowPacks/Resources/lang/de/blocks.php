@@ -1,0 +1,122 @@
+<?php
+
+// Blocks of the internal flow engine (Blocks/, Services/Engine). Titles are composed when shown, never stored.
+return [
+    'families'  => [
+        'trigger'   => 'Auslöser',
+        'condition' => 'Bedingungen',
+        'wait'      => 'Wartezeiten',
+        'action'    => 'Aktionen',
+        'util'      => 'Werkzeuge',
+    ],
+    'outputs'   => [
+        'next'  => 'weiter',
+        'yes'   => 'ja',
+        'no'    => 'nein',
+        'error' => 'Fehler',
+    ],
+    'already'   => 'bereits erledigt, nichts zu ändern',
+    'trigger'   => [
+        'new_mail' => [
+            'name'  => 'Neue E-Mail',
+            'title' => 'Neue E-Mail',
+            'help'  => 'Ein Kunde schreibt eine neue E-Mail in ein Postfach des Ablaufs.',
+        ],
+    ],
+    'condition' => [
+        'ticket' => [
+            'name'       => 'Wenn…',
+            'title'      => 'Wenn :var :operator „:value“',
+            'title_bool' => 'Wenn :var: :operator',
+            'decision'   => ':var „:actual“ :operator „:value“ → :output',
+            'help'       => 'Prüft das Ticket oder das Ergebnis eines vorherigen Blocks.',
+        ],
+    ],
+    'wait'      => [
+        'duration' => [
+            'name'  => 'Warten',
+            'title' => ':delay warten',
+            'help'  => 'Das Ticket wartet und geht dann weiter.',
+        ],
+    ],
+    'action'    => [
+        'status'      => [
+            'name'  => 'Status',
+            'title' => 'Status: :status',
+            'help'  => 'Ändert den Status des Tickets.',
+        ],
+        'assign'      => [
+            'name'  => 'Zuweisen',
+            'title' => 'Zuweisen an :user',
+            'help'  => 'Weist das Ticket einem Benutzer des Postfachs zu, oder niemandem.',
+        ],
+        'note'        => [
+            'name'  => 'Interne Notiz',
+            'title' => 'Notiz: :text',
+            'help'  => 'Fügt eine interne Notiz hinzu; {{ticket.subject}} wird ersetzt.',
+        ],
+        'imap_folder' => [
+            'name'  => 'In einen Ordner ablegen',
+            'title' => 'Ordner: :folder',
+            'help'  => 'Legt die E-Mail in einen Ordner des Mailservers ab.',
+        ],
+    ],
+    'vars'      => [
+        'ticket' => [
+            'subject'  => 'Betreff',
+            'body'     => 'Text der E-Mail',
+            'from'     => 'Absender',
+            'status'   => 'Status',
+            'assigned' => 'Zugewiesen',
+            'replied'  => 'Das Team hat geantwortet',
+        ],
+    ],
+    'ops'       => [
+        'contains'     => 'enthält',
+        'not_contains' => 'enthält nicht',
+        'equal'        => 'ist gleich',
+        'not_equal'    => 'ist ungleich',
+        'starts'       => 'beginnt mit',
+        'ends'         => 'endet mit',
+        'regex'        => 'passt zum Ausdruck',
+        'is'           => 'ist',
+        'is_not'       => 'ist nicht',
+        'yes'          => 'ja',
+        'no'           => 'nein',
+        'gte'          => '≥',
+        'lte'          => '≤',
+        'eq'           => '=',
+    ],
+    'values'    => [
+        'status' => [
+            'active'  => 'Aktiv',
+            'pending' => 'Wartend',
+            'closed'  => 'Geschlossen',
+            'spam'    => 'Spam',
+        ],
+        'nobody' => 'niemand',
+    ],
+    'errors'    => [
+        'required'     => 'Erforderlich.',
+        'choice'       => 'Wert nicht erlaubt.',
+        'id'           => 'Ungültige oder doppelte Block-ID.',
+        'link'         => 'Ungültige Verbindung (unbekannter Block oder Ausgang schon verbunden).',
+        'count'        => 'Ein Ablauf hat 1 bis :max Blöcke.',
+        'type'         => 'Unbekannter Blocktyp: „:type“.',
+        'var'          => 'Diese Variable wird von keinem vorherigen Block geliefert.',
+        'trigger'      => 'Ein Ablauf hat genau einen Auslöser.',
+        'port'         => 'Dieser Block hat keinen Ausgang „:port“.',
+        'into_trigger' => 'Eine Verbindung kann nicht zu einem Auslöser führen.',
+        'unreached'    => 'Dieser Block ist nicht mit dem Auslöser verbunden.',
+        'loop'         => 'Schleife ohne Wartezeit: sie würde nie enden.',
+        'steps'        => 'Nach :max Blöcken hintereinander gestoppt (Schleife?).',
+        'internal'     => 'Interner Fehler, später erneut versucht.',
+        'delay'        => 'Ungültige Dauer (1 bis 100 000 Minuten, Stunden oder Tage).',
+        'regex'        => 'Ungültiger oder zu langer Ausdruck (höchstens :max Zeichen).',
+        'long'         => 'Text zu lang (höchstens :max Byte).',
+        'user'         => 'Dieser Benutzer hat keinen Zugriff mehr auf das Postfach.',
+        'folder'       => 'Ungültiger Ordnername.',
+        'imap_off'     => 'Option „In einen E-Mail-Ordner ablegen“ ist aus (Verwalten › Einstellungen › Workflow Packs).',
+        'imap_nothing' => 'Keine E-Mail zum Ablegen (siehe Verlauf).',
+    ],
+];

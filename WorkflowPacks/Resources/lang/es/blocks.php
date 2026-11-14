@@ -1,0 +1,122 @@
+<?php
+
+// Blocks of the internal flow engine (Blocks/, Services/Engine). Titles are composed when shown, never stored.
+return [
+    'families'  => [
+        'trigger'   => 'Disparadores',
+        'condition' => 'Condiciones',
+        'wait'      => 'Esperas',
+        'action'    => 'Acciones',
+        'util'      => 'Herramientas',
+    ],
+    'outputs'   => [
+        'next'  => 'siguiente',
+        'yes'   => 'sí',
+        'no'    => 'no',
+        'error' => 'error',
+    ],
+    'already'   => 'ya hecho, nada que cambiar',
+    'trigger'   => [
+        'new_mail' => [
+            'name'  => 'Nuevo correo',
+            'title' => 'Nuevo correo',
+            'help'  => 'Un cliente escribe un nuevo correo en un buzón del flujo.',
+        ],
+    ],
+    'condition' => [
+        'ticket' => [
+            'name'       => 'Si…',
+            'title'      => 'Si :var :operator «:value»',
+            'title_bool' => 'Si :var: :operator',
+            'decision'   => ':var «:actual» :operator «:value» → :output',
+            'help'       => 'Comprueba el ticket o el resultado de un bloque anterior.',
+        ],
+    ],
+    'wait'      => [
+        'duration' => [
+            'name'  => 'Esperar',
+            'title' => 'Esperar :delay',
+            'help'  => 'El ticket espera y luego continúa.',
+        ],
+    ],
+    'action'    => [
+        'status'      => [
+            'name'  => 'Estado',
+            'title' => 'Estado: :status',
+            'help'  => 'Cambia el estado del ticket.',
+        ],
+        'assign'      => [
+            'name'  => 'Asignar',
+            'title' => 'Asignar a :user',
+            'help'  => 'Asigna el ticket a un usuario del buzón, o a nadie.',
+        ],
+        'note'        => [
+            'name'  => 'Nota interna',
+            'title' => 'Nota: :text',
+            'help'  => 'Añade una nota interna; {{ticket.subject}} se sustituye.',
+        ],
+        'imap_folder' => [
+            'name'  => 'Archivar en una carpeta',
+            'title' => 'Carpeta: :folder',
+            'help'  => 'Archiva el correo en una carpeta del servidor de correo.',
+        ],
+    ],
+    'vars'      => [
+        'ticket' => [
+            'subject'  => 'Asunto',
+            'body'     => 'Texto del correo',
+            'from'     => 'Remitente',
+            'status'   => 'Estado',
+            'assigned' => 'Asignado',
+            'replied'  => 'El equipo ha respondido',
+        ],
+    ],
+    'ops'       => [
+        'contains'     => 'contiene',
+        'not_contains' => 'no contiene',
+        'equal'        => 'es igual a',
+        'not_equal'    => 'es distinto de',
+        'starts'       => 'empieza por',
+        'ends'         => 'termina por',
+        'regex'        => 'coincide con la expresión',
+        'is'           => 'es',
+        'is_not'       => 'no es',
+        'yes'          => 'sí',
+        'no'           => 'no',
+        'gte'          => '≥',
+        'lte'          => '≤',
+        'eq'           => '=',
+    ],
+    'values'    => [
+        'status' => [
+            'active'  => 'Activo',
+            'pending' => 'Pendiente',
+            'closed'  => 'Cerrado',
+            'spam'    => 'Spam',
+        ],
+        'nobody' => 'nadie',
+    ],
+    'errors'    => [
+        'required'     => 'Obligatorio.',
+        'choice'       => 'Valor no permitido.',
+        'id'           => 'Identificador de bloque no válido o duplicado.',
+        'link'         => 'Enlace no válido (bloque desconocido o salida ya enlazada).',
+        'count'        => 'Un flujo tiene de 1 a :max bloques.',
+        'type'         => 'Tipo de bloque desconocido: «:type».',
+        'var'          => 'Esta variable no la proporciona ningún bloque anterior.',
+        'trigger'      => 'Un flujo tiene exactamente un disparador.',
+        'port'         => 'Este bloque no tiene salida «:port».',
+        'into_trigger' => 'Un enlace no puede ir hacia un disparador.',
+        'unreached'    => 'Este bloque no está enlazado al disparador.',
+        'loop'         => 'Bucle sin espera: no terminaría nunca.',
+        'steps'        => 'Detenido tras :max bloques seguidos (¿bucle?).',
+        'internal'     => 'Error interno, se reintentará más tarde.',
+        'delay'        => 'Duración no válida (1 a 100 000 minutos, horas o días).',
+        'regex'        => 'Expresión no válida o demasiado larga (:max caracteres como máximo).',
+        'long'         => 'Texto demasiado largo (:max bytes como máximo).',
+        'user'         => 'Este usuario ya no tiene acceso al buzón.',
+        'folder'       => 'Nombre de carpeta no válido.',
+        'imap_off'     => 'La opción «Archivar en una carpeta de correo» está desactivada (Administrar › Ajustes › Workflow Packs).',
+        'imap_nothing' => 'Ningún correo que archivar (ver el historial).',
+    ],
+];

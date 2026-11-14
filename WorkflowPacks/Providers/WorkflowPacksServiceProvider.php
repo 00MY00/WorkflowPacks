@@ -31,6 +31,7 @@ class WorkflowPacksServiceProvider extends ServiceProvider
             \Modules\WorkflowPacks\Console\CheckCommand::class,
             \Modules\WorkflowPacks\Console\HealthCommand::class,
             \Modules\WorkflowPacks\Console\CleanFoldersCommand::class,
+            \Modules\WorkflowPacks\Console\EngineTickCommand::class,
         ]);
     }
 
@@ -57,6 +58,8 @@ class WorkflowPacksServiceProvider extends ServiceProvider
         \Modules\WorkflowPacks\Services\Imap\ImapFolders::register();
         // current e-mail folder of each ticket: read API for the other modules, shown in the ticket, removed with it
         \Modules\WorkflowPacks\Services\Imap\TicketFolders::register();
+        // internal flow engine (3.0, experimental, off by default): FreeScout's events start the flows
+        \Modules\WorkflowPacks\Services\Engine\Listener::register();
         // condition "E-mail tag" of the rules: origin tags of RefreshGlobal (spam, inbox, folder:…), when it is installed
         \Modules\WorkflowPacks\Services\MailTags::register();
         // conditions "Assigned" and "A reply was sent" (branch blocks of the flow view)
@@ -203,6 +206,10 @@ class WorkflowPacksServiceProvider extends ServiceProvider
                 $schedule->command('workflowpacks:clean-folders')
                     ->everyFifteenMinutes()
                     ->withoutOverlapping();
+                // internal flows: the tickets whose wait is over (only when the engine is on)
+                if (\Modules\WorkflowPacks\Services\Engine\Engine::enabled()) {
+                    $schedule->command('workflowpacks:engine-tick')->everyMinute()->withoutOverlapping();
+                }
             } catch (\Throwable $e) {
                 // no clean-up rather than a broken scheduler
             }

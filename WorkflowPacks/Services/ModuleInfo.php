@@ -14,7 +14,8 @@ class ModuleInfo
     const MODULE = 'WorkflowPacks';
     const ALIAS = 'workflowpacks';
     const TABLES = ['workflowpacks_packs', 'workflowpacks_links', 'workflowpacks_imports', 'workflowpacks_resources', 'workflowpacks_layouts',
-        'workflowpacks_backups', 'workflowpacks_retention', 'workflowpacks_activity', 'workflowpacks_ticket_folders'];
+        'workflowpacks_backups', 'workflowpacks_retention', 'workflowpacks_activity', 'workflowpacks_ticket_folders',
+        'workflowpacks_flows', 'workflowpacks_flow_versions', 'workflowpacks_flow_runs', 'workflowpacks_flow_events'];
     const UPDATEGUARD_URL = 'https://github.com/00MY00/UpdateGuard';
 
     protected static $version = null;

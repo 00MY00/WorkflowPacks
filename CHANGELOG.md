@@ -4,6 +4,17 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [Non publié] — 3.0 en cours
+
+### Ajouté (pas encore visible : option désactivée, sans écran)
+- **Fondations du moteur de flux interne** (docs/moteur-autonome.md) : tables des flux, versions publiées, tickets en
+  cours et historique ; moteur (bloc après bloc, attentes réveillées chaque minute par lots, réclamation sûre pour
+  MySQL et PostgreSQL, nouvelles tentatives, sortie « erreur ») ; registre de blocs extensible (filtre
+  `workflowpacks.blocks`) ; validation avant publication (déclencheur unique, blocs reliés, boucle sans attente,
+  variables fournies par un bloc précédent) ; simulation en mémoire avec horloge virtuelle.
+- Premiers blocs : Nouvel e-mail, Si…, Attendre, Statut, Assigner, Note interne, Classer dans un dossier (textes dans
+  les 7 langues).
+
 ## [2.17.0] - 2026-11-14
 
 ### Ajouté

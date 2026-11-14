@@ -1,0 +1,122 @@
+<?php
+
+// Blocks of the internal flow engine (Blocks/, Services/Engine). Titles are composed when shown, never stored.
+return [
+    'families'  => [
+        'trigger'   => 'Attivatori',
+        'condition' => 'Condizioni',
+        'wait'      => 'Attese',
+        'action'    => 'Azioni',
+        'util'      => 'Strumenti',
+    ],
+    'outputs'   => [
+        'next'  => 'avanti',
+        'yes'   => 'sì',
+        'no'    => 'no',
+        'error' => 'errore',
+    ],
+    'already'   => 'già fatto, niente da cambiare',
+    'trigger'   => [
+        'new_mail' => [
+            'name'  => 'Nuova e-mail',
+            'title' => 'Nuova e-mail',
+            'help'  => 'Un cliente scrive una nuova e-mail in una casella del flusso.',
+        ],
+    ],
+    'condition' => [
+        'ticket' => [
+            'name'       => 'Se…',
+            'title'      => 'Se :var :operator «:value»',
+            'title_bool' => 'Se :var: :operator',
+            'decision'   => ':var «:actual» :operator «:value» → :output',
+            'help'       => 'Verifica il ticket o il risultato di un blocco precedente.',
+        ],
+    ],
+    'wait'      => [
+        'duration' => [
+            'name'  => 'Attendere',
+            'title' => 'Attendere :delay',
+            'help'  => 'Il ticket attende, poi prosegue.',
+        ],
+    ],
+    'action'    => [
+        'status'      => [
+            'name'  => 'Stato',
+            'title' => 'Stato: :status',
+            'help'  => 'Cambia lo stato del ticket.',
+        ],
+        'assign'      => [
+            'name'  => 'Assegnare',
+            'title' => 'Assegnare a :user',
+            'help'  => 'Assegna il ticket a un utente della casella, o a nessuno.',
+        ],
+        'note'        => [
+            'name'  => 'Nota interna',
+            'title' => 'Nota: :text',
+            'help'  => 'Aggiunge una nota interna; {{ticket.subject}} viene sostituito.',
+        ],
+        'imap_folder' => [
+            'name'  => 'Archiviare in una cartella',
+            'title' => 'Cartella: :folder',
+            'help'  => 'Archivia l’e-mail in una cartella del server di posta.',
+        ],
+    ],
+    'vars'      => [
+        'ticket' => [
+            'subject'  => 'Oggetto',
+            'body'     => 'Testo dell’e-mail',
+            'from'     => 'Mittente',
+            'status'   => 'Stato',
+            'assigned' => 'Assegnato',
+            'replied'  => 'Il team ha risposto',
+        ],
+    ],
+    'ops'       => [
+        'contains'     => 'contiene',
+        'not_contains' => 'non contiene',
+        'equal'        => 'è uguale a',
+        'not_equal'    => 'è diverso da',
+        'starts'       => 'inizia con',
+        'ends'         => 'finisce con',
+        'regex'        => 'corrisponde all’espressione',
+        'is'           => 'è',
+        'is_not'       => 'non è',
+        'yes'          => 'sì',
+        'no'           => 'no',
+        'gte'          => '≥',
+        'lte'          => '≤',
+        'eq'           => '=',
+    ],
+    'values'    => [
+        'status' => [
+            'active'  => 'Attivo',
+            'pending' => 'In attesa',
+            'closed'  => 'Chiuso',
+            'spam'    => 'Spam',
+        ],
+        'nobody' => 'nessuno',
+    ],
+    'errors'    => [
+        'required'     => 'Obbligatorio.',
+        'choice'       => 'Valore non consentito.',
+        'id'           => 'Identificativo di blocco non valido o duplicato.',
+        'link'         => 'Collegamento non valido (blocco sconosciuto o uscita già collegata).',
+        'count'        => 'Un flusso ha da 1 a :max blocchi.',
+        'type'         => 'Tipo di blocco sconosciuto: «:type».',
+        'var'          => 'Questa variabile non è fornita da un blocco precedente.',
+        'trigger'      => 'Un flusso ha esattamente un attivatore.',
+        'port'         => 'Questo blocco non ha l’uscita «:port».',
+        'into_trigger' => 'Un collegamento non può portare a un attivatore.',
+        'unreached'    => 'Questo blocco non è collegato all’attivatore.',
+        'loop'         => 'Ciclo senza attesa: non finirebbe mai.',
+        'steps'        => 'Fermato dopo :max blocchi di seguito (ciclo?).',
+        'internal'     => 'Errore interno, nuovo tentativo più tardi.',
+        'delay'        => 'Durata non valida (da 1 a 100 000 minuti, ore o giorni).',
+        'regex'        => 'Espressione non valida o troppo lunga (al massimo :max caratteri).',
+        'long'         => 'Testo troppo lungo (al massimo :max byte).',
+        'user'         => 'Questo utente non ha più accesso alla casella.',
+        'folder'       => 'Nome di cartella non valido.',
+        'imap_off'     => 'Opzione «Archivia in una cartella e-mail» disattivata (Gestisci › Impostazioni › Workflow Packs).',
+        'imap_nothing' => 'Nessuna e-mail da archiviare (vedi la cronologia).',
+    ],
+];
