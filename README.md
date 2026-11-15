@@ -21,10 +21,10 @@ remplacées pour chacune (`{{mailbox.email}}`, `{{mailbox.name}}`, `{{mailbox.id
   - application d'une règle à une autre boîte en tirant un lien.
 
   Voir [docs/schema.md](docs/schema.md).
-- **Moteur de flux interne** (3.0, expérimental, désactivé par défaut) : des flux où **chaque bloc est un objet**
+- **Moteur de flux interne** (3.0, activé par défaut depuis 3.3) : des flux où **chaque bloc est un objet**
   (déclencheur, « Si… », attente, statut, assignation, note, dossier), sans le module Workflows ; éditeur visuel, « Si »
   qui propose les variables possibles, publication par versions, simulation animée et parcours d'un ticket. Voir
-  [docs/flux-internes.md](docs/flux-internes.md). **Assistant IA** sans connexion : un dossier de tickets anonymisés
+  [docs/flux-internes.md](docs/flux-internes.md). **Packs de flux** à importer ou exporter (3.3). **Assistant IA** sans connexion : un dossier de tickets anonymisés
   pour une IA, sa réponse testée sur ces tickets, puis enregistrée en brouillon
   ([docs/assistant-ia.md](docs/assistant-ia.md)). **Agents IA connectés** par une API à jeton (usage unique ou
   continu, déconnexion d'un clic, publication seulement si autorisée) : [docs/agent-api.md](docs/agent-api.md).

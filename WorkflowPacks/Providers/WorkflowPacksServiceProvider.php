@@ -58,7 +58,7 @@ class WorkflowPacksServiceProvider extends ServiceProvider
         \Modules\WorkflowPacks\Services\Imap\ImapFolders::register();
         // current e-mail folder of each ticket: read API for the other modules, shown in the ticket, removed with it
         \Modules\WorkflowPacks\Services\Imap\TicketFolders::register();
-        // internal flow engine (3.0, experimental, off by default): FreeScout's events start the flows
+        // internal flow engine (on by default since 3.3): FreeScout's events start the flows
         \Modules\WorkflowPacks\Services\Engine\Listener::register();
         // condition "E-mail tag" of the rules: origin tags of RefreshGlobal (spam, inbox, folder:…), when it is installed
         \Modules\WorkflowPacks\Services\MailTags::register();

@@ -2,10 +2,10 @@
 
 // Editor of the flows of the internal engine (Workflow Packs › Flows, Public/js/flows/editor.js).
 return [
-    'tab'             => 'Flussi (sperimentale)',
-    'settings_title'  => 'Motore di flussi interno (sperimentale)',
+    'tab'             => 'Flussi',
+    'settings_title'  => 'Motore di flussi interno',
     'settings_label'  => 'Attivare',
-    'settings_help'   => 'Ogni blocco è un oggetto indipendente, senza il modulo Workflows. Aggiunge la scheda «Flussi». Disattivato: non cambia nulla, le regole Workflows funzionano come prima.',
+    'settings_help'   => 'Ogni blocco è un oggetto indipendente, senza il modulo Workflows; aggiunge le schede «Flussi» e «Assistente IA». Attivo per impostazione predefinita: senza flusso attivo non fa nulla. Disattivato: funzionano solo le regole Workflows.',
     'intro'           => 'Un flusso = blocchi collegati: attivatore, condizioni, attese, azioni. Viene eseguito solo una volta pubblicato e attivato.',
     'empty'           => 'Ancora nessun flusso.',
     'new_flow'        => 'Nuovo flusso',
@@ -61,7 +61,6 @@ return [
     'published_ok'    => 'Pubblicato.',
     'trigger_fixed'   => 'L’attivatore è il punto di partenza: non si può eliminare.',
     'select_hint'     => 'Fai clic su un blocco per vederne le impostazioni.',
-    'experimental'    => 'sperimentale',
     'zoom_fit'        => 'Vedi tutto',
     'path_title'      => 'Percorso di un ticket',
     'path_ticket'     => 'N. del ticket',

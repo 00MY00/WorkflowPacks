@@ -2,10 +2,10 @@
 
 // Editor of the flows of the internal engine (Workflow Packs › Flows, Public/js/flows/editor.js).
 return [
-    'tab'             => 'Stromen (experimenteel)',
-    'settings_title'  => 'Interne stroom-engine (experimenteel)',
+    'tab'             => 'Stromen',
+    'settings_title'  => 'Interne stroom-engine',
     'settings_label'  => 'Inschakelen',
-    'settings_help'   => 'Elk blok is een zelfstandig object, zonder de module Workflows. Voegt het tabblad „Stromen” toe. Uit: er verandert niets, de Workflows-regels werken zoals voorheen.',
+    'settings_help'   => 'Elk blok is een zelfstandig object, zonder de module Workflows; voegt de tabbladen „Stromen” en „AI-assistent” toe. Standaard aan: zonder actieve stroom doet hij niets. Uit: alleen de Workflows-regels werken.',
     'intro'           => 'Een stroom = gekoppelde blokken: trigger, voorwaarden, wachttijden, acties. Hij draait pas als hij gepubliceerd en ingeschakeld is.',
     'empty'           => 'Nog geen stroom.',
     'new_flow'        => 'Nieuwe stroom',
@@ -61,7 +61,6 @@ return [
     'published_ok'    => 'Gepubliceerd.',
     'trigger_fixed'   => 'De trigger is het startpunt: hij kan niet verwijderd worden.',
     'select_hint'     => 'Klik op een blok om zijn instellingen te zien.',
-    'experimental'    => 'experimenteel',
     'zoom_fit'        => 'Alles tonen',
     'path_title'      => 'Pad van een ticket',
     'path_ticket'     => 'Ticketnummer',

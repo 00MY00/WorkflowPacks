@@ -9,7 +9,7 @@ class Flow extends Model
 {
     protected $table = 'workflowpacks_flows';
 
-    protected $fillable = ['name', 'mailbox_ids', 'active', 'once', 'draft', 'version_id', 'created_by', 'agent_id'];
+    protected $fillable = ['name', 'mailbox_ids', 'active', 'once', 'draft', 'version_id', 'created_by', 'agent_id', 'pack_key', 'flow_key'];
 
     protected $casts = ['mailbox_ids' => 'array', 'draft' => 'array', 'active' => 'boolean', 'once' => 'boolean'];
 

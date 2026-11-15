@@ -2,10 +2,10 @@
 
 // Editor of the flows of the internal engine (Workflow Packs › Flows, Public/js/flows/editor.js).
 return [
-    'tab'             => 'Flux (expérimental)',
-    'settings_title'  => 'Moteur de flux interne (expérimental)',
+    'tab'             => 'Flux',
+    'settings_title'  => 'Moteur de flux interne',
     'settings_label'  => 'Activer',
-    'settings_help'   => 'Chaque bloc est un objet indépendant, sans le module Workflows. Ajoute l’onglet « Flux ». Désactivé : rien ne change, les règles Workflows fonctionnent comme avant.',
+    'settings_help'   => 'Chaque bloc est un objet indépendant, sans le module Workflows ; ajoute les onglets « Flux » et « Assistant IA ». Activé par défaut : sans flux actif, il ne fait rien. Désactivé : seules les règles Workflows fonctionnent.',
     'intro'           => 'Un flux = des blocs reliés : déclencheur, conditions, attentes, actions. Il ne s’exécute qu’une fois publié et activé.',
     'empty'           => 'Aucun flux pour l’instant.',
     'new_flow'        => 'Nouveau flux',
@@ -61,7 +61,6 @@ return [
     'published_ok'    => 'Publié.',
     'trigger_fixed'   => 'Le déclencheur est le point de départ : il ne se supprime pas.',
     'select_hint'     => 'Cliquez un bloc pour voir ses réglages.',
-    'experimental'    => 'expérimental',
     'zoom_fit'        => 'Tout voir',
     'path_title'      => 'Parcours d’un ticket',
     'path_ticket'     => 'N° du ticket',

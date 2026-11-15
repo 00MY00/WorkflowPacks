@@ -2,10 +2,10 @@
 
 // Editor of the flows of the internal engine (Workflow Packs › Flows, Public/js/flows/editor.js).
 return [
-    'tab'             => 'Flujos (experimental)',
-    'settings_title'  => 'Motor de flujos interno (experimental)',
+    'tab'             => 'Flujos',
+    'settings_title'  => 'Motor de flujos interno',
     'settings_label'  => 'Activar',
-    'settings_help'   => 'Cada bloque es un objeto independiente, sin el módulo Workflows. Añade la pestaña «Flujos». Desactivado: nada cambia, las reglas de Workflows funcionan como antes.',
+    'settings_help'   => 'Cada bloque es un objeto independiente, sin el módulo Workflows; añade las pestañas «Flujos» y «Asistente IA». Activado por defecto: sin flujo activo no hace nada. Desactivado: solo funcionan las reglas de Workflows.',
     'intro'           => 'Un flujo = bloques enlazados: disparador, condiciones, esperas, acciones. Solo se ejecuta una vez publicado y activado.',
     'empty'           => 'Aún no hay flujos.',
     'new_flow'        => 'Nuevo flujo',
@@ -61,7 +61,6 @@ return [
     'published_ok'    => 'Publicado.',
     'trigger_fixed'   => 'El disparador es el punto de partida: no se puede eliminar.',
     'select_hint'     => 'Haga clic en un bloque para ver sus ajustes.',
-    'experimental'    => 'experimental',
     'zoom_fit'        => 'Ver todo',
     'path_title'      => 'Recorrido de un ticket',
     'path_ticket'     => 'N.º de ticket',

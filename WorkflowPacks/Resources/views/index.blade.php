@@ -61,6 +61,14 @@
                         <span class="wp-pill wp-pill-indigo">{{ count($entry['rules']) }} {{ __('workflowpacks::messages.rules') }}</span>
                     </div>
                 </div>
+                @if (Auth::user()->isAdmin() && !\Modules\WorkflowPacks\Services\Compat\Checker::workflowsReady() && !\Modules\WorkflowPacks\Services\Compat\Checker::coreBlocking())
+                    {{-- without Workflows: forget the pack (what Workflow Packs keeps of it), after a backup --}}
+                    <form method="POST" action="{{ route('workflowpacks.forget', ['key' => $entry['pack']->pack_key]) }}" class="wp-pack-actions">
+                        {{ csrf_field() }}
+                        <button type="submit" class="btn btn-danger-soft" title="{{ __('workflowpacks::messages.forget_help') }}"
+                            data-wp-confirm="{{ __('workflowpacks::messages.forget_confirm', ['name' => $entry['pack']->name]) }}">{!! $wp_ui::icon('trash') !!} {{ __('workflowpacks::messages.remove') }}</button>
+                    </form>
+                @endif
                 @if (!\Modules\WorkflowPacks\Services\Compat\Checker::packsBlocked())
                     <div class="wp-pack-actions">
                         <a class="btn btn-default" href="{{ route('workflowpacks.reimport', ['key' => $entry['pack']->pack_key]) }}">{!! $wp_ui::icon('refresh') !!} {{ __('workflowpacks::messages.reimport') }}</a>

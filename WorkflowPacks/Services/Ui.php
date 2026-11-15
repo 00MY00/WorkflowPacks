@@ -155,7 +155,9 @@ class Ui
     /** Two letters of a name ("Support Clients" -> "SC", "Ventes" -> "VE"). */
     public static function initials($name)
     {
-        $words = preg_split('/[\s._@-]+/u', trim((string) $name), -1, PREG_SPLIT_NO_EMPTY) ?: ['?'];
+        // a leading tag ("[Tri] Factures") and punctuation are not initials
+        $name = preg_replace('/^\s*\[[^\]]*\]\s*/u', '', (string) $name);
+        $words = preg_split('/[^\p{L}\p{N}]+/u', trim($name), -1, PREG_SPLIT_NO_EMPTY) ?: ['?'];
         $two = count($words) > 1 ? mb_substr($words[0], 0, 1).mb_substr($words[1], 0, 1) : mb_substr($words[0], 0, 2);
 
         return mb_strtoupper($two);

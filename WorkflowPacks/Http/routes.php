@@ -23,6 +23,8 @@ Route::group([
     // remove a pack: preview -> confirmation (with a backup first) -> backup download
     Route::get('/packs/{key}/remove', $users + ['uses' => 'RemoveController@preview'])->name('workflowpacks.remove');
     Route::post('/packs/{key}/remove', $users + ['uses' => 'RemoveController@confirm'])->name('workflowpacks.remove.confirm');
+    // without the Workflows module: the pack forgotten by Workflow Packs (its rules cannot be reached)
+    Route::post('/packs/{key}/forget', $admins + ['uses' => 'RemoveController@forget'])->name('workflowpacks.forget');
     Route::get('/backups/{id}', $users + ['uses' => 'RemoveController@backup'])->name('workflowpacks.backup');
 
     Route::get('/export', $users + ['uses' => 'ExportController@form'])->name('workflowpacks.export');
@@ -54,9 +56,14 @@ Route::group([
     Route::get('/history/inspect', $admins + ['uses' => 'HistoryController@inspect'])->name('workflowpacks.history.inspect');
     Route::get('/history/trace', $admins + ['uses' => 'HistoryController@trace'])->name('workflowpacks.history.trace');
     Route::get('/diagnostic', $admins + ['uses' => 'DiagnosticController@index'])->name('workflowpacks.diagnostic');
-    // flows of the internal engine (3.0, experimental; administrators, when the engine is on)
+    // flows of the internal engine (administrators, when the engine is on)
     Route::get('/flows', $admins + ['uses' => 'FlowsController@show'])->name('workflowpacks.flows');
     Route::get('/flows/data', $admins + ['uses' => 'FlowsController@data'])->name('workflowpacks.flows.data');
+    // packs of flows: import (preview, then drafts switched off) and export
+    Route::get('/flows/import', $admins + ['uses' => 'FlowPackController@show'])->name('workflowpacks.flowpack');
+    Route::post('/flows/import/preview', $admins + ['uses' => 'FlowPackController@preview'])->name('workflowpacks.flowpack.preview');
+    Route::post('/flows/import/confirm', $admins + ['uses' => 'FlowPackController@confirm'])->name('workflowpacks.flowpack.confirm');
+    Route::get('/flows/export', $admins + ['uses' => 'FlowPackController@export'])->name('workflowpacks.flowpack.export');
     Route::post('/flows', $admins + ['uses' => 'FlowsController@store'])->name('workflowpacks.flows.store');
     Route::post('/flows/{id}', $admins + ['uses' => 'FlowsController@save'])->name('workflowpacks.flows.save');
     Route::post('/flows/{id}/publish', $admins + ['uses' => 'FlowsController@publish'])->name('workflowpacks.flows.publish');

@@ -1,0 +1,31 @@
+<?php
+
+// Packs of flows of the internal engine (FlowPackController, Services/Engine/FlowPack).
+return [
+    'intro'          => 'Import a pack of flows for the internal engine (file, pasted or shipped): the flows arrive as drafts, switched off, to check then publish.',
+    'button_import'  => 'Import a pack of flows',
+    'button_export'  => 'Export the flows',
+    'export_name'    => 'My flows',
+    'bundled'        => 'Packs shipped with the module',
+    'file'           => 'File of the pack (.json)',
+    'paste'          => 'Or paste the JSON',
+    'preview'        => 'Preview',
+    'invalid'        => 'This pack cannot be read:',
+    'not_json'       => 'This is not readable JSON.',
+    'bad_format'     => 'Expected format: “workflowpacks-flows”, version 1 (or a single flow).',
+    'bad_pack'       => 'Invalid pack key, or no flow (at most :max).',
+    'bad_flow_key'   => 'Flow no. :n: missing or duplicate key.',
+    'flows_count'    => ':count flow(s)',
+    'mailboxes'      => 'Mailboxes of the flows',
+    'mailboxes_help' => 'None ticked: every mailbox. Can be changed later in each flow.',
+    'required'       => 'required',
+    'recheck'        => 'Check again with these values',
+    'flows_title'    => 'Flows of the pack',
+    'create'         => 'will be created',
+    'update'         => 'draft updated',
+    'problems'       => ':count problem(s)',
+    'drafts_note'    => 'The flows are saved as drafts, switched off. A flow already imported keeps its published version until it is published again.',
+    'import'         => 'Import',
+    'done'           => 'Pack imported: :created flow(s) created, :updated updated (drafts, switched off).',
+    'history'        => ':created flow(s) created, :updated updated',
+];

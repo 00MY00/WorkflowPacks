@@ -4,6 +4,28 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [3.3.0] - 2026-11-15
+
+### Ajouté
+- **Retirer un pack sans le module Workflows** : sur la page des packs, « Retirer le pack » (administrateurs) efface
+  en un clic, après confirmation, ce que Workflow Packs garde du pack (fiche, liens vers ses règles, ressources), avec
+  une **sauvegarde téléchargeable** comme pour un retrait normal. Les règles éventuellement restées dans les tables de
+  Workflows ne sont pas touchées (le module n'est pas là pour les supprimer proprement). Avec Workflows, le retrait
+  habituel (aperçu, règles supprimées, sauvegarde) reste utilisé.
+- **Packs de flux** pour le moteur interne (format `workflowpacks-flows`) : Flux › **Importer un pack de flux**
+  (pack fourni, fichier ou JSON collé) → aperçu (chaque flux : créé ou mis à jour, problèmes à régler, paramètres du
+  pack, boîtes) → flux enregistrés **en brouillon, désactivés**. Un nouvel import du même pack met à jour les
+  brouillons sans toucher à la version publiée. **Exporter les flux** télécharge les flux comme pack (sans les
+  boîtes, propres à l'installation). Pack fourni : **Tri des e-mails (multilingue) — flux**, équivalent des règles
+  du pack Workflows du même nom (le transfert des alertes de sécurité n'existe pas encore comme bloc : la note le
+  rappelle).
+- Variables `{{mailbox.name}}` et `{{mailbox.email}}` dans les textes des blocs (notes).
+
+### Modifié
+- Le **moteur de flux interne est activé par défaut** et n'est plus marqué « expérimental ». Sans flux actif, il ne
+  fait rien (aucune requête pour un événement qu'aucun flux n'écoute). Une installation qui l'avait désactivé
+  explicitement le garde désactivé. L'onglet s'appelle désormais **Flux**.
+
 ## [3.2.2] - 2026-11-15
 
 ### Corrigé
@@ -77,7 +99,7 @@ Mise à jour sans risque : le moteur est **désactivé par défaut**. Tant qu'il
 Workflows, schéma, packs, historique) ; les nouvelles tables sont seulement créées.
 
 ### Ajouté
-- **Moteur de flux interne (expérimental)** — [docs/flux-internes.md](docs/flux-internes.md). À activer dans Gérer ›
+- **Moteur de flux interne (expérimental à l'époque)** — [docs/flux-internes.md](docs/flux-internes.md). À activer dans Gérer ›
   Paramètres › Workflow Packs ; ajoute l'onglet **Flux (expérimental)** (administrateurs).
   - **Éditeur visuel** : chaque bloc est un objet ; « + » sur une sortie pour ajouter le bloc suivant, tirer une
     sortie vers un bloc pour relier, Suppr pour supprimer ; enregistrement au fil des modifications.
