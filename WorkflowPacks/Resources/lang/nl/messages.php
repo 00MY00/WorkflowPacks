@@ -261,6 +261,7 @@ return [
     'wf_missing_help'          => 'De officiële module Workflows is niet geïnstalleerd of niet actief. De pakketten (importeren, exporteren, schema van de Workflows-regels) hebben hem nodig; de rest van Workflow Packs niet.',
     'wf_missing_engine_on'     => 'De interne stroom-engine staat aan: maak uw automatiseringen in Stromen of met de AI-assistent, zonder Workflows.',
     'wf_missing_engine_off'    => 'Om Workflow Packs zonder Workflows te gebruiken, schakelt u de interne stroom-engine in: Beheren › Instellingen › Workflow Packs.',
+    'wf_missing_packs'         => 'De module Workflows is niet actief: de regels van deze pakketten gelden niet meer. U kunt ze verwijderen en in plaats daarvan stroompakketten gebruiken.',
     'more_info'                => 'Meer informatie',
     'pack_rules_count'         => 'Regels van het pakket (:count)',
     'mailboxes_count'          => ':count mailbox(en)',

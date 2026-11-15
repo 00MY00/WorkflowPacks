@@ -167,6 +167,15 @@ class Checker
         return self::blocking() || !self::workflowsReady();
     }
 
+    /**
+     * Workflows missing but nothing else wrong, internal engine on: the module works without it. The pages of the packs
+     * of rules then lead to their equivalent for the flows instead of a notice.
+     */
+    public static function workflowsOptional()
+    {
+        return !self::workflowsReady() && !self::coreBlocking() && \Modules\WorkflowPacks\Services\Engine\Engine::enabled();
+    }
+
     /** Lines describing the blocking checks (shown instead of the import / export forms). */
     public static function blockingReasons()
     {

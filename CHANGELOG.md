@@ -4,6 +4,15 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [3.3.1] - 2026-11-15
+
+### Modifié
+- Sans le module Workflows, moteur interne activé : plus de message « Les packs de règles Workflows ne sont pas
+  disponibles » sur la page des packs. Les onglets **Importer**, **Exporter** et **Schéma** mènent à leur équivalent
+  pour les flux (import et export des packs de flux, éditeur des flux) au lieu d'un avertissement. Une seule ligne
+  discrète reste tant que d'anciens packs de règles sont listés, pour indiquer qu'on peut les retirer. Les
+  utilisateurs sans accès aux flux (non-administrateurs) gardent l'explication.
+
 ## [3.3.0] - 2026-11-15
 
 ### Ajouté

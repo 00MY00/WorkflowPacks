@@ -129,10 +129,16 @@ class SafetyTest extends TestCase
             $this->assertFalse(Checker::blocking(), 'not a blocking state any more');
             $this->assertFalse(Checker::workflowsReady());
             $this->assertTrue(Checker::packsBlocked(), 'the packs of Workflows rules still need it');
-            $import = $this->actingAs($admin)->get(route('workflowpacks.import'))->assertStatus(200);
+            // administrators: the tabs of the packs lead to their equivalent for the flows, no notice
+            $this->actingAs($admin)->get(route('workflowpacks.import'))->assertRedirect(route('workflowpacks.flowpack'));
+            $this->actingAs($admin)->get(route('workflowpacks.export'))->assertRedirect(route('workflowpacks.flowpack.export'));
+            $this->actingAs($admin)->get(route('workflowpacks.graph'))->assertRedirect(route('workflowpacks.flows'));
+            $index = $this->actingAs($admin)->get(route('workflowpacks.index'))->assertStatus(200);
+            $this->assertStringNotContainsString(e(__('workflowpacks::messages.wf_missing_title')), $index->getContent());
+            // the others (no access to the flows): the notice explains why
+            $import = $this->actingAs($this->user([$this->mailbox('A')], false, true))->get(route('workflowpacks.import'))->assertStatus(200);
             $this->seeIn($import, e(__('workflowpacks::messages.wf_missing_title')));
             $this->seeIn($import, e(__('workflowpacks::messages.wf_missing_engine_on')));
-            $this->actingAs($admin)->get(route('workflowpacks.index'))->assertStatus(200);
             $this->actingAs($admin)->get(route('workflowpacks.flows'))->assertStatus(200);
             $this->actingAs($admin)->get(route('workflowpacks.ai'))->assertStatus(200);
         } finally {

@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 3.3.0
+# Résultats des tests — Workflow Packs 3.3.1
 
 Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,12 @@ Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 3.3.1 — sans Workflows, les onglets des packs mènent aux flux
+
+| Série | Résultat |
+|---|---|
+| Intégration (instance neuve) | `SafetyTest` : sans Workflows, moteur activé, administrateur : Importer → import des packs de flux, Exporter → export des flux, Schéma → éditeur des flux, page des packs sans message ; utilisateur sans accès aux flux : l'explication reste |
 
 ## 3.3.0 — retirer un pack sans Workflows, packs de flux, moteur activé par défaut
 

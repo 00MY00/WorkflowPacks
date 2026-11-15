@@ -261,6 +261,7 @@ return [
     'wf_missing_help'          => 'O módulo oficial Workflows não está instalado ou não está ativo. Os pacotes (importação, exportação, esquema das regras do Workflows) precisam dele; o resto do Workflow Packs não.',
     'wf_missing_engine_on'     => 'O motor de fluxos interno está ativado: crie suas automações em Fluxos ou com o assistente de IA, sem o Workflows.',
     'wf_missing_engine_off'    => 'Para usar o Workflow Packs sem o Workflows, ative o motor de fluxos interno: Gerenciar › Configurações › Workflow Packs.',
+    'wf_missing_packs'         => 'O módulo Workflows não está ativo: as regras destes pacotes não se aplicam mais. Você pode removê-los e usar pacotes de fluxos no lugar.',
     'more_info'                => 'Saiba mais',
     'pack_rules_count'         => 'Regras do pacote (:count)',
     'mailboxes_count'          => ':count caixa(s)',
