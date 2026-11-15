@@ -3,7 +3,8 @@
  * drag it, pull one of its outputs onto another block to link them, "+" on an output adds the next block. The side
  * panel is built from the catalog of the server (fields, outputs, variables: no type of block is written here). The
  * draft is saved as it goes; "Publish" freezes a version (checked on the server); "Simulate" plays a sample e-mail
- * through the flow (nothing written, nothing sent).
+ * through the flow (nothing written, nothing sent). Left button = move around, right button = choose blocks (one or
+ * several, rectangle), fingers on phones and tablets, "Enlarge" for the whole page (details in bind()).
  */
 (function (root) {
     'use strict';
@@ -92,6 +93,25 @@
     }
 
     function clone(o) { return JSON.parse(JSON.stringify(o)); }
+
+    /**
+     * Two fingers: the zoom follows their spacing and the point of the diagram under their middle at the start stays
+     * under their middle. v0 = view at the start, m0/m = middles (px in the canvas), d0/d = spacings.
+     */
+    function pinchView(v0, m0, d0, m, d) {
+        var k = Math.min(2, Math.max(0.25, v0.k * d / Math.max(1, d0)));
+        var wx = (m0[0] - v0.x) / v0.k, wy = (m0[1] - v0.y) / v0.k;
+        return { x: m[0] - wx * k, y: m[1] - wy * k, k: k };
+    }
+
+    /** Ids of the blocks touching a rectangle drawn between two points of the diagram (any corner first). */
+    function inRect(blocks, sizeOf, a, b) {
+        var x1 = Math.min(a[0], b[0]), x2 = Math.max(a[0], b[0]), y1 = Math.min(a[1], b[1]), y2 = Math.max(a[1], b[1]);
+        return blocks.filter(function (bl) {
+            var s = sizeOf(bl);
+            return bl.x < x2 && bl.x + s[0] > x1 && bl.y < y2 && bl.y + s[1] > y1;
+        }).map(function (bl) { return bl.id; });
+    }
 
     // -------------------------------------------------------------------------------------------------- editor
 
@@ -234,7 +254,7 @@
         blocks.textContent = '';
         this.setTransform();
         if (!this.flow) { return; }
-        var draft = this.flow.draft;
+        var draft = this.flow.draft, picked = this.picked();
         draft.links.forEach(function (l, i) {
             var a = self.block(l.from), b = self.block(l.to);
             if (!a || !b) { return; }
@@ -253,7 +273,7 @@
         draft.blocks.forEach(function (b) {
             var type = self.types[b.type] || { family: 'util', name: b.type, outputs: [] };
             var size = self.size(b);
-            var cls = 'wpf-block fam-' + type.family + (self.sel && self.sel.block === b.id ? ' is-selected' : '')
+            var cls = 'wpf-block fam-' + type.family + (picked.indexOf(b.id) >= 0 ? ' is-selected' : '')
                 + (self.problemsOf(b.id).length ? ' has-problem' : '') + (self.sim && self.sim.on === b.id ? ' is-sim' : '')
                 + (self.sim && self.sim.seen[b.id] ? ' was-sim' : '');
             var g = svg('g', { class: cls, transform: 'translate(' + b.x + ',' + b.y + ')', 'data-block': b.id }, blocks);
@@ -274,8 +294,12 @@
                     var lt = svg('text', { class: 'wpf-port-label', x: W - 12, y: py + 4 }, g);
                     lt.textContent = o.label;
                 }
-                svg('circle', { class: 'wpf-port port-' + o.key, cx: W, cy: py, r: 7, 'data-port': o.key }, g);
-                var plus = svg('g', { class: 'wpf-plus', 'data-plus': o.key, transform: 'translate(' + (W + 20) + ',' + py + ')' }, g);
+                // invisible larger circles: easier to catch, with a finger too
+                var port = svg('g', { 'data-port': o.key }, g);
+                svg('circle', { class: 'wpf-hit', cx: W, cy: py, r: 12 }, port);
+                svg('circle', { class: 'wpf-port port-' + o.key, cx: W, cy: py, r: 7 }, port);
+                var plus = svg('g', { class: 'wpf-plus', 'data-plus': o.key, transform: 'translate(' + (W + 22) + ',' + py + ')' }, g);
+                svg('circle', { class: 'wpf-hit', r: 12 }, plus);
                 svg('circle', { r: 9 }, plus);
                 svg('path', { d: 'M-4 0H4M0 -4V4' }, plus);
             });
@@ -325,16 +349,25 @@
             if (name === 'publish') { self.publish(); }
             if (name === 'simulate') { self.showSim(); }
             if (name === 'fit') { self.fit(); }
+            if (name === 'fullscreen') { self.fullPage(); }
             if (name === 'add') { self.menu(act, null, null); }
             if (name === 'delete-flow') { self.destroy(); }
             if (name === 'reapply' && self.flow) { self.flush().then(function () { window.location.href = self.url('reapply'); }); }
         });
         document.addEventListener('keydown', function (e) {
-            if ((e.key === 'Delete' || e.key === 'Backspace') && self.sel && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) {
+            var typing = /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName);
+            if ((e.key === 'Delete' || e.key === 'Backspace') && self.sel && !typing) {
                 e.preventDefault();
                 self.removeSelection();
             }
-            if (e.key === 'Escape') { self.closeMenu(); }
+            if ((e.ctrlKey || e.metaKey) && String(e.key).toLowerCase() === 'a' && self.flow && !typing) {
+                e.preventDefault();
+                self.pick(self.flow.draft.blocks.map(function (b) { return b.id; }));
+            }
+            // Escape: first the menu, then the selection, then the full page
+            if (e.key === 'Escape') {
+                if (self.openMenu) { self.closeMenu(); } else if (self.sel && !typing) { self.select(null); } else if (self.root.classList.contains('is-full')) { self.fullPage(false); }
+            }
         });
         this.svg.addEventListener('wheel', function (e) {
             e.preventDefault();
@@ -345,62 +378,209 @@
             self.view.k = k;
             self.setTransform();
         }, { passive: false });
+        /*
+         * Mouse: left button = move around (background) or move the block(s) · right button = choose blocks: a click
+         * adds or removes one, a drag on the background draws a rectangle (Shift / Ctrl: added to the selection) ·
+         * middle button = move around · Shift / Ctrl + left click = add or remove a block.
+         * Finger: one = move around or move the block(s) · two = zoom and move · long press = choose: on a block it is
+         * added or removed, on the background then slide = rectangle · tap on the background = nothing selected.
+         */
+        this.svg.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+        var touches = {}, press = null;
+        var dropPress = function () { if (press) { clearTimeout(press); press = null; } };
+        var local = function (x, y) { var r = self.svg.getBoundingClientRect(); return [x - r.left, y - r.top]; };
+        var fingers = function () { var ids = Object.keys(touches); return ids.length >= 2 ? [touches[ids[0]], touches[ids[1]]] : null; };
+        var middle = function (p) { return local((p[0][0] + p[1][0]) / 2, (p[0][1] + p[1][1]) / 2); };
+        var spacing = function (p) { return Math.sqrt(Math.pow(p[0][0] - p[1][0], 2) + Math.pow(p[0][1] - p[1][1], 2)); };
+        var far = function (e, m) { return Math.abs(e.clientX - m.sx) + Math.abs(e.clientY - m.sy) > (e.pointerType === 'touch' ? 8 : 4); };
+        var pan = function (e) { return { type: 'pan', sx: e.clientX, sy: e.clientY, vx: self.view.x, vy: self.view.y, moved: false }; };
+        var drag = function (e, id) {
+            var ids = self.picked().indexOf(id) >= 0 ? self.picked() : [id];
+            return { type: 'drag', id: id, sx: e.clientX, sy: e.clientY, start: self.world(e), moved: false,
+                from: ids.map(function (k) { var b = self.block(k); return [b, b.x, b.y]; }).filter(function (f) { return f[0]; }) };
+        };
+        var lasso = function (e, add) {
+            var w = self.world(e);
+            return { type: 'lasso', sx: e.clientX, sy: e.clientY, start: w, moved: false, base: add ? self.picked() : [],
+                rect: svg('rect', { class: 'wpf-lasso', x: w[0], y: w[1], width: 0, height: 0 }, self.vp) };
+        };
+        var drop = function (m) {
+            [m && m.rect, m && m.temp].forEach(function (n) { if (n && n.parentNode) { n.parentNode.removeChild(n); } });
+        };
         this.svg.addEventListener('pointerdown', function (e) {
             if (!self.flow) { return; }
             self.closeMenu();
+            var touch = e.pointerType === 'touch';
+            try { self.svg.setPointerCapture(e.pointerId); } catch (err) { /* old browser */ }
+            if (touch) {
+                touches[e.pointerId] = [e.clientX, e.clientY];
+                var p = fingers();
+                if (p) {
+                    // second finger: zoom and move with both; what the first one was doing stops there
+                    dropPress();
+                    if (mode && mode.type === 'drag' && mode.moved) { self.save(); }
+                    drop(mode);
+                    mode = { type: 'pinch', v0: { x: self.view.x, y: self.view.y, k: self.view.k }, m0: middle(p), d0: spacing(p) };
+                    return;
+                }
+            }
             var plus = e.target.closest('[data-plus]'), port = e.target.closest('[data-port]');
             var blockEl = e.target.closest('[data-block]'), linkEl = e.target.closest('[data-link]');
-            try { self.svg.setPointerCapture(e.pointerId); } catch (err) { /* old browser */ }
-            if (plus) {
-                mode = { type: 'plus', from: blockEl.getAttribute('data-block'), port: plus.getAttribute('data-plus') };
+            var id = blockEl ? blockEl.getAttribute('data-block') : null, extra = e.shiftKey || e.ctrlKey || e.metaKey;
+            var before = self.picked();
+            if (e.button === 1) {
+                mode = pan(e);
+            } else if (e.button === 2) {
+                if (id) {
+                    self.togglePick(id);
+                    mode = null;
+                } else if (linkEl) {
+                    self.select({ link: parseInt(linkEl.getAttribute('data-link'), 10) });
+                    mode = null;
+                } else {
+                    mode = lasso(e, extra);
+                }
+            } else if (plus) {
+                mode = { type: 'plus', from: id, port: plus.getAttribute('data-plus') };
             } else if (port) {
-                var from = blockEl.getAttribute('data-block');
-                mode = { type: 'link', from: from, port: port.getAttribute('data-port'), temp: svg('path', { class: 'wpf-temp' }, self.q('.wpf-links')) };
-            } else if (blockEl) {
-                var b = self.block(blockEl.getAttribute('data-block')), w = self.world(e);
-                self.select({ block: b.id });
-                mode = { type: 'drag', b: b, dx: w[0] - b.x, dy: w[1] - b.y, moved: false };
+                mode = { type: 'link', from: id, port: port.getAttribute('data-port'), temp: svg('path', { class: 'wpf-temp' }, self.q('.wpf-links')) };
+            } else if (id && extra) {
+                self.togglePick(id);
+                mode = null;
+            } else if (id) {
+                if (before.indexOf(id) < 0) { self.select({ block: id }); }
+                mode = drag(e, id);
             } else if (linkEl) {
                 self.select({ link: parseInt(linkEl.getAttribute('data-link'), 10) });
+                mode = null;
             } else {
-                mode = { type: 'pan', sx: e.clientX, sy: e.clientY, vx: self.view.x, vy: self.view.y, moved: false };
+                mode = pan(e);
+            }
+            if (touch && mode && (mode.type === 'pan' || mode.type === 'drag')) {
+                var at = { clientX: e.clientX, clientY: e.clientY }, started = mode;
+                press = setTimeout(function () {
+                    press = null;
+                    if (mode !== started || mode.moved) { return; }
+                    if (started.type === 'drag') {
+                        // long press on a block: added to (or removed from) the blocks chosen before
+                        var ids = before.slice(), i = ids.indexOf(id);
+                        if (i >= 0) { ids.splice(i, 1); } else { ids.push(id); }
+                        mode = null;
+                        self.pick(ids);
+                    } else {
+                        mode = lasso(at, false);
+                    }
+                    if (navigator.vibrate) { try { navigator.vibrate(15); } catch (err) { /* not allowed */ } }
+                }, 500);
             }
         });
         this.svg.addEventListener('pointermove', function (e) {
+            if (touches[e.pointerId]) { touches[e.pointerId] = [e.clientX, e.clientY]; }
             if (!mode) { return; }
+            if (mode.type === 'pinch') {
+                var p = fingers();
+                if (p) {
+                    self.view = pinchView(mode.v0, mode.m0, mode.d0, middle(p), spacing(p));
+                    self.setTransform();
+                }
+                return;
+            }
             var w = self.world(e);
-            if (mode.type === 'drag') {
-                mode.b.x = Math.round((w[0] - mode.dx) / GRID) * GRID;
-                mode.b.y = Math.round((w[1] - mode.dy) / GRID) * GRID;
+            if (mode.sx !== undefined && !mode.moved && far(e, mode)) {
                 mode.moved = true;
+                dropPress();
+            }
+            if (mode.type === 'drag' && mode.moved) {
+                var dx = Math.round((w[0] - mode.start[0]) / GRID) * GRID, dy = Math.round((w[1] - mode.start[1]) / GRID) * GRID;
+                mode.from.forEach(function (f) { f[0].x = f[1] + dx; f[0].y = f[2] + dy; });
                 self.render();
             } else if (mode.type === 'pan') {
                 self.view.x = mode.vx + e.clientX - mode.sx;
                 self.view.y = mode.vy + e.clientY - mode.sy;
-                mode.moved = mode.moved || Math.abs(e.clientX - mode.sx) + Math.abs(e.clientY - mode.sy) > 4;
                 self.setTransform();
+            } else if (mode.type === 'lasso') {
+                mode.rect.setAttribute('x', Math.min(mode.start[0], w[0]));
+                mode.rect.setAttribute('y', Math.min(mode.start[1], w[1]));
+                mode.rect.setAttribute('width', Math.abs(w[0] - mode.start[0]));
+                mode.rect.setAttribute('height', Math.abs(w[1] - mode.start[1]));
             } else if (mode.type === 'link') {
                 var a = self.block(mode.from), s = [a.x + W, a.y + self.portY(a, mode.port)];
                 mode.temp.setAttribute('d', 'M' + s + 'L' + w);
             }
         });
         var end = function (e) {
+            delete touches[e.pointerId];
+            dropPress();
             if (!mode) { return; }
+            if (mode.type === 'pinch') {
+                // the finger left does nothing until it is lifted too
+                if (!fingers()) { mode = Object.keys(touches).length ? { type: 'idle' } : null; }
+                return;
+            }
             var m = mode;
             mode = null;
+            drop(m);
             if (m.type === 'drag' && m.moved) { self.save(); }
+            // a click on one of several chosen blocks: that one only
+            if (m.type === 'drag' && !m.moved && m.from.length > 1) { self.select({ block: m.id }); }
             if (m.type === 'pan' && !m.moved) { self.select(null); }
+            if (m.type === 'lasso') {
+                if (m.moved) {
+                    self.pick(m.base.concat(inRect(self.flow.draft.blocks, self.size.bind(self), m.start, self.world(e))));
+                } else {
+                    self.select(null);
+                }
+            }
             if (m.type === 'plus') { self.menu(null, m.from, m.port, e); }
             if (m.type === 'link') {
-                if (m.temp.parentNode) { m.temp.parentNode.removeChild(m.temp); }
                 var under = document.elementFromPoint(e.clientX, e.clientY);
                 var target = under && under.closest ? under.closest('[data-block]') : null;
                 if (target) { self.link(m.from, m.port, target.getAttribute('data-block')); }
             }
         };
         this.svg.addEventListener('pointerup', end);
-        this.svg.addEventListener('pointercancel', function () { mode = null; self.render(); });
+        this.svg.addEventListener('pointercancel', function (e) {
+            delete touches[e.pointerId];
+            dropPress();
+            drop(mode);
+            mode = null;
+            self.render();
+        });
         window.addEventListener('resize', function () { self.setTransform(); });
+    };
+
+    /** Blocks chosen: none, one (its settings in the panel) or several (moved and deleted together). */
+    Editor.prototype.picked = function () {
+        var s = this.sel;
+        return !s ? [] : s.blocks ? s.blocks.slice() : s.block ? [s.block] : [];
+    };
+
+    Editor.prototype.pick = function (ids) {
+        ids = ids.filter(function (id, i) { return ids.indexOf(id) === i; });
+        this.select(!ids.length ? null : ids.length === 1 ? { block: ids[0] } : { blocks: ids });
+    };
+
+    Editor.prototype.togglePick = function (id) {
+        var ids = this.picked(), i = ids.indexOf(id);
+        if (i >= 0) { ids.splice(i, 1); } else { ids.push(id); }
+        this.pick(ids);
+    };
+
+    /** "Enlarge": the editor over the whole page; "Reduce" (or Escape) back. */
+    Editor.prototype.fullPage = function (on) {
+        var full = on === undefined ? !this.root.classList.contains('is-full') : !!on;
+        this.root.classList.toggle('is-full', full);
+        document.body.classList.toggle('wpf-full-open', full);
+        var button = this.q('[data-act="fullscreen"]');
+        if (button) {
+            button.textContent = full ? this.t.reduce : this.t.enlarge;
+            button.setAttribute('aria-pressed', full ? 'true' : 'false');
+        }
+        var self = this;
+        window.requestAnimationFrame(function () {
+            var ids = self.picked();
+            if (ids.length === 1) { self.reveal(self.block(ids[0])); } else { self.fit(); }
+        });
     };
 
     Editor.prototype.select = function (sel) {
@@ -420,15 +600,19 @@
     };
 
     Editor.prototype.removeSelection = function () {
-        var sel = this.sel, draft = this.flow.draft;
+        var sel = this.sel, draft = this.flow.draft, self = this;
         if (!sel) { return; }
         if (sel.link !== undefined) {
             draft.links.splice(sel.link, 1);
         } else {
-            var b = this.block(sel.block);
-            if (!b || (this.types[b.type] || {}).family === 'trigger') { this.status(this.t.trigger_fixed, 'warn'); return; }
-            draft.blocks = draft.blocks.filter(function (x) { return x.id !== b.id; });
-            draft.links = draft.links.filter(function (l) { return l.from !== b.id && l.to !== b.id; });
+            // the chosen blocks, except the trigger (the starting point stays)
+            var ids = this.picked().filter(function (id) {
+                var b = self.block(id);
+                return b && (self.types[b.type] || {}).family !== 'trigger';
+            });
+            if (!ids.length) { this.status(this.t.trigger_fixed, 'warn'); return; }
+            draft.blocks = draft.blocks.filter(function (x) { return ids.indexOf(x.id) < 0; });
+            draft.links = draft.links.filter(function (l) { return ids.indexOf(l.from) < 0 && ids.indexOf(l.to) < 0; });
         }
         this.select(null);
         this.save();
@@ -511,10 +695,18 @@
     Editor.prototype.showPanel = function () {
         var p = this.panel, self = this, t = this.t;
         p.textContent = '';
+        // nothing chosen, no simulation: hidden on a phone in full page (flows.css), the diagram gets the room
+        p.classList.toggle('is-idle', !this.sim && !this.sel);
         if (!this.flow) { return; }
         if (this.sim) { return this.simPanel(); }
         if (this.sel && this.sel.link !== undefined) {
             p.appendChild(h('button', { type: 'button', class: 'btn btn-default btn-sm', text: t.delete_link, on: { click: function () { self.removeSelection(); } } }));
+            return;
+        }
+        if (this.sel && this.sel.blocks) {
+            p.appendChild(h('h4', { text: fill(t.selected, { count: this.sel.blocks.length }) }));
+            p.appendChild(h('p', { class: 'wpf-muted', text: t.selected_hint }));
+            p.appendChild(h('button', { type: 'button', class: 'btn btn-default btn-sm wpf-del', text: t.delete_blocks, on: { click: function () { self.removeSelection(); } } }));
             return;
         }
         var b = this.sel && this.block(this.sel.block);
@@ -840,7 +1032,7 @@
         });
     };
 
-    var api = { start: function (el, cfg) { return new Editor(el, cfg); }, variablesBefore: variablesBefore };
+    var api = { start: function (el, cfg) { return new Editor(el, cfg); }, variablesBefore: variablesBefore, pinchView: pinchView, inRect: inRect };
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = api;
     } else {

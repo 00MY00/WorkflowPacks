@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 3.5.1
+# Résultats des tests — Workflow Packs 3.6.0
 
 Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,15 @@ Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 3.6.0 — éditeur des flux : souris, plein écran, au doigt
+
+| Série | Résultat |
+|---|---|
+| Intégration (instance neuve) | 138 tests OK |
+| JavaScript (`tests/js/flows-editor.test.js`) | zoom à deux doigts (point sous les doigts conservé, limites 0,25 à 2) ; rectangle de sélection tracé depuis n'importe quel coin |
+| Navigateur PC 1440 px, souris | clic gauche glissé sur le fond : la vue bouge, les blocs non ; menu du navigateur bloqué sur le schéma ; clic droit : 1 bloc, puis 2, puis retiré ; glisser un bloc choisi déplace les deux ; Échap : plus rien de choisi ; clic droit glissé : rectangle, 4 blocs sur 4 ; Agrandir (libellé Réduire) puis Échap pour revenir ; aucune erreur JavaScript |
+| Navigateur tablette 820 px et téléphone 390 px, gestes tactiles réels (Chrome DevTools) | dessin qui remplit son cadre (504/506 px sur téléphone, 150 px avant) ; un doigt déplace la vue ; deux doigts zooment (0,37 → 1,10 sur téléphone) ; appui long sur 2 blocs : 2 choisis ; toucher le fond : plus rien ; plein écran sans défilement horizontal, sur téléphone schéma de 786 px sur 844 (barre sur une ligne, Réduire en tête, panneau masqué sans bloc choisi) |
 
 ## 3.5.1 — ligne jaune vide, choix des boîtes à l'import
 
