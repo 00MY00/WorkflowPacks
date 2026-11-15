@@ -62,7 +62,7 @@ appareils des agents, et ses **heures calmes** sont respectées. Un clic sur la 
 
 ## Packs de flux (import, export)
 
-**Flux › Importer un pack de flux** : un pack fourni avec le module, un fichier `.json` (512 Ko au plus) ou le JSON
+**Flux › Importer un pack de flux** : un pack fourni avec le module, un fichier `.json` (8 Mo au plus, sans limite de nombre de flux) ou le JSON
 collé. L'aperçu montre chaque flux (créé ou brouillon mis à jour), ses problèmes éventuels, les **paramètres** du
 pack à renseigner et les boîtes concernées (aucune cochée = toutes). Les flux sont enregistrés **en brouillon,
 désactivés** : vérifiez-les, publiez-les puis activez-les un par un. Réimporter le même pack met à jour les
@@ -82,7 +82,8 @@ Format :
             "links": [{"from": "b1", "port": "next", "to": "b2"}]}]}
 ```
 
-- `key` (pack et flux) : minuscules, chiffres, `.`, `_`, `-` ; c'est elle qui retrouve un flux déjà importé.
+- `key` (pack et flux) : minuscules, chiffres, `.`, `_`, `-` ; c'est elle qui retrouve un flux déjà importé. Écrite
+  autrement (ou absente), elle est corrigée à partir du texte donné ou du nom ; en double, elle reçoit `-2`, `-3`…
 - `{{param.<clé>}}` est remplacé, à l'import, par la valeur saisie (texte simple).
 - Un flux seul (réponse de l'Assistant IA) est accepté comme pack d'un flux.
 - Positions des blocs facultatives : ils sont placés automatiquement.

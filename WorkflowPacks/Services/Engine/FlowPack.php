@@ -11,12 +11,13 @@ use Modules\WorkflowPacks\Entities\Flow;
  * A single flow (the answer of the AI assistant, "workflowpacks-flow") is read as a pack of one flow.
  * {{param.<key>}} in the parameters of the blocks is replaced by the value given at the import (plain text).
  * Imported flows are drafts, switched off; a new import of the same pack updates their drafts.
+ * No limit on the number of flows; only the size of the file (memory of the server). Keys written otherwise
+ * ("Mon Pack") are turned into valid ones instead of refusing the pack.
  */
 class FlowPack
 {
     const FORMAT = 'workflowpacks-flows';
-    const MAX_BYTES = 524288;
-    const MAX_FLOWS = 50;
+    const MAX_BYTES = 8388608;   // 8 MB
     const KEY = '/^[a-z0-9][a-z0-9._-]{0,99}$/';
 
     /** @var BlockRegistry */
@@ -41,7 +42,10 @@ class FlowPack
         if (preg_match('/```(?:json)?\s*(\{.*\})\s*```/s', $json, $m)) {
             $json = $m[1];
         }
-        $data = strlen($json) <= self::MAX_BYTES ? json_decode($json, true) : null;
+        if (strlen($json) > self::MAX_BYTES) {
+            return $fail(__('workflowpacks::flowpack.too_big', ['max' => self::MAX_BYTES / 1048576]));
+        }
+        $data = json_decode($json, true);
         if (!is_array($data)) {
             return $fail(__('workflowpacks::flowpack.not_json'));
         }
@@ -54,10 +58,10 @@ class FlowPack
         if (($data['format'] ?? '') !== self::FORMAT || (int) ($data['version'] ?? 0) !== 1) {
             return $fail(__('workflowpacks::flowpack.bad_format'));
         }
-        $key = (string) ($data['key'] ?? '');
+        $key = self::key((string) ($data['key'] ?? ''), (string) ($data['name'] ?? ''));
         $flows = array_values(array_filter((array) ($data['flows'] ?? []), 'is_array'));
-        if (!preg_match(self::KEY, $key) || !$flows || count($flows) > self::MAX_FLOWS) {
-            return $fail(__('workflowpacks::flowpack.bad_pack', ['max' => self::MAX_FLOWS]));
+        if (!$flows) {
+            return $fail(__('workflowpacks::flowpack.no_flows'));
         }
         $params = [];
         foreach (array_values(array_filter((array) ($data['params'] ?? []), 'is_array')) as $p) {
@@ -73,10 +77,11 @@ class FlowPack
         $existing = Flow::where('pack_key', $key)->pluck('id', 'flow_key');
         $out = [];
         $seen = [];
-        foreach ($flows as $i => $f) {
-            $fkey = (string) ($f['key'] ?? '');
-            if (!preg_match(self::KEY, $fkey) || isset($seen[$fkey])) {
-                return $fail(__('workflowpacks::flowpack.bad_flow_key', ['n' => $i + 1]));
+        foreach ($flows as $f) {
+            // same key twice: the next ones get -2, -3… (always in the same order, so a new import finds them again)
+            $base = self::key((string) ($f['key'] ?? ''), (string) ($f['name'] ?? ''));
+            for ($fkey = $base, $n = 2; isset($seen[$fkey]); $n++) {
+                $fkey = substr($base, 0, 95).'-'.$n;
             }
             $seen[$fkey] = true;
             $draft = \Modules\WorkflowPacks\Services\Ai\Answer::place(self::draft($f, $replace));
@@ -143,6 +148,12 @@ class FlowPack
         }
 
         return ['format' => self::FORMAT, 'version' => 1, 'key' => self::slug($name), 'name' => $name, 'pack_version' => '1.0.0', 'flows' => $out];
+    }
+
+    /** A valid key: the one given, else made from it (or from the name). */
+    protected static function key($key, $name)
+    {
+        return preg_match(self::KEY, $key) ? $key : self::slug($key !== '' ? $key : $name);
     }
 
     public static function slug($text)
