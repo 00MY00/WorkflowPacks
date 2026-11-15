@@ -31,6 +31,7 @@
         <button type="button" class="btn btn-default btn-sm" data-act="add">+ {{ __('workflowpacks::flows.add_block') }}</button>
         <button type="button" class="btn btn-default btn-sm" data-act="simulate">▶ {{ __('workflowpacks::flows.simulate') }}</button>
         <button type="button" class="btn btn-primary btn-sm" data-act="publish">{{ __('workflowpacks::flows.publish') }}</button>
+        <button type="button" class="btn btn-default btn-sm" data-act="reapply" title="{{ __('workflowpacks::reapply.intro') }}">{{ __('workflowpacks::flows.reapply_button') }}</button>
         <span class="wpf-status" role="status" aria-live="polite"></span>
         <span class="wpf-grow"></span>
         <button type="button" class="btn btn-link btn-sm" data-act="fit">{{ __('workflowpacks::flows.zoom_fit') }}</button>

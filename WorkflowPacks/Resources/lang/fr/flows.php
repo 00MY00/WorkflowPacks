@@ -63,6 +63,8 @@ return [
     'unit_h'          => 'heure(s)',
     'unit_d'          => 'jour(s)',
     'published_ok'    => 'Publié.',
+    'reapply_button'  => 'Tickets existants',
+    'reapply_ask'     => 'Publié. Appliquer aussi cette version aux tickets déjà là (en cours ou existants) ?',
     'trigger_fixed'   => 'Le déclencheur est le point de départ : il ne se supprime pas.',
     'select_hint'     => 'Cliquez un bloc pour voir ses réglages.',
     'zoom_fit'        => 'Tout voir',

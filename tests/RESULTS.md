@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 3.4.1
+# Résultats des tests — Workflow Packs 3.5.0
 
 Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,13 @@ Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 3.5.0 — appliquer un flux aux tickets déjà là
+
+| Série | Résultat |
+|---|---|
+| Intégration (instance neuve) | `FlowReapplyTest` : tickets existants filtrés par boîte, période et statut ; simulation à blanc sans effet ; un seul traitement par flux ; « une fois par ticket » respecté ; lots de 10 sur 23 tickets via la tâche planifiée, intervalle respecté, pause et reprise ; tickets en cours passés à la nouvelle version au même bloc, sortis du flux si le bloc a disparu ; page réservée aux administrateurs ; avertissement et confirmation obligatoire avec « Supprimer le ticket » ; arrêt |
+| Navigateur (Chrome, PC 1440 px, tablette 820 px, téléphone 390 px) | pack fourni importé, flux publié depuis l'éditeur (question « appliquer aussi aux tickets déjà là ? » affichée), bouton « Tickets existants », page sans défilement horizontal aux trois largeurs, estimation et simulation affichées, traitement lancé et progression visible, aucune erreur JavaScript |
 
 ## 3.4.1 — packs de flux sans limite de nombre, vrai module WebPush
 

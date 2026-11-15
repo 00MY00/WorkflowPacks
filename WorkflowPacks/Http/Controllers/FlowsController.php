@@ -44,6 +44,7 @@ class FlowsController extends Controller
                     'destroy'  => route('workflowpacks.flows.destroy', ['id' => '__ID__']),
                     'simulate' => route('workflowpacks.flows.simulate', ['id' => '__ID__']),
                     'path'     => route('workflowpacks.flows.path', ['id' => '__ID__']),
+                    'reapply'  => route('workflowpacks.reapply', ['id' => '__ID__']),
                 ],
                 'catalog'   => $this->catalog(),
                 'mailboxes' => \App\Mailbox::orderBy('name')->get(['id', 'name'])->map(function ($m) {

@@ -48,6 +48,29 @@ un flux et une règle Workflows qui visent les mêmes tickets agissent **tous le
 | Supprimer le ticket | — ; dossier **Supprimés** de FreeScout (récupérable tant qu'il n'est pas vidé), dernier bloc de la branche | erreur |
 | Notification push | destinataires (l'assigné, les utilisateurs de la boîte ou un utilisateur), titre (vide = sujet), texte ; variables remplacées. Nécessite le module [WebPush](https://github.com/altmenorg/freescout-webpush) | suite / erreur |
 
+## Appliquer un flux aux tickets déjà là
+
+Un flux s'applique d'abord aux **nouveaux** e-mails. Pour l'appliquer aussi aux tickets déjà présents : bouton
+**Tickets existants** de l'éditeur, ou **OK** à la question posée juste après chaque **Publier**.
+
+| Choix | Effet |
+|---|---|
+| **Tickets existants** | les tickets des boîtes du flux, sur une période (7, 30, 90, 365 jours ou tous, selon leur date de création) et avec les statuts cochés (ouvert, en attente, fermé), passent dans le flux comme si leur e-mail venait d'arriver. « Une fois par ticket » reste respecté : un ticket déjà passé n'y repasse pas. |
+| **Tickets en cours** | les tickets en attente dans une ancienne version continuent dans la version publiée, au même bloc. Si ce bloc n'existe plus, le ticket sort du flux (rien n'est annulé). |
+
+1. **Estimer et simuler** : le nombre de tickets concernés, la durée prévue et une **simulation à blanc** sur les
+   20 tickets les plus récents (ce que chacun ferait, regroupé par résultat ; rien n'est exécuté).
+2. Si le flux contient **Supprimer le ticket** ou **Notification push**, un avertissement s'affiche et il faut cocher
+   une confirmation.
+3. **Lancer** : le traitement se fait **par lots** (10 à 500 tickets, un lot toutes les 1 à 60 minutes), par la tâche
+   planifiée du moteur. La charge reste plafonnée, même pour des milliers de tickets.
+4. Suivi sur la même page : barre de progression, **Pause**, **Reprendre**, **Arrêter** (les tickets déjà traités le
+   restent). Un seul traitement à la fois par flux ; il reprend où il s'était arrêté, même après un redémarrage.
+   Le début et la fin sont notés dans l'Historique.
+
+Le flux n'a pas besoin d'être activé pour être appliqué aux tickets existants : c'est la version publiée qui est
+utilisée.
+
 ## Notifications push (module WebPush)
 
 Le bloc **Notification push** confie la notification au module **WebPush** (FreeScout installé comme application

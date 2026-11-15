@@ -63,6 +63,8 @@ return [
     'unit_h'          => 'hour(s)',
     'unit_d'          => 'day(s)',
     'published_ok'    => 'Published.',
+    'reapply_button'  => 'Existing tickets',
+    'reapply_ask'     => 'Published. Also apply this version to the tickets already there (in progress or existing)?',
     'trigger_fixed'   => 'The trigger is the starting point: it cannot be deleted.',
     'select_hint'     => 'Click a block to see its settings.',
     'zoom_fit'        => 'Fit all',

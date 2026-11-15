@@ -71,6 +71,11 @@ Route::group([
     Route::post('/flows/{id}/delete', $admins + ['uses' => 'FlowsController@destroy'])->name('workflowpacks.flows.destroy');
     Route::post('/flows/{id}/simulate', $admins + ['uses' => 'FlowsController@simulate'])->name('workflowpacks.flows.simulate');
     Route::get('/flows/{id}/path', $admins + ['uses' => 'FlowsController@path'])->name('workflowpacks.flows.path');
+    // a flow applied to the tickets already there (in progress / existing), in batches
+    Route::get('/flows/{id}/reapply', $admins + ['uses' => 'FlowReapplyController@show'])->name('workflowpacks.reapply');
+    Route::post('/flows/{id}/reapply/estimate', $admins + ['uses' => 'FlowReapplyController@estimate'])->name('workflowpacks.reapply.estimate');
+    Route::post('/flows/{id}/reapply/start', $admins + ['uses' => 'FlowReapplyController@start'])->name('workflowpacks.reapply.start');
+    Route::post('/flows/{id}/reapply/control', $admins + ['uses' => 'FlowReapplyController@control'])->name('workflowpacks.reapply.control');
     // AI assistant without connection: brief for the AI, its answer checked and played, flow saved as a draft
     Route::get('/ai', $admins + ['uses' => 'AiController@show'])->name('workflowpacks.ai');
     Route::post('/ai/brief', $admins + ['uses' => 'AiController@brief'])->name('workflowpacks.ai.brief');

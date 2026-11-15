@@ -63,6 +63,8 @@ return [
     'unit_h'          => 'Stunde(n)',
     'unit_d'          => 'Tag(e)',
     'published_ok'    => 'Veröffentlicht.',
+    'reapply_button'  => 'Bestehende Tickets',
+    'reapply_ask'     => 'Veröffentlicht. Diese Version auch auf vorhandene Tickets anwenden (laufende oder bestehende)?',
     'trigger_fixed'   => 'Der Auslöser ist der Startpunkt: er kann nicht gelöscht werden.',
     'select_hint'     => 'Klicken Sie auf einen Block, um seine Einstellungen zu sehen.',
     'zoom_fit'        => 'Alles zeigen',
