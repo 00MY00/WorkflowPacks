@@ -82,6 +82,36 @@ class TicketActions
         return true;
     }
 
+    /** To the "Deleted" folder, as FreeScout's "Delete" button (restorable from there). False: already deleted. */
+    public function delete()
+    {
+        if (!empty($this->ctx->ticket['deleted'])
+            || ($this->ctx->conversation && (int) $this->ctx->conversation->state === \App\Conversation::STATE_DELETED)) {
+            return false;
+        }
+        if (!$this->ctx->dryRun) {
+            $this->ctx->conversation->deleteToFolder($this->ctx->actor);
+        }
+        $this->ctx->ticket['deleted'] = true;
+        $this->ctx->change('deleted', '', __('workflowpacks::blocks.ops.yes'));
+
+        return true;
+    }
+
+    /** Push notification through the WebPush module (Services/Notify/WebPush); a dry run only says to whom. */
+    public function push(array $users, $title, $text)
+    {
+        if (!$this->ctx->dryRun) {
+            \Modules\WorkflowPacks\Services\Notify\WebPush::send($users, $title, $text, $this->ctx->conversation);
+        }
+        $names = array_map(function ($u) {
+            return $u->getFullName();
+        }, array_slice($users, 0, 5));
+        $this->ctx->change('push', '', implode(', ', $names).(count($users) > 5 ? ' (+'.(count($users) - 5).')' : '').' : '.mb_substr($title, 0, 60));
+
+        return true;
+    }
+
     protected static function userName($id)
     {
         if ((int) $id <= 0) {

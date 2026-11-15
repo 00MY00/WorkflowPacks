@@ -4,6 +4,19 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [3.4.0] - 2026-11-15
+
+### Ajouté
+- Bloc **Notification push** pour le moteur interne, avec le module
+  [WebPush](https://github.com/altmenorg/freescout-webpush) : notifie l'assigné, les utilisateurs de la boîte ou un
+  utilisateur choisi, sur leur téléphone ou ordinateur. Titre (vide = sujet du ticket) et texte avec variables.
+  Les heures calmes de WebPush sont respectées ; rien n'est envoyé en simulation. Sans WebPush, le bloc prend sa
+  sortie « erreur ». Workflow Packs n'envoie rien lui-même : il passe par le module WebPush.
+- Bloc **Supprimer le ticket** : place le ticket dans le dossier **Supprimés**, comme le bouton « Supprimer » de
+  FreeScout (récupérable depuis ce dossier tant qu'il n'est pas vidé ; jamais de suppression définitive). C'est le
+  dernier bloc de sa branche. Rien n'est supprimé en simulation. Les règles Workflows « Déplacer vers Supprimés »
+  peuvent désormais être converties en flux.
+
 ## [3.3.1] - 2026-11-15
 
 ### Modifié

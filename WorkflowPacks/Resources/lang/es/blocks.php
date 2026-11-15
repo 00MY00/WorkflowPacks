@@ -66,6 +66,16 @@ return [
             'title' => 'Carpeta: :folder',
             'help'  => 'Archiva el correo en una carpeta del servidor de correo.',
         ],
+        'push'        => [
+            'name'  => 'Notificación push',
+            'title' => 'Notificación push: :to',
+            'help'  => 'Envía una notificación al teléfono u ordenador de los agentes (módulo WebPush), respetando sus horas de silencio.',
+        ],
+        'delete'      => [
+            'name'  => 'Eliminar el ticket',
+            'title' => 'Eliminar el ticket',
+            'help'  => 'Mueve el ticket a la carpeta Eliminados, como el botón «Eliminar»: se puede recuperar desde allí mientras no se vacíe. Último bloque de la rama.',
+        ],
     ],
     'vars'      => [
         'ticket'  => [
@@ -104,6 +114,11 @@ return [
             'spam'    => 'Spam',
         ],
         'nobody' => 'nadie',
+        'to'     => [
+            'assignee'   => 'el asignado',
+            'mailbox'    => 'los usuarios del buzón',
+            'user'       => 'un usuario',
+        ],
     ],
     'errors'    => [
         'required'     => 'Obligatorio.',
@@ -127,6 +142,8 @@ return [
         'folder'       => 'Nombre de carpeta no válido.',
         'imap_off'     => 'La opción «Archivar en una carpeta de correo» está desactivada (Administrar › Ajustes › Workflow Packs).',
         'imap_nothing' => 'Ningún correo que archivar (ver el historial).',
+        'push_off'     => 'Módulo WebPush ausente o desactivado: no se envió ninguna notificación.',
+        'push_nobody'  => 'Nadie a quien notificar (ticket sin asignar o usuario sin acceso al buzón).',
         'examples'     => 'De 1 a :max id de tickets de ejemplo.',
         'percent'      => 'Porcentaje de 0 a 100.',
     ],

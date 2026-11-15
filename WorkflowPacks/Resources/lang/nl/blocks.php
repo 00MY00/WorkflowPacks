@@ -66,6 +66,16 @@ return [
             'title' => 'Map: :folder',
             'help'  => 'Bergt de e-mail op in een map van de mailserver.',
         ],
+        'push'        => [
+            'name'  => 'Pushmelding',
+            'title' => 'Pushmelding: :to',
+            'help'  => 'Stuurt een melding naar de telefoon of computer van de agenten (module WebPush), met respect voor hun stille uren.',
+        ],
+        'delete'      => [
+            'name'  => 'Ticket verwijderen',
+            'title' => 'Ticket verwijderen',
+            'help'  => 'Verplaatst het ticket naar de map Verwijderd, zoals de knop „Verwijderen”: daar te herstellen zolang de map niet geleegd is. Laatste blok van de tak.',
+        ],
     ],
     'vars'      => [
         'ticket'  => [
@@ -104,6 +114,11 @@ return [
             'spam'    => 'Spam',
         ],
         'nobody' => 'niemand',
+        'to'     => [
+            'assignee'   => 'de toegewezen persoon',
+            'mailbox'    => 'de gebruikers van de mailbox',
+            'user'       => 'één gebruiker',
+        ],
     ],
     'errors'    => [
         'required'     => 'Verplicht.',
@@ -127,6 +142,8 @@ return [
         'folder'       => 'Ongeldige mapnaam.',
         'imap_off'     => 'Optie „In een e-mailmap opbergen” staat uit (Beheren › Instellingen › Workflow Packs).',
         'imap_nothing' => 'Geen e-mail om op te bergen (zie de geschiedenis).',
+        'push_off'     => 'Module WebPush ontbreekt of is niet actief: geen melding verstuurd.',
+        'push_nobody'  => 'Niemand te melden (ticket niet toegewezen of gebruiker zonder toegang tot de mailbox).',
         'examples'     => '1 tot :max id’s van voorbeeldtickets.',
         'percent'      => 'Percentage van 0 tot 100.',
     ],

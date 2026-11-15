@@ -772,7 +772,7 @@
     /** A change "before -> after", in words: Status: Active → Closed. */
     Editor.prototype.change = function (c) {
         var bt = this.bt, t = this.t;
-        var labels = { status: bt.vars['ticket.status'], assignee: bt.vars['ticket.assigned'], folder: t.field_path, note: t.field_text };
+        var labels = { status: bt.vars['ticket.status'], assignee: bt.vars['ticket.assigned'], folder: t.field_path, note: t.field_text, push: t.field_push, deleted: t.field_deleted };
         var value = function (v) { return (c[0] === 'status' && bt.values.status && bt.values.status[v]) || v || '—'; };
         return (labels[c[0]] || c[0]) + ' : ' + value(c[1]) + ' → ' + value(c[2]);
     };

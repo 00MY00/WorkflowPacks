@@ -66,6 +66,16 @@ return [
             'title' => 'Pasta: :folder',
             'help'  => 'Arquiva o e-mail em uma pasta do servidor de e-mail.',
         ],
+        'push'        => [
+            'name'  => 'Notificação push',
+            'title' => 'Notificação push: :to',
+            'help'  => 'Envia uma notificação ao celular ou computador dos agentes (módulo WebPush), respeitando seus horários de silêncio.',
+        ],
+        'delete'      => [
+            'name'  => 'Excluir o ticket',
+            'title' => 'Excluir o ticket',
+            'help'  => 'Move o ticket para a pasta Excluídos, como o botão “Excluir”: pode ser restaurado de lá enquanto a pasta não for esvaziada. Último bloco do ramo.',
+        ],
     ],
     'vars'      => [
         'ticket'  => [
@@ -104,6 +114,11 @@ return [
             'spam'    => 'Spam',
         ],
         'nobody' => 'ninguém',
+        'to'     => [
+            'assignee'   => 'o responsável',
+            'mailbox'    => 'os usuários da caixa',
+            'user'       => 'um usuário',
+        ],
     ],
     'errors'    => [
         'required'     => 'Obrigatório.',
@@ -127,6 +142,8 @@ return [
         'folder'       => 'Nome de pasta inválido.',
         'imap_off'     => 'Opção “Arquivar em uma pasta de e-mail” desativada (Gerenciar › Configurações › Workflow Packs).',
         'imap_nothing' => 'Nenhum e-mail a arquivar (veja o histórico).',
+        'push_off'     => 'Módulo WebPush ausente ou desativado: nenhuma notificação enviada.',
+        'push_nobody'  => 'Ninguém para notificar (ticket não atribuído ou usuário sem acesso à caixa).',
         'examples'     => 'De 1 a :max ids de tickets de exemplo.',
         'percent'      => 'Porcentagem de 0 a 100.',
     ],

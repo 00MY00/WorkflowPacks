@@ -66,6 +66,16 @@ return [
             'title' => 'Ordner: :folder',
             'help'  => 'Legt die E-Mail in einen Ordner des Mailservers ab.',
         ],
+        'push'        => [
+            'name'  => 'Push-Benachrichtigung',
+            'title' => 'Push-Benachrichtigung: :to',
+            'help'  => 'Sendet eine Benachrichtigung auf Telefon oder Computer der Agenten (Modul WebPush) und beachtet ihre Ruhezeiten.',
+        ],
+        'delete'      => [
+            'name'  => 'Ticket löschen',
+            'title' => 'Ticket löschen',
+            'help'  => 'Verschiebt das Ticket in den Ordner Gelöscht, wie die Schaltfläche „Löschen“: dort wiederherstellbar, solange der Ordner nicht geleert wird. Letzter Block des Zweigs.',
+        ],
     ],
     'vars'      => [
         'ticket'  => [
@@ -104,6 +114,11 @@ return [
             'spam'    => 'Spam',
         ],
         'nobody' => 'niemand',
+        'to'     => [
+            'assignee'   => 'die zugewiesene Person',
+            'mailbox'    => 'die Benutzer des Postfachs',
+            'user'       => 'einen Benutzer',
+        ],
     ],
     'errors'    => [
         'required'     => 'Erforderlich.',
@@ -127,6 +142,8 @@ return [
         'folder'       => 'Ungültiger Ordnername.',
         'imap_off'     => 'Option „In einen E-Mail-Ordner ablegen“ ist aus (Verwalten › Einstellungen › Workflow Packs).',
         'imap_nothing' => 'Keine E-Mail zum Ablegen (siehe Verlauf).',
+        'push_off'     => 'Modul WebPush fehlt oder ist nicht aktiv: keine Benachrichtigung gesendet.',
+        'push_nobody'  => 'Niemand zu benachrichtigen (Ticket nicht zugewiesen oder Benutzer ohne Zugriff auf das Postfach).',
         'examples'     => '1 bis :max Beispiel-Ticket-IDs.',
         'percent'      => 'Prozentsatz von 0 bis 100.',
     ],
