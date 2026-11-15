@@ -4,6 +4,21 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [3.4.1] - 2026-11-15
+
+### Modifié
+- Packs de flux : **plus de limite sur le nombre de flux** (elle était de 50). Seule la taille du fichier reste
+  limitée, à 8 Mo au lieu de 512 Ko, pour la mémoire du serveur ; au-delà, un message clair propose de découper le
+  pack.
+- Un identifiant de pack ou de flux mal écrit (majuscules, espaces, accents) ou absent est **corrigé
+  automatiquement** au lieu de refuser le pack ; deux flux avec le même identifiant reçoivent `-2`, `-3`…
+- Messages d'erreur séparés : « aucun flux », « fichier trop gros » (l'ancien message mélangeait plusieurs cas).
+
+### Tests
+- Tests réels du bloc « Notification push » avec le **vrai module WebPush** (branche principale 1.7.0 et release
+  1.2.0) : `tests/integration/webpush/run.sh`. Un faux appareil reçoit la notification réellement chiffrée et
+  signée par WebPush, la déchiffre et vérifie titre, texte et lien ; heures calmes (1.7.0) ; module désactivé.
+
 ## [3.4.0] - 2026-11-15
 
 ### Ajouté

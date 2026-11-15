@@ -14,8 +14,6 @@ use Modules\WorkflowPacks\Services\Engine\FlowPack;
  */
 class FlowPackController extends Controller
 {
-    const MAX_KB = 512;
-
     public function show()
     {
         $this->guardEngine();
@@ -27,7 +25,9 @@ class FlowPackController extends Controller
     {
         $this->guardEngine();
         $json = $this->source($request);
-        $read = (new FlowPack())->read($json, (array) $request->input('params', []));
+        $read = $json === null
+            ? ['ok' => false, 'problems' => [__('workflowpacks::flowpack.too_big', ['max' => FlowPack::MAX_BYTES / 1048576])]]
+            : (new FlowPack())->read($json, (array) $request->input('params', []));
         if (!$read['ok']) {
             return $this->page('flowpack.import', ['bundled' => array_keys(self::bundled()), 'problems' => $read['problems']]);
         }
@@ -79,11 +79,16 @@ class FlowPackController extends Controller
         return $out;
     }
 
+    /** @return string|null the JSON of the pack; null: the file is too big */
     protected function source(Request $request)
     {
         $file = $request->file('pack_file');
         if ($file) {
-            return $file->isValid() && $file->getSize() <= self::MAX_KB * 1024 ? (string) file_get_contents($file->getRealPath()) : '';
+            if (!$file->isValid() || $file->getSize() > FlowPack::MAX_BYTES) {
+                return null;   // too big (or cut by the upload limits of PHP)
+            }
+
+            return (string) file_get_contents($file->getRealPath());
         }
         $bundled = self::bundled();
         if (is_string($request->input('bundled')) && isset($bundled[$request->input('bundled')])) {

@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 3.4.0
+# Résultats des tests — Workflow Packs 3.4.1
 
 Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -13,11 +13,18 @@ Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
 
+## 3.4.1 — packs de flux sans limite de nombre, vrai module WebPush
+
+| Série | Résultat |
+|---|---|
+| Intégration (instance neuve) | `FlowPackTest` : pack de 121 flux accepté, identifiants mal écrits ou absents corrigés, doublons numérotés, message « aucun flux » |
+| Vrai module WebPush (`tests/integration/webpush/run.sh`) | **1.7.0** (branche principale) et **1.2.0** (release) : abonnement d'un faux appareil (clés P-256), flux réel déclenché par l'arrivée d'un ticket, requête reçue signée VAPID et chiffrée aes128gcm, **déchiffrée** comme le ferait le téléphone : titre = sujet non échappé, texte avec variables, lien vers le ticket, compteur ajouté par WebPush ; heures calmes respectées (1.7.0 ; absentes en 1.2.0) ; module désactivé : rien envoyé, sortie « erreur ». Lien vérifié avec une vraie adresse d'instance (`https://…/conversation/…`) ; avec `localhost`, FreeScout considère l'instance comme non installée et le lien contient le nom du script. |
+
 ## 3.4.0 — blocs « Notification push » (module WebPush) et « Supprimer le ticket »
 
 | Série | Résultat |
 |---|---|
-| Intégration (instance neuve) | `PushBlockTest` (bouchon `tests/stubs/WebPush` reproduisant `WebPush::sendToUsers` et `QuietHours::silences` du module) : assigné notifié, variables remplacées en texte brut, titre vide = sujet, lien vers le ticket ; utilisateurs de la boîte notifiés sauf heures calmes et sans accès ; rien d'envoyé en simulation ; sortie « erreur » si non assigné, utilisateur sans accès ou module désactivé ; validation des paramètres. Le module WebPush réel **n'a pas été installé** dans l'intégration. |
+| Intégration (instance neuve) | `PushBlockTest` (bouchon `tests/stubs/WebPush` reproduisant `WebPush::sendToUsers` et `QuietHours::silences` du module) : assigné notifié, variables remplacées en texte brut, titre vide = sujet, lien vers le ticket ; utilisateurs de la boîte notifiés sauf heures calmes et sans accès ; rien d'envoyé en simulation ; sortie « erreur » si non assigné, utilisateur sans accès ou module désactivé ; validation des paramètres. Le vrai module a été testé ensuite (3.4.1). |
 | Intégration (instance neuve) | `TicketDeleteTest` : ticket placé dans le dossier Supprimés (toujours en base, récupérable), une seule fois ; rien en simulation ; aucun bloc ne peut suivre la suppression |
 
 ## 3.3.1 — sans Workflows, les onglets des packs mènent aux flux

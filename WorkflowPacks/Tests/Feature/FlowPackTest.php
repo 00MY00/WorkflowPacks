@@ -74,6 +74,29 @@ class FlowPackTest extends TestCase
         $this->assertStringNotContainsString('mailbox_ids', $response->getContent());
     }
 
+    public function testNoLimitOnTheNumberOfFlowsAndKeysAreRepaired()
+    {
+        $flows = [];
+        for ($i = 1; $i <= 120; $i++) {
+            $flows[] = ['key' => $i % 40 === 0 ? 'Même Clé' : 'flux-'.$i, 'name' => 'Flux '.$i, 'blocks' => [['id' => 'b1', 'type' => 'trigger.new_mail'],
+                ['id' => 'b2', 'type' => 'action.status', 'params' => ['status' => 'closed']]], 'links' => [['from' => 'b1', 'port' => 'next', 'to' => 'b2']]];
+        }
+        $flows[] = ['name' => 'Sans clé', 'blocks' => $flows[0]['blocks'], 'links' => $flows[0]['links']];
+        $read = (new FlowPack())->read(json_encode(['format' => 'workflowpacks-flows', 'version' => 1, 'key' => 'Mon Gros Pack', 'name' => 'Mon gros pack', 'flows' => $flows]));
+        $this->assertTrue($read['ok'], implode(' ', $read['problems']));
+        $this->assertSame('mon-gros-pack', $read['pack']['key']);
+        $this->assertCount(121, $read['flows']);
+        $keys = array_column($read['flows'], 'key');
+        $this->assertSame(['meme-cle', 'meme-cle-2', 'meme-cle-3'], array_values(array_filter($keys, function ($k) {
+            return strpos($k, 'meme-cle') === 0;
+        })));
+        $this->assertSame('sans-cle', end($keys));
+        $this->assertCount(121, array_unique($keys));
+
+        $empty = (new FlowPack())->read(json_encode(['format' => 'workflowpacks-flows', 'version' => 1, 'key' => 'x', 'flows' => []]));
+        $this->assertSame([__('workflowpacks::flowpack.no_flows')], $empty['problems']);
+    }
+
     public function testOnlyAdministratorsAndBadPacksAreRefused()
     {
         $a = $this->mailbox('A');
