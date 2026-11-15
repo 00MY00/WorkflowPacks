@@ -48,6 +48,21 @@ un flux et une règle Workflows qui visent les mêmes tickets agissent **tous le
 | Supprimer le ticket | — ; dossier **Supprimés** de FreeScout (récupérable tant qu'il n'est pas vidé), dernier bloc de la branche | erreur |
 | Notification push | destinataires (l'assigné, les utilisateurs de la boîte ou un utilisateur), titre (vide = sujet), texte ; variables remplacées. Nécessite le module [WebPush](https://github.com/altmenorg/freescout-webpush) | suite / erreur |
 
+### Se déplacer et choisir dans le schéma
+
+| | Souris | Au doigt (téléphone, tablette) |
+|---|---|---|
+| Se déplacer | clic gauche glissé sur le fond (ou bouton du milieu) | un doigt glissé sur le fond |
+| Zoomer | molette | deux doigts (pincer, écarter) |
+| Déplacer un bloc | clic gauche glissé sur le bloc ; s'il fait partie des blocs choisis, ils bougent ensemble | un doigt glissé sur le bloc |
+| Choisir un bloc | clic droit (encore un clic droit pour en ajouter ou en retirer un ; Maj ou Ctrl + clic gauche aussi) | appui long sur le bloc (de même pour en ajouter ou en retirer) |
+| Choisir une zone | clic droit glissé sur le fond : rectangle de sélection (Maj ou Ctrl : ajouté aux blocs déjà choisis) | appui long sur le fond, puis glisser |
+| Ne plus rien choisir | clic sur le fond, ou **Échap** | toucher le fond |
+
+**Suppr** supprime les blocs choisis (le déclencheur reste), **Ctrl+A** les choisit tous. **Agrandir** affiche
+l'éditeur sur toute la page (**Réduire** ou **Échap** pour revenir) ; sur téléphone, la barre tient alors sur une
+ligne qui défile, et le panneau n'apparaît que quand un bloc est choisi.
+
 ## Appliquer un flux aux tickets déjà là
 
 Un flux s'applique d'abord aux **nouveaux** e-mails. Pour l'appliquer aussi aux tickets déjà présents : bouton

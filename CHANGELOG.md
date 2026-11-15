@@ -4,6 +4,22 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [3.6.0] - 2026-11-15
+
+### Ajouté
+- Éditeur des flux, **souris** : clic gauche glissé pour se déplacer (ou déplacer les blocs) ; **clic droit pour
+  choisir** un bloc, encore un clic droit pour en ajouter ou en retirer ; clic droit glissé sur le fond = **rectangle
+  de sélection**. Les blocs choisis se déplacent et se suppriment ensemble ; Ctrl+A choisit tout, Échap annule. Le
+  menu du navigateur n'apparaît plus sur le schéma.
+- **Agrandir / Réduire** : l'éditeur sur toute la page (Échap pour revenir).
+- **Au doigt** (téléphone, tablette) : un doigt pour se déplacer, **deux doigts pour zoomer**, appui long pour choisir
+  un bloc ou tracer un rectangle ; ronds de sortie et « + » plus faciles à toucher. En plein écran sur téléphone, la
+  barre tient sur une ligne qui défile (Réduire et Tout voir en tête) et le panneau n'apparaît que pour un bloc choisi.
+
+### Corrigé
+- Sur téléphone, le dessin du schéma ne couvrait que le haut de son cadre (150 px) : un doigt posé plus bas ne
+  faisait rien, et le zoom à deux doigts ne marchait pas.
+
 ## [3.5.1] - 2026-11-15
 
 ### Corrigé

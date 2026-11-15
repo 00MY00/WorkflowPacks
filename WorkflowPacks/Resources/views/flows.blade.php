@@ -35,6 +35,7 @@
         <span class="wpf-status" role="status" aria-live="polite"></span>
         <span class="wpf-grow"></span>
         <button type="button" class="btn btn-link btn-sm" data-act="fit">{{ __('workflowpacks::flows.zoom_fit') }}</button>
+        <button type="button" class="btn btn-default btn-sm" data-act="fullscreen" aria-pressed="false">{{ __('workflowpacks::flows.enlarge') }}</button>
         <button type="button" class="btn btn-link btn-sm text-danger" data-act="delete-flow">{{ __('workflowpacks::flows.delete_flow') }}</button>
     </div>
     <div class="wpf-main">
