@@ -16,7 +16,7 @@ return [
     'no_flows'       => 'Dieses Paket enthält keinen Ablauf.',
     'too_big'    => 'Datei zu groß (höchstens :max MB): teilen Sie das Paket in mehrere Dateien auf.',
     'flows_count'    => ':count Ablauf/Abläufe',
-    'mailboxes'      => 'Postfächer der Abläufe',
+    'mailboxes'      => 'Postfächer, für die die Abläufe gelten',
     'mailboxes_help' => 'Keines angekreuzt: alle Postfächer. Später in jedem Ablauf änderbar.',
     'required'       => 'erforderlich',
     'recheck'        => 'Mit diesen Werten erneut prüfen',

@@ -16,7 +16,7 @@ return [
     'no_flows'       => 'Ce pack ne contient aucun flux.',
     'too_big'    => 'Fichier trop gros (:max Mo au plus) : découpez le pack en plusieurs fichiers.',
     'flows_count'    => ':count flux',
-    'mailboxes'      => 'Boîtes des flux',
+    'mailboxes'      => 'Boîtes où les flux s’appliquent',
     'mailboxes_help' => 'Aucune cochée : toutes les boîtes. Modifiable ensuite dans chaque flux.',
     'required'       => 'obligatoire',
     'recheck'        => 'Revérifier avec ces valeurs',

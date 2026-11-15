@@ -16,7 +16,7 @@ return [
     'no_flows'       => 'Este paquete no contiene ningún flujo.',
     'too_big'    => 'Archivo demasiado grande (:max MB como máximo): divida el paquete en varios archivos.',
     'flows_count'    => ':count flujo(s)',
-    'mailboxes'      => 'Buzones de los flujos',
+    'mailboxes'      => 'Buzones a los que se aplican los flujos',
     'mailboxes_help' => 'Ninguno marcado: todos los buzones. Se puede cambiar luego en cada flujo.',
     'required'       => 'obligatorio',
     'recheck'        => 'Volver a comprobar con estos valores',

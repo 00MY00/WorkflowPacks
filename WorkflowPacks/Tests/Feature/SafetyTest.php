@@ -135,6 +135,11 @@ class SafetyTest extends TestCase
             $this->actingAs($admin)->get(route('workflowpacks.graph'))->assertRedirect(route('workflowpacks.flows'));
             $index = $this->actingAs($admin)->get(route('workflowpacks.index'))->assertStatus(200);
             $this->assertStringNotContainsString(e(__('workflowpacks::messages.wf_missing_title')), $index->getContent());
+            // the Workflows remarks are hidden: no empty yellow box left in their place
+            foreach (['workflowpacks.index', 'workflowpacks.flows', 'workflowpacks.history'] as $page) {
+                $html = $this->actingAs($admin)->get(route($page))->getContent();
+                $this->assertSame(0, preg_match('#class="alert alert-warning">\s*</div>#', $html), $page);
+            }
             // the others (no access to the flows): the notice explains why
             $import = $this->actingAs($this->user([$this->mailbox('A')], false, true))->get(route('workflowpacks.import'))->assertStatus(200);
             $this->seeIn($import, e(__('workflowpacks::messages.wf_missing_title')));

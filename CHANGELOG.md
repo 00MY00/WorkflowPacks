@@ -4,6 +4,18 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [3.5.1] - 2026-11-15
+
+### Corrigé
+- Une **ligne jaune vide** apparaissait en haut des pages quand le module Workflows est absent et le moteur interne
+  activé : les remarques sur Workflows étaient masquées, mais pas leur cadre. Le cadre n'est plus affiché s'il n'a
+  rien à montrer.
+
+### Modifié
+- Import d'un pack de flux : les boîtes se choisissent avec des **cases à cocher** (et non plus une liste à
+  sélection multiple, peu pratique au doigt) ; titre clarifié « Boîtes où les flux s'appliquent ». Aucune cochée =
+  toutes les boîtes, y compris celles créées plus tard.
+
 ## [3.5.0] - 2026-11-15
 
 ### Ajouté
