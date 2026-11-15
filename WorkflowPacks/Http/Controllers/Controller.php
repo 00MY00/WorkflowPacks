@@ -24,9 +24,18 @@ abstract class Controller extends \App\Http\Controllers\Controller
         ]);
     }
 
+    /** Pages of the packs of rules and their equivalent for the flows (Workflows missing, engine on, administrators). */
+    const FLOW_PAGES = ['workflowpacks.import' => 'workflowpacks.flowpack', 'workflowpacks.export' => 'workflowpacks.flowpack.export',
+        'workflowpacks.graph' => 'workflowpacks.flows'];
+
     /** Page shown instead of a form when Workflows is missing or not compatible. */
     protected function blockedPage()
     {
+        $flowPage = self::FLOW_PAGES[(string) \Route::currentRouteName()] ?? null;
+        if ($flowPage && Checker::workflowsOptional() && auth()->user()->isAdmin()) {
+            return redirect()->route($flowPage);
+        }
+
         return $this->page('blocked', ['reasons' => Checker::blockingReasons()]);
     }
 }

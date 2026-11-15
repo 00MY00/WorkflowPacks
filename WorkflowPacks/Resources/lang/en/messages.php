@@ -265,6 +265,7 @@ return [
     'wf_missing_help'          => 'The official Workflows module is not installed or not active. Packs (import, export, diagram of the Workflows rules) need it; the rest of Workflow Packs does not.',
     'wf_missing_engine_on'     => 'The internal flow engine is on: build your automations in Flows or with the AI assistant, without Workflows.',
     'wf_missing_engine_off'    => 'To use Workflow Packs without Workflows, switch on the internal flow engine: Manage › Settings › Workflow Packs.',
+    'wf_missing_packs'         => 'The Workflows module is not active: the rules of these packs no longer apply. You can remove them and use packs of flows instead.',
     'more_info'                => 'More info',
     'pack_rules_count'         => 'Rules of the pack (:count)',
     'mailboxes_count'          => ':count mailbox(es)',

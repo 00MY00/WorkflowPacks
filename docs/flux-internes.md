@@ -12,7 +12,9 @@ qui l'avait désactivé explicitement le garde désactivé.
 
 **Sans le module Workflows** : activez ce moteur. Le module fonctionne alors entièrement (Flux, Assistant IA, agents
 connectés) ; seules les pages des packs de règles Workflows (import, export, schéma des règles) indiquent qu'elles ont
-besoin de Workflows. Le diagnostic (et UpdateGuard) le note comme une simple remarque.
+besoin de Workflows. Pour les administrateurs, les onglets **Importer**, **Exporter** et **Schéma** mènent alors à
+l'import et à l'export des packs de flux et à l'éditeur des flux, sans message. Le diagnostic (et UpdateGuard) le
+note comme une simple remarque.
 
 Tant qu'il est désactivé, rien ne change : les règles Workflows fonctionnent comme avant, aucune tâche planifiée
 du moteur ne tourne, et les événements de FreeScout ne coûtent rien. Les deux peuvent fonctionner en même temps :

@@ -20,7 +20,10 @@
 @endsection
 
 @section('wp_content')
-    @if (\Modules\WorkflowPacks\Services\Compat\Checker::packsBlocked())
+    @if (\Modules\WorkflowPacks\Services\Compat\Checker::workflowsOptional() && Auth::user()->isAdmin())
+        {{-- the module works without Workflows: only a line about the packs of rules still listed --}}
+        @if ($packs)<p class="wp-muted">{!! $wp_ui::icon('info') !!} {{ __('workflowpacks::messages.wf_missing_packs') }}</p>@endif
+    @elseif (\Modules\WorkflowPacks\Services\Compat\Checker::packsBlocked())
         @include('workflowpacks::partials.blocked_inline')
     @endif
 

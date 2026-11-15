@@ -261,6 +261,7 @@ return [
     'wf_missing_help'          => 'Das offizielle Modul Workflows ist nicht installiert oder nicht aktiv. Die Pakete (Import, Export, Diagramm der Workflows-Regeln) brauchen es; der Rest von Workflow Packs nicht.',
     'wf_missing_engine_on'     => 'Die interne Ablauf-Engine ist eingeschaltet: erstellen Sie Ihre Automatisierungen unter Abläufe oder mit dem KI-Assistenten, ohne Workflows.',
     'wf_missing_engine_off'    => 'Um Workflow Packs ohne Workflows zu nutzen, schalten Sie die interne Ablauf-Engine ein: Verwalten › Einstellungen › Workflow Packs.',
+    'wf_missing_packs'         => 'Das Workflows-Modul ist nicht aktiv: die Regeln dieser Pakete gelten nicht mehr. Sie können sie entfernen und stattdessen Ablaufpakete verwenden.',
     'more_info'                => 'Mehr erfahren',
     'pack_rules_count'         => 'Regeln des Pakets (:count)',
     'mailboxes_count'          => ':count Postfach/Postfächer',
