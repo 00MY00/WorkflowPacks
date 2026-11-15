@@ -64,7 +64,15 @@ class FlowPackTest extends TestCase
         \Option::set(Engine::OPTION, true);
         $pack = new FlowPack();
         $pack->import($pack->read($this->shipped()), [], $admin);
-        $response = $this->actingAs($admin)->get(route('workflowpacks.flowpack.export', ['name' => 'Copie']));
+        // the page first: the flows to include, all ticked; no file yet
+        $page = $this->actingAs($admin)->get(route('workflowpacks.flowpack.export'))->assertStatus(200);
+        $this->assertNull($page->headers->get('Content-Disposition'));
+        $first = \Modules\WorkflowPacks\Entities\Flow::orderBy('id')->first();
+        $this->seeIn($page, 'name="ids[]" value="'.$first->id.'" checked');
+        // only the flows ticked
+        $one = $pack->read($this->actingAs($admin)->get(route('workflowpacks.flowpack.export', ['download' => 1, 'ids' => [$first->id]]))->getContent());
+        $this->assertCount(1, $one['flows']);
+        $response = $this->actingAs($admin)->get(route('workflowpacks.flowpack.export', ['name' => 'Copie', 'download' => 1]));
         $response->assertStatus(200);
         $this->assertStringContainsString('attachment; filename="copie.json"', $response->headers->get('Content-Disposition'));
         $read = $pack->read($response->getContent());

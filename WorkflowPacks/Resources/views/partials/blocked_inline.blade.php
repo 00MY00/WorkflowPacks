@@ -11,7 +11,7 @@
         @if ($wp_engine)
             <p>{{ __('workflowpacks::messages.wf_missing_engine_on') }}</p>
             @if (Auth::user()->isAdmin())
-                <a class="btn btn-primary" href="{{ route('workflowpacks.flows') }}">{{ __('workflowpacks::flows.tab') }}</a>
+                <a class="btn btn-primary" href="{{ route('workflowpacks.flows') }}">{{ __('workflowpacks::graph.title') }}</a>
                 <a class="btn btn-default" href="{{ route('workflowpacks.ai') }}">{{ __('workflowpacks::ai.tab') }}</a>
             @endif
         @else
