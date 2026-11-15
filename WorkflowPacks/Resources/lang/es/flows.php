@@ -63,6 +63,8 @@ return [
     'unit_h'          => 'hora(s)',
     'unit_d'          => 'día(s)',
     'published_ok'    => 'Publicado.',
+    'reapply_button'  => 'Tickets existentes',
+    'reapply_ask'     => 'Publicado. ¿Aplicar también esta versión a los tickets ya presentes (en curso o existentes)?',
     'trigger_fixed'   => 'El disparador es el punto de partida: no se puede eliminar.',
     'select_hint'     => 'Haga clic en un bloque para ver sus ajustes.',
     'zoom_fit'        => 'Ver todo',

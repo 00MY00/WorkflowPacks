@@ -63,6 +63,8 @@ return [
     'unit_h'          => 'hora(s)',
     'unit_d'          => 'dia(s)',
     'published_ok'    => 'Publicado.',
+    'reapply_button'  => 'Tickets existentes',
+    'reapply_ask'     => 'Publicado. Aplicar também esta versão aos tickets que já existem (em andamento ou existentes)?',
     'trigger_fixed'   => 'O gatilho é o ponto de partida: não pode ser excluído.',
     'select_hint'     => 'Clique em um bloco para ver suas configurações.',
     'zoom_fit'        => 'Ver tudo',

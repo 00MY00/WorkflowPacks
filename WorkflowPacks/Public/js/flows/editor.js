@@ -327,6 +327,7 @@
             if (name === 'fit') { self.fit(); }
             if (name === 'add') { self.menu(act, null, null); }
             if (name === 'delete-flow') { self.destroy(); }
+            if (name === 'reapply' && self.flow) { self.flush().then(function () { window.location.href = self.url('reapply'); }); }
         });
         document.addEventListener('keydown', function (e) {
             if ((e.key === 'Delete' || e.key === 'Backspace') && self.sel && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) {
@@ -672,6 +673,8 @@
                 self.flow.dirty = false;
                 self.state();
                 self.status(self.t.published_ok + ' ' + fill(self.t.published, { n: res.data.version }), 'ok');
+                // the new version for new tickets; the ones already there only when asked
+                if (window.confirm(self.t.reapply_ask)) { window.location.href = self.url('reapply'); }
             } else {
                 self.flow.problems = res.data.problems || [];
                 self.select(null);

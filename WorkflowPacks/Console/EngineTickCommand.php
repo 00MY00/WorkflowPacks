@@ -23,6 +23,8 @@ class EngineTickCommand extends Command
             return 0;
         }
         $this->line((new Scheduler())->tick().' ticket(s) woken.');
+        // flows applied to the tickets already there: one batch of each due job
+        $this->line((new \Modules\WorkflowPacks\Services\Engine\Reapply())->tick().' ticket(s) of re-applied flows.');
 
         return 0;
     }

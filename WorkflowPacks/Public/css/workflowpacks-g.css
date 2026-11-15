@@ -214,3 +214,15 @@
 .wp-ai-group > summary { gap: 8px; font-size: 14px; font-weight: 600; }
 .wp-ai-tickets { list-style: none; padding: 0 0 0 4px; margin: 6px 0 0; font-size: 13px; }
 .wp-ai-tickets li { padding: 3px 0; }
+
+/* flow applied to the tickets already there (reapply.blade.php) */
+.wp-reapply-job { display: grid; gap: 8px; padding: 12px; margin-bottom: 16px; border: 1px solid var(--g-tile); border-radius: 12px; }
+.wp-progress { height: 8px; border-radius: 4px; background: var(--g-soft); overflow: hidden; }
+.wp-progress > span { display: block; height: 100%; background: var(--g-primary); transition: width .3s; }
+.wp-reapply-scopes { border: 0; padding: 0; margin: 0 0 12px; display: grid; gap: 8px; }
+.wp-reapply-scopes legend { font-size: 14px; font-weight: 600; border: 0; margin-bottom: 4px; }
+.wp-reapply-scope { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border: 1px solid var(--g-tile); border-radius: 12px; font-weight: 400; cursor: pointer; }
+.wp-reapply-scope input { margin-top: 3px; flex: none; }
+.wp-reapply-scope small { display: block; }
+.wp-reapply-checks { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.wp-reapply-checks label { font-weight: 400; margin: 0; }

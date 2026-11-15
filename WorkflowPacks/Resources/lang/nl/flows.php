@@ -63,6 +63,8 @@ return [
     'unit_h'          => 'uur',
     'unit_d'          => 'dag(en)',
     'published_ok'    => 'Gepubliceerd.',
+    'reapply_button'  => 'Bestaande tickets',
+    'reapply_ask'     => 'Gepubliceerd. Deze versie ook toepassen op de tickets die er al zijn (lopend of bestaand)?',
     'trigger_fixed'   => 'De trigger is het startpunt: hij kan niet verwijderd worden.',
     'select_hint'     => 'Klik op een blok om zijn instellingen te zien.',
     'zoom_fit'        => 'Alles tonen',

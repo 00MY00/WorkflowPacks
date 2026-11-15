@@ -63,6 +63,8 @@ return [
     'unit_h'          => 'ora/e',
     'unit_d'          => 'giorno/i',
     'published_ok'    => 'Pubblicato.',
+    'reapply_button'  => 'Ticket esistenti',
+    'reapply_ask'     => 'Pubblicato. Applicare questa versione anche ai ticket già presenti (in corso o esistenti)?',
     'trigger_fixed'   => 'L’attivatore è il punto di partenza: non si può eliminare.',
     'select_hint'     => 'Fai clic su un blocco per vederne le impostazioni.',
     'zoom_fit'        => 'Vedi tutto',

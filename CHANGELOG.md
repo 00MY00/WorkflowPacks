@@ -4,6 +4,20 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [3.5.0] - 2026-11-15
+
+### Ajouté
+- **Appliquer un flux aux tickets déjà là** (moteur interne) : bouton **Tickets existants** dans l'éditeur, et
+  question posée après chaque publication.
+  - **Tickets existants** : ceux des boîtes du flux sur une période (7 à 365 jours ou tous) et avec les statuts
+    choisis passent dans le flux, comme si leur e-mail venait d'arriver (« une fois par ticket » respecté).
+  - **Tickets en cours** : ceux qui attendent dans une ancienne version continuent dans la nouvelle, au même bloc.
+  - Estimation (nombre, durée) et **simulation à blanc** sur 20 tickets avant de lancer ; confirmation obligatoire
+    si le flux supprime des tickets ou envoie des notifications push.
+  - Traitement **par lots échelonnés** (10 à 500 tickets toutes les 1 à 60 min) par la tâche planifiée, avec
+    progression, pause, reprise et arrêt ; un seul traitement à la fois par flux ; entrées dans l'Historique.
+  - Nouvelle table `workflowpacks_flow_reapply` (migration automatique).
+
 ## [3.4.1] - 2026-11-15
 
 ### Modifié
