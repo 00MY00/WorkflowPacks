@@ -66,6 +66,16 @@ return [
             'title' => 'Cartella: :folder',
             'help'  => 'Archivia l’e-mail in una cartella del server di posta.',
         ],
+        'push'        => [
+            'name'  => 'Notifica push',
+            'title' => 'Notifica push: :to',
+            'help'  => 'Invia una notifica al telefono o al computer degli agenti (modulo WebPush), rispettando le loro ore di silenzio.',
+        ],
+        'delete'      => [
+            'name'  => 'Elimina il ticket',
+            'title' => 'Elimina il ticket',
+            'help'  => 'Sposta il ticket nella cartella Eliminati, come il pulsante «Elimina»: recuperabile da lì finché la cartella non viene svuotata. Ultimo blocco del ramo.',
+        ],
     ],
     'vars'      => [
         'ticket'  => [
@@ -104,6 +114,11 @@ return [
             'spam'    => 'Spam',
         ],
         'nobody' => 'nessuno',
+        'to'     => [
+            'assignee'   => 'l’assegnatario',
+            'mailbox'    => 'gli utenti della casella',
+            'user'       => 'un utente',
+        ],
     ],
     'errors'    => [
         'required'     => 'Obbligatorio.',
@@ -127,6 +142,8 @@ return [
         'folder'       => 'Nome di cartella non valido.',
         'imap_off'     => 'Opzione «Archivia in una cartella e-mail» disattivata (Gestisci › Impostazioni › Workflow Packs).',
         'imap_nothing' => 'Nessuna e-mail da archiviare (vedi la cronologia).',
+        'push_off'     => 'Modulo WebPush assente o disattivato: nessuna notifica inviata.',
+        'push_nobody'  => 'Nessuno da notificare (ticket non assegnato o utente senza accesso alla casella).',
         'examples'     => 'Da 1 a :max id di ticket di esempio.',
         'percent'      => 'Percentuale da 0 a 100.',
     ],

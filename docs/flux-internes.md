@@ -45,6 +45,20 @@ un flux et une règle Workflows qui visent les mêmes tickets agissent **tous le
 | Assigner | à un utilisateur ou à personne | suite / erreur |
 | Note interne | texte ; `{{ticket.subject}}` est remplacé | suite / erreur |
 | Classer dans un dossier | dossier du serveur de messagerie (option « Classer dans un dossier e-mail ») | suite / erreur |
+| Supprimer le ticket | — ; dossier **Supprimés** de FreeScout (récupérable tant qu'il n'est pas vidé), dernier bloc de la branche | erreur |
+| Notification push | destinataires (l'assigné, les utilisateurs de la boîte ou un utilisateur), titre (vide = sujet), texte ; variables remplacées. Nécessite le module [WebPush](https://github.com/altmenorg/freescout-webpush) | suite / erreur |
+
+## Notifications push (module WebPush)
+
+Le bloc **Notification push** confie la notification au module **WebPush** (FreeScout installé comme application
+sur téléphone et ordinateur). Workflow Packs n'envoie rien lui-même : WebPush chiffre et livre la notification aux
+appareils des agents, et ses **heures calmes** sont respectées. Un clic sur la notification ouvre le ticket.
+
+- Seuls les utilisateurs actifs qui ont accès à la boîte du ticket sont notifiés.
+- Sortie **erreur** si le module WebPush est absent ou désactivé, ou s'il n'y a personne à notifier (ticket non
+  assigné, utilisateur sans accès).
+- En simulation et en test à blanc, rien n'est envoyé : le parcours indique seulement qui serait notifié.
+- Exemple : *Nouvel e-mail › Si le sujet contient « urgent » › Notification push aux utilisateurs de la boîte*.
 
 ## Packs de flux (import, export)
 

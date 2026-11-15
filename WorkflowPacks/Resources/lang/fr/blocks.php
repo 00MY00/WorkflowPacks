@@ -66,6 +66,16 @@ return [
             'title' => 'Dossier : :folder',
             'help'  => 'Classe l’e-mail dans un dossier du serveur de messagerie.',
         ],
+        'push'        => [
+            'name'  => 'Notification push',
+            'title' => 'Notification push : :to',
+            'help'  => 'Envoie une notification sur le téléphone ou l’ordinateur des agents (module WebPush), en respectant leurs heures calmes.',
+        ],
+        'delete'      => [
+            'name'  => 'Supprimer le ticket',
+            'title' => 'Supprimer le ticket',
+            'help'  => 'Place le ticket dans le dossier Supprimés, comme le bouton « Supprimer » : récupérable depuis ce dossier tant qu’il n’est pas vidé. Dernier bloc de la branche.',
+        ],
     ],
     'vars'      => [
         'ticket'  => [
@@ -104,6 +114,11 @@ return [
             'spam'    => 'Indésirable',
         ],
         'nobody' => 'personne',
+        'to'     => [
+            'assignee'   => 'l’assigné',
+            'mailbox'    => 'les utilisateurs de la boîte',
+            'user'       => 'un utilisateur',
+        ],
     ],
     'errors'    => [
         'required'     => 'À remplir.',
@@ -127,6 +142,8 @@ return [
         'folder'       => 'Nom de dossier invalide.',
         'imap_off'     => 'Option « Classer dans un dossier e-mail » désactivée (Gérer › Paramètres › Workflow Packs).',
         'imap_nothing' => 'Aucun e-mail à classer (voir l’historique).',
+        'push_off'     => 'Module WebPush absent ou désactivé : aucune notification envoyée.',
+        'push_nobody'  => 'Personne à notifier (ticket non assigné, ou utilisateur sans accès à la boîte).',
         'examples'     => 'De 1 à :max n° de tickets d’exemple.',
         'percent'      => 'Pourcentage de 0 à 100.',
     ],

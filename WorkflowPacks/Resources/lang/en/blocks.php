@@ -66,6 +66,16 @@ return [
             'title' => 'Folder: :folder',
             'help'  => 'Files the e-mail into a folder of the mail server.',
         ],
+        'push'        => [
+            'name'  => 'Push notification',
+            'title' => 'Push notification: :to',
+            'help'  => 'Sends a notification to the agents’ phones or computers (WebPush module), respecting their quiet hours.',
+        ],
+        'delete'      => [
+            'name'  => 'Delete the ticket',
+            'title' => 'Delete the ticket',
+            'help'  => 'Moves the ticket to the Deleted folder, as the “Delete” button does: it can be restored from there until the folder is emptied. Last block of the branch.',
+        ],
     ],
     'vars'      => [
         'ticket'  => [
@@ -104,6 +114,11 @@ return [
             'spam'    => 'Spam',
         ],
         'nobody' => 'nobody',
+        'to'     => [
+            'assignee'   => 'the assignee',
+            'mailbox'    => 'the users of the mailbox',
+            'user'       => 'one user',
+        ],
     ],
     'errors'    => [
         'required'     => 'Required.',
@@ -127,6 +142,8 @@ return [
         'folder'       => 'Invalid folder name.',
         'imap_off'     => 'Option “File into an e-mail folder” is off (Manage › Settings › Workflow Packs).',
         'imap_nothing' => 'No e-mail to file (see the history).',
+        'push_off'     => 'WebPush module missing or not active: no notification sent.',
+        'push_nobody'  => 'Nobody to notify (ticket not assigned, or user without access to the mailbox).',
         'examples'     => '1 to :max example ticket ids.',
         'percent'      => 'Percentage from 0 to 100.',
     ],

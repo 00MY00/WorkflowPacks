@@ -19,6 +19,8 @@ class BlockRegistry
         \Modules\WorkflowPacks\Blocks\Actions\Assign::class,
         \Modules\WorkflowPacks\Blocks\Actions\Note::class,
         \Modules\WorkflowPacks\Blocks\Actions\ImapFolder::class,
+        \Modules\WorkflowPacks\Blocks\Actions\Push::class,
+        \Modules\WorkflowPacks\Blocks\Actions\Delete::class,
     ];
 
     const FAMILIES = ['trigger', 'condition', 'wait', 'action', 'util'];

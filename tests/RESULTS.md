@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 3.3.1
+# Résultats des tests — Workflow Packs 3.4.0
 
 Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,13 @@ Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 3.4.0 — blocs « Notification push » (module WebPush) et « Supprimer le ticket »
+
+| Série | Résultat |
+|---|---|
+| Intégration (instance neuve) | `PushBlockTest` (bouchon `tests/stubs/WebPush` reproduisant `WebPush::sendToUsers` et `QuietHours::silences` du module) : assigné notifié, variables remplacées en texte brut, titre vide = sujet, lien vers le ticket ; utilisateurs de la boîte notifiés sauf heures calmes et sans accès ; rien d'envoyé en simulation ; sortie « erreur » si non assigné, utilisateur sans accès ou module désactivé ; validation des paramètres. Le module WebPush réel **n'a pas été installé** dans l'intégration. |
+| Intégration (instance neuve) | `TicketDeleteTest` : ticket placé dans le dossier Supprimés (toujours en base, récupérable), une seule fois ; rien en simulation ; aucun bloc ne peut suivre la suppression |
 
 ## 3.3.1 — sans Workflows, les onglets des packs mènent aux flux
 

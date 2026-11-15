@@ -64,6 +64,7 @@ else
 fi
 docker cp "$ROOT/WorkflowPacks" "$APP:/var/www/html/Modules/WorkflowPacks"
 docker cp "$ROOT/tests/stubs/Workflows" "$APP:/var/www/html/Modules/Workflows"
+docker cp "$ROOT/tests/stubs/WebPush" "$APP:/var/www/html/Modules/WebPush"   # classes only (no module.json): the push block
 docker exec "$APP" sh -c 'rm -rf /var/www/html/.git && chown -R www-data:www-data /var/www/html'
 
 for _ in $(seq 1 60); do
