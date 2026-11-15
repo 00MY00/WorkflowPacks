@@ -16,7 +16,7 @@ return [
     'no_flows'       => 'Dit pakket bevat geen stroom.',
     'too_big'    => 'Bestand te groot (hoogstens :max MB): splits het pakket in meerdere bestanden.',
     'flows_count'    => ':count stroom/stromen',
-    'mailboxes'      => 'Mailboxen van de stromen',
+    'mailboxes'      => 'Mailboxen waarvoor de stromen gelden',
     'mailboxes_help' => 'Geen aangevinkt: alle mailboxen. Later per stroom aan te passen.',
     'required'       => 'verplicht',
     'recheck'        => 'Opnieuw controleren met deze waarden',

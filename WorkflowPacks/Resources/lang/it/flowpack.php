@@ -16,7 +16,7 @@ return [
     'no_flows'       => 'Questo pacchetto non contiene alcun flusso.',
     'too_big'    => 'File troppo grande (al massimo :max MB): dividete il pacchetto in più file.',
     'flows_count'    => ':count flusso/i',
-    'mailboxes'      => 'Caselle dei flussi',
+    'mailboxes'      => 'Caselle a cui si applicano i flussi',
     'mailboxes_help' => 'Nessuna selezionata: tutte le caselle. Modificabile poi in ogni flusso.',
     'required'       => 'obbligatorio',
     'recheck'        => 'Riverifica con questi valori',

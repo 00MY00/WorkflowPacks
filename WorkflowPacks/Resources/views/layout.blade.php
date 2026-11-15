@@ -35,11 +35,18 @@
         </ul>
         </div>
     </div>
-    @if (!empty($compat) && $compat['state'] === 'warning' && Auth::user()->isAdmin())
+    @php
+        // warnings to show: the Workflows ones only when Workflows is there (otherwise an empty yellow box)
+        $wp_warnings = (!empty($compat) && $compat['state'] === 'warning' && Auth::user()->isAdmin())
+            ? array_filter($compat['checks'], function ($check) {
+                return $check['state'] === 'warning'
+                    && (strpos($check['code'], 'WP-WF-') !== 0 || \Modules\WorkflowPacks\Services\Compat\Checker::workflowsReady());
+            })
+            : [];
+    @endphp
+    @if ($wp_warnings)
         <div class="alert alert-warning">
-            @foreach ($compat['checks'] as $check)
-                @if ($check['state'] === 'warning' && (strpos($check['code'], 'WP-WF-') !== 0 || \Modules\WorkflowPacks\Services\Compat\Checker::workflowsReady()))<div>[{{ $check['code'] }}] {{ $check['label'] }} — {{ $check['detail'] }}</div>@endif
-            @endforeach
+            @foreach ($wp_warnings as $check)<div>[{{ $check['code'] }}] {{ $check['label'] }} — {{ $check['detail'] }}</div>@endforeach
         </div>
     @endif
     @yield('wp_content')

@@ -16,7 +16,7 @@ return [
     'no_flows'       => 'This pack contains no flow.',
     'too_big'    => 'File too big (:max MB at most): split the pack into several files.',
     'flows_count'    => ':count flow(s)',
-    'mailboxes'      => 'Mailboxes of the flows',
+    'mailboxes'      => 'Mailboxes the flows apply to',
     'mailboxes_help' => 'None ticked: every mailbox. Can be changed later in each flow.',
     'required'       => 'required',
     'recheck'        => 'Check again with these values',

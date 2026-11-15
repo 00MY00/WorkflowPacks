@@ -30,11 +30,12 @@
                 </div>
             @endif
             <div class="wp-ai-grid">
-                <label class="wp-ai-field"><span>{{ __('workflowpacks::flowpack.mailboxes') }}</span>
-                    <select name="mailbox_ids[]" class="form-control" multiple size="4">
-                        @foreach ($mailboxes as $m)<option value="{{ $m->id }}" @if (in_array((int) $m->id, $chosen, true)) selected @endif>{{ $m->name }}</option>@endforeach
-                    </select>
-                    <small class="wp-muted">{{ __('workflowpacks::flowpack.mailboxes_help') }}</small></label>
+                <div class="wp-ai-field"><span>{{ __('workflowpacks::flowpack.mailboxes') }}</span>
+                    {{-- check boxes, not a multiple select: nothing ticked (all mailboxes) is easy, also with a finger --}}
+                    <div class="wp-box-checks">
+                        @foreach ($mailboxes as $m)<label><input type="checkbox" name="mailbox_ids[]" value="{{ $m->id }}" @if (in_array((int) $m->id, $chosen, true)) checked @endif> {{ $m->name }}</label>@endforeach
+                    </div>
+                    <small class="wp-muted">{{ __('workflowpacks::flowpack.mailboxes_help') }}</small></div>
                 @foreach ($read['params'] as $p)
                     <label class="wp-ai-field"><span>{{ $p['label'] }} @if ($p['required'])<span class="label label-danger">{{ __('workflowpacks::flowpack.required') }}</span>@endif</span>
                         <input type="text" name="params[{{ $p['key'] }}]" class="form-control" value="{{ $values[$p['key']] ?? '' }}" @if ($p['required']) required @endif>
