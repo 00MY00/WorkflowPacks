@@ -135,6 +135,14 @@ class SafetyTest extends TestCase
             $this->actingAs($admin)->get(route('workflowpacks.graph'))->assertRedirect(route('workflowpacks.flows'));
             $index = $this->actingAs($admin)->get(route('workflowpacks.index'))->assertStatus(200);
             $this->assertStringNotContainsString(e(__('workflowpacks::messages.wf_missing_title')), $index->getContent());
+            // the menu leads straight to the right pages: one "Diagram" tab (the editor of the flows), no "Flows" tab,
+            // import and export of the packs of flows; no link to the diagram of the rules without Workflows
+            $html = $this->actingAs($admin)->get(route('workflowpacks.flows'))->getContent();
+            $this->assertStringContainsString('href="'.route('workflowpacks.flows').'">'.e(__('workflowpacks::graph.title')).'</a>', $html);
+            $this->assertStringNotContainsString('>'.e(__('workflowpacks::flows.tab')).'</a>', $html);
+            $this->assertStringContainsString('href="'.route('workflowpacks.flowpack').'">'.e(__('workflowpacks::messages.import')).'</a>', $html);
+            $this->assertStringContainsString('href="'.route('workflowpacks.flowpack.export').'">'.e(__('workflowpacks::messages.export')).'</a>', $html);
+            $this->assertStringNotContainsString('href="'.route('workflowpacks.graph').'"', $html);
             // the Workflows remarks are hidden: no empty yellow box left in their place
             foreach (['workflowpacks.index', 'workflowpacks.flows', 'workflowpacks.history'] as $page) {
                 $html = $this->actingAs($admin)->get(route($page))->getContent();
@@ -151,6 +159,21 @@ class SafetyTest extends TestCase
             \App\Module::clearModulesCache();
             Checker::forget();
         }
+    }
+
+    public function testWithWorkflowsTheDiagramTabOpensTheFlowsAndTheRulesStayReachable()
+    {
+        $admin = $this->user([], true);
+        \Option::set(\Modules\WorkflowPacks\Services\Engine\Engine::OPTION, true);
+        Checker::forget();
+        $html = $this->actingAs($admin)->get(route('workflowpacks.flows'))->assertStatus(200)->getContent();
+        $this->assertStringContainsString('href="'.route('workflowpacks.flows').'">'.e(__('workflowpacks::graph.title')).'</a>', $html);
+        $this->assertStringContainsString('href="'.route('workflowpacks.import').'">'.e(__('workflowpacks::messages.import')).'</a>', $html);
+        $this->assertStringContainsString('href="'.route('workflowpacks.graph').'">'.e(__('workflowpacks::flows.rules_graph')).'</a>', $html);
+        $this->actingAs($admin)->get(route('workflowpacks.graph'))->assertStatus(200);
+        // not an administrator: the diagram of the rules, as before
+        $agent = $this->user([$this->mailbox('A')], false, true);
+        $this->seeIn($this->actingAs($agent)->get(route('workflowpacks.index')), 'href="'.route('workflowpacks.graph').'">'.e(__('workflowpacks::graph.title')).'</a>');
     }
 
     public function testWithoutWorkflowsAPackIsRemovedFromWorkflowPacksAfterABackup()

@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 3.6.0
+# Résultats des tests — Workflow Packs 3.6.1
 
 Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,13 @@ Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 3.6.1 — un seul onglet « Schéma », onglets directs
+
+| Série | Résultat |
+|---|---|
+| Intégration (instance neuve) | 139 tests OK ; `SafetyTest` : sans Workflows, onglet Schéma = éditeur des flux, pas d'onglet Flux, Importer / Exporter vers les packs de flux, pas de lien vers le schéma des règles ; avec Workflows, Importer = règles, lien « Schéma des règles Workflows » dans l'éditeur, agents sur le schéma des règles ; `FlowPackTest` : page d'export (flux cochés, pas de fichier), export des seuls flux cochés |
+| Navigateur PC 1440 px, tablette 820 px, téléphone 390 px, Workflows désactivé | chaque onglet ouvre sa page sans redirection et s'affiche actif ; Schéma = éditeur ; pas de défilement horizontal ; aucune erreur JavaScript |
 
 ## 3.6.0 — éditeur des flux : souris, plein écran, au doigt
 

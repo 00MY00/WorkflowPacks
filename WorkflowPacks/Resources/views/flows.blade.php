@@ -14,8 +14,13 @@
 @section('wp_content')
 <div class="wpf-app" id="wpf-app">
     <p class="wpf-intro">{{ __('workflowpacks::flows.intro') }}
-        <a class="btn btn-default btn-sm" href="{{ route('workflowpacks.flowpack') }}">{{ __('workflowpacks::flowpack.button_import') }}</a>
-        <a class="btn btn-default btn-sm" href="{{ route('workflowpacks.flowpack.export') }}">{{ __('workflowpacks::flowpack.button_export') }}</a></p>
+        {{-- Workflows there: the Import / Export tabs are for its rules, so the packs of flows and the diagram of the
+             rules (to be removed later) are reached from here; without it, the tabs already lead to the packs of flows --}}
+        @if (\Modules\WorkflowPacks\Services\Compat\Checker::workflowsReady())
+            <a class="btn btn-default btn-sm" href="{{ route('workflowpacks.flowpack') }}">{{ __('workflowpacks::flowpack.button_import') }}</a>
+            <a class="btn btn-default btn-sm" href="{{ route('workflowpacks.flowpack.export') }}">{{ __('workflowpacks::flowpack.button_export') }}</a>
+            <a class="btn btn-link btn-sm" href="{{ route('workflowpacks.graph') }}">{{ __('workflowpacks::flows.rules_graph') }}</a>
+        @endif</p>
     <div class="wpf-toolbar" role="toolbar">
         <select class="form-control input-sm wpf-flow-select" aria-label="{{ __('workflowpacks::flows.tab') }}"></select>
         <button type="button" class="btn btn-default btn-sm" data-act="new">+ {{ __('workflowpacks::flows.new_flow') }}</button>

@@ -4,6 +4,19 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [3.6.1] - 2026-11-15
+
+### Modifié
+- **Un seul onglet « Schéma »** : avec le moteur interne (administrateurs), il ouvre directement l'éditeur des flux ;
+  l'onglet « Flux » disparaît. Sans Workflows, l'ancien « Schéma » des règles ne pouvait pas fonctionner et renvoyait
+  vers « Flux », comme « Importer un pack » et « Exporter » : chaque onglet mène maintenant **directement** à sa page
+  (import et export des packs de flux), sans redirection.
+- Avec Workflows installé, les onglets Importer / Exporter restent ceux des règles ; l'import et l'export des packs
+  de flux et le **schéma des règles Workflows** sont accessibles par des boutons en haut de l'éditeur.
+- **Exporter** les flux ouvre une page : flux à inclure (tous cochés), nom du pack, puis **Télécharger** (au lieu d'un
+  téléchargement immédiat).
+- Les agents (non administrateurs) gardent le schéma des règles, comme avant.
+
 ## [3.6.0] - 2026-11-15
 
 ### Ajouté

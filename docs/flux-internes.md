@@ -7,7 +7,8 @@ ce qui s'exécute. Conception complète : [moteur-autonome.md](moteur-autonome.m
 ## Activer
 
 **Gérer › Paramètres › Workflow Packs › Moteur de flux interne** : interrupteur, **activé par défaut**
-depuis 3.3 (sans flux actif, il ne fait rien). L'onglet **Flux** apparaît pour les administrateurs. Une installation
+depuis 3.3 (sans flux actif, il ne fait rien). Pour les administrateurs, l'onglet **Schéma** ouvre alors l'éditeur des flux (depuis 3.6.1 ; le schéma
+des règles Workflows reste accessible par un lien de l'éditeur quand Workflows est installé). Une installation
 qui l'avait désactivé explicitement le garde désactivé.
 
 **Sans le module Workflows** : activez ce moteur. Le module fonctionne alors entièrement (Flux, Assistant IA, agents
@@ -100,13 +101,13 @@ appareils des agents, et ses **heures calmes** sont respectées. Un clic sur la 
 
 ## Packs de flux (import, export)
 
-**Flux › Importer un pack de flux** : un pack fourni avec le module, un fichier `.json` (8 Mo au plus, sans limite de nombre de flux) ou le JSON
+**Importer un pack** (onglet, sans Workflows ; avec Workflows : bouton **Importer un pack de flux** en haut du Schéma) : un pack fourni avec le module, un fichier `.json` (8 Mo au plus, sans limite de nombre de flux) ou le JSON
 collé. L'aperçu montre chaque flux (créé ou brouillon mis à jour), ses problèmes éventuels, les **paramètres** du
 pack à renseigner et les boîtes concernées (aucune cochée = toutes). Les flux sont enregistrés **en brouillon,
 désactivés** : vérifiez-les, publiez-les puis activez-les un par un. Réimporter le même pack met à jour les
 brouillons ; la version publiée continue de tourner jusqu'à la prochaine publication.
 
-**Exporter les flux** télécharge tous les flux comme pack (blocs et liens, sans les boîtes).
+**Exporter** (onglet sans Workflows, ou bouton **Exporter les flux** du Schéma) : choisissez les flux (tous cochés) et le nom du pack, puis **Télécharger** (blocs et liens, sans les boîtes).
 
 Format :
 
@@ -129,7 +130,7 @@ Format :
 **Passer d'un pack de règles Workflows au pack de flux** (exemple : « Tri des e-mails (multilingue) ») :
 
 1. Packs › **Retirer le pack** (une sauvegarde est proposée).
-2. Flux › **Importer un pack de flux** › *tri-emails-multilingue-flux.json* ; renseignez l'expéditeur de newsletter.
+2. **Importer un pack** › *tri-emails-multilingue-flux.json* ; renseignez l'expéditeur de newsletter.
 3. Ouvrez chaque flux, vérifiez-le, **Publier**, puis activez-le.
 
 Le transfert par e-mail des alertes de sécurité n'existe pas encore comme bloc : la note ajoutée le rappelle.

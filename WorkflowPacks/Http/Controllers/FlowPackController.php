@@ -55,10 +55,13 @@ class FlowPackController extends Controller
         return redirect()->route('workflowpacks.flows')->with('flash_success_floating', __('workflowpacks::flowpack.done', $count));
     }
 
-    /** Every flow (or the ones given) as a pack to download. */
+    /** The page (flows to include, name of the pack), then with "download": those flows as a pack to download. */
     public function export(Request $request)
     {
         $this->guardEngine();
+        if (!$request->input('download')) {
+            return $this->page('flowpack.export', ['flows' => Flow::orderBy('name')->get(['id', 'name', 'active', 'version_id'])]);
+        }
         $ids = array_map('intval', (array) $request->input('ids', []));
         $flows = $ids ? Flow::whereIn('id', $ids)->orderBy('id')->get() : Flow::orderBy('id')->get();
         $name = trim((string) $request->input('name')) ?: __('workflowpacks::flowpack.export_name');

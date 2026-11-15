@@ -18,14 +18,19 @@
         </div>
         @hasSection('wp_actions')<div class="wp-header-actions">@yield('wp_actions')</div>@endif
         <div class="wp-header-row">
+        @php
+            // one "Diagram" tab: the editor of the flows when the engine is on (administrators), else the diagram of
+            // the Workflows rules; without Workflows, import and export lead straight to the packs of flows
+            $wp_flows = Auth::user()->isAdmin() && \Modules\WorkflowPacks\Services\Engine\Engine::enabled();
+            $wp_direct = $wp_flows && !\Modules\WorkflowPacks\Services\Compat\Checker::workflowsReady();
+        @endphp
         <ul class="nav nav-tabs wp-tabs">
             <li class="{{ Route::is('workflowpacks.index') ? 'active' : '' }}"><a href="{{ route('workflowpacks.index') }}">{{ __('workflowpacks::messages.menu') }}</a></li>
-            <li class="{{ Route::is('workflowpacks.import*') || Route::is('workflowpacks.reimport') || Route::is('workflowpacks.flowpack') || Route::is('workflowpacks.flowpack.preview') ? 'active' : '' }}"><a href="{{ route('workflowpacks.import') }}">{{ __('workflowpacks::messages.import') }}</a></li>
-            <li class="{{ Route::is('workflowpacks.graph') ? 'active' : '' }}"><a href="{{ route('workflowpacks.graph') }}">{{ __('workflowpacks::graph.title') }}</a></li>
-            <li class="{{ Route::is('workflowpacks.export*') ? 'active' : '' }}"><a href="{{ route('workflowpacks.export') }}">{{ __('workflowpacks::messages.export') }}</a></li>
+            <li class="{{ Route::is('workflowpacks.import*') || Route::is('workflowpacks.reimport') || Route::is('workflowpacks.flowpack') || Route::is('workflowpacks.flowpack.preview') ? 'active' : '' }}"><a href="{{ route($wp_direct ? 'workflowpacks.flowpack' : 'workflowpacks.import') }}">{{ __('workflowpacks::messages.import') }}</a></li>
+            <li class="{{ Route::is('workflowpacks.graph') || Route::is('workflowpacks.flows') || Route::is('workflowpacks.reapply*') ? 'active' : '' }}"><a href="{{ route($wp_flows ? 'workflowpacks.flows' : 'workflowpacks.graph') }}">{{ __('workflowpacks::graph.title') }}</a></li>
+            <li class="{{ Route::is('workflowpacks.export*') || Route::is('workflowpacks.flowpack.export') ? 'active' : '' }}"><a href="{{ route($wp_direct ? 'workflowpacks.flowpack.export' : 'workflowpacks.export') }}">{{ __('workflowpacks::messages.export') }}</a></li>
             <li class="{{ Route::is('workflowpacks.history*') ? 'active' : '' }}"><a href="{{ route('workflowpacks.history') }}">{{ __('workflowpacks::messages.history') }}</a></li>
-            @if (Auth::user()->isAdmin() && \Modules\WorkflowPacks\Services\Engine\Engine::enabled())
-                <li class="{{ Route::is('workflowpacks.flows') ? 'active' : '' }}"><a href="{{ route('workflowpacks.flows') }}">{{ __('workflowpacks::flows.tab') }}</a></li>
+            @if ($wp_flows)
                 <li class="{{ Route::is('workflowpacks.ai*') ? 'active' : '' }}"><a href="{{ route('workflowpacks.ai') }}">{{ __('workflowpacks::ai.tab') }}</a></li>
             @endif
             @if (Auth::user()->isAdmin())
