@@ -69,7 +69,36 @@ class PacksController extends Controller
             $packs[] = ['pack' => $pack, 'source' => $source, 'rules' => $rules];
         }
 
-        return $this->page('index', ['packs' => $packs, 'filter' => $filter, 'mailboxes' => $mailboxes]);
+        return $this->page('index', ['packs' => $packs, 'filter' => $filter, 'mailboxes' => $mailboxes, 'flowPacks' => $this->flowPacks($user)]);
+    }
+
+    /**
+     * Flows of the internal engine, by pack they came from (flows made here last): administrators, engine on.
+     *
+     * @return array [['key' => string ('' = made here), 'name' => string, 'flows' => [Flow…]]]
+     */
+    protected function flowPacks($user)
+    {
+        if (!$user->isAdmin() || !\Modules\WorkflowPacks\Services\Engine\Engine::enabled()) {
+            return [];
+        }
+        $groups = [];
+        foreach (\Modules\WorkflowPacks\Entities\Flow::with('version')->orderBy('name')->get() as $flow) {
+            $key = (string) $flow->pack_key;
+            $groups[$key] = $groups[$key] ?? ['key' => $key, 'name' => '', 'flows' => []];
+            // the name given by the pack (flows imported before 3.6.2: made from its key)
+            if ($key !== '' && $groups[$key]['name'] === '') {
+                $groups[$key]['name'] = (string) $flow->pack_name !== '' ? $flow->pack_name : ucfirst(str_replace(['-', '_'], ' ', $key));
+            }
+            $groups[$key]['flows'][] = $flow;
+        }
+        ksort($groups);
+        if (isset($groups[''])) {
+            $groups[] = $groups[''];
+            unset($groups['']);
+        }
+
+        return array_values($groups);
     }
 
     /** Enables / disables the rules ticked in the list (or the one whose switch was clicked), then back to the list. */

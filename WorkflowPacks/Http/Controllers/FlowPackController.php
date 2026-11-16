@@ -60,7 +60,9 @@ class FlowPackController extends Controller
     {
         $this->guardEngine();
         if (!$request->input('download')) {
-            return $this->page('flowpack.export', ['flows' => Flow::orderBy('name')->get(['id', 'name', 'active', 'version_id'])]);
+            // ids given (the "Export this pack" of the home page): only those ticked at first
+            return $this->page('flowpack.export', ['flows' => Flow::orderBy('name')->get(['id', 'name', 'active', 'version_id']),
+                'chosen' => array_map('intval', (array) $request->input('ids', []))]);
         }
         $ids = array_map('intval', (array) $request->input('ids', []));
         $flows = $ids ? Flow::whereIn('id', $ids)->orderBy('id')->get() : Flow::orderBy('id')->get();

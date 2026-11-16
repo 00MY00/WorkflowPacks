@@ -4,6 +4,22 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [3.6.2] - 2026-11-16
+
+### Corrigé
+- **Chargement d'un pack de flux sans doublon** : un flux déjà présent est reconnu par son pack d'origine, sinon par
+  son nom (pack réexporté sous un autre nom, flux créé ici puis exporté, réponse de l'assistant IA collée deux fois).
+  Identique : inchangé ; différent : brouillon mis à jour, **boîtes conservées** (elles étaient remplacées) ;
+  manquant : créé. L'aperçu et le message final indiquent créés / mis à jour / inchangés.
+- L'**accueil** affichait « Aucun pack importé » alors que des flux venaient d'un pack : il liste maintenant les flux
+  par pack d'origine (sous le nom du pack, puis « Flux créés ici »), en premier, chacun s'ouvrant dans le Schéma, avec
+  **Exporter ce pack** (page d'export avec ces flux cochés).
+
+### Modifié
+- Assistant IA : libellés clarifiés, « Votre demande à l'IA (le « prompt », ajouté au dossier) » et « Coller la
+  réponse de l'IA » (ce que l'IA répond au dossier de l'étape 1).
+- Nouvelle colonne `pack_name` (migration automatique).
+
 ## [3.6.1] - 2026-11-15
 
 ### Modifié

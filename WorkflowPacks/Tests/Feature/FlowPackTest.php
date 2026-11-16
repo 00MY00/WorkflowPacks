@@ -55,7 +55,60 @@ class FlowPackTest extends TestCase
         $this->assertNull($flows->first()->version_id, 'nothing published');
 
         $this->actingAs($admin)->post(route('workflowpacks.flowpack.confirm'), $post)->assertRedirect(route('workflowpacks.flows'));
-        $this->assertSame(8, Flow::where('pack_key', 'tri-emails-multilingue-flux')->count(), 'updated, not doubled');
+        $this->assertSame(8, Flow::where('pack_key', 'tri-emails-multilingue-flux')->count(), 'not doubled');
+    }
+
+    public function testAPackLoadedAgainCreatesOnlyTheMissingFlowsWithoutDuplicates()
+    {
+        $a = $this->mailbox('A');
+        $b = $this->mailbox('B');
+        $admin = $this->user([$a, $b], true);
+        \Option::set(Engine::OPTION, true);
+        $pack = new FlowPack();
+        $values = ['newsletter_sender' => 'news@example.com'];
+        $this->assertSame(['created' => 8, 'updated' => 0, 'same' => 0], $pack->import($pack->read($this->shipped(), $values), [$a->id], $admin));
+
+        // the same pack again: everything already here, identical, nothing touched
+        $read = $pack->read($this->shipped(), $values);
+        $this->assertSame([true], array_values(array_unique(array_column($read['flows'], 'same'))));
+        $this->assertSame(['created' => 0, 'updated' => 0, 'same' => 8], $pack->import($read, [$b->id], $admin));
+        $this->assertSame(8, Flow::count());
+
+        // one flow deleted, one changed here (its mailboxes too): the missing one comes back, the changed one gets
+        // the draft of the pack again but keeps its mailboxes
+        $flows = Flow::orderBy('id')->get();
+        $flows[0]->delete();
+        $changed = $flows[1];
+        $draft = $changed->draft;
+        $draft['blocks'][] = ['id' => 'extra', 'type' => 'action.status', 'params' => ['status' => 'closed'], 'x' => 0, 'y' => 0];
+        $changed->update(['draft' => $draft, 'mailbox_ids' => [$b->id]]);
+        $this->assertSame(['created' => 1, 'updated' => 1, 'same' => 6], $pack->import($pack->read($this->shipped(), $values), [$a->id], $admin));
+        $this->assertSame(8, Flow::count());
+        $changed = $changed->fresh();
+        $this->assertSame([$b->id], $changed->mailbox_ids, 'mailboxes kept');
+        $this->assertNotContains('extra', array_column($changed->draft['blocks'], 'id'));
+
+        // the flows exported under another name, then loaded again: found by their name, no copy
+        $export = FlowPack::export(Flow::orderBy('id')->get(), 'Autre nom');
+        $this->assertSame(['created' => 0, 'updated' => 0, 'same' => 8], $pack->import($pack->read(json_encode($export)), [], $admin));
+        $this->assertSame(8, Flow::count());
+
+        // a flow made here (no pack), then the same flow pasted (the AI assistant): found by its name, and from
+        // then on it belongs to that pack
+        $mine = Flow::create(['name' => 'Mon flux', 'mailbox_ids' => [], 'active' => false, 'once' => true, 'created_by' => $admin->id,
+            'draft' => ['blocks' => [['id' => 'b1', 'type' => 'trigger.new_mail', 'x' => 40, 'y' => 40]], 'links' => []]]);
+        $one = json_encode(['name' => 'mon flux ', 'blocks' => [['id' => 'b1', 'type' => 'trigger.new_mail']], 'links' => []]);
+        $this->assertSame(['created' => 0, 'updated' => 0, 'same' => 1], $pack->import($pack->read($one), [], $admin));
+        $this->assertSame('mon-flux', $mine->fresh()->pack_key);
+        $this->assertSame(9, Flow::count());
+
+        // the home page lists the flows by the pack they came from, each one opening in the diagram
+        $home = $this->actingAs($admin)->get(route('workflowpacks.index'))->assertStatus(200);
+        $this->assertStringNotContainsString(e(__('workflowpacks::messages.no_packs')), $home->getContent());
+        $this->seeIn($home, 'tri-emails-multilingue-flux');
+        $this->seeIn($home, e($read['pack']['name']));
+        $this->seeIn($home, route('workflowpacks.flows', ['flow' => $mine->id]));
+        $this->seeIn($home, e(__('workflowpacks::flowpack.home_export')));
     }
 
     public function testExportedFlowsAreImportedAgain()
@@ -68,7 +121,7 @@ class FlowPackTest extends TestCase
         $page = $this->actingAs($admin)->get(route('workflowpacks.flowpack.export'))->assertStatus(200);
         $this->assertNull($page->headers->get('Content-Disposition'));
         $first = \Modules\WorkflowPacks\Entities\Flow::orderBy('id')->first();
-        $this->seeIn($page, 'name="ids[]" value="'.$first->id.'" checked');
+        $this->assertSame(1, preg_match('#name="ids\[\]" value="'.$first->id.'"\s+checked#', $page->getContent()));
         // only the flows ticked
         $one = $pack->read($this->actingAs($admin)->get(route('workflowpacks.flowpack.export', ['download' => 1, 'ids' => [$first->id]]))->getContent());
         $this->assertCount(1, $one['flows']);
