@@ -37,4 +37,12 @@ return [
     'import'         => 'Import',
     'done'           => 'Pack imported: :created flow(s) created, :updated updated, :same already here and unchanged. New flows are drafts, switched off.',
     'history'        => ':created flow(s) created, :updated updated, :same unchanged',
+    'after_title'     => 'After the import',
+    'after_publish'   => 'Publish the flows (the ones without problems)',
+    'after_activate'  => 'Switch them on too: new e-mails go through them',
+    'after_apply'     => 'Apply them to the tickets already there',
+    'after_help'      => 'Switching on or applying publishes too. Applied to the tickets already there: in batches, in the background, “once per ticket” kept; follow, pause and stop it from “Existing tickets” of each flow.',
+    'after_confirm_risky' => 'I confirm: apply these flows to the tickets already there',
+    'after_done'      => ':published published, :activated switched on, :jobs run(s) on the existing tickets started.',
+    'after_refused'   => 'Not published (problems to fix): :list',
 ];

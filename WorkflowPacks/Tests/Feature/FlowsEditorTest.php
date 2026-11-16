@@ -142,4 +142,36 @@ class FlowsEditorTest extends TestCase
         $none = $this->actingAs($admin)->postJson(route('workflowpacks.flows.destroy_many'), ['ids' => []]);
         $this->assertSame(0, json_decode($none->getContent(), true)['deleted']);
     }
+
+    public function testTickedFlowsPublishedSwitchedOnAndOffTogether()
+    {
+        $a = $this->mailbox('A');
+        $admin = $this->user([$a], true);
+        \Option::set(Engine::OPTION, true);
+        $make = function ($name, $draft) use ($admin) {
+            return Flow::create(['name' => $name, 'mailbox_ids' => [], 'active' => false, 'once' => true, 'created_by' => $admin->id, 'draft' => $draft]);
+        };
+        $one = $make('Un', $this->draft());
+        $two = $make('Deux', $this->draft());
+        $broken = $make('Cassé', ['blocks' => [['id' => 'b1', 'type' => 'trigger.new_mail'], ['id' => 'b2', 'type' => 'condition.ticket', 'params' => []]],
+            'links' => [['from' => 'b1', 'port' => 'next', 'to' => 'b2']]]);
+        $ids = [$one->id, $two->id, $broken->id];
+        $post = function ($action, $ids) use ($admin) {
+            return json_decode($this->actingAs($admin)->postJson(route('workflowpacks.flows.bulk'), ['action' => $action, 'ids' => $ids])->getContent(), true);
+        };
+
+        $this->actingAs($this->user([$a], false, true))->postJson(route('workflowpacks.flows.bulk'), ['action' => 'publish', 'ids' => $ids])->assertStatus(403);
+        // switched on before being published: refused
+        $this->assertSame(['ok' => true, 'done' => 0, 'refused' => ['Cassé', 'Deux', 'Un']], $post('activate', $ids));
+        $this->assertSame(['ok' => true, 'done' => 2, 'refused' => ['Cassé']], $post('publish', $ids), 'the flow with problems is named');
+        $this->assertNotNull($one->fresh()->version_id);
+        $this->assertNull($broken->fresh()->version_id);
+        $this->assertSame(['ok' => true, 'done' => 2, 'refused' => ['Cassé']], $post('activate', $ids));
+        $this->assertTrue($one->fresh()->active && $two->fresh()->active);
+        $this->assertFalse($broken->fresh()->active);
+        $this->assertSame(['ok' => true, 'done' => 1, 'refused' => []], $post('deactivate', [$one->id]));
+        $this->assertFalse($one->fresh()->active);
+        $this->assertTrue($two->fresh()->active, 'not ticked: unchanged');
+        $this->actingAs($admin)->postJson(route('workflowpacks.flows.bulk'), ['action' => 'drop', 'ids' => $ids])->assertStatus(422);
+    }
 }

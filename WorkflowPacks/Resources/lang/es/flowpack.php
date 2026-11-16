@@ -37,4 +37,12 @@ return [
     'import'         => 'Importar',
     'done'           => 'Paquete importado: :created flujo(s) creado(s), :updated actualizado(s), :same ya presente(s) y sin cambios. Los flujos nuevos son borradores, desactivados.',
     'history'        => ':created creado(s), :updated actualizado(s), :same sin cambios',
+    'after_title'     => 'Después de la importación',
+    'after_publish'   => 'Publicar los flujos (los que no tienen problemas)',
+    'after_activate'  => 'Activarlos también: los nuevos e-mails pasan por ellos',
+    'after_apply'     => 'Aplicarlos a los tickets ya presentes',
+    'after_help'      => 'Activar o aplicar también publica. Aplicado a los tickets ya presentes: por lotes, en segundo plano, «una vez por ticket» respetado; seguimiento, pausa y parada desde «Tickets existentes» de cada flujo.',
+    'after_confirm_risky' => 'Confirmo: aplicar estos flujos a los tickets ya presentes',
+    'after_done'      => ':published publicado(s), :activated activado(s), :jobs aplicación(es) a los tickets existentes iniciada(s).',
+    'after_refused'   => 'No publicados (problemas por corregir): :list',
 ];

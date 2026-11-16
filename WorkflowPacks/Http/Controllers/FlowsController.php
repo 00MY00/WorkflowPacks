@@ -43,6 +43,7 @@ class FlowsController extends Controller
                     'toggle'   => route('workflowpacks.flows.toggle', ['id' => '__ID__']),
                     'destroy'  => route('workflowpacks.flows.destroy', ['id' => '__ID__']),
                     'destroy_many' => route('workflowpacks.flows.destroy_many'),
+                    'bulk'     => route('workflowpacks.flows.bulk'),
                     'simulate' => route('workflowpacks.flows.simulate', ['id' => '__ID__']),
                     'path'     => route('workflowpacks.flows.path', ['id' => '__ID__']),
                     'reapply'  => route('workflowpacks.reapply', ['id' => '__ID__']),
@@ -143,6 +144,35 @@ class FlowsController extends Controller
         self::remove(Flow::findOrFail((int) $id));
 
         return response()->json(['ok' => true]);
+    }
+
+    /**
+     * The flows ticked in the list of the editor ("All" included), handled together: published, switched on (only the
+     * published ones) or off. The ones refused are named (problems to fix, never published).
+     */
+    public function bulk(Request $request)
+    {
+        $this->guardEngine();
+        $action = (string) $request->input('action');
+        if (!in_array($action, ['publish', 'activate', 'deactivate'], true)) {
+            return response()->json(['ok' => false], 422);
+        }
+        $ids = array_values(array_unique(array_filter(array_map('intval', (array) $request->input('ids', [])))));
+        $done = 0;
+        $refused = [];
+        foreach (($ids ? Flow::whereIn('id', $ids)->orderBy('name')->get() : []) as $flow) {
+            if ($action === 'publish') {
+                $result = (new Publisher($this->registry))->publish($flow, auth()->user());
+                $result['ok'] ? $done++ : $refused[] = $flow->name;
+            } elseif ($action === 'activate' && !$flow->version_id) {
+                $refused[] = $flow->name;
+            } else {
+                $flow->update(['active' => $action === 'activate']);
+                $done++;
+            }
+        }
+
+        return response()->json(['ok' => true, 'done' => $done, 'refused' => $refused]);
     }
 
     /** The flows ticked in the list of the editor ("All" included), deleted together. */

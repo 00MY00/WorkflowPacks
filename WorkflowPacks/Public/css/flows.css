@@ -2,35 +2,44 @@
 .wpf-app { --f-border: var(--fd-border, #dfe3e8); --f-card: var(--fd-surface, #fff); --f-text: var(--fd-text, #1f2937);
   --f-muted: var(--fd-muted, #6b7280); --f-brand: var(--fd-brand, #4f46e5); --f-bg: var(--fd-bg, #f6f7fb);
   --c-trigger: #2563eb; --c-condition: #d97706; --c-wait: #0891b2; --c-action: #059669; --c-util: #6b7280; --c-err: #dc2626; }
-.wpf-intro, .wpf-help, .wpf-muted { color: var(--f-muted); font-size: 13px; }
-.wpf-toolbar { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; padding: 8px 10px; background: var(--f-card);
+.wpf-muted, .wpf-help { color: var(--f-muted); font-size: 13px; }
+.wpf-help > summary { cursor: pointer; font-weight: 600; color: var(--f-text); margin-top: 14px; }
+/* one line of actions */
+.wpf-toolbar { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; padding: 6px 10px; background: var(--f-card);
   border: 1px solid var(--f-border); border-radius: 12px; margin-bottom: 8px; }
-.wpf-toolbar .form-control { width: auto; display: inline-block; }
-.wpf-name { width: 220px !important; }
-.wpf-sep { width: 1px; height: 22px; background: var(--f-border); }
 .wpf-grow { flex: 1; }
-.wpf-check { font-weight: normal; margin: 0; display: inline-flex; gap: 4px; align-items: center; }
+.wpf-check { font-weight: normal; margin: 4px 0; display: inline-flex; gap: 6px; align-items: center; }
 .wpf-status { font-size: 12px; color: var(--f-muted); }
 .wpf-status.is-warn { color: #b45309; }
 .wpf-status.is-error { color: var(--c-err); }
 .wpf-status.is-ok { color: #059669; }
-.wpf-boxes { position: relative; display: inline-block; }
-.wpf-boxes > summary { list-style: none; }
-.wpf-boxes > summary::-webkit-details-marker { display: none; }
-.wpf-boxes-list { position: absolute; z-index: 30; top: 100%; left: 0; min-width: 220px; max-height: 300px; overflow: auto; padding: 8px;
-  background: var(--f-card); border: 1px solid var(--f-border); border-radius: 10px; box-shadow: 0 12px 32px rgba(15, 23, 42, .15);
-  display: flex; flex-direction: column; gap: 4px; }
-.wpf-main { display: flex; gap: 8px; height: calc(100vh - 290px); min-height: 420px; }
-.wpf-stage { position: relative; flex: 1; background: var(--f-bg); border: 1px solid var(--f-border); border-radius: 12px; overflow: hidden;
+/* the grid takes the room: the height of the window, sides on the left and the right */
+.wpf-main { position: relative; display: flex; gap: 8px; height: calc(100vh - 215px); min-height: 480px; }
+.wpf-stage { position: relative; flex: 1; min-width: 0; background: var(--f-bg); border: 1px solid var(--f-border); border-radius: 12px; overflow: hidden;
   background-image: radial-gradient(rgba(100, 116, 139, .18) 1px, transparent 1px); background-size: 20px 20px; }
 .wpf-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; user-select: none; cursor: grab; }
 .wpf-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--f-muted); margin: 0; pointer-events: none; }
 .wpf-empty[hidden] { display: none; }
-/* list of every flow: open one, tick several to delete them */
-.wpf-list { width: 250px; flex: none; overflow: auto; background: var(--f-card); border: 1px solid var(--f-border); border-radius: 12px; }
-.wpf-list-head { list-style: none; cursor: pointer; padding: 10px 12px 4px; }
-.wpf-list-head::-webkit-details-marker { display: none; }
-.wpf-list-current { display: none; color: var(--f-muted); font-weight: normal; }
+/* sides that fold; folded, a button on the grid opens them again */
+.wpf-side { flex: none; overflow: auto; background: var(--f-card); border: 1px solid var(--f-border); border-radius: 12px; }
+.wpf-list { width: 230px; }
+.wpf-side-panel { width: 280px; padding: 0 12px 12px; }
+.wpf-side-head { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; gap: 6px; padding: 10px 12px 6px; background: var(--f-card); }
+.wpf-side-panel .wpf-side-head { margin: 0 -12px; }
+.wpf-side-close { margin-left: auto; border: 1px solid var(--f-border); background: var(--f-card); border-radius: 8px; width: 30px; height: 30px;
+  font-size: 18px; line-height: 1; color: var(--f-muted); }
+.wpf-side-close:hover { color: var(--f-brand); border-color: var(--f-brand); }
+.wpf-app.list-off .wpf-list, .wpf-app.panel-off .wpf-side-panel { display: none; }
+.wpf-edge { position: absolute; top: 10px; z-index: 2; border: 1px solid var(--f-border); background: var(--f-card); border-radius: 10px; padding: 6px 10px;
+  font-size: 13px; font-weight: 600; color: var(--f-text); box-shadow: 0 4px 12px rgba(15, 23, 42, .08); }
+.wpf-edge:hover { border-color: var(--f-brand); color: var(--f-brand); }
+.wpf-edge-list { left: 10px; }
+.wpf-edge-panel { right: 10px; }
+.wpf-edge.is-attn { border-color: var(--f-brand); color: #fff; background: var(--f-brand); }
+.wpf-app:not(.list-off) .wpf-edge-list, .wpf-app:not(.panel-off) .wpf-edge-panel { display: none; }
+/* list of every flow: which ones the grid shows, open one, tick several to delete them */
+.wpf-list-show { display: block; margin: 0 12px 6px; font-weight: normal; }
+.wpf-list-show > span { display: block; font-size: 12px; color: var(--f-muted); margin-bottom: 3px; }
 .wpf-list-tools { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: space-between; padding: 4px 12px 8px;
   border-bottom: 1px solid var(--f-border); }
 .wpf-list-items { list-style: none; margin: 0; padding: 6px; }
@@ -43,8 +52,17 @@
 .wpf-list-item.is-current .wpf-list-name { color: var(--f-brand); }
 .wpf-list-note { display: block; font-size: 11px; color: var(--f-muted); }
 .wpf-list-del:not(:disabled) { color: var(--c-err); }
-.wpf-panel { width: 320px; flex: none; overflow: auto; padding: 12px; background: var(--f-card); border: 1px solid var(--f-border); border-radius: 12px; }
-.wpf-panel h4 { margin: 0 0 6px; font-size: 15px; }
+.wpf-list-tools [hidden] { display: none; }
+/* settings of the open flow, then of the chosen block */
+.wpf-settings { padding-bottom: 10px; margin-bottom: 8px; border-bottom: 1px solid var(--f-border); }
+.wpf-settings > summary { cursor: pointer; font-weight: 600; color: var(--f-brand); overflow-wrap: anywhere; padding: 2px 0 4px; }
+.wpf-settings .wpf-inline { margin-top: 8px; }
+.wpf-boxes { display: block; margin: 6px 0; }
+.wpf-boxes > summary { list-style: none; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.wpf-boxes > summary::-webkit-details-marker { display: none; }
+.wpf-boxes-list { max-height: 220px; overflow: auto; padding: 8px; margin-top: 4px; border: 1px solid var(--f-border); border-radius: 10px;
+  display: flex; flex-direction: column; gap: 4px; }
+.wpf-panel h4 { margin: 8px 0 6px; font-size: 15px; }
 .wpf-field { display: block; margin: 10px 0; font-weight: normal; }
 .wpf-field > span { display: block; font-size: 12px; color: var(--f-muted); margin-bottom: 3px; }
 .wpf-inline { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
@@ -53,6 +71,13 @@
   padding: 6px 8px; margin: 4px 0; font-size: 12px; }
 .wpf-problem-text { color: #b45309; font-size: 12px; margin: 6px 0; }
 .wpf-del { margin-top: 12px; }
+/* the flows on the grid: each in its frame, its name above; the open one in colour, the others faded (a click opens them) */
+.wpf-frame { fill: rgba(255, 255, 255, .55); stroke: var(--f-border); stroke-width: 1.2; vector-effect: non-scaling-stroke; }
+.wpf-frame.is-open { fill: rgba(79, 70, 229, .04); stroke: var(--f-brand); stroke-width: 1.6; }
+.wpf-frame-name { font-size: 15px; font-weight: 700; fill: var(--f-text); }
+.wpf-other { opacity: .5; cursor: pointer; }
+.wpf-other:hover { opacity: .85; }
+.wpf-other .wpf-block { cursor: pointer; }
 /* blocks */
 .wpf-card { fill: var(--f-card); stroke: var(--f-border); stroke-width: 1.2; filter: drop-shadow(0 2px 4px rgba(15, 23, 42, .08)); }
 .wpf-block { cursor: pointer; --c: var(--c-util); }
@@ -104,31 +129,38 @@
 .wpf-events li.lvl-3 { color: var(--c-err); }
 .wpf-at { display: inline-block; min-width: 54px; color: var(--f-muted); margin-right: 4px; }
 .wpf-change { color: #047857; }
-/* "Enlarge": the editor over the whole page */
+/* "Enlarge": the editor over the whole page; narrower sides */
 .wpf-app.is-full { position: fixed; inset: 0; z-index: 1035; display: flex; flex-direction: column; margin: 0; padding: 8px; background: var(--fd-bg, #fff); }
-.wpf-app.is-full .wpf-intro, .wpf-app.is-full .wpf-help { display: none; }
 .wpf-app.is-full .wpf-main { flex: 1 1 auto; height: auto; min-height: 0; }
+.wpf-app.is-full .wpf-list { width: 210px; }
+.wpf-app.is-full .wpf-side-panel { width: 260px; }
 body.wpf-full-open { overflow: hidden; }
+/* tablets: narrower sides */
+@media (max-width: 1199px) {
+  .wpf-list { width: 210px; }
+  .wpf-side-panel { width: 260px; }
+}
+/* tablets held upright and phones: the grid takes the whole width; the sides open over it (folded at first) */
+@media (max-width: 1023px) {
+  .wpf-main { display: block; height: calc(100vh - 230px); min-height: 380px; }
+  .wpf-stage { height: 100%; }
+  .wpf-side { position: absolute; top: 0; bottom: 0; z-index: 5; width: min(86%, 340px) !important; box-shadow: 0 16px 40px rgba(15, 23, 42, .25); }
+  .wpf-list { left: 0; }
+  .wpf-side-panel { right: 0; }
+  .wpf-app.is-full .wpf-main { height: auto; }
+}
+/* phones: one line of actions that scrolls sideways, the grid first and big */
 @media (max-width: 767px) {
-  .wpf-app.is-full { padding: 4px; height: 100vh; height: 100dvh; }
-  .wpf-app.is-full .wpf-toolbar { flex-wrap: nowrap; overflow-x: auto; padding: 4px 6px; margin-bottom: 4px; gap: 6px; scrollbar-width: none; }
-  .wpf-app.is-full .wpf-toolbar::-webkit-scrollbar { display: none; }
-  .wpf-app.is-full .wpf-toolbar > * { flex: none; }
-  .wpf-app.is-full .wpf-name { width: 160px !important; }
-  .wpf-app.is-full .wpf-sep, .wpf-app.is-full .wpf-grow, .wpf-app.is-full .wpf-status { display: none; }
-  .wpf-app.is-full .wpf-boxes-list { position: fixed; top: 52px; left: 8px; right: 8px; }
-  .wpf-app.is-full .wpf-panel.is-idle { display: none; }
+  .wpf-toolbar { flex-wrap: nowrap; overflow-x: auto; padding: 4px 6px; gap: 6px; scrollbar-width: none; }
+  .wpf-toolbar::-webkit-scrollbar { display: none; }
+  .wpf-toolbar > * { flex: none; }
+  .wpf-toolbar .wpf-grow, .wpf-toolbar .wpf-status { display: none; }
   /* no Escape key on a phone: "Reduce" and "Fit all" first, always in sight */
-  .wpf-app.is-full [data-act="fullscreen"], .wpf-app.is-full [data-act="fit"] { order: -1; }
-  .wpf-app.is-full .wpf-stage { flex: 1 1 auto; height: auto; min-height: 0; }
-  .wpf-app.is-full .wpf-panel { flex: none; max-height: 40vh; }
-  .wpf-main { flex-direction: column; height: auto; }
-  .wpf-list { width: auto; max-height: 45vh; }
-  .wpf-list:not([open]) .wpf-list-current { display: inline; }
+  .wpf-toolbar [data-act="fullscreen"], .wpf-toolbar [data-act="fit"] { order: -1; }
+  .wpf-main { height: 74vh; }
+  .wpf-app.is-full { padding: 4px; height: 100vh; height: 100dvh; }
+  .wpf-app.is-full .wpf-main { height: auto; }
   .wpf-list-item { padding: 8px; }
   .wpf-list-item > input { width: 18px; height: 18px; }
-  .wpf-stage { flex: none; height: 60vh; min-height: 320px; }
-  .wpf-panel { width: auto; }
-  .wpf-name { width: 100% !important; }
   .wpf-menu-item { padding: 10px; font-size: 15px; }
 }

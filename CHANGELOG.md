@@ -4,6 +4,24 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [3.8.0] - 2026-11-16
+
+### Ajouté
+- **Schéma en grande grille** : tous les flux dessinés à la fois, chacun dans son cadre, rangés en lignes ; le flux
+  ouvert se modifie, un clic sur un autre l'ouvre sans que la grille bouge. **Afficher sur la grille** : tous les flux,
+  les flux cochés ou le flux ouvert seul. La grille prend la hauteur de l'écran, la barre d'outils tient sur une ligne.
+- **Côtés repliables** : à gauche la liste des flux, à droite les réglages du flux (nom, boîtes, une fois par ticket,
+  actif, tickets existants, supprimer) puis du bloc choisi ; boutons **☰ Flux** / **⚙ Réglages** sur la grille pour les
+  rouvrir, choix mémorisé dans le navigateur ; plus étroits en mode agrandi. Tablette tenue droite et téléphone : les
+  côtés s'ouvrent par-dessus la grille, repliés au départ.
+- **Flux cochés traités ensemble** : **Publier (n)**, **Activer**, **Désactiver**, **Supprimer (n)** ; les refusés
+  sont nommés.
+- **Après l'import d'un pack** : publier, activer, et appliquer aux tickets déjà là (période, statuts ; un traitement
+  par lots par flux, confirmation obligatoire si le pack supprime des tickets ou envoie des notifications push).
+
+### Modifié
+- Le zoom va plus loin en arrière pour voir beaucoup de flux ; l'aide de l'éditeur est dans le panneau des réglages.
+
 ## [3.7.0] - 2026-11-16
 
 ### Ajouté

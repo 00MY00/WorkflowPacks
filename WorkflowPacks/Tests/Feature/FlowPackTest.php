@@ -58,6 +58,52 @@ class FlowPackTest extends TestCase
         $this->assertSame(8, Flow::where('pack_key', 'tri-emails-multilingue-flux')->count(), 'not doubled');
     }
 
+    public function testAfterTheImportFlowsPublishedSwitchedOnAndAppliedToTheTicketsThere()
+    {
+        $a = $this->mailbox('A');
+        $admin = $this->user([$a], true);
+        \Option::set(Engine::OPTION, true);
+        // a ticket already there (the runs on the tickets there start only when there is something to go through)
+        $c = new \App\Conversation();
+        $c->type = \App\Conversation::TYPE_EMAIL;
+        $c->number = random_int(100000, 999999);
+        $c->folder_id = (int) optional($a->folders()->first())->id;
+        $c->mailbox_id = $a->id;
+        $c->subject = 'Ancien ticket';
+        $c->customer_email = 'client@example.test';
+        $c->source_via = \App\Conversation::PERSON_CUSTOMER;
+        $c->source_type = \App\Conversation::SOURCE_TYPE_EMAIL;
+        $c->status = \App\Conversation::STATUS_ACTIVE;
+        $c->state = \App\Conversation::STATE_PUBLISHED;
+        $c->save();
+        $post = ['pack_carry' => $this->shipped(), 'params' => ['newsletter_sender' => 'news@example.com'], 'mailbox_ids' => [$a->id],
+            'after_activate' => 1, 'after_apply' => 1, 'after_period' => 90, 'after_statuses' => ['active']];
+        $this->actingAs($admin)->post(route('workflowpacks.flowpack.confirm'), $post)->assertRedirect(route('workflowpacks.flows'));
+        $flows = Flow::where('pack_key', 'tri-emails-multilingue-flux')->get();
+        $this->assertCount(8, $flows);
+        $this->assertSame([], $flows->whereStrict('version_id', null)->pluck('name')->all(), 'switching on publishes');
+        $this->assertSame([true], $flows->pluck('active')->unique()->values()->all());
+        $jobs = \Modules\WorkflowPacks\Entities\FlowReapply::whereIn('flow_id', $flows->pluck('id'))->get();
+        $this->assertCount(8, $jobs, 'one run on the tickets there per flow');
+        $this->assertSame([90], $jobs->pluck('options')->pluck('period')->unique()->values()->all());
+        $this->assertSame([['active']], $jobs->pluck('options')->pluck('statuses')->unique()->values()->all());
+
+        // a pack that deletes tickets: applied to the tickets there only once confirmed
+        $pack = json_encode(['format' => 'workflowpacks-flows', 'version' => 1, 'key' => 'menage', 'name' => 'Ménage', 'flows' => [[
+            'key' => 'supprimer', 'name' => 'Supprimer', 'blocks' => [['id' => 'b1', 'type' => 'trigger.new_mail'], ['id' => 'b2', 'type' => 'action.delete']],
+            'links' => [['from' => 'b1', 'port' => 'next', 'to' => 'b2']]]]]);
+        $page = $this->actingAs($admin)->post(route('workflowpacks.flowpack.confirm'), ['pack_carry' => $pack, 'after_apply' => 1]);
+        $page->assertStatus(200);
+        $this->seeIn($page, e(__('workflowpacks::reapply.warn_delete')));
+        $this->assertSame(0, Flow::where('pack_key', 'menage')->count(), 'nothing done without the confirmation');
+        $this->actingAs($admin)->post(route('workflowpacks.flowpack.confirm'), ['pack_carry' => $pack, 'after_apply' => 1, 'confirm_risky' => 1])
+            ->assertRedirect(route('workflowpacks.flows'));
+        $flow = Flow::where('pack_key', 'menage')->first();
+        $this->assertNotNull($flow->version_id);
+        $this->assertFalse((bool) $flow->active, 'applied, not switched on');
+        $this->assertSame(1, \Modules\WorkflowPacks\Entities\FlowReapply::where('flow_id', $flow->id)->count());
+    }
+
     public function testAPackLoadedAgainCreatesOnlyTheMissingFlowsWithoutDuplicates()
     {
         $a = $this->mailbox('A');
