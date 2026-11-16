@@ -117,4 +117,41 @@ class AiAssistantTest extends TestCase
         $this->assertNull($flow->version_id, 'not published');
         $this->assertSame(340, $flow->draft['blocks'][1]['x'], 'placed left to right');
     }
+
+    public function testExamplesOfLooksLikeFoundAndTestedFromTheEditorWithoutPublishing()
+    {
+        $box = $this->mailbox('A');
+        $elsewhere = $this->mailbox('B');
+        $admin = $this->user([$box, $elsewhere], true);
+        \Option::set(Engine::OPTION, true);
+        $news1 = $this->ticket($box, 'Newsletter de la semaine', 'Nos promotions et nouveautés de la semaine.');
+        $news2 = $this->ticket($box, 'Votre newsletter hebdomadaire', 'Les nouveautés et promotions de cette semaine.');
+        $other = $this->ticket($box, 'Problème de connexion', 'Je n’arrive pas à me connecter depuis ce matin.');
+        $far = $this->ticket($elsewhere, 'Newsletter ailleurs', 'Promotions de la semaine.');
+        $get = function ($query) use ($admin) {
+            return json_decode($this->actingAs($admin)->get(route('workflowpacks.flows.tickets').'?'.$query)->getContent(), true)['tickets'];
+        };
+
+        // search in the mailboxes of the flow: by subject, by number; the ones chosen come back with their subject
+        $found = array_column($get('q=newsletter&mailbox_ids[]='.$box->id), 'id');
+        $this->assertContains($news1->id, $found);
+        $this->assertContains($news2->id, $found);
+        $this->assertNotContains($far->id, $found, 'another mailbox than the flow');
+        $this->assertNotContains($other->id, $found);
+        \App\Conversation::where('id', $other->id)->update(['number' => 987654]);
+        $this->assertSame([$other->id], array_column($get('q=987654&mailbox_ids[]='.$box->id), 'id'));
+        $this->assertSame('Newsletter de la semaine', $get('ids[]='.$news1->id)[0]['subject']);
+
+        // test: the examples against the last tickets, nothing published, nothing changed
+        $res = json_decode($this->actingAs($admin)->postJson(route('workflowpacks.flows.similar_test'),
+            ['examples' => [$news1->id], 'threshold' => 40, 'mailbox_ids' => [$box->id]])->getContent(), true);
+        $this->assertTrue($res['ok']);
+        $this->assertSame(2, $res['tested'], 'the example left out, another mailbox too');
+        $scores = array_column($res['tickets'], 'score', 'id');
+        $this->assertGreaterThanOrEqual(40, $scores[$news2->id]);
+        $this->assertLessThan(40, $scores[$other->id]);
+        $this->assertSame(1, $res['yes']);
+        $this->actingAs($admin)->postJson(route('workflowpacks.flows.similar_test'), ['examples' => []])->assertStatus(422);
+        $this->actingAs($this->user([$box], false, true))->get(route('workflowpacks.flows.tickets').'?q=news')->assertStatus(403);
+    }
 }

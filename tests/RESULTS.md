@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 3.9.0
+# Résultats des tests — Workflow Packs 3.10.0
 
 Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,13 @@ Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 3.10.0 — « Ressemble à… » : exemples cherchés et testés dans l'éditeur
+
+| Série | Résultat |
+|---|---|
+| Intégration (instance neuve) | 147 tests ; `AiAssistantTest` : recherche d'exemples par sujet et par numéro dans les boîtes du flux (autre boîte exclue), exemples choisis rendus avec leur sujet ; test : l'exemple et l'autre boîte exclus, la newsletter semblable au-dessus du seuil, le ticket sans rapport en dessous, rien de créé ; sans exemple refusé ; réservé aux administrateurs |
+| Navigateur PC 1440 px et téléphone 390 px, flux neuf jamais publié | champs nommés ; recherche « newsletter » : 3 tickets ; un ajouté d'un toucher ; Tester : scores 41 % et 36 % pour les newsletters, 5 à 12 % pour les autres (seuil 75 % trop haut avec un seul exemple, visible tout de suite) ; brouillon enregistré avec l'exemple, version publiée : aucune ; pas de défilement horizontal ; aucune erreur JavaScript |
 
 ## 3.9.0 — dossier : adresse et dossiers existants, barre « Supprimer », « + » au doigt, « Publier maintenant »
 

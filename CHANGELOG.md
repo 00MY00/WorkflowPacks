@@ -4,6 +4,18 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [3.10.0] - 2026-11-17
+
+### Ajouté
+- **« Ressemble à… » se règle dans l'éditeur, sans publier** : chercher des e-mails d'exemple parmi les tickets
+  (sujet, expéditeur ou numéro, dans les boîtes du flux), les ajouter ou les retirer d'un toucher (affichés avec leur
+  sujet, plus des numéros à taper), puis **Tester** sur les 100 derniers tickets : combien seraient reconnus au seuil
+  choisi et le score de chacun, pour ajuster seuil et exemples. Rien n'est publié ni modifié.
+
+### Corrigé
+- Les champs de « Ressemble à… » s'affichaient sous leur nom technique (examples, threshold…) : ils ont maintenant
+  leur libellé dans les 7 langues.
+
 ## [3.9.0] - 2026-11-17
 
 ### Ajouté
