@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 3.6.2
+# Résultats des tests — Workflow Packs 3.7.0
 
 Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,13 @@ Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 3.7.0 — liste des flux, suppression de plusieurs flux
+
+| Série | Résultat |
+|---|---|
+| Intégration (instance neuve) | 141 tests ; `FlowsEditorTest` : liste et bouton présents, suppression multiple refusée aux non-administrateurs, 2 flux supprimés ensemble (versions effacées, tickets en attente sortis), flux non coché gardé, rien coché = rien supprimé. Un premier passage a vu `EngineTest` échouer sur un saut d'horloge de la machine (≈ 15 min pendant le test) ; repassé OK, horloges vérifiées |
+| Navigateur PC 1440 px, tablette 820 px, téléphone 390 px, Workflows désactivé | 8 flux listés, clic = flux ouvert ; 2 cochés : « Tout » à moitié, « Supprimer (2) » ; Tout : 8 ; Tout à nouveau : aucun ; 2 supprimés après confirmation, 6 restants, flux ouvert conservé ; téléphone : liste repliée, titre « Flux (6) — flux ouvert », pas de défilement horizontal ; aucune erreur JavaScript |
 
 ## 3.6.2 — packs de flux sans doublon, accueil, libellés de l'assistant IA
 

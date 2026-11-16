@@ -22,7 +22,6 @@
             <a class="btn btn-link btn-sm" href="{{ route('workflowpacks.graph') }}">{{ __('workflowpacks::flows.rules_graph') }}</a>
         @endif</p>
     <div class="wpf-toolbar" role="toolbar">
-        <select class="form-control input-sm wpf-flow-select" aria-label="{{ __('workflowpacks::flows.tab') }}"></select>
         <button type="button" class="btn btn-default btn-sm" data-act="new">+ {{ __('workflowpacks::flows.new_flow') }}</button>
         <span class="wpf-sep"></span>
         <input type="text" class="form-control input-sm wpf-name" maxlength="191" aria-label="{{ __('workflowpacks::flows.name') }}" placeholder="{{ __('workflowpacks::flows.name') }}">
@@ -44,6 +43,16 @@
         <button type="button" class="btn btn-link btn-sm text-danger" data-act="delete-flow">{{ __('workflowpacks::flows.delete_flow') }}</button>
     </div>
     <div class="wpf-main">
+        {{-- every flow at once: open one, tick several ("All") to delete them together --}}
+        <details class="wpf-list" open>
+            <summary class="wpf-list-head"><strong>{{ __('workflowpacks::flows.list_title') }}</strong> <span class="wpf-list-count"></span>
+                <span class="wpf-list-current"></span></summary>
+            <div class="wpf-list-tools">
+                <label class="wpf-check"><input type="checkbox" class="wpf-list-all"> {{ __('workflowpacks::flows.list_all') }}</label>
+                <button type="button" class="btn btn-default btn-sm wpf-list-del" data-act="delete-many" disabled>{{ __('workflowpacks::flows.delete_many_none') }}</button>
+            </div>
+            <ul class="wpf-list-items"></ul>
+        </details>
         <div class="wpf-stage">
             <svg class="wpf-canvas" xmlns="http://www.w3.org/2000/svg"><g class="wpf-vp"><g class="wpf-links"></g><g class="wpf-blocks"></g></g></svg>
             <p class="wpf-empty" hidden>{{ __('workflowpacks::flows.empty') }}</p>

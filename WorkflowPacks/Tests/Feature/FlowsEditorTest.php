@@ -106,4 +106,40 @@ class FlowsEditorTest extends TestCase
         $this->actingAs($admin)->postJson(route('workflowpacks.flows.destroy', ['id' => $id]))->assertStatus(200);
         $this->assertNull(Flow::find($id));
     }
+
+    public function testSeveralFlowsDeletedTogetherFromTheList()
+    {
+        $a = $this->mailbox('A');
+        $admin = $this->user([$a], true);
+        \Option::set(Engine::OPTION, true);
+        $make = function ($name) use ($admin) {
+            return Flow::create(['name' => $name, 'mailbox_ids' => [], 'active' => false, 'once' => true, 'created_by' => $admin->id, 'draft' => $this->draft()]);
+        };
+        $one = $make('Un');
+        $two = $make('Deux');
+        $kept = $make('Gardé');
+        (new \Modules\WorkflowPacks\Services\Engine\Publisher())->publish($one, $admin);
+        $run = \Modules\WorkflowPacks\Entities\FlowRun::create(['flow_id' => $one->id, 'version_id' => $one->fresh()->version_id, 'conversation_id' => 1,
+            'block' => 'b3', 'state' => \Modules\WorkflowPacks\Entities\FlowRun::WAITING]);
+
+        // the editor has the list and the bulk deletion
+        $page = $this->actingAs($admin)->get(route('workflowpacks.flows'))->assertStatus(200);
+        $this->seeIn($page, 'wpf-list-all');
+        $this->seeIn($page, 'data-act="delete-many"');
+        // not an administrator: refused
+        $this->actingAs($this->user([$a], false, true))->postJson(route('workflowpacks.flows.destroy_many'), ['ids' => [$one->id]])->assertStatus(403);
+        $this->assertNotNull(Flow::find($one->id));
+
+        $res = $this->actingAs($admin)->postJson(route('workflowpacks.flows.destroy_many'), ['ids' => [$one->id, $two->id, 999999]]);
+        $res->assertStatus(200);
+        $this->assertSame(['ok' => true, 'deleted' => 2], json_decode($res->getContent(), true));
+        $this->assertNull(Flow::find($one->id));
+        $this->assertNull(Flow::find($two->id));
+        $this->assertNotNull(Flow::find($kept->id), 'not ticked: kept');
+        $this->assertSame(0, \Modules\WorkflowPacks\Entities\FlowVersion::where('flow_id', $one->id)->count());
+        $this->assertSame(\Modules\WorkflowPacks\Entities\FlowRun::CANCELLED, $run->fresh()->state, 'tickets waiting leave the flow');
+        // nothing ticked: nothing deleted
+        $none = $this->actingAs($admin)->postJson(route('workflowpacks.flows.destroy_many'), ['ids' => []]);
+        $this->assertSame(0, json_decode($none->getContent(), true)['deleted']);
+    }
 }

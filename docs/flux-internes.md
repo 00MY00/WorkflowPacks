@@ -23,6 +23,10 @@ un flux et une règle Workflows qui visent les mêmes tickets agissent **tous le
 
 ## Créer un flux
 
+La **liste des flux**, à gauche du Schéma (repliée sous son titre sur téléphone), montre tous les flux à la fois :
+version publiée et état de chacun ; un clic en ouvre un. Cochez-en plusieurs, ou **Tout**, puis **Supprimer (n)** les
+supprime ensemble après confirmation (les tickets en attente dedans en sortent et restent tels quels).
+
 1. **Nouveau flux** : il commence par son déclencheur, **Nouvel e-mail**.
 2. Le **« + »** placé sur une sortie ajoute le bloc suivant, relié et placé à droite. On peut aussi tirer le rond
    d'une sortie vers un bloc pour les relier. Un clic sur un lien le sélectionne ; **Suppr** supprime la sélection.

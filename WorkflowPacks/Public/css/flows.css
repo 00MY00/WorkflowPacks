@@ -6,7 +6,6 @@
 .wpf-toolbar { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; padding: 8px 10px; background: var(--f-card);
   border: 1px solid var(--f-border); border-radius: 12px; margin-bottom: 8px; }
 .wpf-toolbar .form-control { width: auto; display: inline-block; }
-.wpf-flow-select { max-width: 240px; }
 .wpf-name { width: 220px !important; }
 .wpf-sep { width: 1px; height: 22px; background: var(--f-border); }
 .wpf-grow { flex: 1; }
@@ -27,6 +26,23 @@
 .wpf-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; user-select: none; cursor: grab; }
 .wpf-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--f-muted); margin: 0; pointer-events: none; }
 .wpf-empty[hidden] { display: none; }
+/* list of every flow: open one, tick several to delete them */
+.wpf-list { width: 250px; flex: none; overflow: auto; background: var(--f-card); border: 1px solid var(--f-border); border-radius: 12px; }
+.wpf-list-head { list-style: none; cursor: pointer; padding: 10px 12px 4px; }
+.wpf-list-head::-webkit-details-marker { display: none; }
+.wpf-list-current { display: none; color: var(--f-muted); font-weight: normal; }
+.wpf-list-tools { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: space-between; padding: 4px 12px 8px;
+  border-bottom: 1px solid var(--f-border); }
+.wpf-list-items { list-style: none; margin: 0; padding: 6px; }
+.wpf-list-item { display: flex; gap: 8px; align-items: flex-start; padding: 6px 8px; border-radius: 8px; }
+.wpf-list-item > input { margin-top: 3px; flex: none; }
+.wpf-list-item.is-current { background: rgba(79, 70, 229, .09); }
+.wpf-list-open { flex: 1; min-width: 0; border: 0; background: none; padding: 0; text-align: left; color: inherit; }
+.wpf-list-open:focus-visible { outline: 2px solid var(--f-brand); outline-offset: 2px; }
+.wpf-list-name { display: block; font-weight: 600; font-size: 13px; overflow-wrap: anywhere; }
+.wpf-list-item.is-current .wpf-list-name { color: var(--f-brand); }
+.wpf-list-note { display: block; font-size: 11px; color: var(--f-muted); }
+.wpf-list-del:not(:disabled) { color: var(--c-err); }
 .wpf-panel { width: 320px; flex: none; overflow: auto; padding: 12px; background: var(--f-card); border: 1px solid var(--f-border); border-radius: 12px; }
 .wpf-panel h4 { margin: 0 0 6px; font-size: 15px; }
 .wpf-field { display: block; margin: 10px 0; font-weight: normal; }
@@ -107,6 +123,10 @@ body.wpf-full-open { overflow: hidden; }
   .wpf-app.is-full .wpf-stage { flex: 1 1 auto; height: auto; min-height: 0; }
   .wpf-app.is-full .wpf-panel { flex: none; max-height: 40vh; }
   .wpf-main { flex-direction: column; height: auto; }
+  .wpf-list { width: auto; max-height: 45vh; }
+  .wpf-list:not([open]) .wpf-list-current { display: inline; }
+  .wpf-list-item { padding: 8px; }
+  .wpf-list-item > input { width: 18px; height: 18px; }
   .wpf-stage { flex: none; height: 60vh; min-height: 320px; }
   .wpf-panel { width: auto; }
   .wpf-name { width: 100% !important; }

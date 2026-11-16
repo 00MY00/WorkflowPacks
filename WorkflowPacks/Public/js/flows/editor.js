@@ -127,6 +127,7 @@
         this.sel = null;
         this.flows = [];
         this.flow = null;
+        this.checked = {};   // ids ticked in the list of the flows
         this.q = function (s) { return rootEl.querySelector(s); };
         this.svg = this.q('.wpf-canvas');
         this.vp = this.q('.wpf-vp');
@@ -134,6 +135,8 @@
         var defs = svg('defs', {}, this.svg);
         if (root.WPGraph && root.WPGraph.icons) { root.WPGraph.icons.define(defs); }
         this.bind();
+        // phones: the list folded under its title (the flow open is named there), the diagram first
+        if (root.matchMedia && root.matchMedia('(max-width: 767px)').matches) { this.q('.wpf-list').open = false; }
         this.load(cfg.open || undefined);
     }
 
@@ -162,11 +165,6 @@
         var self = this;
         return this.request(this.cfg.urls.data).then(function (res) {
             self.flows = (res.data && res.data.flows) || [];
-            var select = self.q('.wpf-flow-select');
-            select.textContent = '';
-            self.flows.forEach(function (f) {
-                select.appendChild(h('option', { value: f.id, text: f.name + (f.active ? ' ●' : '') }));
-            });
             var pick = self.flows.filter(function (f) { return f.id === selectId; })[0] || self.flows[0] || null;
             self.open(pick);
         });
@@ -178,11 +176,10 @@
         this.sim = null;
         var empty = !flow;
         this.q('.wpf-empty').hidden = !empty;
-        Array.prototype.forEach.call(this.root.querySelectorAll('.wpf-toolbar input, .wpf-toolbar [data-act]:not([data-act="new"]), .wpf-flow-select'), function (n) {
+        Array.prototype.forEach.call(this.root.querySelectorAll('.wpf-toolbar input, .wpf-toolbar [data-act]:not([data-act="new"])'), function (n) {
             n.disabled = empty;
         });
         if (flow) {
-            this.q('.wpf-flow-select').value = flow.id;
             this.q('.wpf-name').value = flow.name;
             this.q('.wpf-once').checked = flow.once;
             this.q('.wpf-active').checked = flow.active;
@@ -194,8 +191,59 @@
         this.state();
     };
 
+    /**
+     * The list of every flow: the one open highlighted (its name, version and state as they are in the editor), a box to
+     * tick each one, "All", and the deletion of the ticked ones.
+     */
+    Editor.prototype.renderList = function () {
+        var self = this, t = this.t, ul = this.q('.wpf-list-items');
+        var ids = this.flows.map(function (f) { return f.id; });
+        Object.keys(this.checked).forEach(function (id) { if (ids.indexOf(parseInt(id, 10)) < 0) { delete self.checked[id]; } });
+        ul.textContent = '';
+        this.flows.forEach(function (f) {
+            var current = !!self.flow && self.flow.id === f.id, src = current ? self.flow : f;
+            var box = h('input', { type: 'checkbox', 'aria-label': src.name, checked: !!self.checked[f.id], on: { change: function () {
+                if (this.checked) { self.checked[f.id] = true; } else { delete self.checked[f.id]; }
+                self.listTools();
+            } } });
+            var note = (src.version ? fill(t.published, { n: src.version }) : t.unpublished) + ' · ' + (src.active ? t.active : t.inactive);
+            ul.appendChild(h('li', { class: 'wpf-list-item' + (current ? ' is-current' : '') }, [box,
+                h('button', { type: 'button', class: 'wpf-list-open', 'aria-current': current ? 'true' : null, on: { click: function () {
+                    if (current) { return; }
+                    self.flush().then(function () { self.open(self.flows.filter(function (x) { return x.id === f.id; })[0]); });
+                } } }, [h('span', { class: 'wpf-list-name', text: src.name }), h('span', { class: 'wpf-list-note', text: note })])]));
+        });
+        this.q('.wpf-list-count').textContent = '(' + this.flows.length + ')';
+        this.q('.wpf-list-current').textContent = this.flow ? '— ' + this.flow.name : '';
+        this.listTools();
+    };
+
+    /** "All" ticked, half ticked or not; the delete button says how many. */
+    Editor.prototype.listTools = function () {
+        var n = Object.keys(this.checked).length, all = this.q('.wpf-list-all'), del = this.q('[data-act="delete-many"]');
+        all.checked = n > 0 && n === this.flows.length;
+        all.indeterminate = n > 0 && n < this.flows.length;
+        all.disabled = !this.flows.length;
+        del.disabled = !n;
+        del.textContent = n ? fill(this.t.delete_many, { count: n }) : this.t.delete_many_none;
+    };
+
+    /** The ticked flows deleted together, after a confirmation; the flow open stays open when it is not one of them. */
+    Editor.prototype.destroyMany = function () {
+        var self = this, ids = Object.keys(this.checked).map(function (id) { return parseInt(id, 10); });
+        if (!ids.length || !window.confirm(fill(this.t.delete_many_confirm, { count: ids.length }))) { return; }
+        var keep = this.flow && ids.indexOf(this.flow.id) < 0 ? this.flow.id : undefined;
+        this.flush().then(function () { return self.request(self.cfg.urls.destroy_many, { ids: ids }); }).then(function (res) {
+            self.checked = {};
+            return self.load(keep).then(function () {
+                self.status(fill(self.t.deleted_many, { count: (res.data && res.data.deleted) || 0 }), res.ok ? 'ok' : 'error');
+            });
+        });
+    };
+
     /** Version and problems in the toolbar. */
     Editor.prototype.state = function () {
+        this.renderList();
         if (!this.flow) { this.status(''); return; }
         var f = this.flow, t = this.t;
         var parts = [f.version ? fill(t.published, { n: f.version }) : t.unpublished];
@@ -334,11 +382,13 @@
 
     Editor.prototype.bind = function () {
         var self = this, mode = null;
-        this.q('.wpf-flow-select').addEventListener('change', function () {
-            var id = parseInt(this.value, 10);
-            self.flush().then(function () { self.open(self.flows.filter(function (f) { return f.id === id; })[0]); });
+        this.q('.wpf-list-all').addEventListener('change', function () {
+            var on = this.checked;
+            self.checked = {};
+            if (on) { self.flows.forEach(function (f) { self.checked[f.id] = true; }); }
+            self.renderList();
         });
-        this.q('.wpf-name').addEventListener('input', function () { self.flow.name = this.value; self.save(); });
+        this.q('.wpf-name').addEventListener('input', function () { self.flow.name = this.value; self.save(); self.renderList(); });
         this.q('.wpf-once').addEventListener('change', function () { self.flow.once = this.checked; self.save(); });
         this.q('.wpf-active').addEventListener('change', function () { self.toggle(this.checked); });
         this.root.addEventListener('click', function (e) {
@@ -352,6 +402,7 @@
             if (name === 'fullscreen') { self.fullPage(); }
             if (name === 'add') { self.menu(act, null, null); }
             if (name === 'delete-flow') { self.destroy(); }
+            if (name === 'delete-many') { self.destroyMany(); }
             if (name === 'reapply' && self.flow) { self.flush().then(function () { window.location.href = self.url('reapply'); }); }
         });
         document.addEventListener('keydown', function (e) {

@@ -42,6 +42,7 @@ class FlowsController extends Controller
                     'publish'  => route('workflowpacks.flows.publish', ['id' => '__ID__']),
                     'toggle'   => route('workflowpacks.flows.toggle', ['id' => '__ID__']),
                     'destroy'  => route('workflowpacks.flows.destroy', ['id' => '__ID__']),
+                    'destroy_many' => route('workflowpacks.flows.destroy_many'),
                     'simulate' => route('workflowpacks.flows.simulate', ['id' => '__ID__']),
                     'path'     => route('workflowpacks.flows.path', ['id' => '__ID__']),
                     'reapply'  => route('workflowpacks.reapply', ['id' => '__ID__']),
@@ -139,14 +140,32 @@ class FlowsController extends Controller
     public function destroy($id)
     {
         $this->guardEngine();
-        $flow = Flow::findOrFail((int) $id);
+        self::remove(Flow::findOrFail((int) $id));
+
+        return response()->json(['ok' => true]);
+    }
+
+    /** The flows ticked in the list of the editor ("All" included), deleted together. */
+    public function destroyMany(Request $request)
+    {
+        $this->guardEngine();
+        $ids = array_values(array_unique(array_filter(array_map('intval', (array) $request->input('ids', [])))));
+        $flows = $ids ? Flow::whereIn('id', $ids)->get() : collect();
+        foreach ($flows as $flow) {
+            self::remove($flow);
+        }
+
+        return response()->json(['ok' => true, 'deleted' => $flows->count()]);
+    }
+
+    /** A flow deleted: the tickets waiting in it leave it (they stay as they are), its versions go with it. */
+    protected static function remove(Flow $flow)
+    {
         \DB::transaction(function () use ($flow) {
             FlowRun::where('flow_id', $flow->id)->whereIn('state', [FlowRun::WAITING, FlowRun::RUNNING])->update(['state' => FlowRun::CANCELLED]);
             FlowVersion::where('flow_id', $flow->id)->delete();
             $flow->delete();
         });
-
-        return response()->json(['ok' => true]);
     }
 
     /** The draft in the editor (saved or not), with a sample e-mail: every step, nothing written (Engine::simulate). */
