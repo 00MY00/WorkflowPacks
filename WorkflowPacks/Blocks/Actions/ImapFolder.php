@@ -8,7 +8,11 @@ use Modules\WorkflowPacks\Services\Engine\Result;
 use Modules\WorkflowPacks\Services\Imap\FolderPath;
 use Modules\WorkflowPacks\Services\Imap\ImapFolders;
 
-/** File the e-mail into a folder of the mail server ("[WP] Invoices/Suppliers"), queued as the action of the rules. */
+/**
+ * File the e-mail into a folder of the mail server ("[WP] Invoices/Suppliers"), queued as the action of the rules. The
+ * address: the mailbox where the e-mail arrived, or another one chosen (an address sharing the same mail account, an
+ * alias); the e-mail is looked for there by its Message-ID. Only folders carrying the prefix are created or used.
+ */
 class ImapFolder extends AbstractBlock
 {
     public static function type()
@@ -23,7 +27,7 @@ class ImapFolder extends AbstractBlock
 
     public static function fields()
     {
-        return ['path' => ['type' => 'text', 'required' => true]];
+        return ['mailbox' => ['type' => 'mailbox'], 'path' => ['type' => 'imap_folder', 'required' => true]];
     }
 
     public static function outputs()
@@ -42,6 +46,10 @@ class ImapFolder extends AbstractBlock
         if (!$problems && FolderPath::parse($params['path'])['error'] !== null) {
             $problems['path'] = __('workflowpacks::blocks.errors.folder');
         }
+        $mailbox = (int) ($params['mailbox'] ?? 0);
+        if ($mailbox && !\App\Mailbox::where('id', $mailbox)->exists()) {
+            $problems['mailbox'] = __('workflowpacks::blocks.errors.mailbox');
+        }
 
         return $problems;
     }
@@ -52,7 +60,7 @@ class ImapFolder extends AbstractBlock
         if (!ImapFolders::enabled()) {
             return Result::error(__('workflowpacks::blocks.errors.imap_off'));
         }
-        if (!$ctx->actions()->imapFolder((string) $params['path'])) {
+        if (!$ctx->actions()->imapFolder((string) $params['path'], (int) ($params['mailbox'] ?? 0) ?: null)) {
             return Result::error(__('workflowpacks::blocks.errors.imap_nothing'));
         }
 

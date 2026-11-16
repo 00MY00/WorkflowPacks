@@ -60,7 +60,7 @@ sur la grille ; le navigateur se souvient de ce choix. Sur tablette tenue droite
 | Statut | ouvert, en attente, fermé, indésirable | suite / erreur |
 | Assigner | à un utilisateur ou à personne | suite / erreur |
 | Note interne | texte ; `{{ticket.subject}}` est remplacé | suite / erreur |
-| Classer dans un dossier | dossier du serveur de messagerie (option « Classer dans un dossier e-mail ») | suite / erreur |
+| Classer dans un dossier | **adresse** (par défaut la boîte où l'e-mail est arrivé ; une autre adresse partageant le même compte, un alias : l'e-mail y est cherché par son Message-ID) ; **dossier** après le préfixe du module (« [WP] » par défaut, réglable) : les dossiers du module déjà sur l'adresse s'affichent à toucher, un nouveau nom est créé au premier e-mail rangé ; vos autres dossiers ne sont jamais touchés (option « Classer dans un dossier e-mail ») | suite / erreur |
 | Supprimer le ticket | — ; dossier **Supprimés** de FreeScout (récupérable tant qu'il n'est pas vidé), dernier bloc de la branche | erreur |
 | Notification push | destinataires (l'assigné, les utilisateurs de la boîte ou un utilisateur), titre (vide = sujet), texte ; variables remplacées. Nécessite le module [WebPush](https://github.com/altmenorg/freescout-webpush) | suite / erreur |
 
@@ -72,6 +72,8 @@ sur la grille ; le navigateur se souvient de ce choix. Sur tablette tenue droite
 | Zoomer | molette | deux doigts (pincer, écarter) |
 | Déplacer un bloc | clic gauche glissé sur le bloc ; s'il fait partie des blocs choisis, ils bougent ensemble | un doigt glissé sur le bloc |
 | Choisir un bloc | clic droit (encore un clic droit pour en ajouter ou en retirer un ; Maj ou Ctrl + clic gauche aussi) | appui long sur le bloc (de même pour en ajouter ou en retirer) |
+| Supprimer, régler | **Suppr**, ou la barre qui apparaît sous la grille : **Supprimer**, **Réglages** | la barre sous la grille, après un appui long ou un toucher |
+| Ajouter un bloc | « + » d'une sortie, puis le bloc dans la liste | toucher « + », la liste reste ouverte, toucher le bloc |
 | Choisir une zone | clic droit glissé sur le fond : rectangle de sélection (Maj ou Ctrl : ajouté aux blocs déjà choisis) | appui long sur le fond, puis glisser |
 | Ne plus rien choisir | clic sur le fond, ou **Échap** | toucher le fond |
 
@@ -82,7 +84,9 @@ barre tient sur une ligne qui défile (Réduire et Tout voir en tête).
 ## Appliquer un flux aux tickets déjà là
 
 Un flux s'applique d'abord aux **nouveaux** e-mails. Pour l'appliquer aussi aux tickets déjà présents : bouton
-**Tickets existants** de l'éditeur, ou **OK** à la question posée juste après chaque **Publier**.
+**Tickets existants** de l'éditeur, ou **OK** à la question posée juste après chaque **Publier**. C'est la version
+publiée qui est appliquée : un flux jamais publié affiche **Publier maintenant** sur cette page (ses problèmes sont
+indiqués s'il ne peut pas l'être).
 
 | Choix | Effet |
 |---|---|

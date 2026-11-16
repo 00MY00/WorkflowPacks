@@ -44,14 +44,18 @@ class FlowsController extends Controller
                     'destroy'  => route('workflowpacks.flows.destroy', ['id' => '__ID__']),
                     'destroy_many' => route('workflowpacks.flows.destroy_many'),
                     'bulk'     => route('workflowpacks.flows.bulk'),
+                    'imap_folders' => route('workflowpacks.flows.imap_folders'),
                     'simulate' => route('workflowpacks.flows.simulate', ['id' => '__ID__']),
                     'path'     => route('workflowpacks.flows.path', ['id' => '__ID__']),
                     'reapply'  => route('workflowpacks.reapply', ['id' => '__ID__']),
                 ],
                 'catalog'   => $this->catalog(),
-                'mailboxes' => \App\Mailbox::orderBy('name')->get(['id', 'name'])->map(function ($m) {
-                    return ['id' => (int) $m->id, 'name' => (string) $m->name];
+                'mailboxes' => \App\Mailbox::orderBy('name')->get(['id', 'name', 'email', 'in_server', 'in_username'])->map(function ($m) {
+                    return ['id' => (int) $m->id, 'name' => (string) $m->name, 'email' => (string) $m->email, 'imap' => $m->in_server && $m->in_username];
                 })->values(),
+                // "file into a folder": the folders of the module carry this prefix (Manage › Settings › Workflow Packs)
+                'imap'      => ['enabled' => \Modules\WorkflowPacks\Services\Imap\ImapFolders::enabled(), 'prefix' => \Modules\WorkflowPacks\Services\Imap\ImapFolders::prefix(),
+                    'settings' => route('settings', ['section' => 'workflowpacks'])],
                 'users'     => \App\User::where('status', \App\User::STATUS_ACTIVE)->orderBy('first_name')->get()->map(function ($u) {
                     return ['id' => (int) $u->id, 'name' => $u->getFullName()];
                 })->values(),
@@ -173,6 +177,21 @@ class FlowsController extends Controller
         }
 
         return response()->json(['ok' => true, 'done' => $done, 'refused' => $refused]);
+    }
+
+    /** The folders of the module already on the mail server of a mailbox, for the "file into a folder" block. */
+    public function imapFolders(Request $request)
+    {
+        $this->guardEngine();
+        $mailbox = \App\Mailbox::find((int) $request->input('mailbox_id'));
+        if (!$mailbox) {
+            return response()->json(['ok' => false, 'folders' => [], 'error' => ''], 404);
+        }
+        if (!$mailbox->in_server || !$mailbox->in_username) {
+            return response()->json(['ok' => false, 'folders' => [], 'error' => __('workflowpacks::flows.folders_no_imap')]);
+        }
+
+        return response()->json(\Modules\WorkflowPacks\Services\Imap\ImapFolders::managedFolders($mailbox));
     }
 
     /** The flows ticked in the list of the editor ("All" included), deleted together. */

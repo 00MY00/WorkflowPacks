@@ -169,4 +169,27 @@ class FlowReapplyTest extends TestCase
         $this->actingAs($admin)->post(route('workflowpacks.reapply.control', ['id' => $flow->id]), ['action' => 'stop']);
         $this->assertSame(FlowReapply::STOPPED, FlowReapply::where('flow_id', $flow->id)->first()->state);
     }
+
+    public function testAFlowNotPublishedCanBePublishedFromThePage()
+    {
+        $a = $this->mailbox('A');
+        $admin = $this->user([$a], true);
+        $flow = Flow::create(['name' => 'Brouillon', 'mailbox_ids' => [$a->id], 'active' => false, 'once' => true, 'created_by' => $admin->id,
+            'draft' => ['blocks' => [['id' => 'b1', 'type' => 'trigger.new_mail'], ['id' => 'b2', 'type' => 'action.status', 'params' => ['status' => 'pending']]],
+                'links' => [['from' => 'b1', 'port' => 'next', 'to' => 'b2']]]]);
+        $page = $this->actingAs($admin)->get(route('workflowpacks.reapply', ['id' => $flow->id]))->assertStatus(200);
+        $this->seeIn($page, e(__('workflowpacks::reapply.not_published')));
+        $this->seeIn($page, route('workflowpacks.reapply.publish', ['id' => $flow->id]));
+        $this->actingAs($admin)->post(route('workflowpacks.reapply.publish', ['id' => $flow->id]))->assertRedirect(route('workflowpacks.reapply', ['id' => $flow->id]));
+        $this->assertNotNull($flow->fresh()->version_id);
+        $this->seeIn($this->actingAs($admin)->get(route('workflowpacks.reapply', ['id' => $flow->id])), e(__('workflowpacks::reapply.scope_existing')));
+
+        // a flow with problems: not published, its problems said
+        $broken = Flow::create(['name' => 'Cassé', 'mailbox_ids' => [], 'active' => false, 'once' => true, 'created_by' => $admin->id,
+            'draft' => ['blocks' => [['id' => 'b1', 'type' => 'trigger.new_mail'], ['id' => 'b2', 'type' => 'condition.ticket', 'params' => []]],
+                'links' => [['from' => 'b1', 'port' => 'next', 'to' => 'b2']]]]);
+        $this->actingAs($admin)->post(route('workflowpacks.reapply.publish', ['id' => $broken->id]))->assertSessionHas('flash_error_floating');
+        $this->assertNull($broken->fresh()->version_id);
+        $this->actingAs($this->user([$a], false, true))->post(route('workflowpacks.reapply.publish', ['id' => $flow->id]))->assertStatus(403);
+    }
 }

@@ -4,6 +4,22 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [3.9.0] - 2026-11-17
+
+### Ajouté
+- **Classer dans un dossier** : choix de l'**adresse** (par défaut la boîte où l'e-mail est arrivé ; une autre adresse
+  partageant le même compte, un alias), et la liste des **dossiers du module déjà sur cette adresse** à toucher pour
+  choisir ; un nouveau nom est créé avec le **préfixe** configurable (« [WP] » par défaut, lien vers le réglage) au
+  premier e-mail rangé. Seuls les dossiers portant le préfixe sont utilisés, jamais les autres.
+- **Barre de l'élément choisi** sous la grille : **Supprimer** et **Réglages** ; au doigt, un appui long sur un bloc
+  permet ainsi de le supprimer.
+- **Tickets existants** d'un flux jamais publié : bouton **Publier maintenant** (ses problèmes indiqués s'il ne peut pas
+  l'être) au lieu du seul message.
+
+### Corrigé
+- Au doigt, toucher « + » ouvrait la liste des blocs, mais le clic envoyé ensuite par le navigateur tombait dessus : un
+  bloc s'ajoutait ou la liste se fermait sans laisser le temps de choisir. La liste reste maintenant ouverte.
+
 ## [3.8.0] - 2026-11-16
 
 ### Ajouté
