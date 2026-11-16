@@ -24,6 +24,9 @@ class FlowPack
     /** @var BlockRegistry */
     protected $registry;
 
+    /** @var int[] ids of the flows of the last import (created, updated or already there) */
+    protected $imported = [];
+
     public function __construct(BlockRegistry $registry = null)
     {
         $this->registry = $registry ?: new BlockRegistry();
@@ -127,6 +130,7 @@ class FlowPack
     public function import(array $read, array $mailboxIds, $user)
     {
         $count = ['created' => 0, 'updated' => 0, 'same' => 0];
+        $this->imported = [];
         \DB::transaction(function () use ($read, $mailboxIds, $user, &$count) {
             foreach ($read['flows'] as $f) {
                 $flow = $f['existing'] ? Flow::find($f['existing']) : null;
@@ -147,15 +151,35 @@ class FlowPack
                     if ($keys) {
                         $flow->update($keys);
                     }
+                    $this->imported[] = (int) $flow->id;
                 } else {
-                    Flow::create(['name' => $f['name'], 'draft' => $f['draft'], 'once' => $f['once'], 'mailbox_ids' => $mailboxIds,
-                        'active' => false, 'created_by' => $user ? $user->id : null, 'pack_key' => $read['pack']['key'], 'flow_key' => $f['key'], 'pack_name' => $read['pack']['name']]);
+                    $this->imported[] = (int) Flow::create(['name' => $f['name'], 'draft' => $f['draft'], 'once' => $f['once'], 'mailbox_ids' => $mailboxIds,
+                        'active' => false, 'created_by' => $user ? $user->id : null, 'pack_key' => $read['pack']['key'], 'flow_key' => $f['key'], 'pack_name' => $read['pack']['name']])->id;
                     $count['created']++;
                 }
             }
         });
 
         return $count;
+    }
+
+    /** @return int[] the flows of the last import */
+    public function imported()
+    {
+        return $this->imported;
+    }
+
+    /** Blocks of the pack that delete tickets or notify (a ticked confirmation before applying it to tickets there). */
+    public static function risky(array $read)
+    {
+        $types = [];
+        foreach ($read['flows'] as $f) {
+            foreach ((array) ($f['draft']['blocks'] ?? []) as $b) {
+                $types[] = (string) ($b['type'] ?? '');
+            }
+        }
+
+        return array_values(array_intersect(Reapply::RISKY, $types));
     }
 
     /** Same name, whatever the case and the spaces around. */

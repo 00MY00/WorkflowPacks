@@ -37,4 +37,12 @@ return [
     'import'         => 'Importer',
     'done'           => 'Pack importé : :created flux créé(s), :updated mis à jour, :same déjà présent(s) et inchangé(s). Nouveaux flux en brouillon, désactivés.',
     'history'        => ':created flux créé(s), :updated mis à jour, :same inchangé(s)',
+    'after_title'     => 'Après l’import',
+    'after_publish'   => 'Publier les flux (ceux sans problème)',
+    'after_activate'  => 'Les activer aussi : les nouveaux e-mails passent dedans',
+    'after_apply'     => 'Les appliquer aux tickets déjà là',
+    'after_help'      => 'Activer ou appliquer publie aussi. Appliquer aux tickets déjà là : par lots, en arrière-plan, « une fois par ticket » respecté ; suivi, pause et arrêt depuis « Tickets existants » de chaque flux.',
+    'after_confirm_risky' => 'Je confirme : appliquer ces flux aux tickets déjà là',
+    'after_done'      => ':published publié(s), :activated activé(s), :jobs application(s) aux tickets existants lancée(s).',
+    'after_refused'   => 'Non publiés (problèmes à corriger) : :list',
 ];

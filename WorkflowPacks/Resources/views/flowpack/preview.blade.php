@@ -57,6 +57,33 @@
                 @endforeach
             </div>
             <p class="wp-ai-warn">{!! $wp_ui::icon('shield') !!} {{ __('workflowpacks::flowpack.drafts_note') }}</p>
+
+            {{-- right after the import: publish, switch on, apply to the tickets already there (in batches, Reapply) --}}
+            <h3 class="wp-boxes-title">{{ __('workflowpacks::flowpack.after_title') }}</h3>
+            <div class="wp-after">
+                <label class="wpf-check"><input type="checkbox" name="after_publish" value="1" @if ($after['publish']) checked @endif> {{ __('workflowpacks::flowpack.after_publish') }}</label>
+                <label class="wpf-check"><input type="checkbox" name="after_activate" value="1" @if ($after['activate']) checked @endif> {{ __('workflowpacks::flowpack.after_activate') }}</label>
+                <label class="wpf-check"><input type="checkbox" name="after_apply" value="1" @if ($after['apply']) checked @endif> {{ __('workflowpacks::flowpack.after_apply') }}</label>
+                <div class="wp-ai-grid wp-after-apply">
+                    <label class="wp-ai-field"><span>{{ __('workflowpacks::reapply.period') }}</span>
+                        <select name="after_period" class="form-control">
+                            @foreach (\Modules\WorkflowPacks\Services\Engine\Reapply::PERIODS as $d)<option value="{{ $d }}" @if ($after['reapply']['period'] === $d) selected @endif>{{ $d ? __('workflowpacks::reapply.days', ['n' => $d]) : __('workflowpacks::reapply.period_all') }}</option>@endforeach
+                        </select></label>
+                    <div class="wp-ai-field"><span>{{ __('workflowpacks::reapply.statuses') }}</span>
+                        <div class="wp-reapply-checks">
+                            @foreach (['active', 'pending', 'closed'] as $st)
+                                <label><input type="checkbox" name="after_statuses[]" value="{{ $st }}" @if (in_array($st, $after['reapply']['statuses'], true)) checked @endif> {{ __('workflowpacks::blocks.values.status.'.$st) }}</label>
+                            @endforeach
+                        </div></div>
+                </div>
+                <small class="wp-muted">{{ __('workflowpacks::flowpack.after_help') }}</small>
+                @foreach ($risky as $type)
+                    <p class="wp-ai-warn">{!! $wp_ui::icon('shield') !!} {{ __('workflowpacks::reapply.warn_'.str_replace('action.', '', $type)) }}</p>
+                @endforeach
+                @if ($risky)
+                    <label class="wpf-check @if ($riskyMissing) text-danger @endif"><input type="checkbox" name="confirm_risky" value="1"> {{ __('workflowpacks::flowpack.after_confirm_risky') }}</label>
+                @endif
+            </div>
             <div class="wp-actionbar">
                 <button type="submit" class="btn btn-primary">{!! $wp_ui::icon('upload') !!} {{ __('workflowpacks::flowpack.import') }}</button>
                 <a href="{{ route('workflowpacks.flowpack') }}" class="btn btn-link">{{ __('workflowpacks::messages.back') }}</a>

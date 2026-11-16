@@ -13,53 +13,74 @@
 
 @section('wp_content')
 <div class="wpf-app" id="wpf-app">
-    <p class="wpf-intro">{{ __('workflowpacks::flows.intro') }}
-        {{-- Workflows there: the Import / Export tabs are for its rules, so the packs of flows and the diagram of the
-             rules (to be removed later) are reached from here; without it, the tabs already lead to the packs of flows --}}
-        @if (\Modules\WorkflowPacks\Services\Compat\Checker::workflowsReady())
-            <a class="btn btn-default btn-sm" href="{{ route('workflowpacks.flowpack') }}">{{ __('workflowpacks::flowpack.button_import') }}</a>
-            <a class="btn btn-default btn-sm" href="{{ route('workflowpacks.flowpack.export') }}">{{ __('workflowpacks::flowpack.button_export') }}</a>
-            <a class="btn btn-link btn-sm" href="{{ route('workflowpacks.graph') }}">{{ __('workflowpacks::flows.rules_graph') }}</a>
-        @endif</p>
+    {{-- one line of actions; the grid of the flows gets the room, the settings are on sides that fold --}}
     <div class="wpf-toolbar" role="toolbar">
         <button type="button" class="btn btn-default btn-sm" data-act="new">+ {{ __('workflowpacks::flows.new_flow') }}</button>
-        <span class="wpf-sep"></span>
-        <input type="text" class="form-control input-sm wpf-name" maxlength="191" aria-label="{{ __('workflowpacks::flows.name') }}" placeholder="{{ __('workflowpacks::flows.name') }}">
-        <details class="wpf-boxes">
-            <summary class="btn btn-default btn-sm">{{ __('workflowpacks::flows.mailboxes') }}: <span class="wpf-boxes-label"></span></summary>
-            <div class="wpf-boxes-list"></div>
-        </details>
-        <label class="wpf-check" title="{{ __('workflowpacks::flows.once_help') }}"><input type="checkbox" class="wpf-once"> {{ __('workflowpacks::flows.once') }}</label>
-        <label class="wpf-check"><input type="checkbox" class="wpf-active"> {{ __('workflowpacks::flows.active') }}</label>
-        <span class="wpf-sep"></span>
         <button type="button" class="btn btn-default btn-sm" data-act="add">+ {{ __('workflowpacks::flows.add_block') }}</button>
         <button type="button" class="btn btn-default btn-sm" data-act="simulate">▶ {{ __('workflowpacks::flows.simulate') }}</button>
         <button type="button" class="btn btn-primary btn-sm" data-act="publish">{{ __('workflowpacks::flows.publish') }}</button>
-        <button type="button" class="btn btn-default btn-sm" data-act="reapply" title="{{ __('workflowpacks::reapply.intro') }}">{{ __('workflowpacks::flows.reapply_button') }}</button>
         <span class="wpf-status" role="status" aria-live="polite"></span>
         <span class="wpf-grow"></span>
         <button type="button" class="btn btn-link btn-sm" data-act="fit">{{ __('workflowpacks::flows.zoom_fit') }}</button>
         <button type="button" class="btn btn-default btn-sm" data-act="fullscreen" aria-pressed="false">{{ __('workflowpacks::flows.enlarge') }}</button>
-        <button type="button" class="btn btn-link btn-sm text-danger" data-act="delete-flow">{{ __('workflowpacks::flows.delete_flow') }}</button>
     </div>
     <div class="wpf-main">
-        {{-- every flow at once: open one, tick several ("All") to delete them together --}}
-        <details class="wpf-list" open>
-            <summary class="wpf-list-head"><strong>{{ __('workflowpacks::flows.list_title') }}</strong> <span class="wpf-list-count"></span>
-                <span class="wpf-list-current"></span></summary>
+        {{-- left: every flow (which ones the grid shows, open one, tick several to delete them) --}}
+        <aside class="wpf-side wpf-list" aria-label="{{ __('workflowpacks::flows.list_title') }}">
+            <div class="wpf-side-head"><strong>{{ __('workflowpacks::flows.list_title') }}</strong> <span class="wpf-list-count"></span>
+                <button type="button" class="wpf-side-close" data-act="toggle-list" title="{{ __('workflowpacks::flows.fold') }}" aria-label="{{ __('workflowpacks::flows.fold') }}">‹</button></div>
+            <label class="wpf-list-show"><span>{{ __('workflowpacks::flows.show') }}</span>
+                <select class="form-control input-sm wpf-show">
+                    <option value="all">{{ __('workflowpacks::flows.show_all') }}</option>
+                    <option value="checked">{{ __('workflowpacks::flows.show_checked') }}</option>
+                    <option value="open">{{ __('workflowpacks::flows.show_open') }}</option>
+                </select></label>
             <div class="wpf-list-tools">
                 <label class="wpf-check"><input type="checkbox" class="wpf-list-all"> {{ __('workflowpacks::flows.list_all') }}</label>
+                <button type="button" class="btn btn-default btn-sm" data-act="bulk-on" disabled title="{{ __('workflowpacks::flows.bulk_on_help') }}">{{ __('workflowpacks::flows.bulk_on') }}</button>
+                <button type="button" class="btn btn-default btn-sm" data-act="bulk-off" disabled>{{ __('workflowpacks::flows.bulk_off') }}</button>
                 <button type="button" class="btn btn-default btn-sm wpf-list-del" data-act="delete-many" disabled>{{ __('workflowpacks::flows.delete_many_none') }}</button>
             </div>
             <ul class="wpf-list-items"></ul>
-        </details>
+        </aside>
         <div class="wpf-stage">
-            <svg class="wpf-canvas" xmlns="http://www.w3.org/2000/svg"><g class="wpf-vp"><g class="wpf-links"></g><g class="wpf-blocks"></g></g></svg>
+            <svg class="wpf-canvas" xmlns="http://www.w3.org/2000/svg"><g class="wpf-vp"><g class="wpf-others"></g><g class="wpf-act"><g class="wpf-frames"></g><g class="wpf-links"></g><g class="wpf-blocks"></g></g></g></svg>
             <p class="wpf-empty" hidden>{{ __('workflowpacks::flows.empty') }}</p>
+            {{-- folded sides open again from the grid --}}
+            <button type="button" class="wpf-edge wpf-edge-list" data-act="toggle-list" aria-expanded="true">☰ {{ __('workflowpacks::flows.list_title') }}</button>
+            <button type="button" class="wpf-edge wpf-edge-panel" data-act="toggle-panel" aria-expanded="true">⚙ {{ __('workflowpacks::flows.settings') }}</button>
         </div>
-        <aside class="wpf-panel" aria-live="polite"></aside>
+        {{-- right: the settings of the open flow, then of the chosen block (or the simulation, the path of a ticket) --}}
+        <aside class="wpf-side wpf-side-panel" aria-label="{{ __('workflowpacks::flows.settings') }}">
+            <div class="wpf-side-head"><strong>{{ __('workflowpacks::flows.settings') }}</strong>
+                <button type="button" class="wpf-side-close" data-act="toggle-panel" title="{{ __('workflowpacks::flows.fold') }}" aria-label="{{ __('workflowpacks::flows.fold') }}">›</button></div>
+            <details class="wpf-settings" open>
+                <summary><span class="wpf-settings-name"></span></summary>
+                <label class="wpf-field"><span>{{ __('workflowpacks::flows.name') }}</span>
+                    <input type="text" class="form-control input-sm wpf-name" maxlength="191"></label>
+                <details class="wpf-boxes">
+                    <summary class="btn btn-default btn-sm">{{ __('workflowpacks::flows.mailboxes') }}: <span class="wpf-boxes-label"></span></summary>
+                    <div class="wpf-boxes-list"></div>
+                </details>
+                <label class="wpf-check" title="{{ __('workflowpacks::flows.once_help') }}"><input type="checkbox" class="wpf-once"> {{ __('workflowpacks::flows.once') }}</label>
+                <label class="wpf-check"><input type="checkbox" class="wpf-active"> {{ __('workflowpacks::flows.active') }}</label>
+                <div class="wpf-inline">
+                    <button type="button" class="btn btn-default btn-sm" data-act="reapply" title="{{ __('workflowpacks::reapply.intro') }}">{{ __('workflowpacks::flows.reapply_button') }}</button>
+                    <button type="button" class="btn btn-link btn-sm text-danger" data-act="delete-flow">{{ __('workflowpacks::flows.delete_flow') }}</button>
+                </div>
+                {{-- Workflows there: the Import / Export tabs are for its rules, so the packs of flows and the diagram of
+                     the rules (to be removed later) are reached from here; without it, the tabs lead to the packs of flows --}}
+                @if (\Modules\WorkflowPacks\Services\Compat\Checker::workflowsReady())
+                    <div class="wpf-inline">
+                        <a class="btn btn-default btn-sm" href="{{ route('workflowpacks.flowpack') }}">{{ __('workflowpacks::flowpack.button_import') }}</a>
+                        <a class="btn btn-default btn-sm" href="{{ route('workflowpacks.flowpack.export') }}">{{ __('workflowpacks::flowpack.button_export') }}</a>
+                        <a class="btn btn-link btn-sm" href="{{ route('workflowpacks.graph') }}">{{ __('workflowpacks::flows.rules_graph') }}</a>
+                    </div>
+                @endif
+            </details>
+            <div class="wpf-panel" aria-live="polite"></div>
+        </aside>
     </div>
-    <p class="wpf-help">{{ __('workflowpacks::flows.help') }}</p>
 </div>
 @endsection
 

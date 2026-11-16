@@ -29,7 +29,7 @@ assert.deepStrictEqual(pv, { x: -100, y: -100, k: 2 }, 'spread: zoom x2 around t
 pv = E.pinchView({ x: 10, y: 20, k: 1 }, [50, 50], 100, [80, 60], 100);
 assert.deepStrictEqual(pv, { x: 40, y: 30, k: 1 }, 'same spacing: the view follows the fingers');
 assert.strictEqual(E.pinchView({ x: 0, y: 0, k: 1 }, [0, 0], 100, [0, 0], 10000).k, 2, 'zoom capped');
-assert.strictEqual(E.pinchView({ x: 0, y: 0, k: 1 }, [0, 0], 100, [0, 0], 1).k, 0.25, 'zoom floored');
+assert.strictEqual(E.pinchView({ x: 0, y: 0, k: 1 }, [0, 0], 100, [0, 0], 1).k, E.MIN_K, 'zoom floored (far enough to see many flows)');
 console.log('pinchView: OK');
 
 // selection rectangle: blocks it touches, whatever corner it starts from
@@ -39,3 +39,17 @@ assert.deepStrictEqual(E.inRect(blocks, size, [-10, -10], [250, 100]), ['a']);
 assert.deepStrictEqual(E.inRect(blocks, size, [600, 100], [200, -50]), ['a', 'b'], 'drawn from the bottom right');
 assert.deepStrictEqual(E.inRect(blocks, size, [240, 100], [290, 200]), [], 'empty space');
 console.log('inRect: OK');
+
+// flows on the grid, in rows: side by side until the row is full, then the next row under the tallest one
+const placed = E.shelf([
+    { id: 1, x: -24, y: -54, w: 1000, h: 200 },
+    { id: 2, x: 100, y: 40, w: 1200, h: 300 },
+    { id: 3, x: 0, y: 0, w: 900, h: 100 },
+    { id: 4, x: 0, y: 0, w: 500, h: 100 },
+], 2600, 70);
+assert.deepStrictEqual(placed[1], [24, 54], 'first flow at the corner');
+assert.deepStrictEqual(placed[2], [970, -40], 'second one on its right, after the gap');
+assert.deepStrictEqual(placed[3], [0, 370], 'too wide for the row: next row, under the tallest (300 + gap)');
+assert.deepStrictEqual(placed[4], [970, 370], 'then on its right');
+assert.deepStrictEqual(E.shelf([{ id: 9, x: 0, y: 0, w: 5000, h: 10 }], 2600, 70)[9], [0, 0], 'wider than a row: alone on it');
+console.log('shelf: OK');

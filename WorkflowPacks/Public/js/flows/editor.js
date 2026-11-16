@@ -11,6 +11,7 @@
 
     var NS = 'http://www.w3.org/2000/svg';
     var W = 230, H = 62, PORT_GAP = 24, GRID = 10;
+    var MIN_K = 0.08, MAX_K = 2, PAD = 24, LABEL = 30, SHELF_GAP = 70, SHELF_WIDTH = 2600;
     var OPS = {
         text: ['contains', 'not_contains', 'equal', 'not_equal', 'starts', 'ends', 'regex'],
         choice: ['is', 'is_not'],
@@ -99,9 +100,44 @@
      * under their middle. v0 = view at the start, m0/m = middles (px in the canvas), d0/d = spacings.
      */
     function pinchView(v0, m0, d0, m, d) {
-        var k = Math.min(2, Math.max(0.25, v0.k * d / Math.max(1, d0)));
+        var k = Math.min(MAX_K, Math.max(MIN_K, v0.k * d / Math.max(1, d0)));
         var wx = (m0[0] - v0.x) / v0.k, wy = (m0[1] - v0.y) / v0.k;
         return { x: m[0] - wx * k, y: m[1] - wy * k, k: k };
+    }
+
+    /**
+     * Flows side by side on the grid, in rows (like books on shelves): each box {id, x, y, w, h} (where its blocks are)
+     * gets the shift [dx, dy] that puts it in its place. A row ends past maxWidth; gap between flows and between rows.
+     */
+    function shelf(boxes, maxWidth, gap) {
+        var out = {}, x = 0, y = 0, row = 0;
+        boxes.forEach(function (b) {
+            if (x > 0 && x + b.w > maxWidth) {
+                x = 0;
+                y += row + gap;
+                row = 0;
+            }
+            out[b.id] = [x - b.x, y - b.y];
+            x += b.w + gap;
+            row = Math.max(row, b.h);
+        });
+        return out;
+    }
+
+    /** Settings of this viewer kept in the browser (what is shown, sides folded); nothing when the browser refuses. */
+    function pref(key, value) {
+        try {
+            var all = JSON.parse(root.localStorage.getItem('wpf.view') || '{}') || {};
+            if (value === undefined) { return all[key]; }
+            all[key] = value;
+            root.localStorage.setItem('wpf.view', JSON.stringify(all));
+        } catch (e) { /* private window, storage blocked */ }
+        return undefined;
+    }
+
+    /** Phones and tablets held upright: the sides open over the grid (flows.css, same width). */
+    function narrow() {
+        return !!(root.matchMedia && root.matchMedia('(max-width: 1023px)').matches);
     }
 
     /** Ids of the blocks touching a rectangle drawn between two points of the diagram (any corner first). */
@@ -128,15 +164,21 @@
         this.flows = [];
         this.flow = null;
         this.checked = {};   // ids ticked in the list of the flows
+        this.offsets = {};   // flow id -> [dx, dy]: where it sits on the grid
+        this.show = ['all', 'checked', 'open'].indexOf(pref('show')) >= 0 ? pref('show') : 'all';
         this.q = function (s) { return rootEl.querySelector(s); };
         this.svg = this.q('.wpf-canvas');
         this.vp = this.q('.wpf-vp');
+        this.act = this.q('.wpf-act');
+        this.others = this.q('.wpf-others');
         this.panel = this.q('.wpf-panel');
         var defs = svg('defs', {}, this.svg);
         if (root.WPGraph && root.WPGraph.icons) { root.WPGraph.icons.define(defs); }
         this.bind();
-        // phones: the list folded under its title (the flow open is named there), the diagram first
-        if (root.matchMedia && root.matchMedia('(max-width: 767px)').matches) { this.q('.wpf-list').open = false; }
+        // the grid first: on a phone both sides start folded (they open over the grid), elsewhere as left last time
+        this.q('.wpf-show').value = this.show;
+        this.side('list', narrow() ? false : pref('list') !== false, true);
+        this.side('panel', narrow() ? false : pref('panel') !== false, true);
         this.load(cfg.open || undefined);
     }
 
@@ -165,18 +207,22 @@
         var self = this;
         return this.request(this.cfg.urls.data).then(function (res) {
             self.flows = (res.data && res.data.flows) || [];
+            self.flow = null;   // fresh from the server: the copy open before must not replace it
             var pick = self.flows.filter(function (f) { return f.id === selectId; })[0] || self.flows[0] || null;
             self.open(pick);
         });
     };
 
     Editor.prototype.open = function (flow) {
+        // the flow left keeps its changes (drawn on the grid, opened again as it is)
+        var left = this.flow;
+        if (left) { this.flows = this.flows.map(function (f) { return f.id === left.id ? left : f; }); }
         this.flow = flow ? clone(flow) : null;
         this.sel = null;
         this.sim = null;
         var empty = !flow;
         this.q('.wpf-empty').hidden = !empty;
-        Array.prototype.forEach.call(this.root.querySelectorAll('.wpf-toolbar input, .wpf-toolbar [data-act]:not([data-act="new"])'), function (n) {
+        Array.prototype.forEach.call(this.root.querySelectorAll('.wpf-toolbar [data-act]:not([data-act="new"]):not([data-act="fullscreen"]), .wpf-settings input, .wpf-settings [data-act]'), function (n) {
             n.disabled = empty;
         });
         if (flow) {
@@ -185,10 +231,10 @@
             this.q('.wpf-active').checked = flow.active;
             this.boxes();
         }
-        this.render();
-        this.fit();
-        this.showPanel();
         this.state();
+        this.relayout();
+        this.focus();
+        this.showPanel();
     };
 
     /**
@@ -205,6 +251,7 @@
             var box = h('input', { type: 'checkbox', 'aria-label': src.name, checked: !!self.checked[f.id], on: { change: function () {
                 if (this.checked) { self.checked[f.id] = true; } else { delete self.checked[f.id]; }
                 self.listTools();
+                if (self.show === 'checked') { self.relayout(); }
             } } });
             var note = (src.version ? fill(t.published, { n: src.version }) : t.unpublished) + ' · ' + (src.active ? t.active : t.inactive);
             ul.appendChild(h('li', { class: 'wpf-list-item' + (current ? ' is-current' : '') }, [box,
@@ -214,7 +261,7 @@
                 } } }, [h('span', { class: 'wpf-list-name', text: src.name }), h('span', { class: 'wpf-list-note', text: note })])]));
         });
         this.q('.wpf-list-count').textContent = '(' + this.flows.length + ')';
-        this.q('.wpf-list-current').textContent = this.flow ? '— ' + this.flow.name : '';
+        this.q('.wpf-settings-name').textContent = this.flow ? this.flow.name : '';
         this.listTools();
     };
 
@@ -226,6 +273,30 @@
         all.disabled = !this.flows.length;
         del.disabled = !n;
         del.textContent = n ? fill(this.t.delete_many, { count: n }) : this.t.delete_many_none;
+        // the ticked flows are the ones handled: "Publish (n)", switch on / off
+        var pub = this.q('[data-act="publish"]');
+        pub.textContent = n ? fill(this.t.publish_n, { count: n }) : this.t.publish;
+        pub.title = n ? this.t.publish_n_help : '';
+        // the actions on the ticked flows only show when some are ticked (the list keeps its room)
+        Array.prototype.forEach.call(this.root.querySelectorAll('[data-act="bulk-on"], [data-act="bulk-off"], [data-act="delete-many"]'), function (b) {
+            b.disabled = !n;
+            b.hidden = !n;
+        });
+    };
+
+    /** The ticked flows published, switched on or off together; the ones refused are named. */
+    Editor.prototype.bulk = function (action) {
+        var self = this, ids = Object.keys(this.checked).map(function (id) { return parseInt(id, 10); });
+        if (!ids.length) { return; }
+        var keep = this.flow ? this.flow.id : undefined;
+        this.flush().then(function () { return self.request(self.cfg.urls.bulk, { action: action, ids: ids }); }).then(function (res) {
+            var d = res.data || {};
+            return self.load(keep).then(function () {
+                var text = fill(self.t['bulk_' + action], { count: d.done || 0 });
+                if (d.refused && d.refused.length) { text += ' ' + fill(self.t.bulk_refused, { list: d.refused.slice(0, 8).join(' · ') }); }
+                self.status(text, res.ok && !(d.refused && d.refused.length) ? 'ok' : 'warn');
+            });
+        });
     };
 
     /** The ticked flows deleted together, after a confirmation; the flow open stays open when it is not one of them. */
@@ -296,34 +367,103 @@
         return ((this.flow && this.flow.problems) || []).filter(function (p) { return p.block === id; });
     };
 
+    /** Where the blocks of a draft are, with room for the frame and the name of the flow above. */
+    Editor.prototype.box = function (draft) {
+        var self = this, b = [Infinity, Infinity, -Infinity, -Infinity];
+        (draft.blocks || []).forEach(function (bl) {
+            var sz = self.size(bl);
+            b = [Math.min(b[0], bl.x || 0), Math.min(b[1], bl.y || 0), Math.max(b[2], (bl.x || 0) + sz[0] + 40), Math.max(b[3], (bl.y || 0) + sz[1])];
+        });
+        if (b[0] === Infinity) { b = [0, 0, W, H]; }
+        return { x: b[0] - PAD, y: b[1] - PAD - LABEL, w: b[2] - b[0] + PAD * 2, h: b[3] - b[1] + PAD * 2 + LABEL };
+    };
+
+    /** The flows shown: all, the ticked ones or the open one only; the open one always, as it is being edited. */
+    Editor.prototype.visible = function () {
+        var self = this, open = this.flow ? this.flow.id : null;
+        return this.flows.filter(function (f) {
+            return f.id === open || self.show === 'all' || (self.show === 'checked' && self.checked[f.id]);
+        }).map(function (f) { return f.id === open ? self.flow : f; });
+    };
+
+    /** Each flow shown gets its place on the grid; the open one stays where it is on the screen. */
+    Editor.prototype.relayout = function () {
+        var self = this, before = this.offset(), list = this.visible();
+        var boxes = list.map(function (f) { var b = self.box(f.draft || {}); b.id = f.id; return b; });
+        // rows about as wide as the grid is wide compared to its height: "Fit all" fills the screen
+        var r = this.svg.getBoundingClientRect(), aspect = r.width && r.height ? r.width / r.height : 1.6;
+        var area = boxes.reduce(function (m, b) { return m + (b.w + SHELF_GAP) * (b.h + SHELF_GAP); }, 0);
+        var widest = boxes.reduce(function (m, b) { return Math.max(m, b.w); }, 0);
+        this.offsets = shelf(boxes, Math.max(widest, Math.min(SHELF_WIDTH * 3, Math.sqrt(area * aspect))), SHELF_GAP);
+        var after = this.offset();
+        this.view.x += (before[0] - after[0]) * this.view.k;
+        this.view.y += (before[1] - after[1]) * this.view.k;
+        // the other flows: drawn once here (not at each move of the open one)
+        this.others.textContent = '';
+        list.forEach(function (f) {
+            if (self.flow && f.id === self.flow.id) { return; }
+            var o = self.offsets[f.id] || [0, 0];
+            var g = svg('g', { class: 'wpf-other', 'data-flow': f.id, transform: 'translate(' + o[0] + ',' + o[1] + ')' }, self.others);
+            self.frame(g, f, false);
+            self.drawFlow(f, svg('g', {}, g), svg('g', {}, g), false);
+        });
+        this.render();
+    };
+
+    Editor.prototype.offset = function () {
+        return (this.flow && this.offsets[this.flow.id]) || [0, 0];
+    };
+
+    /** The frame of a flow and its name above it (a click on the name of another flow opens it). */
+    Editor.prototype.frame = function (parent, f, open) {
+        var b = this.box(f.draft || {});
+        svg('rect', { class: 'wpf-frame' + (open ? ' is-open' : ''), x: b.x, y: b.y, width: b.w, height: b.h, rx: 16 }, parent);
+        var label = svg('text', { class: 'wpf-frame-name', x: b.x + 14, y: b.y + 22 }, parent);
+        label.textContent = cut(f.name, 60) + (f.active ? '  ●' : '');
+    };
+
     Editor.prototype.render = function () {
-        var self = this, links = this.q('.wpf-links'), blocks = this.q('.wpf-blocks');
+        var frame = this.q('.wpf-frames'), links = this.q('.wpf-links'), blocks = this.q('.wpf-blocks');
+        frame.textContent = '';
         links.textContent = '';
         blocks.textContent = '';
+        var o = this.offset();
+        this.act.setAttribute('transform', 'translate(' + o[0] + ',' + o[1] + ')');
         this.setTransform();
         if (!this.flow) { return; }
-        var draft = this.flow.draft, picked = this.picked();
-        draft.links.forEach(function (l, i) {
-            var a = self.block(l.from), b = self.block(l.to);
+        this.frame(frame, this.flow, true);
+        this.drawFlow(this.flow, links, blocks, true);
+    };
+
+    /** The blocks and links of a flow; live = the open one (selection, simulation, problems, ports to pull). */
+    Editor.prototype.drawFlow = function (f, links, blocks, live) {
+        var self = this, draft = f.draft || { blocks: [], links: [] }, picked = live ? this.picked() : [];
+        var byId = {};
+        (draft.blocks || []).forEach(function (b) { byId[b.id] = b; });
+        (draft.links || []).forEach(function (l, i) {
+            var a = byId[l.from], b = byId[l.to];
             if (!a || !b) { return; }
             var s = [a.x + W, a.y + self.portY(a, l.port)], e = [b.x, b.y + self.size(b)[1] / 2];
             var dx = Math.max(40, Math.abs(e[0] - s[0]) / 2);
             var d = 'M' + s + 'C' + [s[0] + dx, s[1]] + ' ' + [e[0] - dx, e[1]] + ' ' + e;
-            var sel = self.sel && self.sel.link === i;
-            var g = svg('g', { class: 'wpf-link port-' + l.port + (sel ? ' is-selected' : '') + (self.sim && self.sim.links[i] ? ' is-sim' : ''), 'data-link': i }, links);
-            svg('path', { class: 'wpf-link-hit', d: d }, g);
-            svg('path', { class: 'wpf-link-line', d: d, 'marker-end': '' }, g);
+            var sel = live && self.sel && self.sel.link === i;
+            var g = svg('g', live ? { class: 'wpf-link port-' + l.port + (sel ? ' is-selected' : '') + (self.sim && self.sim.links[i] ? ' is-sim' : ''), 'data-link': i }
+                : { class: 'wpf-link port-' + l.port }, links);
+            if (live) { svg('path', { class: 'wpf-link-hit', d: d }, g); }
+            svg('path', { class: 'wpf-link-line', d: d }, g);
             if (l.port !== 'next') {
                 var t = svg('text', { class: 'wpf-link-label', x: (s[0] + e[0]) / 2, y: (s[1] + e[1]) / 2 - 4 }, g);
                 t.textContent = self.bt.outputs[l.port] || l.port;
             }
         });
-        draft.blocks.forEach(function (b) {
+        (draft.blocks || []).forEach(function (b) {
             var type = self.types[b.type] || { family: 'util', name: b.type, outputs: [] };
             var size = self.size(b);
-            var cls = 'wpf-block fam-' + type.family + (picked.indexOf(b.id) >= 0 ? ' is-selected' : '')
-                + (self.problemsOf(b.id).length ? ' has-problem' : '') + (self.sim && self.sim.on === b.id ? ' is-sim' : '')
-                + (self.sim && self.sim.seen[b.id] ? ' was-sim' : '');
+            var cls = 'wpf-block fam-' + type.family;
+            if (live) {
+                cls += (picked.indexOf(b.id) >= 0 ? ' is-selected' : '') + (self.problemsOf(b.id).length ? ' has-problem' : '')
+                    + (self.sim && self.sim.on === b.id ? ' is-sim' : '') + (self.sim && self.sim.seen[b.id] ? ' was-sim' : '');
+            }
             var g = svg('g', { class: cls, transform: 'translate(' + b.x + ',' + b.y + ')', 'data-block': b.id }, blocks);
             svg('rect', { class: 'wpf-card', width: size[0], height: size[1], rx: 10 }, g);
             svg('rect', { class: 'wpf-stripe', width: 5, height: size[1], rx: 2 }, g);
@@ -332,7 +472,7 @@
             var name = svg('text', { class: 'wpf-kind', x: 46, y: 22 }, g);
             name.textContent = cut(type.name, 26);
             var title = svg('text', { class: 'wpf-title', x: 46, y: 41 }, g);
-            title.textContent = cut((self.flow.titles || {})[b.id] || type.name, 24);
+            title.textContent = cut((f.titles || {})[b.id] || type.name, 24);
             if (type.family !== 'trigger') {
                 svg('circle', { class: 'wpf-in', cx: 0, cy: size[1] / 2, r: 5 }, g);
             }
@@ -341,6 +481,10 @@
                 if (self.outputsOf(b).length > 1) {
                     var lt = svg('text', { class: 'wpf-port-label', x: W - 12, y: py + 4 }, g);
                     lt.textContent = o.label;
+                }
+                if (!live) {
+                    svg('circle', { class: 'wpf-port port-' + o.key, cx: W, cy: py, r: 7 }, g);
+                    return;
                 }
                 // invisible larger circles: easier to catch, with a finger too
                 var port = svg('g', { 'data-port': o.key }, g);
@@ -358,24 +502,53 @@
         this.vp.setAttribute('transform', 'translate(' + this.view.x + ',' + this.view.y + ') scale(' + this.view.k + ')');
     };
 
-    Editor.prototype.fit = function () {
-        if (!this.flow || !this.flow.draft.blocks.length) { return; }
-        var self = this, box = [Infinity, Infinity, -Infinity, -Infinity];
-        this.flow.draft.blocks.forEach(function (b) {
-            var s = self.size(b);
-            box = [Math.min(box[0], b.x), Math.min(box[1], b.y), Math.max(box[2], b.x + s[0] + 40), Math.max(box[3], b.y + s[1])];
-        });
+    /** The view on a rectangle of the grid (zoom from MIN_K to 1.2). */
+    Editor.prototype.look = function (x, y, w, h) {
         var r = this.svg.getBoundingClientRect(), pad = 30;
-        var k = Math.min(1.2, (r.width - pad * 2) / Math.max(1, box[2] - box[0]), (r.height - pad * 2) / Math.max(1, box[3] - box[1]));
-        this.view.k = Math.max(0.3, k);
-        this.view.x = (r.width - (box[2] - box[0]) * this.view.k) / 2 - box[0] * this.view.k;
-        this.view.y = (r.height - (box[3] - box[1]) * this.view.k) / 2 - box[1] * this.view.k;
+        if (!r.width || !r.height) { return; }
+        var k = Math.min(1.2, (r.width - pad * 2) / Math.max(1, w), (r.height - pad * 2) / Math.max(1, h));
+        this.view.k = Math.max(MIN_K, k);
+        this.view.x = (r.width - w * this.view.k) / 2 - x * this.view.k;
+        this.view.y = (r.height - h * this.view.k) / 2 - y * this.view.k;
         this.setTransform();
     };
 
+    /** "Fit all": every flow shown. */
+    Editor.prototype.fit = function () {
+        var self = this, b = [Infinity, Infinity, -Infinity, -Infinity];
+        this.visible().forEach(function (f) {
+            var x = self.box(f.draft || {}), o = self.offsets[f.id] || [0, 0];
+            b = [Math.min(b[0], x.x + o[0]), Math.min(b[1], x.y + o[1]), Math.max(b[2], x.x + o[0] + x.w), Math.max(b[3], x.y + o[1] + x.h)];
+        });
+        if (b[0] !== Infinity) { this.look(b[0], b[1], b[2] - b[0], b[3] - b[1]); }
+    };
+
+    /** The open flow in the middle of the grid. */
+    Editor.prototype.focus = function () {
+        if (!this.flow) { return; }
+        var x = this.box(this.flow.draft), o = this.offset();
+        this.look(x.x + o[0], x.y + o[1], x.w, x.h);
+    };
+
+    /** A point of the screen, in the coordinates of the open flow. */
     Editor.prototype.world = function (e) {
-        var r = this.svg.getBoundingClientRect();
-        return [(e.clientX - r.left - this.view.x) / this.view.k, (e.clientY - r.top - this.view.y) / this.view.k];
+        var r = this.svg.getBoundingClientRect(), o = this.offset();
+        return [(e.clientX - r.left - this.view.x) / this.view.k - o[0], (e.clientY - r.top - this.view.y) / this.view.k - o[1]];
+    };
+
+    /** A side folded or unfolded (kept for next time, except on a phone where they open over the grid). */
+    Editor.prototype.side = function (name, on, quiet) {
+        this.root.classList.toggle(name + '-off', !on);
+        var edge = this.q('.wpf-edge-' + name);
+        if (edge) { edge.setAttribute('aria-expanded', on ? 'true' : 'false'); }
+        if (!quiet && !narrow()) { pref(name, on); }
+        this.attention();
+    };
+
+    /** The settings folded while a block is chosen: their button on the grid says so. */
+    Editor.prototype.attention = function () {
+        var edge = this.q('.wpf-edge-panel');
+        if (edge) { edge.classList.toggle('is-attn', !!(this.sel && this.root.classList.contains('panel-off'))); }
     };
 
     // ------------------------------------------------------------------------------------------ interactions
@@ -387,6 +560,13 @@
             self.checked = {};
             if (on) { self.flows.forEach(function (f) { self.checked[f.id] = true; }); }
             self.renderList();
+            if (self.show === 'checked') { self.relayout(); }
+        });
+        this.q('.wpf-show').addEventListener('change', function () {
+            self.show = this.value;
+            pref('show', self.show);
+            self.relayout();
+            self.fit();
         });
         this.q('.wpf-name').addEventListener('input', function () { self.flow.name = this.value; self.save(); self.renderList(); });
         this.q('.wpf-once').addEventListener('change', function () { self.flow.once = this.checked; self.save(); });
@@ -396,9 +576,13 @@
             if (!act || act.disabled) { return; }
             var name = act.getAttribute('data-act');
             if (name === 'new') { self.create(); }
-            if (name === 'publish') { self.publish(); }
+            if (name === 'publish') { if (Object.keys(self.checked).length) { self.bulk('publish'); } else { self.publish(); } }
+            if (name === 'bulk-on') { self.bulk('activate'); }
+            if (name === 'bulk-off') { self.bulk('deactivate'); }
             if (name === 'simulate') { self.showSim(); }
-            if (name === 'fit') { self.fit(); }
+            if (name === 'fit') { self.relayout(); self.fit(); }
+            if (name === 'toggle-list') { self.side('list', self.root.classList.contains('list-off')); }
+            if (name === 'toggle-panel') { self.side('panel', self.root.classList.contains('panel-off')); }
             if (name === 'fullscreen') { self.fullPage(); }
             if (name === 'add') { self.menu(act, null, null); }
             if (name === 'delete-flow') { self.destroy(); }
@@ -423,7 +607,7 @@
         this.svg.addEventListener('wheel', function (e) {
             e.preventDefault();
             var r = self.svg.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top;
-            var k = Math.min(2, Math.max(0.25, self.view.k * (e.deltaY < 0 ? 1.1 : 0.9)));
+            var k = Math.min(MAX_K, Math.max(MIN_K, self.view.k * (e.deltaY < 0 ? 1.1 : 0.9)));
             self.view.x = mx - (mx - self.view.x) * k / self.view.k;
             self.view.y = my - (my - self.view.y) * k / self.view.k;
             self.view.k = k;
@@ -453,7 +637,7 @@
         var lasso = function (e, add) {
             var w = self.world(e);
             return { type: 'lasso', sx: e.clientX, sy: e.clientY, start: w, moved: false, base: add ? self.picked() : [],
-                rect: svg('rect', { class: 'wpf-lasso', x: w[0], y: w[1], width: 0, height: 0 }, self.vp) };
+                rect: svg('rect', { class: 'wpf-lasso', x: w[0], y: w[1], width: 0, height: 0 }, self.act) };
         };
         var drop = function (m) {
             [m && m.rect, m && m.temp].forEach(function (n) { if (n && n.parentNode) { n.parentNode.removeChild(n); } });
@@ -474,6 +658,17 @@
                     mode = { type: 'pinch', v0: { x: self.view.x, y: self.view.y, k: self.view.k }, m0: middle(p), d0: spacing(p) };
                     return;
                 }
+            }
+            // another flow on the grid: the view moves as on the background; a click (no move) opens it
+            var otherEl = e.target.closest('.wpf-other');
+            if (otherEl) {
+                var inner = e.target.closest('[data-block]');
+                mode = e.button === 0 || e.button === 1 || touch ? pan(e) : null;
+                if (mode) {
+                    mode.other = parseInt(otherEl.getAttribute('data-flow'), 10);
+                    mode.otherBlock = inner ? inner.getAttribute('data-block') : null;
+                }
+                return;
             }
             var plus = e.target.closest('[data-plus]'), port = e.target.closest('[data-port]');
             var blockEl = e.target.closest('[data-block]'), linkEl = e.target.closest('[data-link]');
@@ -574,7 +769,11 @@
             if (m.type === 'drag' && m.moved) { self.save(); }
             // a click on one of several chosen blocks: that one only
             if (m.type === 'drag' && !m.moved && m.from.length > 1) { self.select({ block: m.id }); }
-            if (m.type === 'pan' && !m.moved) { self.select(null); }
+            if (m.type === 'pan' && !m.moved && m.other) {
+                self.openOther(m.other, m.otherBlock);
+            } else if (m.type === 'pan' && !m.moved) {
+                self.select(null);
+            }
             if (m.type === 'lasso') {
                 if (m.moved) {
                     self.pick(m.base.concat(inRect(self.flow.draft.blocks, self.size.bind(self), m.start, self.world(e))));
@@ -630,7 +829,7 @@
         var self = this;
         window.requestAnimationFrame(function () {
             var ids = self.picked();
-            if (ids.length === 1) { self.reveal(self.block(ids[0])); } else { self.fit(); }
+            if (ids.length === 1) { self.reveal(self.block(ids[0])); } else { self.focus(); }
         });
     };
 
@@ -638,6 +837,21 @@
         this.sel = sel;
         this.render();
         this.showPanel();
+        this.attention();
+    };
+
+    /** A flow clicked on the grid: opened where it is, the block clicked chosen. */
+    Editor.prototype.openOther = function (id, blockId) {
+        var self = this, flow = this.flows.filter(function (f) { return f.id === id; })[0];
+        if (!flow) { return; }
+        var keep = { x: this.view.x, y: this.view.y, k: this.view.k };
+        this.flush().then(function () {
+            self.open(flow);
+            // no jump: the grid stays as it was, the flow clicked is now the one being edited
+            self.view = keep;
+            self.setTransform();
+            if (blockId && self.block(blockId)) { self.select({ block: blockId }); }
+        });
     };
 
     Editor.prototype.link = function (from, port, to) {
@@ -727,18 +941,20 @@
 
     /** The block (and its "+") brought into view when it is outside: the view moves, the zoom stays. */
     Editor.prototype.reveal = function (b) {
-        var r = this.svg.getBoundingClientRect(), k = this.view.k, s = this.size(b);
-        var left = b.x * k + this.view.x, top = b.y * k + this.view.y, right = (b.x + s[0] + 40) * k + this.view.x, bottom = (b.y + s[1]) * k + this.view.y;
+        var r = this.svg.getBoundingClientRect(), k = this.view.k, s = this.size(b), o = this.offset();
+        var x = b.x + o[0], y = b.y + o[1];
+        var left = x * k + this.view.x, top = y * k + this.view.y, right = (x + s[0] + 40) * k + this.view.x, bottom = (y + s[1]) * k + this.view.y;
         if (left < 10 || top < 10 || right > r.width - 10 || bottom > r.height - 10) {
-            this.view.x = r.width / 2 - (b.x + s[0] / 2) * k;
-            this.view.y = r.height / 2 - (b.y + s[1] / 2) * k;
+            this.view.x = r.width / 2 - (x + s[0] / 2) * k;
+            this.view.y = r.height / 2 - (y + s[1] / 2) * k;
             this.setTransform();
         }
     };
 
     Editor.prototype.centre = function () {
         var r = this.svg.getBoundingClientRect();
-        return [(r.width / 2 - this.view.x) / this.view.k - W / 2, (r.height / 2 - this.view.y) / this.view.k - H / 2];
+        var o = this.offset();
+        return [(r.width / 2 - this.view.x) / this.view.k - W / 2 - o[0], (r.height / 2 - this.view.y) / this.view.k - H / 2 - o[1]];
     };
 
     // ------------------------------------------------------------------------------------------ side panel
@@ -777,6 +993,8 @@
                         [(bl ? ((self.flow.titles || {})[bl.id] || bl.type) + ' — ' : '') + pr.message]));
                 });
             }
+            // how to use the grid, folded (it was a paragraph under the diagram)
+            p.appendChild(h('details', { class: 'wpf-help' }, [h('summary', { text: t.help_title }), h('p', { text: t.intro }), h('p', { text: t.help })]));
             return;
         }
         var c = this.types[b.type] || { name: b.type, fields: {}, help: '' };
@@ -1070,7 +1288,7 @@
             var path = index >= 0 ? self.q('[data-link="' + index + '"] .wpf-link-line') : null;
             if (!path || !path.getTotalLength) { return done(); }
             s.links[index] = true;
-            var dot = svg('circle', { class: 'wpf-packet', r: 7 }, self.vp);
+            var dot = svg('circle', { class: 'wpf-packet', r: 7 }, self.act);
             var len = path.getTotalLength(), start = null;
             var frame = function (ts) {
                 start = start || ts;
@@ -1083,7 +1301,7 @@
         });
     };
 
-    var api = { start: function (el, cfg) { return new Editor(el, cfg); }, variablesBefore: variablesBefore, pinchView: pinchView, inRect: inRect };
+    var api = { start: function (el, cfg) { return new Editor(el, cfg); }, variablesBefore: variablesBefore, pinchView: pinchView, inRect: inRect, shelf: shelf, MIN_K: MIN_K };
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = api;
     } else {

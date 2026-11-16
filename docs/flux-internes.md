@@ -23,9 +23,20 @@ un flux et une règle Workflows qui visent les mêmes tickets agissent **tous le
 
 ## Créer un flux
 
-La **liste des flux**, à gauche du Schéma (repliée sous son titre sur téléphone), montre tous les flux à la fois :
-version publiée et état de chacun ; un clic en ouvre un. Cochez-en plusieurs, ou **Tout**, puis **Supprimer (n)** les
-supprime ensemble après confirmation (les tickets en attente dedans en sortent et restent tels quels).
+Le **Schéma** est une grande grille où l'on se déplace : **tous les flux** y sont dessinés, chacun dans son cadre
+avec son nom, rangés en lignes. Le flux **ouvert** est en couleur et se modifie ; les autres sont estompés, un clic
+sur l'un d'eux l'ouvre (sans que la grille bouge). **Tout voir** montre tous les flux affichés.
+
+Les réglages sont sur deux **côtés repliables** (‹ et ›), rouverts par les boutons **☰ Flux** et **⚙ Réglages** posés
+sur la grille ; le navigateur se souvient de ce choix. Sur tablette tenue droite et sur téléphone, les côtés s'ouvrent
+**par-dessus** la grille et sont repliés au départ.
+- **À gauche, les flux** : **Afficher sur la grille** tous les flux, les flux cochés ou le flux ouvert seul ; la
+  version et l'état de chacun ; un clic en ouvre un. Cochez-en un ou plusieurs (ou **Tout**) pour les traiter
+  ensemble : **Publier (n)** (bouton de la barre), **Activer**, **Désactiver** (seuls les flux publiés), **Supprimer (n)**
+  après confirmation. Les flux refusés (problèmes à corriger, jamais publiés) sont nommés.
+- **À droite, les réglages** : nom du flux, boîtes, une fois par ticket, actif, tickets existants, supprimer le flux ;
+  puis les réglages du bloc choisi, la simulation ou le parcours d'un ticket, et l'aide. Replié, son bouton se
+  colore quand un bloc est choisi.
 
 1. **Nouveau flux** : il commence par son déclencheur, **Nouvel e-mail**.
 2. Le **« + »** placé sur une sortie ajoute le bloc suivant, relié et placé à droite. On peut aussi tirer le rond
@@ -65,8 +76,8 @@ supprime ensemble après confirmation (les tickets en attente dedans en sortent 
 | Ne plus rien choisir | clic sur le fond, ou **Échap** | toucher le fond |
 
 **Suppr** supprime les blocs choisis (le déclencheur reste), **Ctrl+A** les choisit tous. **Agrandir** affiche
-l'éditeur sur toute la page (**Réduire** ou **Échap** pour revenir) ; sur téléphone, la barre tient alors sur une
-ligne qui défile, et le panneau n'apparaît que quand un bloc est choisi.
+l'éditeur sur toute la page (**Réduire** ou **Échap** pour revenir), avec des côtés plus étroits ; sur téléphone, la
+barre tient sur une ligne qui défile (Réduire et Tout voir en tête).
 
 ## Appliquer un flux aux tickets déjà là
 
@@ -107,8 +118,14 @@ appareils des agents, et ses **heures calmes** sont respectées. Un clic sur la 
 
 **Importer un pack** (onglet, sans Workflows ; avec Workflows : bouton **Importer un pack de flux** en haut du Schéma) : un pack fourni avec le module, un fichier `.json` (8 Mo au plus, sans limite de nombre de flux) ou le JSON
 collé. L'aperçu montre chaque flux, ses problèmes éventuels, les **paramètres** du pack à renseigner et les boîtes
-concernées (aucune cochée = toutes). Les nouveaux flux sont enregistrés **en brouillon, désactivés** : vérifiez-les,
-publiez-les puis activez-les un par un.
+concernées (aucune cochée = toutes). Les nouveaux flux sont enregistrés **en brouillon, désactivés**, sauf choix
+contraire dans **Après l'import** :
+- **Publier les flux** (ceux sans problème ; les autres sont nommés) ;
+- **Les activer aussi** : les nouveaux e-mails passent dedans ;
+- **Les appliquer aux tickets déjà là** (période, statuts) : un traitement par lots par flux, comme « Tickets
+  existants » (une fois par ticket respecté, suivi et arrêt depuis la page de chaque flux). Si le pack supprime des
+  tickets ou envoie des notifications push, une confirmation à cocher est demandée, sinon rien n'est fait.
+Activer ou appliquer publie aussi.
 
 **Jamais de doublon** : un flux déjà présent est reconnu par son pack d'origine, sinon par **son nom** (pack réexporté
 sous un autre nom, flux créé ici puis exporté, même réponse de l'assistant IA collée deux fois).

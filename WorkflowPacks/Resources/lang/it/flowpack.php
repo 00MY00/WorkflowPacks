@@ -37,4 +37,12 @@ return [
     'import'         => 'Importa',
     'done'           => 'Pacchetto importato: :created flusso/i creato/i, :updated aggiornato/i, :same già presente/i e invariato/i. I nuovi flussi sono bozze, disattivati.',
     'history'        => ':created creato/i, :updated aggiornato/i, :same invariato/i',
+    'after_title'     => 'Dopo l’importazione',
+    'after_publish'   => 'Pubblica i flussi (quelli senza problemi)',
+    'after_activate'  => 'Attivali anche: le nuove e-mail ci passano',
+    'after_apply'     => 'Applicali ai ticket già presenti',
+    'after_help'      => 'Attivare o applicare pubblica anche. Applicato ai ticket già presenti: a lotti, in background, «una volta per ticket» rispettato; seguito, pausa e stop da «Ticket esistenti» di ogni flusso.',
+    'after_confirm_risky' => 'Confermo: applicare questi flussi ai ticket già presenti',
+    'after_done'      => ':published pubblicato/i, :activated attivato/i, :jobs applicazione/i ai ticket esistenti avviata/e.',
+    'after_refused'   => 'Non pubblicati (problemi da correggere): :list',
 ];

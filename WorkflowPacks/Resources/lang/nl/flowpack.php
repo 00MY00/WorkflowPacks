@@ -37,4 +37,12 @@ return [
     'import'         => 'Importeren',
     'done'           => 'Pakket geïmporteerd: :created stroom/stromen aangemaakt, :updated bijgewerkt, :same al aanwezig en ongewijzigd. Nieuwe stromen zijn concepten, uitgeschakeld.',
     'history'        => ':created aangemaakt, :updated bijgewerkt, :same ongewijzigd',
+    'after_title'     => 'Na de import',
+    'after_publish'   => 'De stromen publiceren (die zonder problemen)',
+    'after_activate'  => 'Ook inschakelen: nieuwe e-mails gaan erdoor',
+    'after_apply'     => 'Toepassen op de tickets die er al zijn',
+    'after_help'      => 'Inschakelen of toepassen publiceert ook. Toegepast op bestaande tickets: in batches, op de achtergrond, „één keer per ticket” gerespecteerd; volgen, pauzeren en stoppen via „Bestaande tickets” van elke stroom.',
+    'after_confirm_risky' => 'Ik bevestig: deze stromen toepassen op de tickets die er al zijn',
+    'after_done'      => ':published gepubliceerd, :activated ingeschakeld, :jobs verwerking(en) van bestaande tickets gestart.',
+    'after_refused'   => 'Niet gepubliceerd (problemen op te lossen): :list',
 ];

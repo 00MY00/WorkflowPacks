@@ -37,4 +37,12 @@ return [
     'import'         => 'Importieren',
     'done'           => 'Paket importiert: :created Ablauf/Abläufe erstellt, :updated aktualisiert, :same bereits vorhanden und unverändert. Neue Abläufe sind Entwürfe, ausgeschaltet.',
     'history'        => ':created erstellt, :updated aktualisiert, :same unverändert',
+    'after_title'     => 'Nach dem Import',
+    'after_publish'   => 'Abläufe veröffentlichen (die ohne Problem)',
+    'after_activate'  => 'Auch einschalten: neue E-Mails laufen hindurch',
+    'after_apply'     => 'Auf die vorhandenen Tickets anwenden',
+    'after_help'      => 'Einschalten oder Anwenden veröffentlicht auch. Auf vorhandene Tickets: in Stapeln, im Hintergrund, „einmal pro Ticket“ beachtet; verfolgen, pausieren und stoppen über „Vorhandene Tickets“ jedes Ablaufs.',
+    'after_confirm_risky' => 'Ich bestätige: diese Abläufe auf die vorhandenen Tickets anwenden',
+    'after_done'      => ':published veröffentlicht, :activated eingeschaltet, :jobs Durchlauf/Durchläufe auf vorhandenen Tickets gestartet.',
+    'after_refused'   => 'Nicht veröffentlicht (Probleme zu beheben): :list',
 ];

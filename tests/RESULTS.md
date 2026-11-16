@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 3.7.0
+# Résultats des tests — Workflow Packs 3.8.0
 
 Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,15 @@ Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 3.8.0 — Schéma en grande grille, côtés repliables, flux cochés traités ensemble, options après l'import
+
+| Série | Résultat |
+|---|---|
+| Intégration (instance neuve) | 143 tests ; `FlowsEditorTest` : publier / activer / désactiver les flux cochés (activation refusée avant publication, flux à problème nommé, flux non coché inchangé, action inconnue refusée, droits) ; `FlowPackTest` : après l'import, 8 flux publiés, activés, 8 traitements sur les tickets déjà là avec la période et les statuts choisis ; pack qui supprime des tickets : rien sans la confirmation, puis publié et appliqué sans être activé |
+| JavaScript | rangement des flux en lignes (`shelf`), zoom à deux doigts jusqu'au nouveau minimum |
+| Navigateur PC 1440 px, souris | 8 flux sur la grille (7 autres + l'ouvert) ; afficher le flux ouvert seul : 0 autre ; les flux cochés : 2 ; clic sur un autre flux : ouvert, bloc choisi, grille immobile ; glisser un bloc du flux ouvert : il suit la souris (60, 39 px) ; rectangle : 3 blocs sur 3 ; côtés repliés : grille de 810 à 1336 px, bouton Réglages coloré avec un bloc choisi, choix gardé au rechargement ; plein écran ; « Publier (2) » puis « Activer » sur les mêmes flux cochés ; import avec « activer » et « appliquer » : 7 publiés et activés, 7 traitements lancés sur 6 tickets fictifs, le flux à paramètre manquant nommé |
+| Navigateur tablette 820 px et téléphone 390 px, gestes tactiles | côtés repliés au départ, grille sur toute la largeur (756 px sur tablette, 366 px sur téléphone) ; liste ouverte par-dessus la grille, flux ouvert depuis la liste ; zoom à deux doigts ; toucher un autre flux l'ouvre ; plein écran ; pas de défilement horizontal ; aucune erreur JavaScript |
 
 ## 3.7.0 — liste des flux, suppression de plusieurs flux
 

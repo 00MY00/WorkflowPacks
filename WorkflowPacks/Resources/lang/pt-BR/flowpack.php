@@ -37,4 +37,12 @@ return [
     'import'         => 'Importar',
     'done'           => 'Pacote importado: :created fluxo(s) criado(s), :updated atualizado(s), :same já presente(s) e sem alteração. Os novos fluxos são rascunhos, desativados.',
     'history'        => ':created criado(s), :updated atualizado(s), :same sem alteração',
+    'after_title'     => 'Após a importação',
+    'after_publish'   => 'Publicar os fluxos (os sem problemas)',
+    'after_activate'  => 'Ativá-los também: novos e-mails passam por eles',
+    'after_apply'     => 'Aplicá-los aos tickets já existentes',
+    'after_help'      => 'Ativar ou aplicar também publica. Aplicado aos tickets já existentes: em lotes, em segundo plano, “uma vez por ticket” respeitado; acompanhar, pausar e parar em “Tickets existentes” de cada fluxo.',
+    'after_confirm_risky' => 'Confirmo: aplicar estes fluxos aos tickets já existentes',
+    'after_done'      => ':published publicado(s), :activated ativado(s), :jobs aplicação(ões) aos tickets existentes iniciada(s).',
+    'after_refused'   => 'Não publicados (problemas a corrigir): :list',
 ];
