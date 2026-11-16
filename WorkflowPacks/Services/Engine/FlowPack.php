@@ -10,7 +10,8 @@ use Modules\WorkflowPacks\Entities\Flow;
  *    "params": [{"key", "label", "description", "required"}], "flows": [{"key", "name", "description", "once", "blocks", "links"}]}
  * A single flow (the answer of the AI assistant, "workflowpacks-flow") is read as a pack of one flow.
  * {{param.<key>}} in the parameters of the blocks is replaced by the value given at the import (plain text).
- * Imported flows are drafts, switched off; a new import of the same pack updates their drafts.
+ * Imported flows are drafts, switched off. No duplicates: a flow already here (same pack and key, else same name) is
+ * left as it is when identical, else its draft is updated (its mailboxes kept); only the missing ones are created.
  * No limit on the number of flows; only the size of the file (memory of the server). Keys written otherwise
  * ("Mon Pack") are turned into valid ones instead of refusing the pack.
  */
@@ -31,7 +32,7 @@ class FlowPack
     /**
      * @param array $values values of the parameters (key => text)
      * @return array ['ok', 'problems' => [texts], 'pack' => {key, name, description, version}, 'params' => [...],
-     *               'flows' => [{key, name, description, once, draft, problems, existing}]]
+     *               'flows' => [{key, name, description, once, draft, problems, existing (id|null), same (bool)}]]
      */
     public function read($json, array $values = [])
     {
@@ -74,7 +75,10 @@ class FlowPack
         foreach ($params as $p) {
             $replace['{{param.'.$p['key'].'}}'] = mb_substr(trim((string) ($values[$p['key']] ?? '')), 0, 500);
         }
-        $existing = Flow::where('pack_key', $key)->pluck('id', 'flow_key');
+        // the flows already here: same pack and key first, else same name (a pack exported under another name, a
+        // flow made here then exported, the same answer of the AI pasted twice); each one matched once at most
+        $here = Flow::orderBy('id')->get(['id', 'name', 'pack_key', 'flow_key', 'draft']);
+        $used = [];
         $out = [];
         $seen = [];
         foreach ($flows as $f) {
@@ -92,8 +96,20 @@ class FlowPack
                 'once'        => !array_key_exists('once', $f) || (bool) $f['once'],
                 'draft'       => $draft,
                 'problems'    => Definition::from($draft)->validate($this->registry),
-                'existing'    => $existing[$fkey] ?? null,
+                'existing'    => null,
+                'same'        => false,
             ];
+            $match = $here->first(function ($flow) use ($key, $fkey, $used) {
+                return !isset($used[$flow->id]) && (string) $flow->pack_key === $key && (string) $flow->flow_key === $fkey;
+            }) ?: $here->first(function ($flow) use ($out, $used) {
+                return !isset($used[$flow->id]) && self::sameName($flow->name, end($out)['name']);
+            });
+            if ($match) {
+                $used[$match->id] = true;
+                $last = count($out) - 1;
+                $out[$last]['existing'] = (int) $match->id;
+                $out[$last]['same'] = self::sameDraft((array) $match->draft, $draft);
+            }
         }
 
         return ['ok' => true, 'problems' => [], 'params' => $params, 'flows' => $out, 'pack' => [
@@ -106,26 +122,79 @@ class FlowPack
      * The flows of a pack saved as drafts, switched off (a new import of the same pack: their drafts updated, the
      * version that runs is kept until they are published again).
      *
-     * @return array ['created' => n, 'updated' => n]
+     * @return array ['created' => n, 'updated' => n, 'same' => n]
      */
     public function import(array $read, array $mailboxIds, $user)
     {
-        $count = ['created' => 0, 'updated' => 0];
+        $count = ['created' => 0, 'updated' => 0, 'same' => 0];
         \DB::transaction(function () use ($read, $mailboxIds, $user, &$count) {
             foreach ($read['flows'] as $f) {
                 $flow = $f['existing'] ? Flow::find($f['existing']) : null;
                 if ($flow) {
-                    $flow->update(['name' => $f['name'], 'draft' => $f['draft'], 'once' => $f['once'], 'mailbox_ids' => $mailboxIds]);
-                    $count['updated']++;
+                    // a flow found by its name now knows its pack: the next import finds it by its key
+                    $keys = (string) $flow->pack_key === '' ? ['pack_key' => $read['pack']['key'], 'flow_key' => $f['key'], 'pack_name' => $read['pack']['name']] : [];
+                    // same pack: its name as given by this import
+                    if ((string) $flow->pack_key === $read['pack']['key'] && (string) $flow->pack_name !== $read['pack']['name']) {
+                        $keys['pack_name'] = $read['pack']['name'];
+                    }
+                    if ($f['same']) {
+                        $count['same']++;
+                    } else {
+                        // the draft only: its mailboxes, "active" and the published version stay as they are
+                        $keys += ['name' => $f['name'], 'draft' => $f['draft'], 'once' => $f['once']];
+                        $count['updated']++;
+                    }
+                    if ($keys) {
+                        $flow->update($keys);
+                    }
                 } else {
                     Flow::create(['name' => $f['name'], 'draft' => $f['draft'], 'once' => $f['once'], 'mailbox_ids' => $mailboxIds,
-                        'active' => false, 'created_by' => $user ? $user->id : null, 'pack_key' => $read['pack']['key'], 'flow_key' => $f['key']]);
+                        'active' => false, 'created_by' => $user ? $user->id : null, 'pack_key' => $read['pack']['key'], 'flow_key' => $f['key'], 'pack_name' => $read['pack']['name']]);
                     $count['created']++;
                 }
             }
         });
 
         return $count;
+    }
+
+    /** Same name, whatever the case and the spaces around. */
+    protected static function sameName($a, $b)
+    {
+        return mb_strtolower(trim((string) $a)) === mb_strtolower(trim((string) $b));
+    }
+
+    /** Same blocks (type, settings) and same links; where the blocks are drawn does not count. */
+    protected static function sameDraft(array $a, array $b)
+    {
+        $shape = function (array $d) {
+            $blocks = [];
+            foreach ((array) ($d['blocks'] ?? []) as $bl) {
+                $blocks[(string) ($bl['id'] ?? '')] = [(string) ($bl['type'] ?? ''), self::sorted((array) ($bl['params'] ?? []))];
+            }
+            ksort($blocks);
+            $links = [];
+            foreach ((array) ($d['links'] ?? []) as $l) {
+                $links[] = ($l['from'] ?? '').'|'.($l['port'] ?? 'next').'|'.($l['to'] ?? '');
+            }
+            sort($links);
+
+            return json_encode([$blocks, $links]);
+        };
+
+        return $shape($a) === $shape($b);
+    }
+
+    protected static function sorted(array $v)
+    {
+        ksort($v);
+        foreach ($v as $k => $x) {
+            if (is_array($x)) {
+                $v[$k] = self::sorted($x);
+            }
+        }
+
+        return $v;
     }
 
     /** Flows -> a pack (to share them): blocks and links only, no mailbox (they are particular to this installation). */

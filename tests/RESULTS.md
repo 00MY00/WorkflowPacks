@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 3.6.1
+# Résultats des tests — Workflow Packs 3.6.2
 
 Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,13 @@ Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 3.6.2 — packs de flux sans doublon, accueil, libellés de l'assistant IA
+
+| Série | Résultat |
+|---|---|
+| Intégration (instance neuve) | 140 tests OK ; `FlowPackTest` : pack chargé 2 fois = 8 créés puis 8 inchangés ; un flux supprimé recréé, un flux modifié remis au brouillon du pack avec ses boîtes conservées ; pack réexporté sous un autre nom : aucun doublon ; flux créé ici puis collé (assistant IA) : reconnu par son nom ; accueil listant les flux par pack sous son nom, liens vers le Schéma, « Exporter ce pack » |
+| Navigateur PC 1440 px, tablette 820 px, téléphone 390 px, Workflows désactivé | pack fourni chargé 2 fois : aperçu « déjà présent, identique », toujours 8 flux ; accueil : packs de flux en premier, 8 flux, pas de défilement horizontal ; assistant IA : nouveaux libellés ; aucune erreur JavaScript |
 
 ## 3.6.1 — un seul onglet « Schéma », onglets directs
 

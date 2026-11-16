@@ -22,7 +22,7 @@
                             <input type="text" name="name" class="form-control" maxlength="120" value="{{ __('workflowpacks::flowpack.export_name') }}"></label>
                         <div class="wp-ai-field"><span>{{ __('workflowpacks::flowpack.flows_count', ['count' => count($flows)]) }}</span>
                             <div class="wp-box-checks">
-                                @foreach ($flows as $f)<label><input type="checkbox" name="ids[]" value="{{ $f->id }}" checked> {{ $f->name }}@if ($f->active) <span class="wp-muted">●</span>@endif</label>@endforeach
+                                @foreach ($flows as $f)<label><input type="checkbox" name="ids[]" value="{{ $f->id }}" @if (!$chosen || in_array((int) $f->id, $chosen, true)) checked @endif> {{ $f->name }}@if ($f->active) <span class="wp-muted">●</span>@endif</label>@endforeach
                             </div>
                             <small class="wp-muted">{{ __('workflowpacks::flowpack.export_help') }}</small></div>
                     </div>

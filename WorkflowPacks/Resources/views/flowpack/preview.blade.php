@@ -51,7 +51,7 @@
                     <div class="wp-tile" title="{{ $f['description'] }}">
                         <span class="wp-initials wp-fam-{{ $wp_ui::family($f['key']) }}" aria-hidden="true">{{ $wp_ui::initials($f['name']) }}<span class="wp-state-dot {{ $f['problems'] ? 'is-modified' : 'is-synced' }}"></span></span>
                         <span class="wp-tile-name">{{ $f['name'] }}
-                            <span class="wp-tile-note">{{ $f['existing'] ? __('workflowpacks::flowpack.update') : __('workflowpacks::flowpack.create') }}@if ($f['problems']) · {{ __('workflowpacks::flowpack.problems', ['count' => count($f['problems'])]) }}: {{ $f['problems'][0]['message'] }}@endif</span>
+                            <span class="wp-tile-note">{{ $f['existing'] ? ($f['same'] ? __('workflowpacks::flowpack.same') : __('workflowpacks::flowpack.update')) : __('workflowpacks::flowpack.create') }}@if ($f['problems']) · {{ __('workflowpacks::flowpack.problems', ['count' => count($f['problems'])]) }}: {{ $f['problems'][0]['message'] }}@endif</span>
                         </span>
                     </div>
                 @endforeach

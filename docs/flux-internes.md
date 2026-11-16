@@ -102,10 +102,19 @@ appareils des agents, et ses **heures calmes** sont respectées. Un clic sur la 
 ## Packs de flux (import, export)
 
 **Importer un pack** (onglet, sans Workflows ; avec Workflows : bouton **Importer un pack de flux** en haut du Schéma) : un pack fourni avec le module, un fichier `.json` (8 Mo au plus, sans limite de nombre de flux) ou le JSON
-collé. L'aperçu montre chaque flux (créé ou brouillon mis à jour), ses problèmes éventuels, les **paramètres** du
-pack à renseigner et les boîtes concernées (aucune cochée = toutes). Les flux sont enregistrés **en brouillon,
-désactivés** : vérifiez-les, publiez-les puis activez-les un par un. Réimporter le même pack met à jour les
-brouillons ; la version publiée continue de tourner jusqu'à la prochaine publication.
+collé. L'aperçu montre chaque flux, ses problèmes éventuels, les **paramètres** du pack à renseigner et les boîtes
+concernées (aucune cochée = toutes). Les nouveaux flux sont enregistrés **en brouillon, désactivés** : vérifiez-les,
+publiez-les puis activez-les un par un.
+
+**Jamais de doublon** : un flux déjà présent est reconnu par son pack d'origine, sinon par **son nom** (pack réexporté
+sous un autre nom, flux créé ici puis exporté, même réponse de l'assistant IA collée deux fois).
+- identique : **inchangé** ;
+- différent : son **brouillon** est mis à jour, ses **boîtes**, son état (actif ou non) et sa version publiée sont
+  conservés (la version publiée tourne jusqu'à la prochaine publication) ;
+- absent (jamais importé, ou supprimé depuis) : **créé**. Recharger un pack complète donc les flux manquants.
+
+L'**accueil** liste les flux par pack d'origine (puis « Flux créés ici »), chacun s'ouvrant dans le Schéma, avec
+**Exporter ce pack**.
 
 **Exporter** (onglet sans Workflows, ou bouton **Exporter les flux** du Schéma) : choisissez les flux (tous cochés) et le nom du pack, puis **Télécharger** (blocs et liens, sans les boîtes).
 

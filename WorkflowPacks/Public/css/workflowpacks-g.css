@@ -123,6 +123,8 @@
 .wp-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 8px; margin-top: 10px; }
 .wp-tile { min-width: 0; display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 6px 8px 6px 12px; border: 1px solid var(--g-tile); border-radius: 12px; background: #fff; }
 .wp-tile.is-selected { border-color: var(--g-primary); box-shadow: 0 0 0 1px var(--g-primary); background: var(--g-selected); }
+a.wp-tile { color: inherit; text-decoration: none; }
+a.wp-tile:hover, a.wp-tile:focus { border-color: var(--g-primary); text-decoration: none; }
 .wp-tile > input[type=checkbox] { width: 16px; height: 16px; margin: 0; flex: none; }
 .wp-initials { position: relative; width: 32px; height: 32px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center;
   font-size: 12px; font-weight: 700; flex: none; }
