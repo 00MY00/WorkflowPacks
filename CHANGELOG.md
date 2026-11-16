@@ -4,6 +4,14 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [3.7.0] - 2026-11-16
+
+### Ajouté
+- **Liste des flux** dans le Schéma (à la place de la liste déroulante) : tous les flux visibles en même temps, avec
+  leur version publiée et leur état ; un clic ouvre un flux. Une case par flux et **Tout** pour tous les choisir ;
+  **Supprimer (n)** supprime les flux cochés ensemble, après confirmation (tickets en attente sortis du flux, versions
+  effacées). Sur téléphone, la liste est repliée sous son titre, qui nomme le flux ouvert.
+
 ## [3.6.2] - 2026-11-16
 
 ### Corrigé
