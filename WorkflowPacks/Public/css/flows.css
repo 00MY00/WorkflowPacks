@@ -37,6 +37,19 @@
 .wpf-edge-panel { right: 10px; }
 .wpf-edge.is-attn { border-color: var(--f-brand); color: #fff; background: var(--f-brand); }
 .wpf-app:not(.list-off) .wpf-edge-list, .wpf-app:not(.panel-off) .wpf-edge-panel { display: none; }
+/* what is chosen on the grid: delete it, open its settings */
+.wpf-selbar { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); z-index: 3; display: flex; gap: 8px; align-items: center;
+  max-width: calc(100% - 20px); padding: 6px 8px 6px 14px; background: var(--f-card); border: 1px solid var(--f-border); border-radius: 999px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, .16); font-size: 13px; white-space: nowrap; }
+.wpf-selbar[hidden], .wpf-selbar [hidden] { display: none; }
+.wpf-selbar-count { font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
+.wpf-selbar-x { border: 0; background: none; font-size: 20px; line-height: 1; color: var(--f-muted); padding: 0 6px; }
+/* folder of "file into a folder": prefix of the module, the folders already there to tap */
+.wpf-prefix { font-weight: 600; color: var(--f-muted); white-space: nowrap; }
+.wpf-folder-note { margin: 6px 0 4px; }
+.wpf-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.wpf-chip { border: 1px solid var(--f-border); background: var(--f-card); border-radius: 999px; padding: 4px 10px; font-size: 12px; color: var(--f-text); }
+.wpf-chip.is-on, .wpf-chip:hover { border-color: var(--f-brand); color: var(--f-brand); }
 /* list of every flow: which ones the grid shows, open one, tick several to delete them */
 .wpf-list-show { display: block; margin: 0 12px 6px; font-weight: normal; }
 .wpf-list-show > span { display: block; font-size: 12px; color: var(--f-muted); margin-bottom: 3px; }

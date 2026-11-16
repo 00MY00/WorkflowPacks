@@ -140,6 +140,7 @@ return [
         'long'         => 'Texto longo demais (no máximo :max bytes).',
         'user'         => 'Este usuário não tem mais acesso à caixa.',
         'folder'       => 'Nome de pasta inválido.',
+        'mailbox'      => 'Caixa não encontrada.',
         'imap_off'     => 'Opção “Arquivar em uma pasta de e-mail” desativada (Gerenciar › Configurações › Workflow Packs).',
         'imap_nothing' => 'Nenhum e-mail a arquivar (veja o histórico).',
         'push_off'     => 'Módulo WebPush ausente ou desativado: nenhuma notificação enviada.',

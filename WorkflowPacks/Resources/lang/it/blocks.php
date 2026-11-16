@@ -140,6 +140,7 @@ return [
         'long'         => 'Testo troppo lungo (al massimo :max byte).',
         'user'         => 'Questo utente non ha più accesso alla casella.',
         'folder'       => 'Nome di cartella non valido.',
+        'mailbox'      => 'Casella non trovata.',
         'imap_off'     => 'Opzione «Archivia in una cartella e-mail» disattivata (Gestisci › Impostazioni › Workflow Packs).',
         'imap_nothing' => 'Nessuna e-mail da archiviare (vedi la cronologia).',
         'push_off'     => 'Modulo WebPush assente o disattivato: nessuna notifica inviata.',

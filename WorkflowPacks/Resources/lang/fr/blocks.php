@@ -140,6 +140,7 @@ return [
         'long'         => 'Texte trop long (:max octets au plus).',
         'user'         => 'Cet utilisateur n’a plus accès à la boîte.',
         'folder'       => 'Nom de dossier invalide.',
+        'mailbox'      => 'Boîte introuvable.',
         'imap_off'     => 'Option « Classer dans un dossier e-mail » désactivée (Gérer › Paramètres › Workflow Packs).',
         'imap_nothing' => 'Aucun e-mail à classer (voir l’historique).',
         'push_off'     => 'Module WebPush absent ou désactivé : aucune notification envoyée.',

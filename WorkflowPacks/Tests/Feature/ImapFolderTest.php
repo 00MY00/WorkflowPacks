@@ -164,6 +164,45 @@ class ImapFolderTest extends TestCase
         \Queue::assertPushed(FileIntoImapFolder::class, 1);
     }
 
+    public function testTheFlowBlockFilesTheEmailOnTheAddressChosen()
+    {
+        \Queue::fake();
+        $a = $this->mailbox('A');
+        $b = $this->mailbox('B');
+        $b->in_server = 'imap.example.test';
+        $b->in_username = 'alias@example.test';
+        $b->save();
+        list($conversation, $thread) = $this->conversation($a, 'wp-'.self::uid().'@example.test');
+        // the mailbox where it arrived has no IMAP; the address chosen has one: filed there
+        $this->assertFalse(ImapFolders::queue($conversation, 'Factures'));
+        $this->assertTrue(ImapFolders::queue($conversation, 'Factures', null, false, $b->id));
+        \Queue::assertPushed(FileIntoImapFolder::class, function ($job) use ($b, $thread) {
+            return $job->mailboxId === (int) $b->id && $job->threadId === (int) $thread->id && $job->folder === 'Factures';
+        });
+        // the block: an address that does not exist is a problem to fix before publishing
+        $this->assertArrayHasKey('mailbox', \Modules\WorkflowPacks\Blocks\Actions\ImapFolder::validate(['path' => 'Factures', 'mailbox' => 999999]));
+        $this->assertSame([], \Modules\WorkflowPacks\Blocks\Actions\ImapFolder::validate(['path' => 'Factures', 'mailbox' => $b->id]));
+        $this->assertSame([], \Modules\WorkflowPacks\Blocks\Actions\ImapFolder::validate(['path' => 'Factures']), 'no address: where it arrived');
+    }
+
+    public function testTheFoldersOfTheModuleOnAnAddressAreListedForTheEditor()
+    {
+        $mailbox = $this->imapMailbox();
+        $id = $this->deliver($mailbox);
+        $prefix = ImapFolders::prefix();
+        $this->assertSame('moved', (new ImapMover())->move($mailbox, $id, 'Factures/Fournisseurs', $prefix)['result']);
+        \Cache::forget('workflowpacks.imap_folders.'.$mailbox->id.'.'.md5($prefix));
+        $listed = ImapFolders::managedFolders($mailbox);
+        $this->assertTrue($listed['ok'], $listed['error']);
+        $this->assertSame(['Factures', 'Factures/Fournisseurs'], $listed['folders'], 'as written in a block, the folders of the user left out');
+
+        \Option::set(\Modules\WorkflowPacks\Services\Engine\Engine::OPTION, true);
+        $admin = $this->user([$mailbox], true);
+        $json = json_decode($this->actingAs($admin)->get(route('workflowpacks.flows.imap_folders', ['mailbox_id' => $mailbox->id]))->getContent(), true);
+        $this->assertSame(['Factures', 'Factures/Fournisseurs'], $json['folders']);
+        $this->actingAs($this->user([$mailbox], false, true))->get(route('workflowpacks.flows.imap_folders', ['mailbox_id' => $mailbox->id]))->assertStatus(403);
+    }
+
     public function testTheEmailIsMovedIntoTheManagedFolderCreatedWhenMissing()
     {
         $mailbox = $this->imapMailbox();

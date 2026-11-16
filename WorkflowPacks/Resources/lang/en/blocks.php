@@ -140,6 +140,7 @@ return [
         'long'         => 'Text too long (:max bytes at most).',
         'user'         => 'This user no longer has access to the mailbox.',
         'folder'       => 'Invalid folder name.',
+        'mailbox'      => 'Mailbox not found.',
         'imap_off'     => 'Option “File into an e-mail folder” is off (Manage › Settings › Workflow Packs).',
         'imap_nothing' => 'No e-mail to file (see the history).',
         'push_off'     => 'WebPush module missing or not active: no notification sent.',

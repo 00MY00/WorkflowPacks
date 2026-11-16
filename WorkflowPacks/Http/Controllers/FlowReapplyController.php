@@ -45,6 +45,22 @@ class FlowReapplyController extends Controller
         return redirect()->route('workflowpacks.reapply', ['id' => $flow->id])->with($job ? 'flash_success_floating' : 'flash_error_floating', $message);
     }
 
+    /** "Publish now" from this page (the version published is the one applied); its problems when it cannot be. */
+    public function publish($id)
+    {
+        $flow = $this->flow($id);
+        $result = (new \Modules\WorkflowPacks\Services\Engine\Publisher())->publish($flow, auth()->user());
+        $back = redirect()->route('workflowpacks.reapply', ['id' => $flow->id]);
+        if ($result['ok']) {
+            return $back->with('flash_success_floating', __('workflowpacks::reapply.published_now', ['n' => $result['version']->number]));
+        }
+        $lines = array_map(function ($p) {
+            return $p['message'];
+        }, array_slice($result['problems'], 0, 5));
+
+        return $back->with('flash_error_floating', __('workflowpacks::reapply.publish_refused', ['list' => implode(' · ', $lines)]));
+    }
+
     public function control(Request $request, $id)
     {
         $flow = $this->flow($id);

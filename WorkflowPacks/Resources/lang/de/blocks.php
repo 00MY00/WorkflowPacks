@@ -140,6 +140,7 @@ return [
         'long'         => 'Text zu lang (höchstens :max Byte).',
         'user'         => 'Dieser Benutzer hat keinen Zugriff mehr auf das Postfach.',
         'folder'       => 'Ungültiger Ordnername.',
+        'mailbox'      => 'Postfach nicht gefunden.',
         'imap_off'     => 'Option „In einen E-Mail-Ordner ablegen“ ist aus (Verwalten › Einstellungen › Workflow Packs).',
         'imap_nothing' => 'Keine E-Mail zum Ablegen (siehe Verlauf).',
         'push_off'     => 'Modul WebPush fehlt oder ist nicht aktiv: keine Benachrichtigung gesendet.',

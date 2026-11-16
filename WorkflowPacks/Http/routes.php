@@ -67,6 +67,7 @@ Route::group([
     Route::post('/flows', $admins + ['uses' => 'FlowsController@store'])->name('workflowpacks.flows.store');
     Route::post('/flows/delete-many', $admins + ['uses' => 'FlowsController@destroyMany'])->name('workflowpacks.flows.destroy_many');
     Route::post('/flows/bulk', $admins + ['uses' => 'FlowsController@bulk'])->name('workflowpacks.flows.bulk');
+    Route::get('/flows/imap-folders', $admins + ['uses' => 'FlowsController@imapFolders'])->name('workflowpacks.flows.imap_folders');
     Route::post('/flows/{id}', $admins + ['uses' => 'FlowsController@save'])->name('workflowpacks.flows.save');
     Route::post('/flows/{id}/publish', $admins + ['uses' => 'FlowsController@publish'])->name('workflowpacks.flows.publish');
     Route::post('/flows/{id}/toggle', $admins + ['uses' => 'FlowsController@toggle'])->name('workflowpacks.flows.toggle');
@@ -75,6 +76,7 @@ Route::group([
     Route::get('/flows/{id}/path', $admins + ['uses' => 'FlowsController@path'])->name('workflowpacks.flows.path');
     // a flow applied to the tickets already there (in progress / existing), in batches
     Route::get('/flows/{id}/reapply', $admins + ['uses' => 'FlowReapplyController@show'])->name('workflowpacks.reapply');
+    Route::post('/flows/{id}/reapply/publish', $admins + ['uses' => 'FlowReapplyController@publish'])->name('workflowpacks.reapply.publish');
     Route::post('/flows/{id}/reapply/estimate', $admins + ['uses' => 'FlowReapplyController@estimate'])->name('workflowpacks.reapply.estimate');
     Route::post('/flows/{id}/reapply/start', $admins + ['uses' => 'FlowReapplyController@start'])->name('workflowpacks.reapply.start');
     Route::post('/flows/{id}/reapply/control', $admins + ['uses' => 'FlowReapplyController@control'])->name('workflowpacks.reapply.control');

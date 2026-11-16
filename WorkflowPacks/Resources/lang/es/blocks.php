@@ -140,6 +140,7 @@ return [
         'long'         => 'Texto demasiado largo (:max bytes como máximo).',
         'user'         => 'Este usuario ya no tiene acceso al buzón.',
         'folder'       => 'Nombre de carpeta no válido.',
+        'mailbox'      => 'Buzón no encontrado.',
         'imap_off'     => 'La opción «Archivar en una carpeta de correo» está desactivada (Administrar › Ajustes › Workflow Packs).',
         'imap_nothing' => 'Ningún correo que archivar (ver el historial).',
         'push_off'     => 'Módulo WebPush ausente o desactivado: no se envió ninguna notificación.',

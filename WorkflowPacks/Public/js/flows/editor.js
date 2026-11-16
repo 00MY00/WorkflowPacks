@@ -235,6 +235,7 @@
         this.relayout();
         this.focus();
         this.showPanel();
+        this.selbar();
     };
 
     /**
@@ -578,6 +579,9 @@
             if (name === 'new') { self.create(); }
             if (name === 'publish') { if (Object.keys(self.checked).length) { self.bulk('publish'); } else { self.publish(); } }
             if (name === 'bulk-on') { self.bulk('activate'); }
+            if (name === 'delete-sel') { self.removeSelection(); }
+            if (name === 'clear-sel') { self.select(null); }
+            if (name === 'settings-sel') { self.side('panel', true); self.selbar(); }
             if (name === 'bulk-off') { self.bulk('deactivate'); }
             if (name === 'simulate') { self.showSim(); }
             if (name === 'fit') { self.relayout(); self.fit(); }
@@ -838,6 +842,22 @@
         this.render();
         this.showPanel();
         this.attention();
+        this.selbar();
+    };
+
+    /**
+     * A bar over the grid while something is chosen: delete it, open its settings. With a finger (a long press chooses)
+     * this is how a block is deleted; with a mouse, Del does the same.
+     */
+    Editor.prototype.selbar = function () {
+        var bar = this.q('.wpf-selbar'), t = this.t, sel = this.sel;
+        if (!sel || this.sim) { bar.hidden = true; return; }
+        var self = this, n = sel.link !== undefined ? 1 : this.picked().length;
+        var deletable = sel.link !== undefined || this.picked().some(function (id) { var b = self.block(id); return b && (self.types[b.type] || {}).family !== 'trigger'; });
+        bar.hidden = false;
+        bar.querySelector('.wpf-selbar-count').textContent = sel.link !== undefined ? t.sel_link : fill(t.sel_blocks, { count: n });
+        bar.querySelector('[data-act="delete-sel"]').disabled = !deletable;
+        bar.querySelector('[data-act="settings-sel"]').hidden = !this.root.classList.contains('panel-off');
     };
 
     /** A flow clicked on the grid: opened where it is, the block clicked chosen. */
@@ -899,12 +919,15 @@
             menu.appendChild(h('div', { class: 'wpf-menu-group', text: self.bt.families[family] || family }));
             groups[family].forEach(function (c) {
                 menu.appendChild(h('button', { type: 'button', class: 'wpf-menu-item', title: c.help, on: { click: function () {
+                    // a finger: the click the browser sends after the tap lands on the menu just opened under it
+                    if (Date.now() - self.menuAt < 450) { return; }
                     self.closeMenu();
                     self.add(c.type, from, port);
                 } } }, [c.name]));
             });
         });
         document.body.appendChild(menu);
+        this.menuAt = Date.now();
         var r = button ? button.getBoundingClientRect() : { left: e.clientX, bottom: e.clientY };
         var mr = menu.getBoundingClientRect();
         menu.style.left = Math.max(8, Math.min(r.left, window.innerWidth - mr.width - 8)) + 'px';
@@ -1049,6 +1072,15 @@
                     set({ number: (b.params[key] || d).number, metric: this.value });
                 } } }, ['i', 'h', 'd'].map(function (u) { return h('option', { value: u, text: t['unit_' + u], selected: d.metric === u }); }));
                 return h('span', { class: 'wpf-inline' }, [num, unit]);
+            case 'mailbox':
+                // the address where the e-mail is filed: by default the mailbox where it arrived
+                var mbs = this.cfg.mailboxes.map(function (m) { return [m.id, m.name + (m.email ? ' — ' + m.email : '') + (m.imap ? '' : ' (' + t.folders_no_imap_short + ')')]; });
+                var ms = h('select', { class: 'form-control input-sm', on: { change: function () { set(this.value === '' ? undefined : parseInt(this.value, 10), true); } } },
+                    [h('option', { value: '', text: t.mailbox_arrived })]);
+                mbs.forEach(function (o) { ms.appendChild(h('option', { value: o[0], text: o[1], selected: String(v) === String(o[0]) })); });
+                return ms;
+            case 'imap_folder':
+                return this.folderField(b, key, v, set);
             case 'textarea':
                 return h('textarea', { class: 'form-control input-sm', rows: 4, on: { input: function () { set(this.value); } } }, [v || '']);
             case 'variable':
@@ -1064,6 +1096,54 @@
             default:
                 return h('input', { type: 'text', class: 'form-control input-sm', value: v || '', on: { input: function () { set(this.value); } } });
         }
+    };
+
+    /**
+     * Folder of "file into a folder": its name after the prefix of the module; the folders of the module already on the
+     * address (a tap chooses one); a new name is created with the prefix the first time an e-mail is filed there.
+     */
+    Editor.prototype.folderField = function (b, key, v, set) {
+        var self = this, t = this.t, imap = this.cfg.imap || {};
+        var input = h('input', { type: 'text', class: 'form-control input-sm', value: v || '', placeholder: t.folder_placeholder,
+            on: { input: function () { set(this.value); } } });
+        var box = h('div', { class: 'wpf-folder' }, [h('span', { class: 'wpf-inline' }, [h('span', { class: 'wpf-prefix', text: imap.prefix || '' }), input])]);
+        if (!imap.enabled) {
+            box.appendChild(h('p', { class: 'wpf-problem-text' }, [t.folders_off + ' ', h('a', { href: imap.settings, text: t.folders_settings })]));
+            return box;
+        }
+        // which address: the one chosen, else the mailbox of the flow (the first one with IMAP when several or all)
+        var mine = this.flow.mailbox_ids.length ? this.cfg.mailboxes.filter(function (m) { return self.flow.mailbox_ids.indexOf(m.id) >= 0; }) : this.cfg.mailboxes;
+        var mb = this.cfg.mailboxes.filter(function (m) { return m.id === b.params.mailbox; })[0] || mine.filter(function (m) { return m.imap; })[0];
+        var note = h('p', { class: 'wpf-muted wpf-folder-note' });
+        var chips = h('div', { class: 'wpf-chips' });
+        box.appendChild(note);
+        box.appendChild(chips);
+        box.appendChild(h('p', { class: 'wpf-muted' }, [fill(t.folder_new_help, { prefix: imap.prefix || '' }) + ' ',
+            h('a', { href: imap.settings, target: '_blank', rel: 'noopener', text: t.folder_prefix_change })]));
+        if (!mb) {
+            note.textContent = t.folders_no_imap;
+            return box;
+        }
+        note.textContent = fill(t.folders_loading, { mailbox: mb.name });
+        this.folderCache = this.folderCache || {};
+        this.folderCache[mb.id] = this.folderCache[mb.id] || this.request(this.cfg.urls.imap_folders + '?mailbox_id=' + mb.id);
+        this.folderCache[mb.id].then(function (res) {
+            var d = res.data || {};
+            if (!d.ok) {
+                note.textContent = fill(t.folders_error, { mailbox: mb.name, error: d.error || '' });
+                delete self.folderCache[mb.id];
+                return;
+            }
+            note.textContent = fill(d.folders.length ? t.folders_of : t.folders_none, { mailbox: mb.name, prefix: imap.prefix || '' });
+            d.folders.slice(0, 60).forEach(function (f) {
+                chips.appendChild(h('button', { type: 'button', class: 'wpf-chip' + (f === input.value ? ' is-on' : ''), text: f, on: { click: function () {
+                    input.value = f;
+                    set(f);
+                    Array.prototype.forEach.call(chips.children, function (c) { c.classList.toggle('is-on', c.textContent === f); });
+                } } }));
+            });
+        });
+        return box;
     };
 
     // ----------------------------------------------------------------------------------------- server calls
@@ -1168,6 +1248,7 @@
     Editor.prototype.showSim = function () {
         this.sim = { links: {}, seen: {}, on: null, events: null, step: 0 };
         this.sel = null;
+        this.selbar();
         this.render();
         this.showPanel();
     };

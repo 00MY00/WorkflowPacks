@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 3.8.0
+# Résultats des tests — Workflow Packs 3.9.0
 
 Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,13 @@ Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 3.9.0 — dossier : adresse et dossiers existants, barre « Supprimer », « + » au doigt, « Publier maintenant »
+
+| Série | Résultat |
+|---|---|
+| Intégration (instance neuve, serveur IMAP GreenMail) | 146 tests ; `ImapFolderTest` : bloc rangé sur l'adresse choisie (tâche envoyée vers cette boîte), adresse inconnue refusée, dossiers du module listés tels qu'écrits dans un bloc (« Factures », « Factures/Fournisseurs »), dossiers de l'utilisateur ignorés, liste réservée aux administrateurs ; `FlowReapplyTest` : « Publier maintenant » publie puis propose l'application, flux à problème non publié avec message, droits |
+| Navigateur téléphone 390 px et tablette 820 px, gestes tactiles réels | toucher « + » : la liste est toujours là 0,8 s plus tard, un bloc s'y choisit au doigt et s'ajoute (3 → 4) ; barre « 1 bloc · Supprimer · Réglages » ; champ Dossier : adresse par défaut, préfixe « [WP] », autre adresse : ses 2 dossiers du module à toucher ; appui long sur le bloc puis « Supprimer » : retiré (4 → 3) ; aucune erreur JavaScript |
 
 ## 3.8.0 — Schéma en grande grille, côtés repliables, flux cochés traités ensemble, options après l'import
 

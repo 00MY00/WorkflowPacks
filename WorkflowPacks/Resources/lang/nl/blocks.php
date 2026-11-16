@@ -140,6 +140,7 @@ return [
         'long'         => 'Tekst te lang (hoogstens :max bytes).',
         'user'         => 'Deze gebruiker heeft geen toegang meer tot de mailbox.',
         'folder'       => 'Ongeldige mapnaam.',
+        'mailbox'      => 'Mailbox niet gevonden.',
         'imap_off'     => 'Optie „In een e-mailmap opbergen” staat uit (Beheren › Instellingen › Workflow Packs).',
         'imap_nothing' => 'Geen e-mail om op te bergen (zie de geschiedenis).',
         'push_off'     => 'Module WebPush ontbreekt of is niet actief: geen melding verstuurd.',

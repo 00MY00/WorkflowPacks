@@ -70,10 +70,11 @@ class TicketActions
     }
 
     /** E-mail folder on the mail server (queued, as the action of the rules). False: nothing to move (reason in History). */
-    public function imapFolder($path)
+    /** $mailboxId: the address where the e-mail is filed (null: the mailbox where it arrived). */
+    public function imapFolder($path, $mailboxId = null)
     {
         $before = $this->ctx->ticket['folder'] ?? '';
-        if (!$this->ctx->dryRun && !ImapFolders::queue($this->ctx->conversation, $path)) {
+        if (!$this->ctx->dryRun && !ImapFolders::queue($this->ctx->conversation, $path, null, false, $mailboxId)) {
             return false;
         }
         $this->ctx->ticket['folder'] = $path;

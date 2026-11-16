@@ -49,6 +49,13 @@
             {{-- folded sides open again from the grid --}}
             <button type="button" class="wpf-edge wpf-edge-list" data-act="toggle-list" aria-expanded="true">☰ {{ __('workflowpacks::flows.list_title') }}</button>
             <button type="button" class="wpf-edge wpf-edge-panel" data-act="toggle-panel" aria-expanded="true">⚙ {{ __('workflowpacks::flows.settings') }}</button>
+            {{-- what is chosen on the grid: delete it, open its settings (with a finger, after a long press) --}}
+            <div class="wpf-selbar" role="toolbar" hidden>
+                <span class="wpf-selbar-count"></span>
+                <button type="button" class="btn btn-sm btn-danger-soft" data-act="delete-sel">{{ __('workflowpacks::flows.sel_delete') }}</button>
+                <button type="button" class="btn btn-sm btn-default" data-act="settings-sel">⚙ {{ __('workflowpacks::flows.settings') }}</button>
+                <button type="button" class="wpf-selbar-x" data-act="clear-sel" aria-label="{{ __('workflowpacks::flows.sel_clear') }}" title="{{ __('workflowpacks::flows.sel_clear') }}">×</button>
+            </div>
         </div>
         {{-- right: the settings of the open flow, then of the chosen block (or the simulation, the path of a ticket) --}}
         <aside class="wpf-side wpf-side-panel" aria-label="{{ __('workflowpacks::flows.settings') }}">
