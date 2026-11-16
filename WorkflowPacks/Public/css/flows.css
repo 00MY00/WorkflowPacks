@@ -50,6 +50,18 @@
 .wpf-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .wpf-chip { border: 1px solid var(--f-border); background: var(--f-card); border-radius: 999px; padding: 4px 10px; font-size: 12px; color: var(--f-text); }
 .wpf-chip.is-on, .wpf-chip:hover { border-color: var(--f-brand); color: var(--f-brand); }
+/* examples of "Looks like": chosen ones, search, test */
+.wpf-chip-x { border: 0; background: none; padding: 0 0 0 4px; font-size: 15px; line-height: 1; color: inherit; }
+.wpf-tickets .wpf-inline { margin-top: 8px; }
+.wpf-ticket-results, .wpf-ticket-test { max-height: 260px; overflow: auto; margin-top: 6px; }
+.wpf-ticket { display: flex; gap: 8px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--f-border); }
+.wpf-ticket-text { flex: 1; min-width: 0; }
+.wpf-ticket-text strong { display: block; font-size: 12px; font-weight: 600; overflow-wrap: anywhere; }
+.wpf-ticket-text small { display: block; font-size: 11px; overflow-wrap: anywhere; }
+.wpf-ticket-sum { font-weight: 600; margin: 4px 0; }
+.wpf-score { flex: none; font-weight: 700; font-size: 12px; padding: 2px 8px; border-radius: 999px; }
+.wpf-score.is-yes { background: #d1fae5; color: #047857; }
+.wpf-score.is-no { background: #f1f5f9; color: var(--f-muted); }
 /* list of every flow: which ones the grid shows, open one, tick several to delete them */
 .wpf-list-show { display: block; margin: 0 12px 6px; font-weight: normal; }
 .wpf-list-show > span { display: block; font-size: 12px; color: var(--f-muted); margin-bottom: 3px; }

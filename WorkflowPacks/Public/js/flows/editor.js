@@ -1081,6 +1081,8 @@
                 return ms;
             case 'imap_folder':
                 return this.folderField(b, key, v, set);
+            case 'tickets':
+                return this.ticketsField(b, key, v, set);
             case 'textarea':
                 return h('textarea', { class: 'form-control input-sm', rows: 4, on: { input: function () { set(this.value); } } }, [v || '']);
             case 'variable':
@@ -1143,6 +1145,107 @@
                 } } }));
             });
         });
+        return box;
+    };
+
+    /** Ids of a "tickets" value written either way ("12, 45" or [12, 45]). */
+    function ticketIds(v) {
+        var list = Array.isArray(v) ? v : String(v || '').split(/[^0-9]+/);
+        var out = [];
+        list.forEach(function (x) { var n = parseInt(x, 10); if (n > 0 && out.indexOf(n) < 0) { out.push(n); } });
+        return out;
+    }
+
+    /**
+     * Examples of "Looks like": the tickets chosen (subject, sender; × removes one), a search among the tickets there
+     * (subject, sender or number, in the mailboxes of the flow) to add more, and "Test" on the last tickets with the
+     * threshold and the weights of the block. Nothing to publish first: the draft is enough.
+     */
+    Editor.prototype.ticketsField = function (b, key, v, set) {
+        var self = this, t = this.t, ids = ticketIds(v);
+        var box = h('div', { class: 'wpf-tickets' });
+        var chosen = h('div', { class: 'wpf-chips' });
+        var results = h('div', { class: 'wpf-ticket-results' });
+        var test = h('div', { class: 'wpf-ticket-test' });
+        var rows = {};
+        var save = function () { set(ids.slice()); };
+        var row = function (tk, button) {
+            return h('div', { class: 'wpf-ticket' }, [h('span', { class: 'wpf-ticket-text' }, [
+                h('strong', { text: '#' + tk.number + ' ' + (tk.subject || '—') }),
+                h('small', { class: 'wpf-muted', text: [tk.from, tk.mailbox, tk.date].filter(Boolean).join(' · ') })]), button]);
+        };
+        var drawChosen = function () {
+            chosen.textContent = '';
+            if (!ids.length) { chosen.appendChild(h('p', { class: 'wpf-muted', text: t.examples_none })); }
+            ids.forEach(function (id) {
+                var tk = rows[id];
+                chosen.appendChild(h('span', { class: 'wpf-chip is-on', title: tk ? tk.from : '' }, [
+                    (tk ? '#' + tk.number + ' ' + (tk.subject || '—') : '#' + id) + ' ',
+                    h('button', { type: 'button', class: 'wpf-chip-x', 'aria-label': t.examples_remove, on: { click: function () {
+                        ids = ids.filter(function (x) { return x !== id; });
+                        save();
+                        drawChosen();
+                        drawResults(lastFound);
+                    } } }, ['×'])]));
+            });
+        };
+        var lastFound = [];
+        var drawResults = function (list) {
+            lastFound = list;
+            results.textContent = '';
+            list.forEach(function (tk) {
+                rows[tk.id] = tk;
+                var on = ids.indexOf(tk.id) >= 0;
+                results.appendChild(row(tk, h('button', { type: 'button', class: 'btn btn-default btn-xs', disabled: on, text: on ? t.examples_added : '+ ' + t.examples_add, on: { click: function () {
+                    if (ids.indexOf(tk.id) < 0) { ids.push(tk.id); }
+                    save();
+                    drawChosen();
+                    drawResults(lastFound);
+                } } })));
+            });
+            if (!list.length && search.value) { results.appendChild(h('p', { class: 'wpf-muted', text: t.examples_nothing })); }
+        };
+        var mailboxes = function () { return self.flow.mailbox_ids.map(function (m) { return 'mailbox_ids[]=' + m; }).join('&'); };
+        var timer = null;
+        var search = h('input', { type: 'search', class: 'form-control input-sm', placeholder: t.examples_search, on: { input: function () {
+            clearTimeout(timer);
+            var q = this.value;
+            timer = setTimeout(function () {
+                self.request(self.cfg.urls.tickets + '?q=' + encodeURIComponent(q) + '&' + mailboxes()).then(function (res) {
+                    if (search.value === q) { drawResults((res.data && res.data.tickets) || []); }
+                });
+            }, 300);
+        } } });
+        var tryIt = h('button', { type: 'button', class: 'btn btn-default btn-sm', text: '▶ ' + t.examples_test, on: { click: function () {
+            if (!ids.length) { test.textContent = t.examples_none; return; }
+            test.textContent = t.examples_testing;
+            self.request(self.cfg.urls.similar_test + '?' + mailboxes(), {
+                examples: ids, threshold: b.params.threshold || 75, subject: b.params.subject === undefined ? 50 : b.params.subject,
+                body: b.params.body === undefined ? 50 : b.params.body, mailbox_ids: self.flow.mailbox_ids
+            }).then(function (res) {
+                var d = res.data || {};
+                test.textContent = '';
+                if (!d.ok) { test.appendChild(h('p', { class: 'wpf-problem-text', text: d.message || '' })); return; }
+                test.appendChild(h('p', { class: 'wpf-ticket-sum', text: fill(t.examples_result, { yes: d.yes, tested: d.tested, threshold: d.threshold }) }));
+                (d.tickets || []).forEach(function (tk) {
+                    rows[tk.id] = rows[tk.id] || tk;
+                    test.appendChild(row(tk, h('span', { class: 'wpf-score ' + (tk.score >= d.threshold ? 'is-yes' : 'is-no'), text: tk.score + ' %' })));
+                });
+            });
+        } } });
+        box.appendChild(chosen);
+        box.appendChild(h('div', { class: 'wpf-inline' }, [search]));
+        box.appendChild(results);
+        box.appendChild(h('div', { class: 'wpf-inline' }, [tryIt, h('small', { class: 'wpf-muted', text: t.examples_test_help })]));
+        box.appendChild(test);
+        drawChosen();
+        // the examples already chosen: their subject instead of a number
+        if (ids.length) {
+            this.request(this.cfg.urls.tickets + '?' + ids.map(function (id) { return 'ids[]=' + id; }).join('&')).then(function (res) {
+                ((res.data && res.data.tickets) || []).forEach(function (tk) { rows[tk.id] = tk; });
+                drawChosen();
+            });
+        }
         return box;
     };
 

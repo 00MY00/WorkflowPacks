@@ -45,6 +45,8 @@ class FlowsController extends Controller
                     'destroy_many' => route('workflowpacks.flows.destroy_many'),
                     'bulk'     => route('workflowpacks.flows.bulk'),
                     'imap_folders' => route('workflowpacks.flows.imap_folders'),
+                    'tickets'  => route('workflowpacks.flows.tickets'),
+                    'similar_test' => route('workflowpacks.flows.similar_test'),
                     'simulate' => route('workflowpacks.flows.simulate', ['id' => '__ID__']),
                     'path'     => route('workflowpacks.flows.path', ['id' => '__ID__']),
                     'reapply'  => route('workflowpacks.reapply', ['id' => '__ID__']),
@@ -177,6 +179,90 @@ class FlowsController extends Controller
         }
 
         return response()->json(['ok' => true, 'done' => $done, 'refused' => $refused]);
+    }
+
+    const TICKETS_FOUND = 30;
+    const TEST_TICKETS = 100;
+    const TEST_SHOWN = 20;
+
+    /**
+     * Tickets to pick as examples of "Looks like": searched by subject, sender or number in the mailboxes of the flow
+     * (all when it has none), newest first; or the ones already chosen (ids). Nothing published, nothing changed.
+     */
+    public function tickets(Request $request)
+    {
+        $this->guardEngine();
+        $q = \App\Conversation::where('state', \App\Conversation::STATE_PUBLISHED)->with('mailbox');
+        $ids = \Modules\WorkflowPacks\Blocks\Conditions\Similar::ids($request->input('ids', []));
+        if ($ids) {
+            $q->whereIn('id', array_slice($ids, 0, \Modules\WorkflowPacks\Blocks\Conditions\Similar::MAX_EXAMPLES));
+        } else {
+            $mailboxes = array_filter(array_map('intval', (array) $request->input('mailbox_ids', [])));
+            if ($mailboxes) {
+                $q->whereIn('mailbox_id', $mailboxes);
+            }
+            $text = trim(mb_substr((string) $request->input('q', ''), 0, 100));
+            if ($text !== '') {
+                $like = '%'.str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $text).'%';
+                $q->where(function ($w) use ($text, $like) {
+                    $w->where('subject', 'like', $like)->orWhere('customer_email', 'like', $like);
+                    if (ctype_digit($text)) {
+                        $w->orWhere('number', (int) $text);
+                    }
+                });
+            }
+            $q->orderBy('id', 'desc')->limit(self::TICKETS_FOUND);
+        }
+
+        return response()->json(['tickets' => $q->get()->map(function ($c) {
+            return self::ticketRow($c);
+        })->values()]);
+    }
+
+    /**
+     * "Test": the examples (their profile) against the last tickets of the mailboxes of the flow, with the threshold and
+     * the weights of the block: how many would answer "yes", the scores. The examples themselves are left out.
+     */
+    public function similarTest(Request $request)
+    {
+        $this->guardEngine();
+        $similar = \Modules\WorkflowPacks\Blocks\Conditions\Similar::class;
+        $ids = array_slice($similar::ids($request->input('examples', [])), 0, $similar::MAX_EXAMPLES);
+        if (!$ids) {
+            return response()->json(['ok' => false, 'message' => __('workflowpacks::blocks.errors.examples', ['max' => $similar::MAX_EXAMPLES])], 422);
+        }
+        $threshold = max(1, min(100, (int) $request->input('threshold', 75)));
+        $ws = max(0, min(100, (float) $request->input('subject', 50)));
+        $wb = max(0, min(100, (float) $request->input('body', 50)));
+        $profile = $similar::profile($ids);
+        $q = \App\Conversation::where('state', \App\Conversation::STATE_PUBLISHED)->whereNotIn('id', $ids)->with('mailbox');
+        $mailboxes = array_filter(array_map('intval', (array) $request->input('mailbox_ids', [])));
+        if ($mailboxes) {
+            $q->whereIn('mailbox_id', $mailboxes);
+        }
+        $rows = [];
+        foreach ($q->orderBy('id', 'desc')->limit(self::TEST_TICKETS)->get() as $c) {
+            $text = \Modules\WorkflowPacks\Services\Ai\TicketText::of($c, false);
+            $s = \Modules\WorkflowPacks\Services\Ai\Vectorizer::similarity(\Modules\WorkflowPacks\Services\Ai\Vectorizer::vector($text['subject']), $profile['subject']);
+            $b = \Modules\WorkflowPacks\Services\Ai\Vectorizer::similarity(\Modules\WorkflowPacks\Services\Ai\Vectorizer::vector($text['body']), $profile['body']);
+            $rows[] = self::ticketRow($c) + ['score' => (int) round(100 * ($ws * $s + $wb * $b) / max(1, $ws + $wb))];
+        }
+        usort($rows, function ($x, $y) {
+            return $y['score'] - $x['score'];
+        });
+        $yes = count(array_filter($rows, function ($r) use ($threshold) {
+            return $r['score'] >= $threshold;
+        }));
+
+        return response()->json(['ok' => true, 'tested' => count($rows), 'yes' => $yes, 'threshold' => $threshold,
+            'tickets' => array_slice($rows, 0, self::TEST_SHOWN)]);
+    }
+
+    protected static function ticketRow($c)
+    {
+        return ['id' => (int) $c->id, 'number' => (int) $c->number, 'subject' => mb_substr((string) $c->subject, 0, 120),
+            'from' => (string) $c->customer_email, 'mailbox' => (string) optional($c->mailbox)->name,
+            'date' => $c->created_at ? $c->created_at->format('Y-m-d') : ''];
     }
 
     /** The folders of the module already on the mail server of a mailbox, for the "file into a folder" block. */

@@ -55,7 +55,7 @@ sur la grille ; le navigateur se souvient de ce choix. Sur tablette tenue droite
 |---|---|---|
 | Nouvel e-mail | départ : un client écrit un nouvel e-mail dans une boîte du flux | suite |
 | Si… | teste le ticket ou le résultat d'un bloc précédent | oui / non |
-| Ressemble à… | compare le ticket à des tickets d'exemple (leurs numéros), en local ; seuil en %, poids sujet / texte ; variable `similar.score` | oui / non |
+| Ressemble à… | compare le ticket à des **e-mails d'exemple**, en local ; seuil en %, poids sujet / texte ; variable `similar.score`. Dans ses réglages : chercher des tickets (sujet, expéditeur, numéro) dans les boîtes du flux et les ajouter d'un toucher, puis **Tester** sur les 100 derniers tickets (combien seraient reconnus, le score de chacun) pour ajuster seuil et exemples — sans rien publier ni modifier | oui / non |
 | Attendre | 15 minutes … 100 000 jours ; le ticket attend, puis continue | suite |
 | Statut | ouvert, en attente, fermé, indésirable | suite / erreur |
 | Assigner | à un utilisateur ou à personne | suite / erreur |
