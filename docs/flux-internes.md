@@ -55,7 +55,7 @@ sur la grille ; le navigateur se souvient de ce choix. Sur tablette tenue droite
 |---|---|---|
 | Nouvel e-mail | départ : un client écrit un nouvel e-mail dans une boîte du flux | suite |
 | Si… | teste le ticket ou le résultat d'un bloc précédent | oui / non |
-| Ressemble à… | compare le ticket à des **e-mails d'exemple**, en local ; seuil en %, poids sujet / texte ; variable `similar.score`. Dans ses réglages : chercher des tickets (sujet, expéditeur, numéro) dans les boîtes du flux et les ajouter d'un toucher, puis **Tester** sur les 100 derniers tickets (combien seraient reconnus, le score de chacun) pour ajuster seuil et exemples — sans rien publier ni modifier | oui / non |
+| Ressemble à… | compare le ticket à des **e-mails d'exemple**, en local ; seuil en %, poids sujet / texte ; variable `similar.score`. Dans ses réglages : chercher des tickets (sujet, expéditeur, numéro) dans les boîtes du flux, en **cocher plusieurs** (toucher la ligne, ou **Tout**) et les ajouter ensemble (50 au plus), puis **Tester** sur les 100 derniers tickets (combien seraient reconnus, le score de chacun) ; **Cocher les reconnus** ajoute d'un coup ceux au-dessus du seuil, pour affiner. Plus il y a d'exemples variés, plus la reconnaissance est précise — sans rien publier ni modifier | oui / non |
 | Attendre | 15 minutes … 100 000 jours ; le ticket attend, puis continue | suite |
 | Statut | ouvert, en attente, fermé, indésirable | suite / erreur |
 | Assigner | à un utilisateur ou à personne | suite / erreur |
@@ -85,8 +85,9 @@ barre tient sur une ligne qui défile (Réduire et Tout voir en tête).
 
 Un flux s'applique d'abord aux **nouveaux** e-mails. Pour l'appliquer aussi aux tickets déjà présents : bouton
 **Tickets existants** de l'éditeur, ou **OK** à la question posée juste après chaque **Publier**. C'est la version
-publiée qui est appliquée : un flux jamais publié affiche **Publier maintenant** sur cette page (ses problèmes sont
-indiqués s'il ne peut pas l'être).
+publiée qui est appliquée : un flux jamais publié affiche **Publier maintenant** sur cette page ; s'il ne peut pas
+l'être, ses problèmes restent affichés sur la page, à corriger dans l'éditeur. Choisir les e-mails d'exemple d'un
+« Ressemble à… » ne demande pas de publier : c'est dans les réglages du bloc.
 
 | Choix | Effet |
 |---|---|

@@ -145,7 +145,7 @@ return [
         'imap_nothing' => 'Aucun e-mail à classer (voir l’historique).',
         'push_off'     => 'Module WebPush absent ou désactivé : aucune notification envoyée.',
         'push_nobody'  => 'Personne à notifier (ticket non assigné, ou utilisateur sans accès à la boîte).',
-        'examples'     => 'De 1 à :max n° de tickets d’exemple.',
+        'examples'     => 'Choisissez de 1 à :max e-mails d’exemple dans les réglages du bloc (chercher, cocher, ajouter).',
         'percent'      => 'Pourcentage de 0 à 100.',
     ],
 ];

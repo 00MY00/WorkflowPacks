@@ -145,7 +145,7 @@ return [
         'imap_nothing' => 'Nessuna e-mail da archiviare (vedi la cronologia).',
         'push_off'     => 'Modulo WebPush assente o disattivato: nessuna notifica inviata.',
         'push_nobody'  => 'Nessuno da notificare (ticket non assegnato o utente senza accesso alla casella).',
-        'examples'     => 'Da 1 a :max id di ticket di esempio.',
+        'examples'     => 'Scegliete da 1 a :max e-mail di esempio nelle impostazioni del blocco (cercare, selezionare, aggiungere).',
         'percent'      => 'Percentuale da 0 a 100.',
     ],
 ];

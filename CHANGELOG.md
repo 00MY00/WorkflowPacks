@@ -4,6 +4,19 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [3.11.0] - 2026-11-17
+
+### Ajouté
+- « Ressemble à… » : **plusieurs tickets cochés et ajoutés ensemble** comme exemples, dans la recherche comme dans le
+  résultat du test (toucher la ligne coche le ticket, **Tout**, **Ajouter (n)**, 50 exemples au plus) ; après un test,
+  **Cocher les reconnus** coche ceux au-dessus du seuil pour les ajouter et affiner. Le test montre jusqu'à 50 tickets.
+
+### Corrigé
+- **Tickets existants** d'un flux qui ne peut pas être publié : « Publier maintenant » montrait ses problèmes dans un
+  message qui disparaissait, la page semblait inchangée. Les problèmes restent maintenant affichés sur la page, avec le
+  bloc concerné ; le message explique que choisir des e-mails d'exemple se fait dans l'éditeur, sans publier.
+- Problème d'un « Ressemble à… » sans exemple dit clairement (« Choisissez de 1 à 50 e-mails d'exemple… »).
+
 ## [3.10.0] - 2026-11-17
 
 ### Ajouté
