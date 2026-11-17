@@ -183,7 +183,7 @@ class FlowsController extends Controller
 
     const TICKETS_FOUND = 30;
     const TEST_TICKETS = 100;
-    const TEST_SHOWN = 20;
+    const TEST_SHOWN = 50;
 
     /**
      * Tickets to pick as examples of "Looks like": searched by subject, sender or number in the mailboxes of the flow

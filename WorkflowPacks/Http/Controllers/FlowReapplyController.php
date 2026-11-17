@@ -54,11 +54,18 @@ class FlowReapplyController extends Controller
         if ($result['ok']) {
             return $back->with('flash_success_floating', __('workflowpacks::reapply.published_now', ['n' => $result['version']->number]));
         }
-        $lines = array_map(function ($p) {
-            return $p['message'];
-        }, array_slice($result['problems'], 0, 5));
+        // shown on the page itself (not a floating message that goes away): what to fix in the editor
+        $registry = new \Modules\WorkflowPacks\Services\Engine\BlockRegistry();
+        $titles = [];
+        foreach ((array) (($flow->draft ?: [])['blocks'] ?? []) as $block) {
+            $class = $registry->get($block['type'] ?? '');
+            $titles[$block['id'] ?? ''] = $class ? $class::title((array) ($block['params'] ?? [])) : (string) ($block['type'] ?? '?');
+        }
+        $lines = array_map(function ($p) use ($titles) {
+            return (!empty($p['block']) && isset($titles[$p['block']]) ? $titles[$p['block']].' — ' : '').$p['message'];
+        }, array_slice($result['problems'], 0, 10));
 
-        return $back->with('flash_error_floating', __('workflowpacks::reapply.publish_refused', ['list' => implode(' · ', $lines)]));
+        return $back->with('wp_publish_problems', $lines);
     }
 
     public function control(Request $request, $id)

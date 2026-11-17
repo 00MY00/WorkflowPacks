@@ -26,6 +26,10 @@
         <div class="wp-pack-body">
             @if (!$flow->version)
                 <p class="wp-ai-warn">{!! $wp_ui::icon('info') !!} {{ __('workflowpacks::reapply.not_published') }}</p>
+                @if (session('wp_publish_problems'))
+                    <div class="alert alert-warning"><strong>{{ __('workflowpacks::reapply.publish_refused_title') }}</strong>
+                        <ul>@foreach (session('wp_publish_problems') as $line)<li>{{ $line }}</li>@endforeach</ul></div>
+                @endif
                 <form method="POST" action="{{ route('workflowpacks.reapply.publish', ['id' => $flow->id]) }}" class="wp-pack-actions">
                     {{ csrf_field() }}
                     <button type="submit" class="btn btn-primary">{!! $wp_ui::icon('check') !!} {{ __('workflowpacks::reapply.publish_now') }}</button>

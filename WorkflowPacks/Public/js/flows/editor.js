@@ -11,6 +11,7 @@
 
     var NS = 'http://www.w3.org/2000/svg';
     var W = 230, H = 62, PORT_GAP = 24, GRID = 10;
+    var MAX_EXAMPLES = 50;   // Blocks/Conditions/Similar::MAX_EXAMPLES
     var MIN_K = 0.08, MAX_K = 2, PAD = 24, LABEL = 30, SHELF_GAP = 70, SHELF_WIDTH = 2600;
     var OPS = {
         text: ['contains', 'not_contains', 'equal', 'not_equal', 'starts', 'ends', 'regex'],
@@ -1169,11 +1170,6 @@
         var test = h('div', { class: 'wpf-ticket-test' });
         var rows = {};
         var save = function () { set(ids.slice()); };
-        var row = function (tk, button) {
-            return h('div', { class: 'wpf-ticket' }, [h('span', { class: 'wpf-ticket-text' }, [
-                h('strong', { text: '#' + tk.number + ' ' + (tk.subject || '—') }),
-                h('small', { class: 'wpf-muted', text: [tk.from, tk.mailbox, tk.date].filter(Boolean).join(' · ') })]), button]);
-        };
         var drawChosen = function () {
             chosen.textContent = '';
             if (!ids.length) { chosen.appendChild(h('p', { class: 'wpf-muted', text: t.examples_none })); }
@@ -1185,25 +1181,83 @@
                         ids = ids.filter(function (x) { return x !== id; });
                         save();
                         drawChosen();
-                        drawResults(lastFound);
+                        redraw();
                     } } }, ['×'])]));
             });
         };
-        var lastFound = [];
+        /**
+         * A list of tickets to tick (a tap on the line ticks it), "All", "Add (n)": the ticked ones become examples
+         * together (50 at most). recognised: the threshold of a test, "Tick the recognised ones" ticks those above it.
+         */
+        var picker = function (list, recognised) {
+            var wrap = h('div', { class: 'wpf-pick' }), picked = {}, boxes = [];
+            var free = list.filter(function (tk) { return ids.indexOf(tk.id) < 0; });
+            var note = h('p', { class: 'wpf-problem-text' });
+            var upd = function () {
+                var n = Object.keys(picked).length;
+                add.disabled = !n;
+                add.textContent = n ? fill(t.examples_add_n, { count: n }) : t.examples_add_none;
+                all.checked = n > 0 && n === free.length;
+                all.indeterminate = n > 0 && n < free.length;
+                boxes.forEach(function (b) { if (!b.disabled) { b.checked = !!picked[b.value]; } });
+            };
+            var all = h('input', { type: 'checkbox', disabled: !free.length, on: { change: function () {
+                picked = {};
+                if (this.checked) { free.forEach(function (tk) { picked[tk.id] = true; }); }
+                upd();
+            } } });
+            var add = h('button', { type: 'button', class: 'btn btn-primary btn-xs', disabled: true, text: t.examples_add_none, on: { click: function () {
+                var adding = Object.keys(picked).map(function (x) { return parseInt(x, 10); });
+                var room = MAX_EXAMPLES - ids.length;
+                note.textContent = adding.length > room ? fill(t.examples_max, { max: MAX_EXAMPLES }) : '';
+                adding.slice(0, Math.max(0, room)).forEach(function (id) { if (ids.indexOf(id) < 0) { ids.push(id); } });
+                save();
+                drawChosen();
+                redraw();
+            } } });
+            var head = [h('label', { class: 'wpf-check' }, [all, ' ' + t.list_all])];
+            if (recognised) {
+                head.push(h('button', { type: 'button', class: 'btn btn-default btn-xs', text: t.examples_tick_recognised, on: { click: function () {
+                    picked = {};
+                    free.forEach(function (tk) { if (tk.score >= recognised) { picked[tk.id] = true; } });
+                    upd();
+                } } }));
+            }
+            head.push(add);
+            if (list.length) { wrap.appendChild(h('div', { class: 'wpf-pick-head' }, head)); }
+            list.forEach(function (tk) {
+                rows[tk.id] = rows[tk.id] || tk;
+                var on = ids.indexOf(tk.id) >= 0;
+                var cb = h('input', { type: 'checkbox', value: tk.id, checked: on, disabled: on, on: { change: function () {
+                    if (this.checked) { picked[tk.id] = true; } else { delete picked[tk.id]; }
+                    upd();
+                } } });
+                boxes.push(cb);
+                var line = h('label', { class: 'wpf-ticket' + (on ? ' is-example' : '') }, [cb, h('span', { class: 'wpf-ticket-text' }, [
+                    h('strong', { text: '#' + tk.number + ' ' + (tk.subject || '—') }),
+                    h('small', { class: 'wpf-muted', text: (on ? t.examples_added + ' · ' : '') + [tk.from, tk.mailbox, tk.date].filter(Boolean).join(' · ') })])]);
+                if (tk.score !== undefined) {
+                    line.appendChild(h('span', { class: 'wpf-score ' + (recognised && tk.score >= recognised ? 'is-yes' : 'is-no'), text: tk.score + ' %' }));
+                }
+                wrap.appendChild(line);
+            });
+            wrap.appendChild(note);
+            return wrap;
+        };
+        var lastFound = [], lastTest = null;
+        var redraw = function () { drawResults(lastFound); drawTest(lastTest); };
         var drawResults = function (list) {
             lastFound = list;
             results.textContent = '';
-            list.forEach(function (tk) {
-                rows[tk.id] = tk;
-                var on = ids.indexOf(tk.id) >= 0;
-                results.appendChild(row(tk, h('button', { type: 'button', class: 'btn btn-default btn-xs', disabled: on, text: on ? t.examples_added : '+ ' + t.examples_add, on: { click: function () {
-                    if (ids.indexOf(tk.id) < 0) { ids.push(tk.id); }
-                    save();
-                    drawChosen();
-                    drawResults(lastFound);
-                } } })));
-            });
+            results.appendChild(picker(list, 0));
             if (!list.length && search.value) { results.appendChild(h('p', { class: 'wpf-muted', text: t.examples_nothing })); }
+        };
+        var drawTest = function (d) {
+            lastTest = d;
+            test.textContent = '';
+            if (!d) { return; }
+            test.appendChild(h('p', { class: 'wpf-ticket-sum', text: fill(t.examples_result, { yes: d.yes, tested: d.tested, threshold: d.threshold }) }));
+            test.appendChild(picker(d.tickets || [], d.threshold));
         };
         var mailboxes = function () { return self.flow.mailbox_ids.map(function (m) { return 'mailbox_ids[]=' + m; }).join('&'); };
         var timer = null;
@@ -1226,11 +1280,7 @@
                 var d = res.data || {};
                 test.textContent = '';
                 if (!d.ok) { test.appendChild(h('p', { class: 'wpf-problem-text', text: d.message || '' })); return; }
-                test.appendChild(h('p', { class: 'wpf-ticket-sum', text: fill(t.examples_result, { yes: d.yes, tested: d.tested, threshold: d.threshold }) }));
-                (d.tickets || []).forEach(function (tk) {
-                    rows[tk.id] = rows[tk.id] || tk;
-                    test.appendChild(row(tk, h('span', { class: 'wpf-score ' + (tk.score >= d.threshold ? 'is-yes' : 'is-no'), text: tk.score + ' %' })));
-                });
+                drawTest(d);
             });
         } } });
         box.appendChild(chosen);

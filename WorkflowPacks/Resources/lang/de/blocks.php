@@ -145,7 +145,7 @@ return [
         'imap_nothing' => 'Keine E-Mail zum Ablegen (siehe Verlauf).',
         'push_off'     => 'Modul WebPush fehlt oder ist nicht aktiv: keine Benachrichtigung gesendet.',
         'push_nobody'  => 'Niemand zu benachrichtigen (Ticket nicht zugewiesen oder Benutzer ohne Zugriff auf das Postfach).',
-        'examples'     => '1 bis :max Beispiel-Ticket-IDs.',
+        'examples'     => 'Wählen Sie 1 bis :max Beispiel-E-Mails in den Einstellungen des Blocks (suchen, ankreuzen, hinzufügen).',
         'percent'      => 'Prozentsatz von 0 bis 100.',
     ],
 ];

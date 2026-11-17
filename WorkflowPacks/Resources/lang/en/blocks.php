@@ -145,7 +145,7 @@ return [
         'imap_nothing' => 'No e-mail to file (see the history).',
         'push_off'     => 'WebPush module missing or not active: no notification sent.',
         'push_nobody'  => 'Nobody to notify (ticket not assigned, or user without access to the mailbox).',
-        'examples'     => '1 to :max example ticket ids.',
+        'examples'     => 'Choose 1 to :max example e-mails in the settings of the block (search, tick, add).',
         'percent'      => 'Percentage from 0 to 100.',
     ],
 ];

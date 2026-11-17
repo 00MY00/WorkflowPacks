@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 3.10.0
+# Résultats des tests — Workflow Packs 3.11.0
 
 Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,13 @@ Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 3.11.0 — plusieurs exemples ajoutés ensemble, problèmes de publication affichés sur la page
+
+| Série | Résultat |
+|---|---|
+| Intégration (instance neuve) | 147 tests ; `FlowReapplyTest` : flux à problème, « Publier maintenant » garde ses problèmes pour la page, qui les affiche |
+| Navigateur PC 1440 px et téléphone 390 px | recherche « newsletter » : toucher une ligne = « Ajouter (1) », « Tout » = « Ajouter (3) », 3 exemples ajoutés d'un coup ; test au seuil de 20 % : 1 sur 3 reconnu, « Cocher les reconnus » = « Ajouter (1) » ; page « Tickets existants » d'un flux sans exemple : le problème du bloc est toujours affiché 3 s après ; aucune erreur JavaScript |
 
 ## 3.10.0 — « Ressemble à… » : exemples cherchés et testés dans l'éditeur
 

@@ -145,7 +145,7 @@ return [
         'imap_nothing' => 'Ningún correo que archivar (ver el historial).',
         'push_off'     => 'Módulo WebPush ausente o desactivado: no se envió ninguna notificación.',
         'push_nobody'  => 'Nadie a quien notificar (ticket sin asignar o usuario sin acceso al buzón).',
-        'examples'     => 'De 1 a :max id de tickets de ejemplo.',
+        'examples'     => 'Elija de 1 a :max e-mails de ejemplo en los ajustes del bloque (buscar, marcar, añadir).',
         'percent'      => 'Porcentaje de 0 a 100.',
     ],
 ];

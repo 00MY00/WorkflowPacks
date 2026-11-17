@@ -145,7 +145,7 @@ return [
         'imap_nothing' => 'Geen e-mail om op te bergen (zie de geschiedenis).',
         'push_off'     => 'Module WebPush ontbreekt of is niet actief: geen melding verstuurd.',
         'push_nobody'  => 'Niemand te melden (ticket niet toegewezen of gebruiker zonder toegang tot de mailbox).',
-        'examples'     => '1 tot :max id’s van voorbeeldtickets.',
+        'examples'     => 'Kies 1 tot :max voorbeeld-e-mails in de instellingen van het blok (zoeken, aanvinken, toevoegen).',
         'percent'      => 'Percentage van 0 tot 100.',
     ],
 ];

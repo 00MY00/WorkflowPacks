@@ -188,7 +188,9 @@ class FlowReapplyTest extends TestCase
         $broken = Flow::create(['name' => 'Cassé', 'mailbox_ids' => [], 'active' => false, 'once' => true, 'created_by' => $admin->id,
             'draft' => ['blocks' => [['id' => 'b1', 'type' => 'trigger.new_mail'], ['id' => 'b2', 'type' => 'condition.ticket', 'params' => []]],
                 'links' => [['from' => 'b1', 'port' => 'next', 'to' => 'b2']]]]);
-        $this->actingAs($admin)->post(route('workflowpacks.reapply.publish', ['id' => $broken->id]))->assertSessionHas('flash_error_floating');
+        $this->actingAs($admin)->post(route('workflowpacks.reapply.publish', ['id' => $broken->id]))->assertSessionHas('wp_publish_problems');
+        $this->seeIn($this->actingAs($admin)->withSession(['wp_publish_problems' => ['Si… — Valeur requise.']])->get(route('workflowpacks.reapply', ['id' => $broken->id])),
+            e(__('workflowpacks::reapply.publish_refused_title')));
         $this->assertNull($broken->fresh()->version_id);
         $this->actingAs($this->user([$a], false, true))->post(route('workflowpacks.reapply.publish', ['id' => $flow->id]))->assertStatus(403);
     }
