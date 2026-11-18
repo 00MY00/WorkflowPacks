@@ -4,6 +4,15 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [3.18.1] - 2026-11-18
+
+### Corrigé
+- **Mêmes outils pour le connecteur et l'API** : le connecteur gagne `get_me` (ses droits, comme `GET /me`) ;
+  `test_flow` est toujours proposé (tester ses flux est toujours permis, comme par l'API) ; les descriptions
+  d'`activate_flow`, `publish_flow` et `test_flow` disent quand les autres flux de ses boîtes sont permis ; les
+  instructions du connecteur ne disent plus que seuls ses flux peuvent être modifiés. Un test vérifie, droit par droit,
+  qu'un outil est proposé exactement quand sa route API est permise.
+
 ## [3.18.0] - 2026-11-18
 
 ### Ajouté

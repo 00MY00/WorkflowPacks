@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 3.18.0
+# Résultats des tests — Workflow Packs 3.18.1
 
 Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,12 @@ Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 3.18.1 — mêmes outils pour le connecteur et l'API
+
+| Série | Résultat |
+|---|---|
+| Intégration (instance neuve) | 169 tests ; `McpTest` : pour 16 jeux de droits (aucun, tous, chacun seul), les outils proposés au connecteur sont exactement ceux dont la route API est permise sur son flux ou sur un autre flux de sa boîte, et chaque outil a sa route ; vérifié en réintroduisant l'ancien écart (`test_flow` masqué) : le test échoue |
 
 ## 3.18.0 — désactiver un flux par un agent
 

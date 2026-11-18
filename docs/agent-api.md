@@ -65,13 +65,14 @@ Claude dispose alors de ces outils (protocole MCP) :
 
 | Outil | Rôle |
 |---|---|
+| `get_me` | l'agent : boîtes, anonymisation, droits (`permissions`), fin de l'accès (comme `GET /me`) |
 | `get_catalog` | les blocs, les règles d'un flux valide et un exemple |
 | `list_flows` | ses flux, et les autres avec « Voir » sur les autres flux (nom, actif, version publiée, boîtes, blocs et liens) ; `mine` : ceux qu'il a proposés |
 | `simulate_flow` | simule un flux étape par étape (sans e-mail donné : un e-mail qui suit le chemin « oui » est généré) ; renvoie les étapes, un **récit** en clair et `replay_url`, une adresse où un administrateur **revoit la simulation sur le schéma** ; avec un jeton de progression, les étapes arrivent **en direct** |
 | `list_tickets` | seulement si des boîtes sont cochées : les tickets récents de ces boîtes, anonymisés par défaut |
 | `propose_flow` | « Proposer » : un nouveau flux, enregistré **en brouillon, désactivé** ; ses problèmes s'il n'est pas valide |
 | `update_flow` | « Modifier » : remplace le brouillon de son flux, ou d'un autre de ses boîtes avec `others.edit` |
-| `test_flow` | tester à blanc (rien n'est écrit) ses flux, ou les autres avec « Tester » sur les autres flux |
+| `test_flow` | tester à blanc (rien n'est écrit) ses flux (toujours), ou les autres avec « Tester » sur les autres flux |
 | `activate_flow` | « Activer après un test réussi » (ou « Publier sans condition ») : publie et active le flux après un test réussi de cette version |
 | `deactivate_flow` | « Désactiver » : le flux ne démarre plus sur les nouveaux e-mails, comme depuis l'éditeur ; sa version publiée et son brouillon restent ; déjà désactivé : rien ne change (`changed: false`) |
 | `publish_flow` | « Publier et activer sans condition » |
@@ -79,6 +80,8 @@ Claude dispose alors de ces outils (protocole MCP) :
 | `delete_flow` | « Supprimer » : **seulement avec `confirm: true`**, après une sauvegarde (`backup_url`) |
 
 Chaque outil n'est proposé que si l'agent a le droit correspondant, pour ses flux ou pour les autres (voir « Droits »).
+Le connecteur et l'API donnent **les mêmes outils** : chaque outil a sa route (tableau ci-dessous), et un outil est
+proposé au connecteur exactement quand sa route est permise (vérifié par un test pour chaque droit).
 
 L'adresse contient le jeton (les connecteurs personnalisés de Claude n'envoient pas d'en-tête) : ne la partagez pas ;
 **Déconnecter** l'agent la rend inutilisable. FreeScout doit être joignable depuis Internet en **https**. Mêmes limites

@@ -128,7 +128,8 @@ class McpController extends BaseController
         .'and when the administrator allowed it read tickets with list_tickets (anonymised by default). Propose a new flow '
         .'with propose_flow: it is saved as a switched-off draft that an administrator reviews; test it on tickets with '
         .'test_flow (dry run, nothing is written) and change it with update_flow. When allowed, activate_flow switches on a flow '
-        .'whose last test passed. Only the flows you proposed can be changed. '
+        .'whose last test passed and deactivate_flow switches one off. get_me tells your rights: on the flows you proposed, '
+        .'and on the other flows running only on your mailboxes; only the tools you are allowed are listed. '
         .'Nothing is ever sent to customers by these tools.';
 
     /** The tools this agent may use (publish only when allowed, tickets only when mailboxes were given). */
@@ -137,6 +138,9 @@ class McpController extends BaseController
         $none = ['type' => 'object', 'properties' => new \stdClass()];
         $flow = ['type' => 'object', 'description' => 'The flow, as in the example of get_catalog: {"name", "description", "blocks": [...], "links": [...]}'];
         $list = [
+            ['name' => 'get_me', 'title' => 'Your rights', 'description' => 'Who you are for this help desk: your mailboxes, whether tickets are anonymised, '
+                .'your rights ("permissions": own.* on the flows you proposed, others.* on the other flows running only on your mailboxes) and when your access ends.',
+                'inputSchema' => $none, 'annotations' => ['readOnlyHint' => true]],
             ['name' => 'get_catalog', 'title' => 'Blocks and rules', 'description' => 'The blocks a flow can use (their fields and outputs), the rules of a valid flow and an example. Read it first.',
                 'inputSchema' => $none, 'annotations' => ['readOnlyHint' => true]],
             ['name' => 'list_flows', 'title' => 'Existing flows', 'description' => ($tools->mayAny(['others.see']) ? 'Every flow of the help desk' : 'The flows you proposed')
@@ -171,12 +175,12 @@ class McpController extends BaseController
                 .' (the published version keeps running until the next publishing).',
                 'inputSchema' => ['type' => 'object', 'properties' => ['id' => ['type' => 'integer'], 'flow' => $flow], 'required' => ['id', 'flow']]];
         }
-        if ($tools->mayAny(['own.propose', 'own.edit', 'others.test'])) {
-            $list[] = ['name' => 'test_flow', 'title' => 'Test a flow', 'description' => 'Plays the draft of one of your flows on tickets (dry run, nothing written): what each ticket would get.',
+        // its own flows are always tested (a dry run), as through the API
+        $list[] = ['name' => 'test_flow', 'title' => 'Test a flow', 'description' => 'Plays the draft of one of your flows'
+            .($tools->mayAny(['others.test']) ? ' (or of another flow running only on your mailboxes)' : '').' on tickets (dry run, nothing written): what each ticket would get.',
             'inputSchema' => ['type' => 'object', 'properties' => ['id' => ['type' => 'integer'],
                 'ticket_ids' => ['type' => 'array', 'items' => ['type' => 'integer'], 'description' => 'Default: recent tickets of your mailboxes']], 'required' => ['id']],
             'annotations' => ['readOnlyHint' => true]];
-        }
         if ($tools->mayAny(['own.rename', 'others.rename'])) {
             $list[] = ['name' => 'rename_flow', 'title' => 'Rename a flow', 'description' => 'Changes the name of '
                 .($tools->mayAny(['own.rename']) ? 'one of your flows' : 'a flow').($tools->mayAny(['others.rename']) ? ' (or of another flow running only on your mailboxes)' : '').'; nothing else changes.',
@@ -190,8 +194,10 @@ class McpController extends BaseController
                     'required' => ['id', 'confirm']], 'annotations' => ['destructiveHint' => true]];
         }
         if ($tools->mayActivate()) {
-            $list[] = ['name' => 'activate_flow', 'title' => 'Switch a flow on', 'description' => 'Publishes and switches on one of your flows. '
-                .($tools->me()['can_publish'] ? 'Allowed at once.' : 'Only after test_flow passed on this very draft (unchanged since): test it first.')
+            $list[] = ['name' => 'activate_flow', 'title' => 'Switch a flow on', 'description' => 'Publishes and switches on '
+                .($tools->mayAny(['own.activate', 'own.publish']) ? 'one of your flows' : 'a flow')
+                .($tools->mayAny(['others.activate', 'others.publish']) ? ' (or another flow running only on your mailboxes)' : '').'. '
+                .'Allowed at once where you may publish freely (see get_me), otherwise only after test_flow passed on this very draft (unchanged since): test it first.'
                 .' It then runs on new e-mails.',
                 'inputSchema' => ['type' => 'object', 'properties' => ['id' => ['type' => 'integer']], 'required' => ['id']],
                 'annotations' => ['destructiveHint' => true]];
@@ -203,7 +209,9 @@ class McpController extends BaseController
                 'inputSchema' => ['type' => 'object', 'properties' => ['id' => ['type' => 'integer']], 'required' => ['id']]];
         }
         if ($tools->me()['can_publish']) {
-            $list[] = ['name' => 'publish_flow', 'title' => 'Publish a flow', 'description' => 'Publishes one of your flows (and switches it on with activate: true). It then runs on new e-mails.',
+            $list[] = ['name' => 'publish_flow', 'title' => 'Publish a flow', 'description' => 'Publishes '
+                .($tools->mayAny(['own.publish']) ? 'one of your flows' : 'a flow').($tools->mayAny(['others.publish']) ? ' (or another flow running only on your mailboxes)' : '')
+                .' (and switches it on with activate: true). It then runs on new e-mails.',
                 'inputSchema' => ['type' => 'object', 'properties' => ['id' => ['type' => 'integer'], 'activate' => ['type' => 'boolean']], 'required' => ['id']],
                 'annotations' => ['destructiveHint' => true]];
         }
@@ -220,6 +228,9 @@ class McpController extends BaseController
                 throw new AgentToolError(404, 'unknown_tool');
             }
             switch ($name) {
+                case 'get_me':
+                    $out = $tools->me();
+                    break;
                 case 'get_catalog':
                     $out = $tools->catalog();
                     break;
