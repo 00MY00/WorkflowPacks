@@ -83,7 +83,14 @@ class McpTest extends TestCase
         $unknown = json_decode($this->rpc($token, 'resources/list')->getContent(), true);
         $this->assertSame(-32601, $unknown['error']['code']);
         $this->rpc('wpa_00', 'tools/list')->assertStatus(401);
-        $this->call('GET', route('workflowpacks.mcp', ['token' => $token]))->assertStatus(405);
+        $this->call('GET', route('workflowpacks.mcp', ['token' => $token]), [], [], [], ['HTTP_ACCEPT' => 'application/json, text/event-stream'])->assertStatus(405);
+        // opened in a browser: a page saying what it is (nothing about the agent); an MCP client asking for a stream: 405
+        $page = $this->call('GET', route('workflowpacks.mcp', ['token' => $token]), [], [], [], ['HTTP_ACCEPT' => 'text/html,application/xhtml+xml']);
+        $page->assertStatus(200);
+        $this->seeIn($page, e(__('workflowpacks::ai.mcp_browser_ok')));
+        $this->assertStringNotContainsString('Claude test', $page->getContent());
+        $this->assertStringContainsString('no-store', $page->headers->get('Cache-Control'));
+        $this->call('GET', route('workflowpacks.mcp', ['token' => $token]), [], [], [], ['HTTP_ACCEPT' => 'text/event-stream'])->assertStatus(405);
     }
 
     public function testWithMailboxesClaudeReadsAnonymisedTicketsAndPublishesWhenAllowed()

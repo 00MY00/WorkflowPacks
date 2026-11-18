@@ -4,6 +4,14 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [3.12.1] - 2026-11-18
+
+### Modifié
+- L'adresse du connecteur Claude ouverte dans un navigateur affichait l'erreur « HTTP ERROR 405 » (normale : le
+  connecteur ne répond qu'à Claude) : elle affiche maintenant une page « Le connecteur est joignable » qui explique où
+  coller l'adresse, sans rien dire de l'agent. Les clients MCP reçoivent toujours la réponse prévue.
+- Documentation : vérifier l'accès depuis Internet, connecteur derrière Cloudflare.
+
 ## [3.12.0] - 2026-11-18
 
 ### Ajouté

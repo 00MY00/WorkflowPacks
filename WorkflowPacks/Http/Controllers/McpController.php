@@ -30,7 +30,13 @@ class McpController extends BaseController
     protected function reply(Request $request, $token)
     {
         if (!$request->isMethod('post')) {
-            // no stream from the server: answers come in the response of each request
+            // a person opening the address in a browser: a short page saying what it is (the token is not checked,
+            // nothing is shown); an MCP client asking for a stream: none, answers come in the response of each request
+            if ($request->isMethod('get') && strpos((string) $request->header('Accept'), 'text/html') !== false
+                && strpos((string) $request->header('Accept'), 'text/event-stream') === false) {
+                return response()->view('workflowpacks::mcp_browser', [], 200, ['Allow' => 'POST']);
+            }
+
             return response('', 405, ['Allow' => 'POST']);
         }
         $header = (string) $request->header('Authorization');
