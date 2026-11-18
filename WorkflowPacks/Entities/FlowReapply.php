@@ -19,7 +19,7 @@ class FlowReapply extends Model
     protected $table = 'workflowpacks_flow_reapply';
 
     protected $fillable = ['flow_id', 'version_id', 'scope', 'options', 'cursor', 'total', 'done', 'started', 'batch', 'every',
-        'state', 'next_at', 'created_by'];
+        'state', 'next_at', 'created_by', 'agent_id'];
 
     protected $casts = ['options' => 'array'];
 

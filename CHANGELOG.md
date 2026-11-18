@@ -4,6 +4,22 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [3.19.0] - 2026-11-18
+
+### Ajouté
+- **Appliquer un flux aux tickets existants depuis le connecteur ou l'API** (`reapply_flow`, `reapply_control`,
+  `POST /flows/{id}/reapply`) : nouveau droit « Appliquer aux tickets existants » (ses flux / autres flux de ses
+  boîtes), désactivé par défaut. Estimation et essai à blanc d'abord ; lancé seulement avec `confirm: true`, par lots,
+  « une fois par ticket » respecté ; pause, reprise, arrêt ; noté dans l'Historique.
+- **Limites par agent**, réglées sur sa fiche : statuts permis (actif, en attente, fermé), période au plus, nombre de
+  tickets au plus par lancement, étiquettes (module Tags de FreeScout ou étiquettes de RefreshGlobal), techniciens
+  assignés (ou personne), flux qui suppriment ou notifient (refusés par défaut, sinon confirmation à part). L'agent
+  peut demander moins, jamais plus ; toujours dans ses boîtes.
+
+### Modifié
+- « Tickets existants » (le service) filtre aussi par boîtes, technicien assigné et étiquettes ; les lancements depuis
+  l'éditeur ne changent pas.
+
 ## [3.18.2] - 2026-11-18
 
 ### Corrigé

@@ -19,6 +19,27 @@ accès à FreeScout lui-même : un jeton, des droits limités, et une déconnexi
 
 Chaque réglage a une bulle **?** (survol ou clic sur PC, appui sur téléphone ; Échap ou un clic ailleurs la ferme).
 
+### Appliquer aux tickets existants (3.19)
+
+Avec le droit « Appliquer aux tickets existants », un agent applique un flux **publié** aux tickets déjà là, comme
+« Tickets existants » dans l'éditeur : par lots de 50 chaque minute, « une fois par ticket » respecté. Toujours dans
+**ses boîtes** (ses propres flux aussi), et dans les **limites** choisies par l'administrateur sur sa fiche :
+
+| Limite | Par défaut | Effet |
+|---|---|---|
+| Statuts permis | Actif, En attente | l'agent peut viser ces statuts (ou moins), jamais Fermé s'il n'est pas coché |
+| Période au plus | 30 jours | date de création des tickets ; « Tout » permet aussi `period: 0` |
+| Tickets au plus par lancement | 500 | au-delà : `422 too_many_tickets` (avec le nombre), rien n'est lancé |
+| Étiquettes | toutes | seulement les tickets ayant l'une de ces étiquettes (module Tags de FreeScout, sinon étiquettes d'e-mail de RefreshGlobal) |
+| Assignés à | tous | seulement les tickets de ces techniciens et / ou « personne » |
+| Flux qui suppriment ou notifient | refusés | permis : l'agent doit encore envoyer `confirm_risky: true` |
+
+L'agent peut demander **moins** (`statuses`, `period`, `tags`, `assignees`), jamais plus : sinon `403 limit_statuses`,
+`limit_period`, `limit_tags` ou `limit_assignees`, avec ce qui est permis (`problems.allowed`). Sans `confirm: true`,
+rien n'est fait : il reçoit le nombre de tickets, la durée et un **essai à blanc** sur les plus récents, à montrer à
+l'utilisateur. Un seul lancement à la fois par flux ; `reapply_control` donne l'état, met en pause, reprend ou arrête.
+Chaque lancement est noté dans l'Historique et sur la page « Tickets existants » du flux.
+
 ### Droits (3.17)
 
 Deux colonnes : **ses flux** (ceux que l'agent a proposés) et **les autres flux de ses boîtes**. Sur les autres flux,
@@ -35,6 +56,7 @@ toutes).
 | Supprimer (confirmation, sauvegarde d'abord) | `own.delete` | `others.delete` |
 | Activer après un test réussi (cette version exacte, 24 h) | `own.activate` | `others.activate` |
 | Désactiver (version publiée et brouillon gardés) | `own.deactivate` | `others.deactivate` |
+| Appliquer aux tickets existants (limites ci-dessous) | `own.reapply` | `others.reapply` |
 | Publier et activer sans condition | `own.publish` | `others.publish` |
 
 - Par défaut à la création : proposer, modifier, renommer ses flux. **Aucune case cochée** : lecture seule.
@@ -42,7 +64,7 @@ toutes).
   (403) pour ses flux, ou `read_only` si l'agent n'a aucun droit d'écriture ; pour un autre flux sans le droit :
   **404 `not_found`**, son existence n'est pas révélée. Hors de ses boîtes : `mailbox_denied`.
 - `GET /me` renvoie `permissions` (la liste ci-dessus) ; `read_only`, `can_publish`, `can_activate`, `can_see_all`,
-  `can_delete`, `can_deactivate` restent fournis, déduits de cette liste.
+  `can_delete`, `can_deactivate`, `can_reapply` restent fournis ; `reapply_limits` donne ses limites, déduits de cette liste.
 - Les agents créés avant 3.17 gardent exactement leurs droits (anciennes cases traduites dans le tableau ; « agir sur
   les autres flux » n'a jamais permis d'en **modifier** le contenu, `others.edit` reste donc décoché). « Désactiver »
   (3.18) n'est donné à aucun agent existant : à cocher sur sa fiche. Activer ne donne pas le droit de désactiver.
@@ -75,6 +97,8 @@ Claude dispose alors de ces outils (protocole MCP) :
 | `test_flow` | tester à blanc (rien n'est écrit) ses flux (toujours), ou les autres avec « Tester » sur les autres flux |
 | `activate_flow` | « Activer après un test réussi » (ou « Publier sans condition ») : publie et active le flux après un test réussi de cette version |
 | `deactivate_flow` | « Désactiver » : le flux ne démarre plus sur les nouveaux e-mails, comme depuis l'éditeur ; sa version publiée et son brouillon restent ; déjà désactivé : rien ne change (`changed: false`) |
+| `reapply_flow` | « Appliquer aux tickets existants » : estimation (sans `confirm`), puis lancement avec `confirm: true` ; `scope` `existing` (défaut) ou `running` (tickets en attente dans une ancienne version) |
+| `reapply_control` | `action` : `status`, `pause`, `resume`, `stop` |
 | `publish_flow` | « Publier et activer sans condition » |
 | `rename_flow` | « Renommer » ; seul le nom change |
 | `delete_flow` | « Supprimer » : **seulement avec `confirm: true`**, après une sauvegarde (`backup_url`) |
@@ -117,6 +141,8 @@ Elle répond `404` tant que le moteur interne est désactivé. Utilisez HTTPS.
 | POST | `/flows/{id}/simulate` | simuler (corps facultatif `{"mail": {…}}`) ; avec `Accept: text/event-stream`, les étapes arrivent une à une (événements `step`, puis `result`) |
 | POST | `/flows/{id}/activate` | publier et activer son flux après un test réussi (`409 test_required` sinon) |
 | POST | `/flows/{id}/deactivate` | désactiver le flux (droit « Désactiver ») |
+| POST | `/flows/{id}/reapply` | appliquer aux tickets existants : `{"statuses": [...], "period": 30, "tags": [...], "assignees": [12, "unassigned"]}` → estimation ; avec `"confirm": true` → lancé |
+| POST | `/flows/{id}/reapply/control` | `{"action": "status" \| "pause" \| "resume" \| "stop"}` |
 | GET | `/catalog` | les règles d'un flux, les blocs (champs, sorties, variables) et un exemple, comme dans le dossier de l'assistant |
 | GET | `/tickets?mailbox_id=&days=&limit=&search=` | tickets de ses boîtes : numéro, sujet, extrait, domaine, statut, indices (anonymisés selon le réglage) |
 | GET | `/flows` | ses flux : brouillon, version publiée, actif |

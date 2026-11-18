@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 3.18.2
+# Résultats des tests — Workflow Packs 3.19.0
 
 Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,13 @@ Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 3.19.0 — agents : appliquer aux tickets existants, avec limites
+
+| Série | Résultat |
+|---|---|
+| Intégration (instance neuve) | `AgentReapplyTest` : estimation sans rien faire (2 tickets actifs / en attente de sa boîte), essai à blanc ; hors limites refusé avec ce qui est permis (statut fermé, toutes périodes, 365 jours), étiquettes sans source refusées ; « non assigné » seul : 1 ticket ; lancé : son job (agent, boîtes) traité par le planificateur, tickets de sa boîte seulement, autre boîte jamais, Historique ; état « terminé », une fois par ticket (`nothing_to_do`), arrêt sans lancement refusé ; autre boîte `mailbox_denied`, brouillon `not_published`, sans le droit 404. Limites : fermés d'un technicien sur 7 jours (utilisateur inconnu retiré), autre technicien et autre statut refusés ; 102 tickets pour 100 permis : refusé, rien lancé ; étiquettes RefreshGlobal : seul le ticket étiqueté traité, autre étiquette refusée ; flux qui supprime refusé sans la permission, puis confirmation à part exigée. Connecteur : outils proposés, `get_me` avec limites, estimation de son flux, statut « spam » refusé ; page : ligne du droit, limites et bulles, aucun texte manquant ; limites changées depuis la fiche. Parité connecteur / API avec les deux nouveaux outils |
+| Navigateur téléphone 390 px et PC 1440 px | tableau de 10 droits, limites dans la largeur, étiquettes désactivées sans source ; agent créé (appliquer ses flux, fermés, 90 jours, 1000 tickets, « personne ») : limites relues sur sa fiche ; pas de défilement horizontal, aucune erreur JavaScript |
 
 ## 3.18.2 — téléphones et tablettes
 

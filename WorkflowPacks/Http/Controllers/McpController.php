@@ -145,7 +145,7 @@ class McpController extends BaseController
                 'inputSchema' => $none, 'annotations' => ['readOnlyHint' => true]],
             ['name' => 'list_flows', 'title' => 'Existing flows', 'description' => ($tools->mayAny(['others.see']) ? 'Every flow of the help desk' : 'The flows you proposed')
                 .' (name, active, published version, mailboxes, blocks and links); "mine" marks the ones you proposed, the only ones you can change.'
-                .($tools->mayAny(['others.edit', 'others.rename', 'others.delete', 'others.activate', 'others.deactivate', 'others.publish']) ? ' Your rights also cover some of the others that run only on your mailboxes.' : ''),
+                .($tools->mayAny(['others.edit', 'others.rename', 'others.delete', 'others.activate', 'others.deactivate', 'others.publish', 'others.reapply']) ? ' Your rights also cover some of the others that run only on your mailboxes.' : ''),
                 'inputSchema' => $none, 'annotations' => ['readOnlyHint' => true]],
         ];
         if ($tools->mayReadTickets()) {
@@ -208,6 +208,27 @@ class McpController extends BaseController
                 .': it no longer starts on new e-mails; its published version and draft are kept. Already off: nothing changes.',
                 'inputSchema' => ['type' => 'object', 'properties' => ['id' => ['type' => 'integer']], 'required' => ['id']]];
         }
+        if ($tools->mayReapply()) {
+            $list[] = ['name' => 'reapply_flow', 'title' => 'Apply a flow to existing tickets', 'description' => 'Applies a published flow'
+                .($tools->mayAny(['others.reapply']) ? ' (yours, or another one running only on your mailboxes)' : ' of yours')
+                .' to the tickets already there, within the limits of get_me (reapply_limits) and your mailboxes. Without confirm: only the estimate '
+                .'(how many tickets, a dry run on the most recent ones, nothing done): show it to the user. With confirm: true: started, in batches '
+                .'("once per ticket" applies); follow it with reapply_control. scope "running": the tickets waiting in an older version go on in the current one.',
+                'inputSchema' => ['type' => 'object', 'properties' => [
+                    'id'            => ['type' => 'integer'],
+                    'scope'         => ['type' => 'string', 'enum' => ['existing', 'running']],
+                    'statuses'      => ['type' => 'array', 'items' => ['type' => 'string', 'enum' => ['active', 'pending', 'closed']]],
+                    'period'        => ['type' => 'integer', 'description' => 'Tickets created in the last days: 7, 30, 90, 365, or 0 for all (within your limit)'],
+                    'tags'          => ['type' => 'array', 'items' => ['type' => 'string'], 'description' => 'Only tickets having one of these tags'],
+                    'assignees'     => ['type' => 'array', 'items' => ['type' => ['integer', 'string']], 'description' => 'Assigned user ids, "unassigned" for nobody'],
+                    'confirm'       => ['type' => 'boolean', 'description' => 'true to start; ask the user first'],
+                    'confirm_risky' => ['type' => 'boolean', 'description' => 'Needed too when the flow deletes tickets or notifies'],
+                ], 'required' => ['id']], 'annotations' => ['destructiveHint' => true]];
+            $list[] = ['name' => 'reapply_control', 'title' => 'Follow a run on existing tickets', 'description' => 'The run of a flow on the existing tickets: '
+                .'"status" (how far it is), "pause", "resume" or "stop".',
+                'inputSchema' => ['type' => 'object', 'properties' => ['id' => ['type' => 'integer'],
+                    'action' => ['type' => 'string', 'enum' => ['status', 'pause', 'resume', 'stop']]], 'required' => ['id', 'action']]];
+        }
         if ($tools->me()['can_publish']) {
             $list[] = ['name' => 'publish_flow', 'title' => 'Publish a flow', 'description' => 'Publishes '
                 .($tools->mayAny(['own.publish']) ? 'one of your flows' : 'a flow').($tools->mayAny(['others.publish']) ? ' (or another flow running only on your mailboxes)' : '')
@@ -257,6 +278,12 @@ class McpController extends BaseController
                     break;
                 case 'simulate_flow':
                     $out = $tools->simulate($a['id'] ?? 0, $a['mail'] ?? null);
+                    break;
+                case 'reapply_flow':
+                    $out = $tools->reapply($a['id'] ?? 0, $a, ($a['confirm'] ?? false) === true, ($a['confirm_risky'] ?? false) === true);
+                    break;
+                case 'reapply_control':
+                    $out = $tools->reapplyControl($a['id'] ?? 0, $a['action'] ?? '');
                     break;
                 case 'deactivate_flow':
                     $out = $tools->deactivate($a['id'] ?? 0);

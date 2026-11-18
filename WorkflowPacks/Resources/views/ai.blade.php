@@ -127,6 +127,7 @@
                                             </div></div>
                                         <label class="wp-ai-check"><input type="checkbox" name="full_text" value="1" @if (!$ag->anonymise) checked @endif> {{ __('workflowpacks::ai.full_text') }}</label> @include('workflowpacks::partials.tip', ['text' => __('workflowpacks::ai.tip_full_text')])
                                         @include('workflowpacks::partials.agent_rights', ['rights' => $ag->rights()])
+                                        @include('workflowpacks::partials.agent_reapply', ['rights' => $ag->rights(), 'limits' => $ag->reapplyLimits()])
                                         <label class="wp-ai-field"><span>{{ __('workflowpacks::ai.ips') }} @include('workflowpacks::partials.tip', ['text' => __('workflowpacks::ai.tip_ips')])</span>
                                             <input type="text" name="allowed_ips" class="form-control wp-mono" maxlength="2000" value="{{ implode(', ', (array) $ag->allowed_ips) }}"></label>
                                         <button type="submit" class="btn btn-primary btn-sm">{{ __('workflowpacks::ai.agent_save') }}</button>
@@ -163,6 +164,7 @@
                     </div>
                     <label class="wp-ai-check"><input type="checkbox" name="full_text" value="1"> {{ __('workflowpacks::ai.full_text') }}</label> @include('workflowpacks::partials.tip', ['text' => __('workflowpacks::ai.tip_full_text')])
                     @include('workflowpacks::partials.agent_rights', ['rights' => ['own.propose', 'own.edit', 'own.rename']])
+                    @include('workflowpacks::partials.agent_reapply', ['rights' => [], 'limits' => \Modules\WorkflowPacks\Entities\Agent::cleanLimits([])])
                     <label class="wp-ai-field"><span>{{ __('workflowpacks::ai.ips') }} @include('workflowpacks::partials.tip', ['text' => __('workflowpacks::ai.tip_ips')])</span>
                         <input type="text" name="allowed_ips" class="form-control wp-mono" maxlength="2000" placeholder="203.0.113.7, 203.0.113.0/24, 192.168.1.10 - 192.168.1.50">
                         <small class="wp-muted">{{ __('workflowpacks::ai.ips_help') }}</small></label>

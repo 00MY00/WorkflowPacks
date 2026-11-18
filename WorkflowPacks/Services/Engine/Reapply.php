@@ -49,21 +49,27 @@ class Reapply
         ];
     }
 
-    /** Existing tickets concerned (ordered by id, for the cursor). */
-    public static function tickets(Flow $flow, array $o, $afterId = 0)
+    /**
+     * The filters of a run: those chosen (statuses, period; for an agent also its mailboxes, the assigned users, tags),
+     * within the mailboxes of the flow.
+     */
+    public static function filters(Flow $flow, array $o)
     {
-        $statuses = array_values(array_filter(array_map(function ($s) {
-            return array_search($s, Context::STATUS, true);
-        }, $o['statuses'])));
-        $q = \App\Conversation::where('state', \App\Conversation::STATE_PUBLISHED)->whereIn('status', $statuses ?: [0])
-            ->where('id', '>', (int) $afterId)->orderBy('id');
-        $mailboxes = array_map('intval', (array) $flow->mailbox_ids);
-        if ($mailboxes) {
-            $q->whereIn('mailbox_id', $mailboxes);
+        $f = TicketScope::clean($o);
+        $own = array_values(array_filter(array_map('intval', (array) $flow->mailbox_ids)));
+        if ($own) {
+            // both given: only the mailboxes in both (none in common: no ticket)
+            $f['mailboxes'] = $f['mailboxes'] ? (array_values(array_intersect($f['mailboxes'], $own)) ?: [0]) : $own;
         }
-        if ($o['period'] > 0) {
-            $q->where('created_at', '>=', \Carbon\Carbon::now()->subDays($o['period']));
-        }
+
+        return $f;
+    }
+
+    /** Existing tickets concerned (ordered by id, for the cursor; newest first for a sample); the tags are checked afterwards (TicketScope). */
+    public static function tickets(Flow $flow, array $o, $afterId = 0, $newestFirst = false)
+    {
+        $q = \App\Conversation::where('state', \App\Conversation::STATE_PUBLISHED)->where('id', '>', (int) $afterId)->orderBy('id', $newestFirst ? 'desc' : 'asc');
+        TicketScope::apply($q, self::filters($flow, $o));
         if ($flow->once) {
             $q->whereNotIn('id', FlowRun::where('flow_id', $flow->id)->select('conversation_id'));
         }
@@ -86,14 +92,16 @@ class Reapply
     public function estimate(Flow $flow, array $o, $withSample = true)
     {
         $existing = $o['scope'] === FlowReapply::SCOPE_EXISTING;
-        $total = $existing ? self::tickets($flow, $o)->count() : self::runs($flow)->count();
+        $tags = self::filters($flow, $o)['tags'];
+        $total = $existing ? TicketScope::count(self::tickets($flow, $o), $tags) : self::runs($flow)->count();
         $draft = !$flow->version_id;
         $data = $draft ? (array) ($flow->draft ?: []) : (array) $flow->version->data;
         $problems = $draft ? array_column(Definition::from($data)->validate($this->engine->registry()), 'message') : [];
         $types = array_column((array) ($data['blocks'] ?? []), 'type');
         $sample = null;
         if ($existing && $withSample && $total && !$problems) {
-            $ids = self::tickets($flow, $o)->orderBy('id', 'desc')->limit(self::SAMPLE)->pluck('id')->all();
+            $ids = self::tickets($flow, $o, 0, true)->limit($tags ? 500 : self::SAMPLE)->pluck('id')->all();
+            $ids = array_slice(TicketScope::withTags($ids, $tags), 0, self::SAMPLE);
             $sample = (new \Modules\WorkflowPacks\Services\Ai\Answer($this->engine->registry()))->test($data, $ids);
         }
 
@@ -101,8 +109,8 @@ class Reapply
             'risky' => array_values(array_intersect(self::RISKY, $types)), 'sample' => $sample, 'draft' => $draft, 'problems' => $problems];
     }
 
-    /** Null: a job is already going on for this flow (one at a time), or nothing to do. */
-    public function start(Flow $flow, array $o, $user)
+    /** Null: a job is already going on for this flow (one at a time), or nothing to do. $agentId: started by an agent. */
+    public function start(Flow $flow, array $o, $user, $agentId = null)
     {
         if (!$flow->version_id || self::current($flow)) {
             return null;
@@ -112,12 +120,24 @@ class Reapply
             return null;
         }
         $job = FlowReapply::create(['flow_id' => $flow->id, 'version_id' => $flow->version_id, 'scope' => $o['scope'],
-            'options' => ['period' => $o['period'], 'statuses' => $o['statuses']], 'total' => $total, 'batch' => $o['batch'],
-            'every' => $o['every'], 'state' => FlowReapply::RUNNING, 'next_at' => \Carbon\Carbon::now(), 'created_by' => $user ? $user->id : null]);
+            'options' => self::kept($o), 'total' => $total, 'batch' => $o['batch'],
+            'every' => $o['every'], 'state' => FlowReapply::RUNNING, 'next_at' => \Carbon\Carbon::now(), 'created_by' => $user ? $user->id : null,
+            'agent_id' => $agentId ? (int) $agentId : null]);
         \Modules\WorkflowPacks\Services\History::add('flow', 'queued', ['subject' => $flow->name,
             'message' => __('workflowpacks::reapply.history_start', ['count' => $total, 'scope' => __('workflowpacks::reapply.scope_'.$o['scope'])])]);
 
         return $job;
+    }
+
+    /** The filters kept with a job (read again for each batch). */
+    protected static function kept(array $o)
+    {
+        $f = TicketScope::clean($o);
+
+        return array_filter(['period' => $f['period'], 'statuses' => $f['statuses'], 'mailboxes' => $f['mailboxes'],
+            'assignees' => $f['assignees'], 'tags' => $f['tags']], function ($v) {
+                return $v !== [];
+            });
     }
 
     /** The job going on (running or paused) for a flow. */
@@ -166,8 +186,11 @@ class Reapply
 
             return 0;
         }
-        $o = ['period' => (int) ($job->options['period'] ?? 30), 'statuses' => (array) ($job->options['statuses'] ?? ['active', 'pending'])];
+        $o = ['period' => (int) ($job->options['period'] ?? 30), 'statuses' => (array) ($job->options['statuses'] ?? ['active', 'pending'])]
+            + array_intersect_key((array) $job->options, array_flip(['mailboxes', 'assignees', 'tags']));
+        $tags = self::filters($flow, $o)['tags'];
         $count = 0;
+        $handled = 0;
         $started = 0;
         $cursor = (int) $job->cursor;
         if ($job->scope === FlowReapply::SCOPE_RUNNING) {
@@ -181,14 +204,21 @@ class Reapply
                 $count++;
             }
         } else {
-            foreach (self::tickets($flow, $o, $cursor)->limit($job->batch)->get() as $conversation) {
+            $scanned = self::tickets($flow, $o, $cursor)->limit($job->batch)->get();
+            $kept = array_flip(TicketScope::withTags($scanned->pluck('id')->all(), $tags));
+            foreach ($scanned as $conversation) {
                 $cursor = (int) $conversation->id;
-                $started += $this->engine->start($flow, $conversation) ? 1 : 0;
+                if (isset($kept[$cursor])) {
+                    $started += $this->engine->start($flow, $conversation) ? 1 : 0;
+                    $handled++;
+                }
                 $count++;
             }
         }
+        // tickets in progress: each one handled; existing tickets: those having the tags among the ones looked at
+        $handled = $job->scope === FlowReapply::SCOPE_RUNNING ? $count : $handled;
         $done = $count < $job->batch;
-        $job->update(['cursor' => $cursor, 'done' => min($job->total, $job->done + $count), 'started' => $job->started + $started,
+        $job->update(['cursor' => $cursor, 'done' => min($job->total, $job->done + $handled), 'started' => $job->started + $started,
             'state' => $done ? FlowReapply::DONE : $job->fresh()->state]);
         if ($done) {
             \Modules\WorkflowPacks\Services\History::add('flow', 'ok', ['subject' => $flow->name,

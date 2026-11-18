@@ -112,13 +112,17 @@ class AiController extends Controller
             ? array_values(array_intersect(Agent::PERMISSIONS, (array) $request->input('permissions', [])))
             : Agent::legacyRights($request->only(['read_only', 'can_publish', 'can_activate', 'can_see_all', 'can_publish_others', 'can_delete']));
 
+        // limits of "apply to the existing tickets" (sent with the matrix; a box not ticked is not sent at all)
+        $limits = $request->input('reapply_sent')
+            ? ['reapply_limits' => Agent::cleanLimits((array) $request->input('reapply', []) + ['statuses' => []])] : [];
+
         return [
             'name'        => mb_substr(trim((string) $request->input('name')) ?: 'Agent', 0, 100),
             'mailbox_ids' => $mailboxes,
             'anonymise'   => !$request->input('full_text'),
             'permissions' => $rights,
             'allowed_ips' => array_values(array_unique($ips)),
-        ] + Agent::legacyFlags($rights);
+        ] + $limits + Agent::legacyFlags($rights);
     }
 
     public function createAgent(Request $request)
@@ -205,7 +209,8 @@ class AiController extends Controller
     {
         return 'mailboxes ['.implode(',', array_map('intval', (array) $a->mailbox_ids)).']'.($a->anonymise ? '' : ' full text')
             .' rights ['.implode(',', $a->rights()).']'
-            .(array_filter((array) $a->allowed_ips) ? ' ips '.implode(',', (array) $a->allowed_ips) : '');
+            .(array_filter((array) $a->allowed_ips) ? ' ips '.implode(',', (array) $a->allowed_ips) : '')
+            .(array_intersect(['own.reapply', 'others.reapply'], $a->rights()) ? ' reapply '.json_encode($a->reapplyLimits()) : '');
     }
 
     /** Disconnected at once: its token no longer works. */
@@ -230,6 +235,9 @@ class AiController extends Controller
             'mcpUrl'    => !empty($extra['newToken']) ? route('workflowpacks.mcp', ['token' => $extra['newToken']]) : null,
             'agentDays' => Agent::DAYS,
             'mailboxes' => \App\Mailbox::orderBy('name')->get(['id', 'name']),
+            // "apply to the existing tickets": the users a ticket can be assigned to, where the tags come from
+            'wpUsers'   => \App\User::where('status', '!=', \App\User::STATUS_DELETED)->orderBy('first_name')->get(),
+            'tagSource' => \Modules\WorkflowPacks\Services\Engine\TicketScope::tagSource(),
             'brief'     => null,
             'count'     => 0,
             'old'       => [],

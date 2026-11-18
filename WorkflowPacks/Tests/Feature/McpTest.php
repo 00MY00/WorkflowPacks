@@ -789,6 +789,9 @@ class McpTest extends TestCase
                 'activate_flow'   => $onFlows('POST', 'workflowpacks.api.activate'),
                 'publish_flow'    => $onFlows('POST', 'workflowpacks.api.publish'),
                 'propose_flow'    => $api($token, 'POST', 'workflowpacks.api.propose', [], $chain),
+                // without confirm: only the estimate (409 not published here when allowed)
+                'reapply_flow'    => $onFlows('POST', 'workflowpacks.api.reapply'),
+                'reapply_control' => $onFlows('POST', 'workflowpacks.api.reapply.control', ['action' => 'status']),
             ];
             $listed = array_column(json_decode($this->rpc($token, 'tools/list')->getContent(), true)['result']['tools'], 'name');
             $this->assertEqualsCanonicalizing(array_keys(array_filter($allowed)), $listed, 'same tools for '.$label);
