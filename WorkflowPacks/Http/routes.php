@@ -116,6 +116,7 @@ Route::group([
     Route::post('/flows/{id}/test', 'AgentApiController@test')->name('workflowpacks.api.test');
     Route::post('/flows/{id}/publish', 'AgentApiController@publish')->name('workflowpacks.api.publish');
     Route::post('/flows/{id}/activate', 'AgentApiController@activate')->name('workflowpacks.api.activate');
+    Route::post('/flows/{id}/deactivate', 'AgentApiController@deactivate')->name('workflowpacks.api.deactivate');
     Route::post('/flows/{id}/simulate', 'AgentApiController@simulate')->name('workflowpacks.api.simulate');
     Route::post('/flows/{id}/rename', 'AgentApiController@rename')->name('workflowpacks.api.rename');
     Route::post('/flows/{id}/delete', 'AgentApiController@deleteFlow')->name('workflowpacks.api.delete');

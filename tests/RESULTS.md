@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 3.17.0
+# Résultats des tests — Workflow Packs 3.18.0
 
 Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,13 @@ Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 3.18.0 — désactiver un flux par un agent
+
+| Série | Résultat |
+|---|---|
+| Intégration (instance neuve) | 168 tests ; `McpTest` : sans le droit (même avec « activer »), pas d'outil `deactivate_flow`, API : autre flux 404 et toujours actif ; « désactiver ses flux » : son flux désactivé, une deuxième fois `changed: false`, un autre flux 404 ; « désactiver les autres » : `/me` `can_deactivate`, flux de sa boîte désactivé (brouillon gardé), autre boîte `mailbox_denied` et toujours actif, noté dans l'Historique ; API 200 ; ligne et bulle sur la page |
+| Navigateur téléphone 390 px et PC 1440 px | tableau de 9 actions dans la largeur, bulles visibles dans l'écran, pas de défilement horizontal, aucune erreur JavaScript |
 
 ## 3.17.0 — droits des agents action par action, plages d'adresses, bulles d'aide
 

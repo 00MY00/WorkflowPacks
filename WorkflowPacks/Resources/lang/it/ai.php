@@ -67,6 +67,8 @@ return [
     'right_delete_tip' => 'Eliminare un flusso, solo con conferma; prima viene salvato (scaricabile da un amministratore). I ticket in attesa ne escono così come sono.',
     'right_activate'  => 'Attivare dopo un test riuscito',
     'right_activate_tip' => 'Pubblicare e attivare un flusso solo se il suo ultimo test, di quella stessa versione, è riuscito (entro 24 h).',
+    'right_deactivate' => 'Disattivare',
+    'right_deactivate_tip' => 'Disattivare un flusso attivo: non parte più con le nuove e-mail. La versione pubblicata e la bozza restano; può essere riattivato.',
     'right_publish'   => 'Pubblicare e attivare senza condizioni',
     'right_publish_tip' => 'Pubblicare e attivare un flusso senza test. Il più potente: da riservare a un agente fidato.',
     'tip_tickets'     => 'Le caselle di cui l’agente può leggere i ticket; i flussi proposti vi si applicano. Nessuna: non vede alcun ticket.',

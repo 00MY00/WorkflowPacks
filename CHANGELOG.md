@@ -4,6 +4,14 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [3.18.0] - 2026-11-18
+
+### Ajouté
+- **Désactiver un flux depuis le connecteur ou l'API** (`deactivate_flow`, `POST /flows/{id}/deactivate`) : nouveau
+  droit « Désactiver » dans le tableau, pour ses flux et pour les autres flux de ses boîtes, désactivé par défaut (y
+  compris pour les agents existants). Comme depuis l'éditeur : le flux ne démarre plus sur les nouveaux e-mails, sa
+  version publiée et son brouillon restent ; noté dans l'Historique. Sans le droit, un autre flux répond « introuvable ».
+
 ## [3.17.0] - 2026-11-18
 
 ### Ajouté

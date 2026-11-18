@@ -27,12 +27,12 @@ class Agent extends Model
      * Seeing and testing its own flows is always allowed; acting on another flow needs that flow to run only on its
      * mailboxes (checked by Services\Ai\AgentTools).
      */
-    const PERMISSIONS = ['own.propose', 'own.edit', 'own.rename', 'own.delete', 'own.activate', 'own.publish',
-        'others.see', 'others.test', 'others.edit', 'others.rename', 'others.delete', 'others.activate', 'others.publish'];
+    const PERMISSIONS = ['own.propose', 'own.edit', 'own.rename', 'own.delete', 'own.activate', 'own.deactivate', 'own.publish',
+        'others.see', 'others.test', 'others.edit', 'others.rename', 'others.delete', 'others.activate', 'others.deactivate', 'others.publish'];
 
     /** The actions that change something (an agent without any of them only reads). */
-    const WRITES = ['own.propose', 'own.edit', 'own.rename', 'own.delete', 'own.activate', 'own.publish',
-        'others.edit', 'others.rename', 'others.delete', 'others.activate', 'others.publish'];
+    const WRITES = ['own.propose', 'own.edit', 'own.rename', 'own.delete', 'own.activate', 'own.deactivate', 'own.publish',
+        'others.edit', 'others.rename', 'others.delete', 'others.activate', 'others.deactivate', 'others.publish'];
 
     /** Its rights (the matrix; an agent saved before 3.17 without it: its former check boxes). */
     public function rights()
@@ -86,7 +86,7 @@ class Agent extends Model
         return ['read_only' => !array_intersect(self::WRITES, $rights), 'can_publish' => $has('own.publish') || $has('others.publish'),
             'can_activate' => $has('own.activate') || $has('others.activate'), 'can_delete' => $has('own.delete') || $has('others.delete'),
             'can_see_all' => $has('others.see'), 'can_publish_others' => (bool) array_intersect(['others.test', 'others.edit', 'others.rename',
-                'others.delete', 'others.activate', 'others.publish'], $rights)];
+                'others.delete', 'others.activate', 'others.deactivate', 'others.publish'], $rights)];
     }
 
     /** Lengths of access offered for a continuous agent (days; 0: until it is disconnected). */

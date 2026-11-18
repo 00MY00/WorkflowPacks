@@ -32,7 +32,7 @@ class AgentTools
             'tickets' => $this->mayReadTickets(), 'anonymise' => $a->anonymise, 'permissions' => array_values($a->rights()),
             'read_only' => !$this->mayAny(Agent::WRITES), 'can_publish' => $this->mayAny(['own.publish', 'others.publish']),
             'can_activate' => $this->mayActivate(), 'can_see_all' => $a->may('others.see'), 'can_delete' => $this->mayDelete(),
-            'expires_at' => $a->expires_at ? $a->expires_at->toIso8601String() : null];
+            'can_deactivate' => $this->mayDeactivate(), 'expires_at' => $a->expires_at ? $a->expires_at->toIso8601String() : null];
     }
 
     /** The blocks and the rules of a flow: the same as in the brief of the AI assistant. */
@@ -290,6 +290,29 @@ class AgentTools
         $this->log($ok ? 'switched on after a passed test ('.$tested['tickets'].' ticket(s))' : 'published and switched on', $flow);
 
         return ['id' => (int) $flow->id, 'version' => (int) $result['version']->number, 'active' => true, 'tested' => (bool) $ok];
+    }
+
+    /** May switch flows off (its own, or the others of its mailboxes). */
+    public function mayDeactivate()
+    {
+        return $this->mayAny(['own.deactivate', 'others.deactivate']);
+    }
+
+    /**
+     * A flow switched off, as from the editor: it no longer starts on new e-mails; its published version and its draft
+     * stay, an administrator (or an agent allowed to) switches it on again. Already off: nothing changes.
+     */
+    public function deactivate($id)
+    {
+        $flow = $this->target($id, 'deactivate');
+        if (!$flow->active) {
+            return ['id' => (int) $flow->id, 'active' => false, 'changed' => false];
+        }
+        $flow->update(['active' => false]);
+        \Cache::forget(self::testKey($flow->id));
+        $this->log('switched off', $flow);
+
+        return ['id' => (int) $flow->id, 'active' => false, 'changed' => true];
     }
 
     protected static function testKey($flowId)

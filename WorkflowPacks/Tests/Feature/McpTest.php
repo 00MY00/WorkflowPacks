@@ -682,6 +682,62 @@ class McpTest extends TestCase
         $this->assertEqualsCanonicalizing(['own.propose', 'others.rename'], $agent->fresh()->rights());
     }
 
+    public function testAnAgentSwitchesFlowsOff()
+    {
+        $a = $this->mailbox('A');
+        $b = $this->mailbox('B');
+        $admin = $this->user([$a, $b], true);
+        $draft = $this->similarChain();
+        unset($draft['name']);
+        $inA = Flow::create(['name' => 'Actif de A', 'mailbox_ids' => [$a->id], 'active' => true, 'once' => true, 'created_by' => $admin->id, 'draft' => $draft]);
+        $inB = Flow::create(['name' => 'Actif de B', 'mailbox_ids' => [$b->id], 'active' => true, 'once' => true, 'created_by' => $admin->id, 'draft' => $draft]);
+        $form = function (array $rights) use ($a) {
+            return ['mailbox_ids' => [$a->id], 'permissions_sent' => 1, 'permissions' => $rights];
+        };
+
+        // without the right: no tool; through the API, another flow is not revealed
+        list($plain) = $this->agent($admin, $form(['own.propose', 'own.activate']));
+        $names = array_column(json_decode($this->rpc($plain, 'tools/list')->getContent(), true)['result']['tools'], 'name');
+        $this->assertNotContains('deactivate_flow', $names, 'switching on does not give switching off');
+        $this->call('POST', route('workflowpacks.api.deactivate', ['id' => $inA->id]), [], [], [], ['HTTP_AUTHORIZATION' => 'Bearer '.$plain])->assertStatus(404);
+        $this->assertTrue($inA->fresh()->active);
+
+        // its own flows only: its flow switched off, the others not
+        list($own) = $this->agent($admin, $form(['own.propose', 'own.deactivate']));
+        list($made) = $this->tool($own, 'propose_flow', ['flow' => $this->similarChain()]);
+        Flow::find($made['id'])->update(['active' => true]);
+        list($off, $isError) = $this->tool($own, 'deactivate_flow', ['id' => $made['id']]);
+        $this->assertFalse($isError, json_encode($off));
+        $this->assertTrue($off['changed']);
+        $this->assertFalse(Flow::find($made['id'])->active);
+        list($again) = $this->tool($own, 'deactivate_flow', ['id' => $made['id']]);
+        $this->assertFalse($again['changed'], 'already off: nothing changes');
+        list($out) = $this->tool($own, 'deactivate_flow', ['id' => $inA->id]);
+        $this->assertSame('not_found', $out['error']);
+        $this->assertTrue($inA->fresh()->active);
+
+        // the others of its mailboxes: switched off (kept: published version, draft); another mailbox refused
+        list($others) = $this->agent($admin, $form(['others.deactivate']));
+        $this->assertTrue(json_decode($this->call('GET', route('workflowpacks.api.me'), [], [], [], ['HTTP_AUTHORIZATION' => 'Bearer '.$others])->getContent(), true)['can_deactivate']);
+        list($off, $isError) = $this->tool($others, 'deactivate_flow', ['id' => $inA->id]);
+        $this->assertFalse($isError, json_encode($off));
+        $this->assertFalse($inA->fresh()->active);
+        $this->assertNotNull($inA->fresh()->draft);
+        list($out) = $this->tool($others, 'deactivate_flow', ['id' => $inB->id]);
+        $this->assertSame('mailbox_denied', $out['error']);
+        $this->assertTrue($inB->fresh()->active);
+        $this->assertTrue(\Modules\WorkflowPacks\Entities\Activity::where('kind', 'agent')->where('message', 'like', 'switched off%')->exists());
+        // through the API
+        $inA->update(['active' => true]);
+        $api = $this->call('POST', route('workflowpacks.api.deactivate', ['id' => $inA->id]), [], [], [], ['HTTP_AUTHORIZATION' => 'Bearer '.$others]);
+        $api->assertStatus(200);
+        $this->assertFalse($inA->fresh()->active);
+        // the page: the row and its bubble
+        $page = $this->actingAs($admin)->get(route('workflowpacks.ai'))->getContent();
+        $this->assertStringContainsString('value="others.deactivate"', $page);
+        $this->assertStringContainsString(e(__('workflowpacks::ai.right_deactivate_tip')), $page);
+    }
+
     public function testFormerAgentsKeepTheirRights()
     {
         $agent = \Modules\WorkflowPacks\Entities\Agent::class;

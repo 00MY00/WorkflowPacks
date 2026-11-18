@@ -141,7 +141,7 @@ class McpController extends BaseController
                 'inputSchema' => $none, 'annotations' => ['readOnlyHint' => true]],
             ['name' => 'list_flows', 'title' => 'Existing flows', 'description' => ($tools->mayAny(['others.see']) ? 'Every flow of the help desk' : 'The flows you proposed')
                 .' (name, active, published version, mailboxes, blocks and links); "mine" marks the ones you proposed, the only ones you can change.'
-                .($tools->mayAny(['others.edit', 'others.rename', 'others.delete', 'others.activate', 'others.publish']) ? ' Your rights also cover some of the others that run only on your mailboxes.' : ''),
+                .($tools->mayAny(['others.edit', 'others.rename', 'others.delete', 'others.activate', 'others.deactivate', 'others.publish']) ? ' Your rights also cover some of the others that run only on your mailboxes.' : ''),
                 'inputSchema' => $none, 'annotations' => ['readOnlyHint' => true]],
         ];
         if ($tools->mayReadTickets()) {
@@ -196,6 +196,12 @@ class McpController extends BaseController
                 'inputSchema' => ['type' => 'object', 'properties' => ['id' => ['type' => 'integer']], 'required' => ['id']],
                 'annotations' => ['destructiveHint' => true]];
         }
+        if ($tools->mayDeactivate()) {
+            $list[] = ['name' => 'deactivate_flow', 'title' => 'Switch a flow off', 'description' => 'Switches off one of your flows'
+                .($tools->mayAny(['others.deactivate']) ? ' (or another flow running only on your mailboxes)' : '')
+                .': it no longer starts on new e-mails; its published version and draft are kept. Already off: nothing changes.',
+                'inputSchema' => ['type' => 'object', 'properties' => ['id' => ['type' => 'integer']], 'required' => ['id']]];
+        }
         if ($tools->me()['can_publish']) {
             $list[] = ['name' => 'publish_flow', 'title' => 'Publish a flow', 'description' => 'Publishes one of your flows (and switches it on with activate: true). It then runs on new e-mails.',
                 'inputSchema' => ['type' => 'object', 'properties' => ['id' => ['type' => 'integer'], 'activate' => ['type' => 'boolean']], 'required' => ['id']],
@@ -240,6 +246,9 @@ class McpController extends BaseController
                     break;
                 case 'simulate_flow':
                     $out = $tools->simulate($a['id'] ?? 0, $a['mail'] ?? null);
+                    break;
+                case 'deactivate_flow':
+                    $out = $tools->deactivate($a['id'] ?? 0);
                     break;
                 case 'activate_flow':
                     $out = $tools->activate($a['id'] ?? 0);

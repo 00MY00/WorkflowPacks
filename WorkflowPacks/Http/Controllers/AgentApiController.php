@@ -138,6 +138,13 @@ class AgentApiController extends BaseController
         });
     }
 
+    public function deactivate(Request $request, $id)
+    {
+        return $this->guarded($request, function (AgentTools $tools) use ($id) {
+            return $tools->deactivate($id);
+        });
+    }
+
     public function activate(Request $request, $id)
     {
         return $this->guarded($request, function (AgentTools $tools) use ($id) {
