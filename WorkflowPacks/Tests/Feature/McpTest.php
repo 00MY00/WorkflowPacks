@@ -335,4 +335,44 @@ class McpTest extends TestCase
         // not for someone else than an administrator, nor an invalid length
         $this->actingAs($this->user([$a], false, true))->post(route('workflowpacks.ai.agents.expiry', ['id' => $agent->id]), ['days' => 30])->assertStatus(403);
     }
+
+    public function testAnAgentIsChangedWithoutANewKeyAndDeletedOnceDisconnected()
+    {
+        $a = $this->mailbox('A');
+        $admin = $this->user([$a], true);
+        list($token) = $this->agent($admin, []);
+        $agent = \Modules\WorkflowPacks\Entities\Agent::orderBy('id', 'desc')->first();
+        $tools = function () use ($token) {
+            return array_column(json_decode($this->rpc($token, 'tools/list')->getContent(), true)['result']['tools'], 'name');
+        };
+        $this->assertNotContains('list_tickets', $tools());
+        // rights changed: tickets of A, read only; the same address keeps working
+        $this->actingAs($admin)->post(route('workflowpacks.ai.agents.update', ['id' => $agent->id]), ['name' => 'Claude 2', 'mailbox_ids' => [$a->id], 'read_only' => 1])
+            ->assertSessionHas('flash_success_floating');
+        $agent = $agent->fresh();
+        $this->assertSame('Claude 2', $agent->name);
+        $this->assertTrue($agent->read_only);
+        $this->assertSame(['get_catalog', 'list_flows', 'list_tickets'], $tools(), 'same key, new rights at once');
+        $this->assertTrue(\Modules\WorkflowPacks\Entities\Activity::where('kind', 'agent')->where('message', 'like', 'rights changed%')->exists());
+        // an invalid address in the change: nothing changed
+        $this->actingAs($admin)->post(route('workflowpacks.ai.agents.update', ['id' => $agent->id]), ['name' => 'X', 'allowed_ips' => 'nope'])->assertSessionHas('flash_error_floating');
+        $this->assertSame('Claude 2', $agent->fresh()->name);
+
+        // a flow it proposed (rights back to writing), then deletion: refused while it works, done once disconnected
+        $this->actingAs($admin)->post(route('workflowpacks.ai.agents.update', ['id' => $agent->id]), ['name' => 'Claude 2', 'mailbox_ids' => [$a->id]]);
+        list($made) = $this->tool($token, 'propose_flow', ['flow' => ['name' => 'Gardé', 'blocks' => [['id' => 'b1', 'type' => 'trigger.new_mail'],
+            ['id' => 'b2', 'type' => 'action.status', 'params' => ['status' => 'pending']]], 'links' => [['from' => 'b1', 'port' => 'next', 'to' => 'b2']]]]);
+        $this->actingAs($admin)->post(route('workflowpacks.ai.agents.delete', ['id' => $agent->id]))->assertSessionHas('flash_error_floating');
+        $this->assertNotNull(\Modules\WorkflowPacks\Entities\Agent::find($agent->id));
+        $agent->revoke();
+        // a disconnected agent is not changed (a new one is made instead)
+        $this->actingAs($admin)->post(route('workflowpacks.ai.agents.update', ['id' => $agent->id]), ['name' => 'Revenu'])->assertSessionHas('flash_error_floating');
+        $this->actingAs($this->user([$a], false, true))->post(route('workflowpacks.ai.agents.delete', ['id' => $agent->id]))->assertStatus(403);
+        $this->actingAs($admin)->post(route('workflowpacks.ai.agents.delete', ['id' => $agent->id]))->assertSessionHas('flash_success_floating');
+        $this->assertNull(\Modules\WorkflowPacks\Entities\Agent::find($agent->id));
+        $kept = Flow::find($made['id']);
+        $this->assertNotNull($kept, 'its flows stay');
+        $this->assertNull($kept->agent_id);
+        $this->rpc($token, 'tools/list')->assertStatus(404);
+    }
 }

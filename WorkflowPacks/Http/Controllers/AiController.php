@@ -81,36 +81,53 @@ class AiController extends Controller
     }
 
     /** A connected agent: its token is shown once, on this page, never again. */
-    public function createAgent(Request $request)
+    /**
+     * The rights given to an agent, read from the form (creation or change): name, readable mailboxes, anonymisation,
+     * read only, switching on after a test, publishing, allowed addresses. A string: the reason of a refusal.
+     *
+     * @return array|string
+     */
+    protected function rights(Request $request)
     {
-        $this->guardAi();
         $mailboxes = array_values(array_intersect(array_map('intval', (array) $request->input('mailbox_ids', [])),
             \App\Mailbox::pluck('id')->map(function ($id) {
                 return (int) $id;
             })->all()));
-        // addresses allowed to use the token: each one a valid address or range, else nothing is created
+        // addresses allowed to use the token: each one a valid address or range, else nothing is saved
         $ips = [];
         foreach (preg_split('/[\s,;]+/', (string) $request->input('allowed_ips', ''), -1, PREG_SPLIT_NO_EMPTY) as $text) {
             $range = Agent::range($text);
             if ($range === null) {
-                return redirect()->route('workflowpacks.ai')->with('flash_error_floating', __('workflowpacks::ai.ips_invalid', ['value' => e(mb_substr($text, 0, 60))]));
+                return __('workflowpacks::ai.ips_invalid', ['value' => e(mb_substr($text, 0, 60))]);
             }
             $ips[] = $range;
+        }
+        $readOnly = (bool) $request->input('read_only');
+
+        return [
+            'name'         => mb_substr(trim((string) $request->input('name')) ?: 'Agent', 0, 100),
+            'mailbox_ids'  => $mailboxes,
+            'anonymise'    => !$request->input('full_text'),
+            'read_only'    => $readOnly,
+            'can_publish'  => !$readOnly && (bool) $request->input('can_publish'),
+            'can_activate' => !$readOnly && (bool) $request->input('can_activate'),
+            'allowed_ips'  => array_values(array_unique($ips)),
+        ];
+    }
+
+    public function createAgent(Request $request)
+    {
+        $this->guardAi();
+        $rights = $this->rights($request);
+        if (is_string($rights)) {
+            return redirect()->route('workflowpacks.ai')->with('flash_error_floating', $rights);
         }
         $continuous = $request->input('mode') === Agent::CONTINUOUS;
         $days = (int) $request->input('days', 30);
         $days = in_array($days, Agent::DAYS, true) ? $days : 30;
-        $readOnly = (bool) $request->input('read_only');
-        list($agent, $token) = Agent::issue([
-            'name'        => mb_substr(trim((string) $request->input('name')) ?: 'Agent', 0, 100),
-            'mode'        => $continuous ? Agent::CONTINUOUS : Agent::ONCE,
-            'mailbox_ids' => $mailboxes,
-            'anonymise'   => !$request->input('full_text'),
-            'read_only'   => $readOnly,
-            'can_publish' => !$readOnly && (bool) $request->input('can_publish'),
-            'can_activate' => !$readOnly && (bool) $request->input('can_activate'),
-            'allowed_ips' => array_values(array_unique($ips)),
-            'created_by'  => auth()->id(),
+        list($agent, $token) = Agent::issue($rights + [
+            'mode'       => $continuous ? Agent::CONTINUOUS : Agent::ONCE,
+            'created_by' => auth()->id(),
         ] + ($continuous && $days ? ['expires_at' => \Carbon\Carbon::now()->addDays($days)] : []));
         \Modules\WorkflowPacks\Services\History::add('agent', 'ok', ['subject' => $agent->name, 'message' => 'connected ('.$agent->mode.')']);
 
@@ -134,6 +151,55 @@ class AiController extends Controller
 
         return redirect()->route('workflowpacks.ai')->with('flash_success_floating', $days
             ? __('workflowpacks::ai.expiry_changed', ['date' => $agent->expires_at->format('Y-m-d')]) : __('workflowpacks::ai.expiry_none'));
+    }
+
+    /**
+     * Its rights changed, its key kept (the address of the connector stays the same). Not for a disconnected agent.
+     * The change is written in History: what it may read and do, before and after.
+     */
+    public function updateAgent(Request $request, $id)
+    {
+        $this->guardAi();
+        $agent = Agent::findOrFail((int) $id);
+        if ($agent->revoked_at) {
+            return redirect()->route('workflowpacks.ai')->with('flash_error_floating', __('workflowpacks::ai.agent_update_refused'));
+        }
+        $rights = $this->rights($request);
+        if (is_string($rights)) {
+            return redirect()->route('workflowpacks.ai')->with('flash_error_floating', $rights);
+        }
+        $before = self::summary($agent);
+        $agent->update($rights);
+        \Modules\WorkflowPacks\Services\History::add('agent', 'ok', ['subject' => $agent->name, 'message' => 'rights changed: '.$before.' → '.self::summary($agent->fresh())]);
+
+        return redirect()->route('workflowpacks.ai')->with('flash_success_floating', __('workflowpacks::ai.agent_updated', ['name' => e($agent->name)]));
+    }
+
+    /**
+     * Removed from the list, only once it no longer works (disconnected or expired): its key is gone for good. The flows
+     * it proposed stay, as ordinary flows; History keeps what it did.
+     */
+    public function deleteAgent($id)
+    {
+        $this->guardAi();
+        $agent = Agent::findOrFail((int) $id);
+        if ($agent->usable()) {
+            return redirect()->route('workflowpacks.ai')->with('flash_error_floating', __('workflowpacks::ai.agent_delete_refused'));
+        }
+        \Modules\WorkflowPacks\Entities\Flow::where('agent_id', $agent->id)->update(['agent_id' => null]);
+        $name = $agent->name;
+        $agent->delete();
+        \Modules\WorkflowPacks\Services\History::add('agent', 'ok', ['subject' => $name, 'message' => 'deleted']);
+
+        return redirect()->route('workflowpacks.ai')->with('flash_success_floating', __('workflowpacks::ai.agent_deleted', ['name' => e($name)]));
+    }
+
+    /** What an agent may read and do, in a few words (for History). */
+    protected static function summary(Agent $a)
+    {
+        return 'mailboxes ['.implode(',', array_map('intval', (array) $a->mailbox_ids)).']'.($a->anonymise ? '' : ' full text')
+            .($a->read_only ? ' read only' : '').($a->can_activate ? ' activate' : '').($a->can_publish ? ' publish' : '')
+            .(array_filter((array) $a->allowed_ips) ? ' ips '.implode(',', (array) $a->allowed_ips) : '');
     }
 
     /** Disconnected at once: its token no longer works. */

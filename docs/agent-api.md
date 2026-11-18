@@ -20,7 +20,11 @@ accès à FreeScout lui-même : un jeton, des droits limités, et une déconnexi
 | Adresses IP autorisées | facultatif : seules ces adresses ou plages (`203.0.113.0/24`, `2001:db8::/32`) peuvent utiliser le jeton ; toute autre est refusée et notée dans l'Historique |
 
 Le **jeton** (`wpa_…`) est affiché **une seule fois**, à la création. Seule son empreinte SHA-256 est gardée.
-**Déconnecter** le rend inutilisable immédiatement. Chaque action de l'agent est notée dans **Historique** (type
+**Déconnecter** le rend inutilisable immédiatement. **Modifier les droits** (fiche de l'agent : nom, boîtes, anonymisation,
+lecture seule, activation, publication, adresses IP) garde la même clé et la même adresse ; le changement est noté dans
+l'Historique (avant → après). Un agent **déconnecté ou expiré** peut être **supprimé** de la liste : sa clé disparaît
+définitivement, les flux qu'il a proposés restent comme des flux ordinaires. Un agent déconnecté ne se modifie ni ne se
+réactive : on en crée un nouveau. Chaque action de l'agent est notée dans **Historique** (type
 « Agent IA connecté »).
 
 ## Connecteur Claude (chat)

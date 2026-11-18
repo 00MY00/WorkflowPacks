@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 3.13.0
+# Résultats des tests — Workflow Packs 3.14.0
 
 Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,13 @@ Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 3.14.0 — modifier et supprimer un agent
+
+| Série | Résultat |
+|---|---|
+| Intégration (instance neuve) | 156 tests ; `McpTest` : droits changés (boîte, lecture seule) appliqués tout de suite avec la même adresse, noté dans l'Historique, adresse IP invalide : rien de changé ; suppression refusée tant que l'agent fonctionne, agent déconnecté non modifiable, suppression réservée aux administrateurs ; supprimé : flux gardé (sans agent), adresse inutilisable |
+| Navigateur téléphone 390 px | agent créé, droits modifiés depuis sa fiche (nom, lecture seule, boîte), déconnecté (modification masquée, bouton Supprimer), supprimé ; pas de défilement horizontal, aucune erreur JavaScript |
 
 ## 3.13.0 — activation après test réussi, durée d'accès modifiable, 404 pour une adresse de connecteur inconnue
 

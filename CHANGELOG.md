@@ -4,6 +4,16 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [3.14.0] - 2026-11-18
+
+### Ajouté
+- **Modifier un agent connecté** sans changer sa clé ni l'adresse du connecteur : nom, boîtes lisibles, anonymisation,
+  lecture seule, activation après test, publication, adresses IP ; appliqué tout de suite, noté dans l'Historique
+  (avant → après). Pas pour un agent déconnecté (on en crée un nouveau).
+- **Supprimer un agent** déconnecté ou expiré : sa clé disparaît définitivement, les flux qu'il a proposés restent comme
+  des flux ordinaires, l'Historique garde ses actions. Un agent encore actif doit d'abord être déconnecté.
+- Fiche d'un agent réorganisée : état, puis ses actions (durée, déconnecter ou supprimer), ses droits dépliables.
+
 ## [3.13.0] - 2026-11-18
 
 ### Ajouté
