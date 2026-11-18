@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 3.15.1
+# Résultats des tests — Workflow Packs 3.16.0
 
 Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,12 @@ Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 3.16.0 — renommer et supprimer des flux par un agent
+
+| Série | Résultat |
+|---|---|
+| Intégration (instance neuve) | 164 tests ; `McpTest` : sans le droit de suppression, pas d'outil `delete_flow` ; son flux renommé, celui d'un autre refusé sans le droit ; avec les droits : autre flux de sa boîte renommé (seul le nom), autre boîte refusée ; suppression refusée sans `confirm: true`, puis faite avec sauvegarde complète téléchargeable par un administrateur, notée dans l'Historique ; autre boîte refusée ; API 409 sans confirmation ; lecture seule : ni renommer ni supprimer |
 
 ## 3.15.1 — anciens flux activés par un agent qui a toutes les boîtes, durée affichée
 

@@ -311,11 +311,7 @@ class FlowsController extends Controller
     /** A flow deleted: the tickets waiting in it leave it (they stay as they are), its versions go with it. */
     protected static function remove(Flow $flow)
     {
-        \DB::transaction(function () use ($flow) {
-            FlowRun::where('flow_id', $flow->id)->whereIn('state', [FlowRun::WAITING, FlowRun::RUNNING])->update(['state' => FlowRun::CANCELLED]);
-            FlowVersion::where('flow_id', $flow->id)->delete();
-            $flow->delete();
-        });
+        $flow->erase();
     }
 
     /** The draft in the editor (saved or not), with a sample e-mail: every step, nothing written (Engine::simulate). */

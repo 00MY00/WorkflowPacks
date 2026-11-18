@@ -172,6 +172,16 @@ class McpController extends BaseController
             'inputSchema' => ['type' => 'object', 'properties' => ['id' => ['type' => 'integer'],
                 'ticket_ids' => ['type' => 'array', 'items' => ['type' => 'integer'], 'description' => 'Default: recent tickets of your mailboxes']], 'required' => ['id']],
             'annotations' => ['readOnlyHint' => true]];
+        $list[] = ['name' => 'rename_flow', 'title' => 'Rename a flow', 'description' => 'Changes the name of one of your flows'
+            .($tools->me()['can_publish_others'] ? ' (or of another flow running only on your mailboxes)' : '').'; nothing else changes.',
+            'inputSchema' => ['type' => 'object', 'properties' => ['id' => ['type' => 'integer'], 'name' => ['type' => 'string']], 'required' => ['id', 'name']]];
+        if ($tools->mayDelete()) {
+            $list[] = ['name' => 'delete_flow', 'title' => 'Delete a flow', 'description' => 'Deletes one of your flows'
+                .($tools->me()['can_publish_others'] ? ' (or another flow running only on your mailboxes)' : '')
+                .'. Only with confirm: true; a backup is kept first (backup_url, for an administrator); tickets waiting in it leave it as they are. Ask the user before deleting.',
+                'inputSchema' => ['type' => 'object', 'properties' => ['id' => ['type' => 'integer'], 'confirm' => ['type' => 'boolean', 'description' => 'Must be true']],
+                    'required' => ['id', 'confirm']], 'annotations' => ['destructiveHint' => true]];
+        }
         if ($tools->mayActivate()) {
             $list[] = ['name' => 'activate_flow', 'title' => 'Switch a flow on', 'description' => 'Publishes and switches on one of your flows. '
                 .($tools->me()['can_publish'] ? 'Allowed at once.' : 'Only after test_flow passed on this very draft (unchanged since): test it first.')
@@ -214,6 +224,12 @@ class McpController extends BaseController
                     break;
                 case 'test_flow':
                     $out = $tools->test($a['id'] ?? 0, (array) ($a['ticket_ids'] ?? []));
+                    break;
+                case 'rename_flow':
+                    $out = $tools->rename($a['id'] ?? 0, $a['name'] ?? '');
+                    break;
+                case 'delete_flow':
+                    $out = $tools->deleteFlow($a['id'] ?? 0, ($a['confirm'] ?? false) === true);
                     break;
                 case 'simulate_flow':
                     $out = $tools->simulate($a['id'] ?? 0, $a['mail'] ?? null);

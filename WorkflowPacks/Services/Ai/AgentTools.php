@@ -32,6 +32,7 @@ class AgentTools
             'tickets' => $this->mayReadTickets(), 'anonymise' => $a->anonymise, 'read_only' => (bool) $a->read_only,
             'can_publish' => $a->can_publish && !$a->read_only, 'can_activate' => $this->mayActivate(),
             'can_see_all' => (bool) $a->can_see_all, 'can_publish_others' => $this->mayActivate() && (bool) $a->can_publish_others,
+            'can_delete' => $this->mayDelete(),
             'expires_at' => $a->expires_at ? $a->expires_at->toIso8601String() : null];
     }
 
@@ -206,6 +207,74 @@ class AgentTools
         return ['flow' => ['id' => (int) $flow->id, 'name' => $flow->name], 'mail' => $mail, 'mail_made' => $made, 'steps' => $steps,
             'end' => $trace['end'], 'story' => $story,
             'replay_url' => route('workflowpacks.flows', ['flow' => $flow->id, 'replay' => $key])];
+    }
+
+    /** May delete flows (never read only). */
+    public function mayDelete()
+    {
+        return !$this->agent->read_only && (bool) $this->agent->can_delete;
+    }
+
+    /**
+     * A flow renamed: its own ones, or the others of its mailboxes when it may act on them. Only the name changes.
+     */
+    public function rename($id, $name)
+    {
+        $this->write();
+        $name = mb_substr(trim((string) $name), 0, 191);
+        if ($name === '') {
+            throw new AgentToolError(422, 'name_required');
+        }
+        $flow = $this->actOn($id);
+        $before = $flow->name;
+        $flow->update(['name' => $name]);
+        History::add('agent', 'ok', ['user_id' => $this->agent->created_by, 'subject' => $this->agent->name.' → '.$name,
+            'message' => 'renamed #'.$flow->id.' ("'.$before.'" → "'.$name.'")']);
+
+        return ['id' => (int) $flow->id, 'name' => $name, 'before' => $before];
+    }
+
+    /**
+     * A flow deleted, only when asked with confirm: true. Its own ones, or the others of its mailboxes when it may act on
+     * them. Saved first (blocks, links, settings: a backup an administrator downloads), then deleted as from the editor:
+     * the tickets waiting in it leave it, they stay as they are.
+     */
+    public function deleteFlow($id, $confirm)
+    {
+        if (!$this->mayDelete()) {
+            throw new AgentToolError(403, 'delete_denied');
+        }
+        $flow = $this->actOn($id);
+        if (!$confirm) {
+            throw new AgentToolError(409, 'confirm_required');
+        }
+        $backup = \Modules\WorkflowPacks\Entities\Backup::create(['pack_key' => 'flow-'.$flow->id.'-'.\Modules\WorkflowPacks\Services\Engine\FlowPack::slug($flow->name),
+            'user_id' => $this->agent->created_by, 'content' => json_encode(['deleted_by_agent' => $this->agent->name, 'deleted_at' => \Carbon\Carbon::now()->toIso8601String(),
+                'flow' => ['id' => (int) $flow->id, 'name' => $flow->name, 'active' => (bool) $flow->active, 'once' => (bool) $flow->once,
+                    'mailbox_ids' => (array) $flow->mailbox_ids], 'pack' => \Modules\WorkflowPacks\Services\Engine\FlowPack::export([$flow], $flow->name)],
+                JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)]);
+        $name = $flow->name;
+        $flow->erase();
+        History::add('agent', 'ok', ['user_id' => $this->agent->created_by, 'subject' => $this->agent->name.' → '.$name,
+            'message' => 'deleted #'.(int) $id.' (backup #'.$backup->id.')']);
+
+        return ['id' => (int) $id, 'deleted' => true, 'backup_id' => (int) $backup->id,
+            'backup_url' => route('workflowpacks.backup', ['id' => $backup->id, 'part' => 'pack'])];
+    }
+
+    /** A flow it may change the name of or delete: its own ones, the others with "act on the other flows"; within its mailboxes. */
+    protected function actOn($id)
+    {
+        $flow = Flow::find((int) $id);
+        $mine = $flow && (int) $flow->agent_id === (int) $this->agent->id;
+        if (!$flow || (!$mine && !($this->agent->can_publish_others && !$this->agent->read_only))) {
+            throw new AgentToolError(404, 'not_found');
+        }
+        if (!$mine) {
+            $this->inMailboxes($flow);
+        }
+
+        return $flow;
     }
 
     /** May switch on its own flows: allowed to publish, or allowed to switch on after a passed test (never read only). */
