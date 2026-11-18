@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 3.12.0
+# Résultats des tests — Workflow Packs 3.12.1
 
 Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,12 @@ Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 3.12.1 — page du connecteur dans un navigateur
+
+| Série | Résultat |
+|---|---|
+| Intégration | `McpTest`, `AgentApiTest` : 6 tests OK ; navigateur (Accept text/html) : page 200 « Le connecteur est joignable », sans le nom de l'agent, `no-store` ; client MCP (Accept text/event-stream ou JSON) : 405 comme prévu |
 
 ## 3.12.0 — connecteur Claude, droits et sécurité des agents, tickets existants d'un brouillon
 

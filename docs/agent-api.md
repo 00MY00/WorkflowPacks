@@ -43,6 +43,16 @@ L'adresse contient le jeton (les connecteurs personnalisés de Claude n'envoient
 **Déconnecter** l'agent la rend inutilisable. FreeScout doit être joignable depuis Internet en **https**. Mêmes limites
 que l'API : 60 requêtes par minute, rien d'envoyé aux clients, chaque action dans l'Historique.
 
+Ouverte dans un navigateur, l'adresse affiche seulement « Le connecteur est joignable » (rien sur l'agent) : c'est le
+moyen de vérifier qu'elle est accessible depuis Internet. C'est Claude qui vient chercher les données : FreeScout doit
+être joignable en https depuis Internet (déjà le cas s'il l'est pour vous de l'extérieur ; sinon un tunnel, sans port
+à ouvrir, ou le port 443 redirigé).
+
+**Derrière Cloudflare** : si Claude n'arrive pas à se connecter, voir dans Cloudflare › Security › Events si ses
+requêtes sont bloquées (règles du pare-feu, « Bot Fight Mode ») et autoriser le chemin `/workflow-packs/mcp/`. Le champ
+« Adresses IP autorisées » voit l'adresse de Cloudflare, pas celle de Claude, tant que Cloudflare n'est pas déclaré
+comme proxy de confiance de FreeScout : le laisser vide dans ce cas.
+
 ## Utiliser l'API
 
 Adresse : `https://votre-freescout/workflow-packs/api/v1`. Le jeton va dans l'en-tête
