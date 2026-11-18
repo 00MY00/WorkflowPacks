@@ -67,6 +67,8 @@ return [
     'right_delete_tip' => 'Einen Ablauf nur mit Bestätigung löschen; er wird zuerst gesichert (von einem Administrator herunterladbar). Wartende Tickets verlassen ihn unverändert.',
     'right_activate'  => 'Nach bestandenem Test einschalten',
     'right_activate_tip' => 'Einen Ablauf nur veröffentlichen und einschalten, wenn sein letzter Test genau dieser Version bestanden ist (innerhalb von 24 h).',
+    'right_deactivate' => 'Ausschalten',
+    'right_deactivate_tip' => 'Einen aktiven Ablauf ausschalten: er startet nicht mehr bei neuen E-Mails. Veröffentlichte Version und Entwurf bleiben; er kann wieder eingeschaltet werden.',
     'right_publish'   => 'Frei veröffentlichen und einschalten',
     'right_publish_tip' => 'Einen Ablauf ohne Test veröffentlichen und einschalten. Am mächtigsten: einem vertrauenswürdigen Agenten vorbehalten.',
     'tip_tickets'     => 'Die Postfächer, deren Tickets der Agent lesen darf; seine Abläufe gelten dort. Keines: er sieht keine Tickets.',

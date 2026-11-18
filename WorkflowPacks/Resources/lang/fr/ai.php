@@ -67,6 +67,8 @@ return [
     'right_delete_tip' => 'Supprimer un flux, seulement avec confirmation ; il est d’abord sauvegardé (téléchargeable par un administrateur). Les tickets en attente en sortent tels quels.',
     'right_activate'  => 'Activer après un test réussi',
     'right_activate_tip' => 'Publier et activer un flux seulement si son dernier test, sur cette version exacte, a réussi (dans les 24 h).',
+    'right_deactivate' => 'Désactiver',
+    'right_deactivate_tip' => 'Désactiver un flux actif : il ne démarre plus sur les nouveaux e-mails. Sa version publiée et son brouillon sont gardés ; il peut être réactivé.',
     'right_publish'   => 'Publier et activer sans condition',
     'right_publish_tip' => 'Publier et activer un flux sans test préalable. Le plus puissant : à réserver à un agent de confiance.',
     'tip_tickets'     => 'Les boîtes dont l’agent peut lire les tickets ; ses flux proposés s’y appliquent. Aucune : il ne voit aucun ticket.',

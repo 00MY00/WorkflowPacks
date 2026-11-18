@@ -67,6 +67,8 @@ return [
     'right_delete_tip' => 'Delete a flow, only with a confirmation; it is saved first (downloadable by an administrator). Tickets waiting in it leave it as they are.',
     'right_activate'  => 'Switch on after a passed test',
     'right_activate_tip' => 'Publish and switch on a flow only if its last test, on that very version, passed (within 24 h).',
+    'right_deactivate' => 'Switch off',
+    'right_deactivate_tip' => 'Switch an active flow off: it no longer starts on new e-mails. Its published version and its draft are kept; it can be switched on again.',
     'right_publish'   => 'Publish and switch on freely',
     'right_publish_tip' => 'Publish and switch on a flow without a test. The most powerful: keep it for a trusted agent.',
     'tip_tickets'     => 'The mailboxes whose tickets the agent may read; the flows it proposes run there. None: it sees no ticket.',

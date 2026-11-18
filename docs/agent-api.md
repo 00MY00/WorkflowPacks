@@ -34,6 +34,7 @@ toutes).
 | Renommer | `own.rename` | `others.rename` |
 | Supprimer (confirmation, sauvegarde d'abord) | `own.delete` | `others.delete` |
 | Activer après un test réussi (cette version exacte, 24 h) | `own.activate` | `others.activate` |
+| Désactiver (version publiée et brouillon gardés) | `own.deactivate` | `others.deactivate` |
 | Publier et activer sans condition | `own.publish` | `others.publish` |
 
 - Par défaut à la création : proposer, modifier, renommer ses flux. **Aucune case cochée** : lecture seule.
@@ -41,9 +42,10 @@ toutes).
   (403) pour ses flux, ou `read_only` si l'agent n'a aucun droit d'écriture ; pour un autre flux sans le droit :
   **404 `not_found`**, son existence n'est pas révélée. Hors de ses boîtes : `mailbox_denied`.
 - `GET /me` renvoie `permissions` (la liste ci-dessus) ; `read_only`, `can_publish`, `can_activate`, `can_see_all`,
-  `can_delete` restent fournis, déduits de cette liste.
+  `can_delete`, `can_deactivate` restent fournis, déduits de cette liste.
 - Les agents créés avant 3.17 gardent exactement leurs droits (anciennes cases traduites dans le tableau ; « agir sur
-  les autres flux » n'a jamais permis d'en **modifier** le contenu, `others.edit` reste donc décoché).
+  les autres flux » n'a jamais permis d'en **modifier** le contenu, `others.edit` reste donc décoché). « Désactiver »
+  (3.18) n'est donné à aucun agent existant : à cocher sur sa fiche. Activer ne donne pas le droit de désactiver.
 
 Le **jeton** (`wpa_…`) est affiché **une seule fois**, à la création. Seule son empreinte SHA-256 est gardée.
 **Déconnecter** le rend inutilisable immédiatement. **Modifier les droits** (fiche de l'agent : nom, boîtes, anonymisation,
@@ -71,6 +73,7 @@ Claude dispose alors de ces outils (protocole MCP) :
 | `update_flow` | « Modifier » : remplace le brouillon de son flux, ou d'un autre de ses boîtes avec `others.edit` |
 | `test_flow` | tester à blanc (rien n'est écrit) ses flux, ou les autres avec « Tester » sur les autres flux |
 | `activate_flow` | « Activer après un test réussi » (ou « Publier sans condition ») : publie et active le flux après un test réussi de cette version |
+| `deactivate_flow` | « Désactiver » : le flux ne démarre plus sur les nouveaux e-mails, comme depuis l'éditeur ; sa version publiée et son brouillon restent ; déjà désactivé : rien ne change (`changed: false`) |
 | `publish_flow` | « Publier et activer sans condition » |
 | `rename_flow` | « Renommer » ; seul le nom change |
 | `delete_flow` | « Supprimer » : **seulement avec `confirm: true`**, après une sauvegarde (`backup_url`) |
@@ -110,6 +113,7 @@ Elle répond `404` tant que le moteur interne est désactivé. Utilisez HTTPS.
 | POST | `/flows/{id}/delete` | supprimer (`{"confirm": true}`, sauvegarde d'abord ; `409 confirm_required` sinon) |
 | POST | `/flows/{id}/simulate` | simuler (corps facultatif `{"mail": {…}}`) ; avec `Accept: text/event-stream`, les étapes arrivent une à une (événements `step`, puis `result`) |
 | POST | `/flows/{id}/activate` | publier et activer son flux après un test réussi (`409 test_required` sinon) |
+| POST | `/flows/{id}/deactivate` | désactiver le flux (droit « Désactiver ») |
 | GET | `/catalog` | les règles d'un flux, les blocs (champs, sorties, variables) et un exemple, comme dans le dossier de l'assistant |
 | GET | `/tickets?mailbox_id=&days=&limit=&search=` | tickets de ses boîtes : numéro, sujet, extrait, domaine, statut, indices (anonymisés selon le réglage) |
 | GET | `/flows` | ses flux : brouillon, version publiée, actif |

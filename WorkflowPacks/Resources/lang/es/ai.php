@@ -67,6 +67,8 @@ return [
     'right_delete_tip' => 'Eliminar un flujo, solo con confirmación; antes se guarda una copia (descargable por un administrador). Los tickets en espera salen tal cual.',
     'right_activate'  => 'Activar tras una prueba superada',
     'right_activate_tip' => 'Publicar y activar un flujo solo si su última prueba, de esa misma versión, se superó (en 24 h).',
+    'right_deactivate' => 'Desactivar',
+    'right_deactivate_tip' => 'Desactivar un flujo activo: ya no se inicia con los nuevos e-mails. Su versión publicada y su borrador se conservan; puede volver a activarse.',
     'right_publish'   => 'Publicar y activar sin condición',
     'right_publish_tip' => 'Publicar y activar un flujo sin prueba. El más potente: reservado a un agente de confianza.',
     'tip_tickets'     => 'Los buzones cuyos tickets puede leer el agente; sus flujos propuestos se aplican allí. Ninguno: no ve ningún ticket.',

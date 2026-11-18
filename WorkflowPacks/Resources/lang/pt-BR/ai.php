@@ -67,6 +67,8 @@ return [
     'right_delete_tip' => 'Excluir um fluxo, só com confirmação; antes ele é salvo (baixável por um administrador). Os tickets aguardando saem como estão.',
     'right_activate'  => 'Ativar após um teste aprovado',
     'right_activate_tip' => 'Publicar e ativar um fluxo só se o último teste, dessa mesma versão, foi aprovado (em 24 h).',
+    'right_deactivate' => 'Desativar',
+    'right_deactivate_tip' => 'Desativar um fluxo ativo: ele não inicia mais com novos e-mails. A versão publicada e o rascunho são mantidos; pode ser reativado.',
     'right_publish'   => 'Publicar e ativar sem condição',
     'right_publish_tip' => 'Publicar e ativar um fluxo sem teste. O mais poderoso: reserve a um agente de confiança.',
     'tip_tickets'     => 'As caixas cujos tickets o agente pode ler; os fluxos que ele propõe se aplicam a elas. Nenhuma: ele não vê nenhum ticket.',

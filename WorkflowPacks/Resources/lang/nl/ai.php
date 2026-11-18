@@ -67,6 +67,8 @@ return [
     'right_delete_tip' => 'Een stroom verwijderen, alleen met bevestiging; eerst wordt een back-up gemaakt (te downloaden door een beheerder). Wachtende tickets verlaten hem ongewijzigd.',
     'right_activate'  => 'Inschakelen na een geslaagde test',
     'right_activate_tip' => 'Een stroom alleen publiceren en inschakelen als zijn laatste test van precies die versie geslaagd is (binnen 24 u).',
+    'right_deactivate' => 'Uitschakelen',
+    'right_deactivate_tip' => 'Een actieve stroom uitschakelen: hij start niet meer bij nieuwe e-mails. De gepubliceerde versie en het concept blijven; hij kan weer worden ingeschakeld.',
     'right_publish'   => 'Vrij publiceren en inschakelen',
     'right_publish_tip' => 'Een stroom zonder test publiceren en inschakelen. Het krachtigst: voorbehouden aan een vertrouwde agent.',
     'tip_tickets'     => 'De mailboxen waarvan de agent de tickets mag lezen; zijn voorgestelde stromen gelden daar. Geen: hij ziet geen tickets.',

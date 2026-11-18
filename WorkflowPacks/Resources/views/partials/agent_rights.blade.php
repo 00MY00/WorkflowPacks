@@ -5,7 +5,7 @@
 @php
     $wp_rows = [
         ['see', false, true], ['test', false, true], ['propose', true, false], ['edit', true, true], ['rename', true, true],
-        ['delete', true, true], ['activate', true, true], ['publish', true, true],
+        ['delete', true, true], ['activate', true, true], ['deactivate', true, true], ['publish', true, true],
     ];
 @endphp
 <input type="hidden" name="permissions_sent" value="1">
