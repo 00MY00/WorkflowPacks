@@ -17,22 +17,29 @@ class Agent extends Model
 
     protected $table = 'workflowpacks_agents';
 
-    protected $fillable = ['name', 'token_hash', 'token_hint', 'mode', 'mailbox_ids', 'anonymise', 'can_publish', 'can_activate', 'can_see_all', 'can_publish_others', 'can_delete', 'permissions', 'read_only', 'allowed_ips',
+    protected $fillable = ['name', 'token_hash', 'token_hint', 'mode', 'mailbox_ids', 'anonymise', 'can_publish', 'can_activate', 'can_see_all', 'can_publish_others', 'can_delete', 'permissions', 'reapply_limits', 'read_only', 'allowed_ips',
         'last_ip', 'expires_at', 'last_used_at', 'revoked_at', 'created_by'];
 
-    protected $casts = ['mailbox_ids' => 'array', 'anonymise' => 'boolean', 'can_publish' => 'boolean', 'can_activate' => 'boolean', 'can_see_all' => 'boolean', 'can_publish_others' => 'boolean', 'can_delete' => 'boolean', 'permissions' => 'array', 'read_only' => 'boolean', 'allowed_ips' => 'array'];
+    protected $casts = ['mailbox_ids' => 'array', 'anonymise' => 'boolean', 'can_publish' => 'boolean', 'can_activate' => 'boolean', 'can_see_all' => 'boolean', 'can_publish_others' => 'boolean', 'can_delete' => 'boolean', 'permissions' => 'array', 'reapply_limits' => 'array', 'read_only' => 'boolean', 'allowed_ips' => 'array'];
 
     /**
      * Rights of an agent: an action on its own flows ("own.…") or on the other flows of its mailboxes ("others.…").
      * Seeing and testing its own flows is always allowed; acting on another flow needs that flow to run only on its
      * mailboxes (checked by Services\Ai\AgentTools).
      */
-    const PERMISSIONS = ['own.propose', 'own.edit', 'own.rename', 'own.delete', 'own.activate', 'own.deactivate', 'own.publish',
-        'others.see', 'others.test', 'others.edit', 'others.rename', 'others.delete', 'others.activate', 'others.deactivate', 'others.publish'];
+    const PERMISSIONS = ['own.propose', 'own.edit', 'own.rename', 'own.delete', 'own.activate', 'own.deactivate', 'own.publish', 'own.reapply',
+        'others.see', 'others.test', 'others.edit', 'others.rename', 'others.delete', 'others.activate', 'others.deactivate', 'others.publish',
+        'others.reapply'];
 
     /** The actions that change something (an agent without any of them only reads). */
-    const WRITES = ['own.propose', 'own.edit', 'own.rename', 'own.delete', 'own.activate', 'own.deactivate', 'own.publish',
-        'others.edit', 'others.rename', 'others.delete', 'others.activate', 'others.deactivate', 'others.publish'];
+    const WRITES = ['own.propose', 'own.edit', 'own.rename', 'own.delete', 'own.activate', 'own.deactivate', 'own.publish', 'own.reapply',
+        'others.edit', 'others.rename', 'others.delete', 'others.activate', 'others.deactivate', 'others.publish', 'others.reapply'];
+
+    /** Numbers of tickets an agent may apply a flow to at once (limit chosen by the administrator). */
+    const REAPPLY_MAX = [100, 500, 1000, 5000, 20000];
+
+    /** Limits of "apply to the existing tickets" when none were chosen: active and pending, 30 days, 500 tickets. */
+    const REAPPLY_DEFAULTS = ['statuses' => ['active', 'pending'], 'period_max' => 30, 'tags' => [], 'assignees' => [], 'max_tickets' => 500, 'risky' => false];
 
     /** Its rights (the matrix; an agent saved before 3.17 without it: its former check boxes). */
     public function rights()
@@ -86,7 +93,42 @@ class Agent extends Model
         return ['read_only' => !array_intersect(self::WRITES, $rights), 'can_publish' => $has('own.publish') || $has('others.publish'),
             'can_activate' => $has('own.activate') || $has('others.activate'), 'can_delete' => $has('own.delete') || $has('others.delete'),
             'can_see_all' => $has('others.see'), 'can_publish_others' => (bool) array_intersect(['others.test', 'others.edit', 'others.rename',
-                'others.delete', 'others.activate', 'others.deactivate', 'others.publish'], $rights)];
+                'others.delete', 'others.activate', 'others.deactivate', 'others.publish', 'others.reapply'], $rights)];
+    }
+
+    /** Its limits for applying a flow to the existing tickets (always valid values). */
+    public function reapplyLimits()
+    {
+        return self::cleanLimits(is_array($this->reapply_limits) ? $this->reapply_limits : []);
+    }
+
+    /**
+     * Limits of "apply to the existing tickets", from a form or as saved: statuses among active / pending / closed, a
+     * period offered, tags (none: any), users that exist (0: nobody assigned; none: any), a number of tickets offered.
+     */
+    public static function cleanLimits(array $in)
+    {
+        $d = self::REAPPLY_DEFAULTS;
+        $scope = \Modules\WorkflowPacks\Services\Engine\TicketScope::class;
+        $period = (int) ($in['period_max'] ?? $d['period_max']);
+        $max = (int) ($in['max_tickets'] ?? $d['max_tickets']);
+        $users = array_values(array_diff($scope::assignees((array) ($in['assignees'] ?? [])), [$scope::UNASSIGNED]));
+        $known = $users ? \App\User::whereIn('id', $users)->pluck('id')->map(function ($id) {
+            return (int) $id;
+        })->all() : [];
+        $assignees = $scope::assignees((array) ($in['assignees'] ?? []));
+        $tags = is_array($in['tags'] ?? null) ? $in['tags'] : preg_split('/\s*,\s*/', (string) ($in['tags'] ?? ''), -1, PREG_SPLIT_NO_EMPTY);
+
+        return [
+            'statuses'    => array_values(array_intersect($scope::STATUSES, (array) ($in['statuses'] ?? $d['statuses']))),
+            'period_max'  => in_array($period, \Modules\WorkflowPacks\Services\Engine\Reapply::PERIODS, true) ? $period : $d['period_max'],
+            'tags'        => $scope::tags($tags),
+            'assignees'   => array_values(array_filter($assignees, function ($id) use ($known, $scope) {
+                return $id === $scope::UNASSIGNED || in_array($id, $known, true);
+            })),
+            'max_tickets' => in_array($max, self::REAPPLY_MAX, true) ? $max : $d['max_tickets'],
+            'risky'       => !empty($in['risky']),
+        ];
     }
 
     /** Lengths of access offered for a continuous agent (days; 0: until it is disconnected). */

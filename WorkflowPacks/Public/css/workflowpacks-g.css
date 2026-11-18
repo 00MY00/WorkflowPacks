@@ -278,3 +278,6 @@ a.wp-tile:hover, a.wp-tile:focus { border-color: var(--g-primary); text-decorati
   .wp-js .wp-tabs.is-open { display: flex; flex-direction: column; flex-wrap: nowrap; overflow: visible; margin-top: 6px; width: 100%; }
   .wp-js .wp-tabs.is-open > li > a { min-height: 44px; font-size: 15px; }
 }
+/* limits of an agent applying a flow to the existing tickets: a section that folds, under the rights */
+.wp-reapply-limits { margin: 10px 0; padding: 4px 12px 10px; border: 1px solid var(--g-border); border-radius: 12px; }
+.wp-reapply-limits > summary { display: flex; align-items: center; gap: 6px; min-height: 44px; font-weight: 600; color: var(--g-text); cursor: pointer; }

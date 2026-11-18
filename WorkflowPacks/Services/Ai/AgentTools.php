@@ -6,6 +6,8 @@ use Modules\WorkflowPacks\Entities\Agent;
 use Modules\WorkflowPacks\Entities\Flow;
 use Modules\WorkflowPacks\Entities\FlowVersion;
 use Modules\WorkflowPacks\Services\Engine\Publisher;
+use Modules\WorkflowPacks\Services\Engine\Reapply;
+use Modules\WorkflowPacks\Services\Engine\TicketScope;
 use Modules\WorkflowPacks\Services\History;
 
 /**
@@ -32,7 +34,8 @@ class AgentTools
             'tickets' => $this->mayReadTickets(), 'anonymise' => $a->anonymise, 'permissions' => array_values($a->rights()),
             'read_only' => !$this->mayAny(Agent::WRITES), 'can_publish' => $this->mayAny(['own.publish', 'others.publish']),
             'can_activate' => $this->mayActivate(), 'can_see_all' => $a->may('others.see'), 'can_delete' => $this->mayDelete(),
-            'can_deactivate' => $this->mayDeactivate(), 'expires_at' => $a->expires_at ? $a->expires_at->toIso8601String() : null];
+            'can_deactivate' => $this->mayDeactivate(), 'can_reapply' => $this->mayReapply(),
+            'reapply_limits' => $this->mayReapply() ? $a->reapplyLimits() : null, 'expires_at' => $a->expires_at ? $a->expires_at->toIso8601String() : null];
     }
 
     /** The blocks and the rules of a flow: the same as in the brief of the AI assistant. */
@@ -290,6 +293,115 @@ class AgentTools
         $this->log($ok ? 'switched on after a passed test ('.$tested['tickets'].' ticket(s))' : 'published and switched on', $flow);
 
         return ['id' => (int) $flow->id, 'version' => (int) $result['version']->number, 'active' => true, 'tested' => (bool) $ok];
+    }
+
+    /** May apply flows to the tickets already there (its own, or the others of its mailboxes). */
+    public function mayReapply()
+    {
+        return $this->mayAny(['own.reapply', 'others.reapply']);
+    }
+
+    /**
+     * A published flow applied to the tickets already there, within the limits the administrator gave this agent and
+     * within its mailboxes. Without confirm: only the estimate (how many tickets, a dry run on the most recent ones,
+     * nothing done). With confirm: true: started, batch after batch, as from the editor ("once per ticket" applies).
+     *   scope "existing" (default): tickets by statuses, period (days), tags, assigned users ("unassigned": nobody);
+     *   scope "running": the tickets waiting in an older version go on in the current one.
+     */
+    public function reapply($id, array $in, $confirm, $confirmRisky = false)
+    {
+        $flow = $this->target($id, 'reapply');
+        // it touches tickets: always within its mailboxes, its own flows too
+        $this->inMailboxes($flow);
+        if (!$flow->version_id) {
+            throw new AgentToolError(409, 'not_published');
+        }
+        $limits = $this->agent->reapplyLimits();
+        $o = $this->reapplyOptions($in, $limits);
+        $service = new Reapply();
+        $estimate = $service->estimate($flow, $o, !$confirm);
+        if ($estimate['risky'] && !$limits['risky']) {
+            throw new AgentToolError(403, 'risky_denied', ['blocks' => $estimate['risky']]);
+        }
+        if ($estimate['total'] > $limits['max_tickets']) {
+            throw new AgentToolError(422, 'too_many_tickets', ['total' => $estimate['total'], 'max' => $limits['max_tickets']]);
+        }
+        $current = Reapply::current($flow);
+        $answer = ['id' => (int) $flow->id, 'scope' => $o['scope'], 'filters' => array_intersect_key(Reapply::filters($flow, $o), array_flip(['statuses', 'period', 'tags', 'assignees'])),
+            'total' => (int) $estimate['total'], 'minutes' => (int) $estimate['minutes'], 'risky' => $estimate['risky'], 'running' => $current ? self::job($current) : null];
+        if (!$confirm) {
+            return $answer + ['started' => false, 'sample' => $estimate['sample']];
+        }
+        if ($estimate['risky'] && !$confirmRisky) {
+            throw new AgentToolError(409, 'confirm_risky_required', ['blocks' => $estimate['risky']]);
+        }
+        if ($current) {
+            throw new AgentToolError(409, 'already_running');
+        }
+        $job = $service->start($flow, $o, $this->agent->created_by ? \App\User::find($this->agent->created_by) : null, $this->agent->id);
+        if (!$job) {
+            throw new AgentToolError(422, 'nothing_to_do');
+        }
+        $this->log('applied to the existing tickets ('.$job->total.' ticket(s), '.$o['scope'].')', $flow);
+
+        return ['started' => true, 'job' => self::job($job)] + $answer;
+    }
+
+    /** The run of a flow on the existing tickets: its state (status), or paused, resumed, stopped. */
+    public function reapplyControl($id, $action)
+    {
+        $flow = $this->target($id, 'reapply');
+        $this->inMailboxes($flow);
+        $action = (string) $action;
+        if (!in_array($action, ['status', 'pause', 'resume', 'stop'], true)) {
+            throw new AgentToolError(422, 'unknown_action');
+        }
+        $job = Reapply::current($flow);
+        if ($action !== 'status') {
+            if (!$job) {
+                throw new AgentToolError(409, 'nothing_running');
+            }
+            Reapply::control($job, $action);
+            $this->log('existing tickets: '.$action, $flow);
+        }
+        $job = $job ? $job->fresh() : \Modules\WorkflowPacks\Entities\FlowReapply::where('flow_id', $flow->id)->latest('id')->first();
+
+        return ['id' => (int) $flow->id, 'job' => $job ? self::job($job) : null];
+    }
+
+    /** The options of a run asked by the agent, each one within its limits (else refused, with what is allowed). */
+    protected function reapplyOptions(array $in, array $limits)
+    {
+        $scope = ($in['scope'] ?? 'existing') === 'running' ? 'running' : 'existing';
+        $statuses = isset($in['statuses']) ? array_values(array_unique(array_map('strval', (array) $in['statuses']))) : $limits['statuses'];
+        if (!$statuses || array_diff($statuses, $limits['statuses'])) {
+            throw new AgentToolError(403, 'limit_statuses', ['allowed' => $limits['statuses']]);
+        }
+        $period = isset($in['period']) ? (int) $in['period'] : $limits['period_max'];
+        if (!in_array($period, Reapply::PERIODS, true) || ($limits['period_max'] > 0 && ($period === 0 || $period > $limits['period_max']))) {
+            throw new AgentToolError(403, 'limit_period', ['max_days' => $limits['period_max'], 'offered' => Reapply::PERIODS]);
+        }
+        $tags = isset($in['tags']) ? TicketScope::tags((array) $in['tags']) : $limits['tags'];
+        if ($limits['tags'] && (!$tags || array_diff($tags, $limits['tags']))) {
+            throw new AgentToolError(403, 'limit_tags', ['allowed' => $limits['tags']]);
+        }
+        if ($tags && !TicketScope::tagSource()) {
+            throw new AgentToolError(422, 'tags_unavailable');
+        }
+        $assignees = isset($in['assignees']) ? TicketScope::assignees((array) $in['assignees']) : $limits['assignees'];
+        if ($limits['assignees'] && (!$assignees || array_diff($assignees, $limits['assignees']))) {
+            throw new AgentToolError(403, 'limit_assignees', ['allowed' => $limits['assignees']]);
+        }
+
+        return ['scope' => $scope, 'statuses' => $statuses, 'period' => $period, 'tags' => $tags, 'assignees' => $assignees,
+            'mailboxes' => array_map('intval', (array) $this->agent->mailbox_ids), 'batch' => 50, 'every' => 1];
+    }
+
+    /** A run as an agent reads it (no user names). */
+    protected static function job(\Modules\WorkflowPacks\Entities\FlowReapply $job)
+    {
+        return ['state' => $job->state, 'scope' => $job->scope, 'total' => (int) $job->total, 'done' => (int) $job->done,
+            'started' => (int) $job->started, 'by_agent' => $job->agent_id !== null];
     }
 
     /** May switch flows off (its own, or the others of its mailboxes). */

@@ -138,6 +138,25 @@ class AgentApiController extends BaseController
         });
     }
 
+    /** Estimate (nothing done), or started with {"confirm": true}; the filters within the limits of the agent. */
+    public function reapply(Request $request, $id)
+    {
+        return $this->guarded($request, function (AgentTools $tools) use ($request, $id) {
+            $yes = function ($key) use ($request) {
+                return $request->input($key) === true || $request->input($key) === 'true';
+            };
+
+            return $tools->reapply($id, $request->only(['scope', 'statuses', 'period', 'tags', 'assignees']), $yes('confirm'), $yes('confirm_risky'));
+        });
+    }
+
+    public function reapplyControl(Request $request, $id)
+    {
+        return $this->guarded($request, function (AgentTools $tools) use ($request, $id) {
+            return $tools->reapplyControl($id, $request->input('action', 'status'));
+        });
+    }
+
     public function deactivate(Request $request, $id)
     {
         return $this->guarded($request, function (AgentTools $tools) use ($id) {
