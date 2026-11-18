@@ -4,6 +4,22 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [3.15.0] - 2026-11-18
+
+### Ajouté
+- **Simulation : « Générer un e-mail qui passe »** à côté de la saisie manuelle : l'e-mail de test est rempli pour suivre
+  le « oui » de chaque condition jusqu'à la fin du flux (mot attendu, expéditeur, statut, assigné, répondu) ; pour
+  « Ressemble à… », un texte proche des e-mails d'exemple (mots retirés ou permutés au hasard) dont la ressemblance
+  atteint le seuil. Joué aussitôt ; ce qui ne peut pas être réglé depuis un e-mail est indiqué. Le formulaire manuel
+  gagne statut, assigné, répondu.
+- **Simulation pour les agents** (`simulate_flow`, API `POST /flows/{id}/simulate`) : étapes (bloc, décision,
+  changements, moment), **récit** en clair, **diffusion en direct** des étapes (progression MCP, ou événements serveur
+  pour l'API) et **adresse de rediffusion** : un administrateur revoit la simulation jouée sur le schéma.
+- **Droits des agents sur les autres flux** : « Peut voir les autres flux » (désactivé par défaut ; les agents existants
+  le gardent) et « Peut publier et activer les autres flux » de ses boîtes, selon ses droits de publication ou
+  d'activation après test (jamais les modifier).
+- Schéma : bouton **Tout** dans la barre de l'élément choisi (comme Ctrl+A, utile au doigt).
+
 ## [3.14.0] - 2026-11-18
 
 ### Ajouté

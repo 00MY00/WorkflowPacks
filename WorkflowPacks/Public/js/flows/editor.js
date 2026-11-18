@@ -180,7 +180,11 @@
         this.q('.wpf-show').value = this.show;
         this.side('list', narrow() ? false : pref('list') !== false, true);
         this.side('panel', narrow() ? false : pref('panel') !== false, true);
-        this.load(cfg.open || undefined);
+        var self2 = this;
+        this.load(cfg.open || undefined).then(function () {
+            // a simulation shared by an agent (its replay address): its e-mail played on the diagram
+            if (cfg.replay && self2.flow && self2.flow.id === cfg.replay.flow) { self2.replay(cfg.replay.mail); }
+        });
     }
 
     Editor.prototype.request = function (url, data) {
@@ -582,6 +586,7 @@
             if (name === 'bulk-on') { self.bulk('activate'); }
             if (name === 'delete-sel') { self.removeSelection(); }
             if (name === 'clear-sel') { self.select(null); }
+            if (name === 'select-all') { self.selectAll(); }
             if (name === 'settings-sel') { self.side('panel', true); self.selbar(); }
             if (name === 'bulk-off') { self.bulk('deactivate'); }
             if (name === 'simulate') { self.showSim(); }
@@ -602,7 +607,7 @@
             }
             if ((e.ctrlKey || e.metaKey) && String(e.key).toLowerCase() === 'a' && self.flow && !typing) {
                 e.preventDefault();
-                self.pick(self.flow.draft.blocks.map(function (b) { return b.id; }));
+                self.selectAll();
             }
             // Escape: first the menu, then the selection, then the full page
             if (e.key === 'Escape') {
@@ -802,6 +807,11 @@
             self.render();
         });
         window.addEventListener('resize', function () { self.setTransform(); });
+    };
+
+    /** Every block of the open flow chosen (Ctrl+A, or "All" on the bar of the chosen element with a finger). */
+    Editor.prototype.selectAll = function () {
+        if (this.flow) { this.pick(this.flow.draft.blocks.map(function (b) { return b.id; })); }
     };
 
     /** Blocks chosen: none, one (its settings in the panel) or several (moved and deleted together). */
@@ -1435,12 +1445,27 @@
         if (s.real) {
             p.appendChild(h('button', { type: 'button', class: 'btn btn-link btn-sm', text: '×', on: { click: function () { self.sim = null; self.render(); self.showPanel(); } } }));
         } else {
-        if (!s.form) { s.form = { subject: 'PR #42', from: 'client@example.test', body: '' }; }
+        if (!s.form) { s.form = { subject: 'PR #42', from: 'client@example.test', body: '', status: 'active', assigned: false, replied: false }; }
+        // quick way: an e-mail made to take the positive path to the end of the flow, then played at once
+        p.appendChild(h('button', { type: 'button', class: 'btn btn-default btn-sm wpf-sample', text: '⚡ ' + t.sample_make, title: t.sample_help, on: { click: function () { self.sampleMail(); } } }));
+        if (s.replayed) { p.appendChild(h('p', { class: 'wpf-sample-ok', text: t.replay_note })); }
+        if (s.sample) {
+            p.appendChild(h('p', { class: s.sample.reached ? 'wpf-sample-ok' : 'wpf-problem-text', text: s.sample.reached ? t.sample_reached : t.sample_not_reached }));
+            (s.sample.notes || []).forEach(function (n) { p.appendChild(h('p', { class: 'wpf-problem-text', text: n })); });
+        }
+        // manual way: every field written by hand
         ['subject', 'from', 'body'].forEach(function (k) {
             var input = k === 'body'
                 ? h('textarea', { class: 'form-control input-sm', rows: 3, on: { input: function () { s.form[k] = this.value; } } }, [s.form[k]])
                 : h('input', { type: 'text', class: 'form-control input-sm', value: s.form[k], on: { input: function () { s.form[k] = this.value; } } });
             p.appendChild(h('label', { class: 'wpf-field' }, [h('span', { text: t['sim_' + k] }), input]));
+        });
+        var status = h('select', { class: 'form-control input-sm', on: { change: function () { s.form.status = this.value; } } },
+            ['active', 'pending', 'closed', 'spam'].map(function (v) { return h('option', { value: v, text: (self.bt.values.status || {})[v] || v, selected: s.form.status === v }); }));
+        p.appendChild(h('label', { class: 'wpf-field' }, [h('span', { text: t.field_status }), status]));
+        ['assigned', 'replied'].forEach(function (k) {
+            p.appendChild(h('label', { class: 'wpf-check' }, [h('input', { type: 'checkbox', checked: !!s.form[k], on: { change: function () { s.form[k] = this.checked; } } }),
+                ' ' + (self.bt.vars['ticket.' + k] || k)]));
         });
         p.appendChild(h('div', { class: 'wpf-inline' }, [
             h('button', { type: 'button', class: 'btn btn-primary btn-sm', text: '▶ ' + t.sim_run, on: { click: function () { self.runSim(false); } } }),
@@ -1479,6 +1504,35 @@
         if (!seconds) { return '0'; }
         var d = Math.floor(seconds / 86400), hh = Math.floor((seconds % 86400) / 3600), m = Math.floor((seconds % 3600) / 60);
         return '+' + (d ? d + ' ' + this.t.unit_d + ' ' : '') + (hh ? hh + ' h ' : '') + (m ? m + ' min' : '');
+    };
+
+    /** The simulation of an agent replayed: the settings side open, its e-mail in the fields, played step by step. */
+    Editor.prototype.replay = function (mail) {
+        this.side('panel', true, true);
+        this.showSim();
+        var s = this.sim;
+        s.form = { subject: mail.subject || '', from: mail.from || '', body: mail.body || '', status: mail.status || 'active', assigned: !!mail.assigned, replied: !!mail.replied };
+        s.replayed = true;
+        this.runSim(false);
+    };
+
+    /** "An e-mail that goes through": the fields filled by the server, then the simulation played with them. */
+    Editor.prototype.sampleMail = function () {
+        var self = this, s = this.sim;
+        this.flush().then(function () {
+            return self.request(self.url('sample'), { draft: self.flow.draft });
+        }).then(function (res) {
+            if (!res.ok) {
+                s.problems = res.data.problems || [];
+                self.showPanel();
+                return;
+            }
+            var m = res.data.mail;
+            s.form = { subject: m.subject, from: m.from, body: m.body, status: m.status, assigned: !!m.assigned, replied: !!m.replied };
+            s.sample = { reached: res.data.reached, notes: res.data.notes || [] };
+            s.problems = [];
+            self.runSim(false);
+        });
     };
 
     Editor.prototype.runSim = function (stepByStep) {

@@ -64,6 +64,16 @@ sur la grille ; le navigateur se souvient de ce choix. Sur tablette tenue droite
 | Supprimer le ticket | — ; dossier **Supprimés** de FreeScout (récupérable tant qu'il n'est pas vidé), dernier bloc de la branche | erreur |
 | Notification push | destinataires (l'assigné, les utilisateurs de la boîte ou un utilisateur), titre (vide = sujet), texte ; variables remplacées. Nécessite le module [WebPush](https://github.com/altmenorg/freescout-webpush) | suite / erreur |
 
+### Simuler
+
+**Simuler** joue le brouillon avec un e-mail de test (rien n'est écrit ni envoyé), bloc par bloc sur le schéma.
+- **À la main** : sujet, expéditeur, texte, statut, assigné, répondu.
+- **Générer un e-mail qui passe** : l'e-mail est rempli pour suivre le « oui » de chaque condition jusqu'à la fin du flux
+  (mot attendu dans le sujet, expéditeur, statut…) ; pour « Ressemble à… », un texte proche des e-mails d'exemple (quelques
+  mots retirés ou permutés au hasard) dont la ressemblance atteint le seuil. Il est joué aussitôt ; ce qui ne peut pas
+  être réglé depuis un e-mail est indiqué. On peut ensuite le modifier à la main et rejouer.
+- Une simulation faite par un agent IA se **revoit** ici par son adresse de rediffusion.
+
 ### Se déplacer et choisir dans le schéma
 
 | | Souris | Au doigt (téléphone, tablette) |

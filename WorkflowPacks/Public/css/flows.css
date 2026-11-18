@@ -149,6 +149,8 @@
 .wpf-menu-item { display: block; width: 100%; text-align: left; border: 0; background: none; padding: 6px 10px; border-radius: 6px; }
 .wpf-menu-item:hover, .wpf-menu-item:focus { background: rgba(99, 102, 241, .1); outline: none; }
 /* simulation */
+.wpf-sample { margin: 4px 0 8px; }
+.wpf-sample-ok { color: #047857; font-size: 12px; font-weight: 600; margin: 4px 0; }
 .wpf-events { padding-left: 18px; font-size: 12px; }
 .wpf-events li { margin: 6px 0; }
 .wpf-events li.lvl-3 { color: var(--c-err); }
