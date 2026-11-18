@@ -36,4 +36,14 @@ class Flow extends Model
 
         return !$ids || in_array((int) $mailboxId, $ids, true);
     }
+
+    /** Deleted with its versions; the tickets still waiting in it leave it (they stay as they are). */
+    public function erase()
+    {
+        \DB::transaction(function () {
+            FlowRun::where('flow_id', $this->id)->whereIn('state', [FlowRun::WAITING, FlowRun::RUNNING])->update(['state' => FlowRun::CANCELLED]);
+            FlowVersion::where('flow_id', $this->id)->delete();
+            $this->delete();
+        });
+    }
 }

@@ -4,6 +4,18 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [3.16.0] - 2026-11-18
+
+### Ajouté
+- **Supprimer des flux depuis le connecteur ou l'API** (`delete_flow`, `POST /flows/{id}/delete`) : nouveau droit par agent
+  « Peut supprimer des flux », désactivé par défaut. Seulement avec confirmation (`confirm: true`) ; le flux complet est
+  d'abord sauvegardé (téléchargeable par un administrateur), les tickets en attente en sortent tels quels ; noté dans
+  l'Historique.
+- **Renommer des flux** (`rename_flow`, `POST /flows/{id}/rename`) : seul le nom change ; noté dans l'Historique.
+- Pour **les autres flux** : renommer et supprimer avec le droit « Agir sur les autres flux de ses boîtes » (renommé
+  ainsi : tester, publier, activer, renommer, supprimer selon ses autres droits ; jamais modifier leur contenu),
+  toujours seulement pour les flux qui ne visent que ses boîtes.
+
 ## [3.15.1] - 2026-11-18
 
 ### Corrigé

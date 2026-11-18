@@ -123,6 +123,21 @@ class AgentApiController extends BaseController
         return $response;
     }
 
+    public function rename(Request $request, $id)
+    {
+        return $this->guarded($request, function (AgentTools $tools) use ($request, $id) {
+            return $tools->rename($id, $request->input('name'));
+        });
+    }
+
+    /** Deleted only with {"confirm": true}; a backup is kept first. */
+    public function deleteFlow(Request $request, $id)
+    {
+        return $this->guarded($request, function (AgentTools $tools) use ($request, $id) {
+            return $tools->deleteFlow($id, $request->input('confirm') === true || $request->input('confirm') === 'true');
+        });
+    }
+
     public function activate(Request $request, $id)
     {
         return $this->guarded($request, function (AgentTools $tools) use ($id) {

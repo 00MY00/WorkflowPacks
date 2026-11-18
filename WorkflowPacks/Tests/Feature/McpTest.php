@@ -58,7 +58,7 @@ class McpTest extends TestCase
         $this->rpc($token, 'notifications/initialized', [], null)->assertStatus(202);
 
         $names = array_column(json_decode($this->rpc($token, 'tools/list')->getContent(), true)['result']['tools'], 'name');
-        $this->assertSame(['get_catalog', 'list_flows', 'simulate_flow', 'propose_flow', 'update_flow', 'test_flow'], $names, 'no mailbox: no ticket; not allowed to publish');
+        $this->assertSame(['get_catalog', 'list_flows', 'simulate_flow', 'propose_flow', 'update_flow', 'test_flow', 'rename_flow'], $names, 'no mailbox: no ticket; not allowed to publish or delete');
 
         list($catalog) = $this->tool($token, 'get_catalog');
         $this->assertContains('condition.similar', array_column($catalog['blocks'], 'type'));
@@ -546,5 +546,59 @@ class McpTest extends TestCase
         $this->actingAs($admin)->post(route('workflowpacks.ai.agents.expiry', ['id' => $agent->id]), ['days' => 90]);
         $page = $this->actingAs($admin)->get(route('workflowpacks.ai'))->getContent();
         $this->assertSame(1, preg_match('#<option value="90"\s+selected\s*>#', $page));
+    }
+
+    public function testAgentsRenameAndDeleteFlowsTheirOwnAndTheOthersOfTheirMailboxes()
+    {
+        $a = $this->mailbox('A');
+        $b = $this->mailbox('B');
+        $admin = $this->user([$a, $b], true);
+        $draft = $this->similarChain();
+        unset($draft['name']);
+        $inA = Flow::create(['name' => 'Autre de A', 'mailbox_ids' => [$a->id], 'active' => true, 'once' => true, 'created_by' => $admin->id, 'draft' => $draft]);
+        $inB = Flow::create(['name' => 'Autre de B', 'mailbox_ids' => [$b->id], 'active' => false, 'once' => true, 'created_by' => $admin->id, 'draft' => $draft]);
+
+        // without the right: no delete tool, its own flow renamed only
+        list($plain) = $this->agent($admin, ['mailbox_ids' => [$a->id]]);
+        $names = array_column(json_decode($this->rpc($plain, 'tools/list')->getContent(), true)['result']['tools'], 'name');
+        $this->assertContains('rename_flow', $names);
+        $this->assertNotContains('delete_flow', $names);
+        list($made) = $this->tool($plain, 'propose_flow', ['flow' => $this->similarChain()]);
+        list($renamed, $isError) = $this->tool($plain, 'rename_flow', ['id' => $made['id'], 'name' => 'Nouveau nom']);
+        $this->assertFalse($isError);
+        $this->assertSame('Nouveau nom', Flow::find($made['id'])->name);
+        list($out) = $this->tool($plain, 'rename_flow', ['id' => $inA->id, 'name' => 'Pris']);
+        $this->assertSame('not_found', $out['error'], 'the others: not without the right');
+
+        // with the rights: the others of its mailboxes renamed and deleted (confirmation, backup), another mailbox refused
+        list($agent) = $this->agent($admin, ['mailbox_ids' => [$a->id], 'can_see_all' => 1, 'can_publish_others' => 1, 'can_delete' => 1]);
+        list($out) = $this->tool($agent, 'rename_flow', ['id' => $inA->id, 'name' => 'Renommé par Claude']);
+        $this->assertSame('Renommé par Claude', $inA->fresh()->name);
+        $this->assertSame(\Modules\WorkflowPacks\Entities\FlowVersion::where('flow_id', $inA->id)->count(), 0, 'only the name changed');
+        list($out) = $this->tool($agent, 'rename_flow', ['id' => $inB->id, 'name' => 'Non']);
+        $this->assertSame('mailbox_denied', $out['error']);
+        list($out) = $this->tool($agent, 'delete_flow', ['id' => $inA->id]);
+        $this->assertSame('confirm_required', $out['error']);
+        $this->assertNotNull(Flow::find($inA->id), 'nothing deleted without confirm: true');
+        list($deleted, $isError) = $this->tool($agent, 'delete_flow', ['id' => $inA->id, 'confirm' => true]);
+        $this->assertFalse($isError, json_encode($deleted));
+        $this->assertNull(Flow::find($inA->id));
+        $backup = \Modules\WorkflowPacks\Entities\Backup::find($deleted['backup_id']);
+        $saved = json_decode($backup->content, true);
+        $this->assertSame('Renommé par Claude', $saved['flow']['name']);
+        $this->assertCount(1, $saved['pack']['flows'], 'the whole flow kept, to import again');
+        $this->actingAs($admin)->get($deleted['backup_url'])->assertStatus(200);
+        list($out) = $this->tool($agent, 'delete_flow', ['id' => $inB->id, 'confirm' => true]);
+        $this->assertSame('mailbox_denied', $out['error']);
+        $this->assertNotNull(Flow::find($inB->id));
+        $this->assertTrue(\Modules\WorkflowPacks\Entities\Activity::where('kind', 'agent')->where('message', 'like', 'deleted #%')->exists());
+        // through the API: confirmation needed too
+        $this->call('POST', route('workflowpacks.api.delete', ['id' => $made['id']]), [], [], [], ['HTTP_AUTHORIZATION' => 'Bearer '.$agent])->assertStatus(409);
+        $this->assertNotNull(Flow::find($made['id']));
+        // read only: neither rename nor delete
+        list($reader) = $this->agent($admin, ['mailbox_ids' => [$a->id], 'read_only' => 1, 'can_delete' => 1]);
+        $names = array_column(json_decode($this->rpc($reader, 'tools/list')->getContent(), true)['result']['tools'], 'name');
+        $this->assertNotContains('rename_flow', $names);
+        $this->assertNotContains('delete_flow', $names);
     }
 }

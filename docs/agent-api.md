@@ -17,7 +17,8 @@ accès à FreeScout lui-même : un jeton, des droits limités, et une déconnexi
 | Voir les autres flux | sinon l'agent ne voit et ne simule que **ses** flux (désactivé par défaut ; les agents créés avant 3.15 le gardent) |
 | Lecture seule | voit les flux (et les tickets permis), ne peut **rien proposer ni modifier** ; prime sur « Peut publier » |
 | Peut activer après un test réussi | l'agent peut publier et activer **ses** flux **seulement** si son dernier `test_flow` de **cette version exacte** a réussi (au moins un ticket testé, aucun en erreur), dans les 24 h ; modifié depuis : il faut retester |
-| Publier et activer les autres flux | ses droits de publication ou d'activation après test valent aussi pour les flux qu'il n'a pas créés, **seulement s'ils ne visent que ses boîtes** ; il peut les tester, jamais les modifier |
+| Agir sur les autres flux | ses droits valent aussi pour les flux qu'il n'a pas créés, **seulement s'ils ne visent que ses boîtes** : les tester, publier, activer, **renommer**, **supprimer** (avec « Peut supprimer ») ; jamais modifier leur contenu |
+| Peut supprimer des flux | supprime ses flux (et les autres de ses boîtes avec le droit précédent), **seulement avec confirmation** (`confirm: true`) ; le flux complet est d'abord **sauvegardé** (téléchargeable par un administrateur), les tickets en attente en sortent tels quels |
 | Peut publier | **désactivé par défaut**. Activé, l'agent peut publier et activer **ses propres** flux, jamais ceux des autres |
 | Adresses IP autorisées | facultatif : seules ces adresses ou plages (`203.0.113.0/24`, `2001:db8::/32`) peuvent utiliser le jeton ; toute autre est refusée et notée dans l'Historique |
 
@@ -47,6 +48,8 @@ Claude dispose alors de ces outils (protocole MCP) :
 | `update_flow`, `test_flow` | modifier, tester à blanc (rien n'est écrit) **ses** flux |
 | `activate_flow` | si « Peut activer après un test réussi » (ou « Peut publier ») : publie et active **son** flux, après un test réussi de cette version |
 | `publish_flow` | seulement si « Peut publier » est coché : publier, et activer, **ses** flux |
+| `rename_flow` | renomme son flux (ou un autre de ses boîtes avec « Agir sur les autres flux ») ; seul le nom change |
+| `delete_flow` | avec « Peut supprimer » : supprime le flux, **seulement avec `confirm: true`**, après une sauvegarde (`backup_url`) |
 
 L'adresse contient le jeton (les connecteurs personnalisés de Claude n'envoient pas d'en-tête) : ne la partagez pas ;
 **Déconnecter** l'agent la rend inutilisable. FreeScout doit être joignable depuis Internet en **https**. Mêmes limites
@@ -77,6 +80,8 @@ Elle répond `404` tant que le moteur interne est désactivé. Utilisez HTTPS.
 |---|---|---|
 | GET | `/me` | l'agent : usage, boîtes, anonymisation, droit de publier, expiration |
 | GET | `/flows?all=1` | tous les flux, en lecture (`mine` : les siens) |
+| POST | `/flows/{id}/rename` | renommer (`{"name": "…"}`) |
+| POST | `/flows/{id}/delete` | supprimer (`{"confirm": true}`, sauvegarde d'abord ; `409 confirm_required` sinon) |
 | POST | `/flows/{id}/simulate` | simuler (corps facultatif `{"mail": {…}}`) ; avec `Accept: text/event-stream`, les étapes arrivent une à une (événements `step`, puis `result`) |
 | POST | `/flows/{id}/activate` | publier et activer son flux après un test réussi (`409 test_required` sinon) |
 | GET | `/catalog` | les règles d'un flux, les blocs (champs, sorties, variables) et un exemple, comme dans le dossier de l'assistant |
