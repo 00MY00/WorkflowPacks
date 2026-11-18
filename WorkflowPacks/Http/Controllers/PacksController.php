@@ -130,7 +130,7 @@ class PacksController extends Controller
             $back = $back->with('flash_success_floating', __('workflowpacks::messages.'.($active ? 'rules_enabled' : 'rules_disabled'), ['count' => $result['changed']]));
         }
         if ($result['refused']) {
-            $back = $back->with('flash_error_floating', __('workflowpacks::messages.rules_refused', ['list' => implode(' · ', array_slice($result['refused'], 0, 10))]));
+            $back = $back->with('flash_error_floating', __('workflowpacks::messages.rules_refused', ['list' => e(implode(' · ', array_slice($result['refused'], 0, 10)))]));
         }
 
         return $back;

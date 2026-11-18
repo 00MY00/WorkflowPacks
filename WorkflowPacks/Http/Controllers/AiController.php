@@ -93,7 +93,7 @@ class AiController extends Controller
         foreach (preg_split('/[\s,;]+/', (string) $request->input('allowed_ips', ''), -1, PREG_SPLIT_NO_EMPTY) as $text) {
             $range = Agent::range($text);
             if ($range === null) {
-                return redirect()->route('workflowpacks.ai')->with('flash_error_floating', __('workflowpacks::ai.ips_invalid', ['value' => mb_substr($text, 0, 60)]));
+                return redirect()->route('workflowpacks.ai')->with('flash_error_floating', __('workflowpacks::ai.ips_invalid', ['value' => e(mb_substr($text, 0, 60))]));
             }
             $ips[] = $range;
         }

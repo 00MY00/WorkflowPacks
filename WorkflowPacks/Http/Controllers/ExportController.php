@@ -98,7 +98,7 @@ class ExportController extends Controller
         }
 
         return redirect()->route('workflowpacks.export', ['pack_key' => $pack->pack_key])
-            ->with('flash_success_floating', __('workflowpacks::messages.pack_updated', ['name' => $pack->name, 'count' => $result['counts']['linked'], 'version' => $result['counts']['version']]));
+            ->with('flash_success_floating', __('workflowpacks::messages.pack_updated', ['name' => e($pack->name), 'count' => $result['counts']['linked'], 'version' => $result['counts']['version']]));
     }
 
     /** "Group into a pack": the pack is stored and the selected rules are linked to it, then it can be downloaded. */
@@ -116,9 +116,9 @@ class ExportController extends Controller
         if (!$result['ok']) {
             return $this->formPage($request, [$result['error']]);
         }
-        $message = __('workflowpacks::messages.group_done', ['name' => $built['pack']['name'], 'count' => $result['counts']['linked'], 'version' => $result['counts']['version']]);
+        $message = __('workflowpacks::messages.group_done', ['name' => e($built['pack']['name']), 'count' => $result['counts']['linked'], 'version' => $result['counts']['version']]);
         if ($result['removed_packs']) {
-            $message .= ' '.__('workflowpacks::messages.group_packs_removed', ['packs' => implode(', ', $result['removed_packs'])]);
+            $message .= ' '.__('workflowpacks::messages.group_packs_removed', ['packs' => e(implode(', ', $result['removed_packs']))]);
         }
 
         return redirect()->route('workflowpacks.export', ['pack_key' => $built['pack']['key']])->with('flash_success_floating', $message);

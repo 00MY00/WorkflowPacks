@@ -4,6 +4,21 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [3.12.2] - 2026-11-18
+
+### Sécurité (revue des points d'entrée)
+- **Agents connectés : flux bornés à leurs boîtes.** Un agent autorisé à publier mais sans boîte pouvait publier un
+  flux s'appliquant à toutes les boîtes ; un flux d'agent pouvait nommer une autre boîte (« classer dans un dossier »)
+  ou prendre comme exemples des tickets d'autres boîtes. Refusé désormais (`mailbox_denied`, `examples_denied`) : la
+  publication par l'agent exige que le flux ne vise que les boîtes de l'agent.
+- **Noms échappés dans les messages** (flux d'un pack ou d'un agent, packs, règles, boîtes, adresse IP saisie) : FreeScout
+  filtrait déjà les balises dangereuses, l'échappement est maintenant fait aussi par le module.
+- **Requêtes bornées** : lots MCP de 20 messages au plus, corps de plus de 1 Mo refusés aussi par l'API.
+- Page Diagnostic : droit d'administrateur vérifié aussi dans le contrôleur (comme les autres pages).
+- Vérifié sans changement : chaque action vérifie le rôle (administrateur pour les flux, l'IA, les agents) et, pour le
+  schéma des règles, le droit sur la boîte ; CSRF sur les formulaires et appels de l'éditeur ; requêtes SQL paramétrées ;
+  packs fournis par liste blanche (pas de chemin) ; sorties des pages échappées.
+
 ## [3.12.1] - 2026-11-18
 
 ### Modifié
