@@ -57,6 +57,7 @@ return [
     'ips_invalid'     => 'Adresse IP ou plage invalide : « :value ». Rien n’a été créé.',
     'ips_short'       => ':count adresse(s) IP',
     'until'           => 'jusqu’au :date',
+    'no_limit_short'  => 'sans limite de durée',
     'https_needed'    => 'Cette adresse n’est pas en https : le connecteur et l’API refusent les requêtes en http, pour que la clé ne circule jamais en clair. Configurez https sur votre FreeScout.',
     'can_activate'    => 'Peut activer ses flux après un test réussi (sans test réussi sur la version exacte, refusé)',
     'can_see_all'     => 'Peut voir les autres flux (sinon seulement les siens)',

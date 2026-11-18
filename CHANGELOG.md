@@ -4,6 +4,15 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [3.15.1] - 2026-11-18
+
+### Corrigé
+- **Activation des anciens flux par un agent** refusée (`mailbox_denied`) même avec toutes les boîtes cochées : un flux
+  sur « toutes les boîtes » est maintenant accepté pour un agent qui a toutes les boîtes existantes (une boîte ajoutée
+  ensuite et non cochée le bloque, par sécurité).
+- Fiche d'un agent : le menu de durée revenait toujours sur « 30 jours » ; il montre la durée réelle, et la fiche
+  affiche « sans limite de durée » quand c'est le cas.
+
 ## [3.15.0] - 2026-11-18
 
 ### Ajouté

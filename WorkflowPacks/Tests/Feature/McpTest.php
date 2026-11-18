@@ -490,4 +490,61 @@ class McpTest extends TestCase
         $this->assertFalse($agent->fresh()->can_see_all);
         $this->assertFalse($agent->fresh()->can_publish_others);
     }
+
+    public function testAFlowOnEveryMailboxIsSwitchedOnByAnAgentGivenEveryMailbox()
+    {
+        $a = $this->mailbox('A');
+        $b = $this->mailbox('B');
+        $admin = $this->user([$a, $b], true);
+        $all = \App\Mailbox::pluck('id')->map(function ($id) {
+            return (int) $id;
+        })->all();
+        $ticket = new \App\Conversation();
+        $ticket->type = \App\Conversation::TYPE_EMAIL;
+        $ticket->mailbox_id = $a->id;
+        $ticket->subject = 'Votre facture';
+        $ticket->state = \App\Conversation::STATE_PUBLISHED;
+        $ticket->status = \App\Conversation::STATUS_ACTIVE;
+        $ticket->source_via = \App\Conversation::PERSON_CUSTOMER;
+        $ticket->source_type = \App\Conversation::SOURCE_TYPE_EMAIL;
+        $ticket->save();
+        $draft = $this->similarChain();
+        unset($draft['name']);
+        // an older flow on every mailbox (none chosen)
+        $old = Flow::create(['name' => 'Ancien', 'mailbox_ids' => [], 'active' => false, 'once' => true, 'created_by' => $admin->id, 'draft' => $draft]);
+
+        // an agent given every mailbox: tested, then switched on
+        list($every) = $this->agent($admin, ['mailbox_ids' => $all, 'can_see_all' => 1, 'can_activate' => 1, 'can_publish_others' => 1]);
+        $this->tool($every, 'test_flow', ['id' => $old->id, 'ticket_ids' => [$ticket->id]]);
+        list($on, $isError) = $this->tool($every, 'activate_flow', ['id' => $old->id]);
+        $this->assertFalse($isError, json_encode($on));
+        $this->assertTrue($old->fresh()->active);
+
+        // an agent given only some mailboxes: still refused (the flow would run on the others too)
+        $old->update(['active' => false]);
+        list($some) = $this->agent($admin, ['mailbox_ids' => [$a->id], 'can_see_all' => 1, 'can_activate' => 1, 'can_publish_others' => 1]);
+        $this->tool($some, 'test_flow', ['id' => $old->id, 'ticket_ids' => [$ticket->id]]);
+        list($out) = $this->tool($some, 'activate_flow', ['id' => $old->id]);
+        $this->assertSame('mailbox_denied', $out['error']);
+        // a mailbox added afterwards and not given: the agent no longer has every mailbox
+        $this->mailbox('C');
+        $this->tool($every, 'test_flow', ['id' => $old->id, 'ticket_ids' => [$ticket->id]]);
+        list($out) = $this->tool($every, 'activate_flow', ['id' => $old->id]);
+        $this->assertSame('mailbox_denied', $out['error']);
+    }
+
+    public function testTheTileShowsTheLengthOfAccessItReallyHas()
+    {
+        $a = $this->mailbox('A');
+        $admin = $this->user([$a], true);
+        $this->agent($admin, ['days' => 0]);
+        $agent = \Modules\WorkflowPacks\Entities\Agent::orderBy('id', 'desc')->first();
+        $this->assertNull($agent->expires_at);
+        $page = $this->actingAs($admin)->get(route('workflowpacks.ai'))->getContent();
+        $this->assertStringContainsString(e(__('workflowpacks::ai.no_limit_short')), $page);
+        $this->assertSame(1, preg_match('#<option value="0"\s+selected\s*>#', $page), 'the menu shows "no limit", not 30 days');
+        $this->actingAs($admin)->post(route('workflowpacks.ai.agents.expiry', ['id' => $agent->id]), ['days' => 90]);
+        $page = $this->actingAs($admin)->get(route('workflowpacks.ai'))->getContent();
+        $this->assertSame(1, preg_match('#<option value="90"\s+selected\s*>#', $page));
+    }
 }

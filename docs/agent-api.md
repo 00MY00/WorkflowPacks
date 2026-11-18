@@ -110,7 +110,7 @@ curl -X POST -H "Authorization: Bearer wpa_…" -H "Content-Type: application/js
   modifie que ses flux ; ne propose rien en lecture seule ; ne publie que si on le lui a permis.
 - **Flux bornés** : un flux d'agent ne peut nommer dans ses blocs que les boîtes de l'agent (« classer dans un dossier »)
   ni prendre comme exemples (« Ressemble à… ») que des tickets de ces boîtes ; il ne peut être publié par l'agent que
-  s'il vise uniquement ces boîtes (un agent sans boîte ne publie jamais : son flux s'appliquerait à toutes).
+  s'il vise uniquement ces boîtes. Un flux sur **toutes les boîtes** (aucune choisie) ne peut être publié ou activé que par un agent qui a **toutes les boîtes existantes** cochées ; une boîte ajoutée ensuite et non cochée le bloque de nouveau. Un agent sans boîte ne publie jamais.
 - **Lecture des flux** : `list_flows` montre tous les flux (leur configuration, pas les tickets) ; c'est voulu pour que
   Claude voie les règles. N'utilisez pas de données personnelles dans les textes des blocs si cela pose problème.
 - **Traçabilité** : chaque lecture de tickets, proposition, modification, publication et adresse refusée est notée dans

@@ -57,6 +57,7 @@ return [
     'ips_invalid'     => 'Endereço IP ou faixa inválido: “:value”. Nada foi criado.',
     'ips_short'       => ':count endereço(s) IP',
     'until'           => 'até :date',
+    'no_limit_short'  => 'sem limite de tempo',
     'https_needed'    => 'Este endereço não é https: o conector e a API recusam pedidos http, para que a chave nunca trafegue em claro. Configure https no seu FreeScout.',
     'can_activate'    => 'Pode ativar seus fluxos após um teste aprovado (sem teste aprovado dessa mesma versão, recusado)',
     'can_see_all'     => 'Pode ver os outros fluxos (senão só os seus)',

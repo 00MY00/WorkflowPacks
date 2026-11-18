@@ -288,11 +288,19 @@ class AgentTools
         return ['id' => (int) $flow->id, 'version' => (int) $result['version']->number, 'active' => (bool) $flow->fresh()->active];
     }
 
-    /** Published, a flow runs on its mailboxes (none: every mailbox): only within the mailboxes given to the agent. */
+    /**
+     * Published, a flow runs on its mailboxes: only within the mailboxes given to the agent. A flow on every mailbox
+     * (none chosen) only for an agent given every mailbox there is (a mailbox added later and not given: refused).
+     */
     protected function inMailboxes(Flow $flow)
     {
         $mine = array_map('intval', array_filter((array) $this->agent->mailbox_ids));
-        $targets = array_map('intval', (array) $flow->mailbox_ids);
+        $targets = array_map('intval', array_filter((array) $flow->mailbox_ids));
+        if (!$targets) {
+            $targets = \App\Mailbox::pluck('id')->map(function ($id) {
+                return (int) $id;
+            })->all();
+        }
         if (!$mine || !$targets || array_diff($targets, $mine)) {
             throw new AgentToolError(403, 'mailbox_denied');
         }
