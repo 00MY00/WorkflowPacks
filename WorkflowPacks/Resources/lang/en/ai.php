@@ -57,6 +57,7 @@ return [
     'ips_invalid'     => 'Invalid IP address or range: “:value”. Nothing was created.',
     'ips_short'       => ':count IP address(es)',
     'until'           => 'until :date',
+    'no_limit_short'  => 'no time limit',
     'https_needed'    => 'This address is not https: the connector and the API refuse plain http requests, so that the key never travels in clear. Set up https on your FreeScout.',
     'can_activate'    => 'Can switch on its flows after a passed test (refused without a passed test of that very version)',
     'can_see_all'     => 'Can see the other flows (else only its own)',

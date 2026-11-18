@@ -57,6 +57,7 @@ return [
     'ips_invalid'     => 'Indirizzo IP o intervallo non valido: «:value». Non è stato creato nulla.',
     'ips_short'       => ':count indirizzo/i IP',
     'until'           => 'fino al :date',
+    'no_limit_short'  => 'senza limite di tempo',
     'https_needed'    => 'Questo indirizzo non è https: il connettore e l’API rifiutano le richieste http, perché la chiave non viaggi mai in chiaro. Configurate https sul vostro FreeScout.',
     'can_activate'    => 'Può attivare i suoi flussi dopo un test riuscito (senza test riuscito di quella stessa versione, rifiutato)',
     'can_see_all'     => 'Può vedere gli altri flussi (altrimenti solo i suoi)',

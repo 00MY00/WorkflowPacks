@@ -57,6 +57,7 @@ return [
     'ips_invalid'     => 'Dirección IP o rango no válido: «:value». No se ha creado nada.',
     'ips_short'       => ':count dirección(es) IP',
     'until'           => 'hasta el :date',
+    'no_limit_short'  => 'sin límite de tiempo',
     'https_needed'    => 'Esta dirección no es https: el conector y la API rechazan las peticiones http, para que la clave nunca viaje en claro. Configure https en su FreeScout.',
     'can_activate'    => 'Puede activar sus flujos tras una prueba superada (sin prueba superada de esa misma versión, rechazado)',
     'can_see_all'     => 'Puede ver los demás flujos (si no, solo los suyos)',

@@ -57,6 +57,7 @@ return [
     'ips_invalid'     => 'Ongeldig IP-adres of bereik: „:value”. Er is niets aangemaakt.',
     'ips_short'       => ':count IP-adres(sen)',
     'until'           => 'tot :date',
+    'no_limit_short'  => 'zonder tijdslimiet',
     'https_needed'    => 'Dit adres is geen https: de connector en de API weigeren http-verzoeken, zodat de sleutel nooit onversleuteld reist. Stel https in op uw FreeScout.',
     'can_activate'    => 'Mag zijn stromen inschakelen na een geslaagde test (zonder geslaagde test van precies die versie geweigerd)',
     'can_see_all'     => 'Mag de andere stromen zien (anders alleen de zijne)',

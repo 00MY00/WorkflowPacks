@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 3.15.0
+# Résultats des tests — Workflow Packs 3.15.1
 
 Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,12 @@ Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 3.15.1 — anciens flux activés par un agent qui a toutes les boîtes, durée affichée
+
+| Série | Résultat |
+|---|---|
+| Intégration (instance neuve) | 163 tests ; `McpTest` : ancien flux sur toutes les boîtes testé puis activé par un agent qui a toutes les boîtes ; refusé pour un agent qui n'en a qu'une ; refusé de nouveau après l'ajout d'une boîte non cochée ; fiche : « sans limite de durée » et menu sur « sans limite », puis sur 90 jours après le changement |
 
 ## 3.15.0 — e-mail qui passe, simulation des agents (direct, rediffusion), droits sur les autres flux
 

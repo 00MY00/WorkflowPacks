@@ -57,6 +57,7 @@ return [
     'ips_invalid'     => 'Ungültige IP-Adresse oder ungültiger Bereich: „:value“. Nichts wurde erstellt.',
     'ips_short'       => ':count IP-Adresse(n)',
     'until'           => 'bis :date',
+    'no_limit_short'  => 'ohne Zeitlimit',
     'https_needed'    => 'Diese Adresse ist nicht https: Connector und API lehnen http-Anfragen ab, damit der Schlüssel nie im Klartext übertragen wird. Richten Sie https für Ihr FreeScout ein.',
     'can_activate'    => 'Darf seine Abläufe nach bestandenem Test einschalten (ohne bestandenen Test genau dieser Version abgelehnt)',
     'can_see_all'     => 'Darf die anderen Abläufe sehen (sonst nur seine)',
