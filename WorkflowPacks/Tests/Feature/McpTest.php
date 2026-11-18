@@ -2,6 +2,7 @@
 
 namespace Modules\WorkflowPacks\Tests\Feature;
 
+use Modules\WorkflowPacks\Entities\Agent;
 use Modules\WorkflowPacks\Entities\Flow;
 use Modules\WorkflowPacks\Services\Engine\Engine;
 use Modules\WorkflowPacks\Tests\TestCase;
@@ -58,7 +59,7 @@ class McpTest extends TestCase
         $this->rpc($token, 'notifications/initialized', [], null)->assertStatus(202);
 
         $names = array_column(json_decode($this->rpc($token, 'tools/list')->getContent(), true)['result']['tools'], 'name');
-        $this->assertSame(['get_catalog', 'list_flows', 'simulate_flow', 'propose_flow', 'update_flow', 'test_flow', 'rename_flow'], $names, 'no mailbox: no ticket; not allowed to publish or delete');
+        $this->assertSame(['get_me', 'get_catalog', 'list_flows', 'simulate_flow', 'propose_flow', 'update_flow', 'test_flow', 'rename_flow'], $names, 'no mailbox: no ticket; not allowed to publish or delete');
 
         list($catalog) = $this->tool($token, 'get_catalog');
         $this->assertContains('condition.similar', array_column($catalog['blocks'], 'type'));
@@ -129,7 +130,7 @@ class McpTest extends TestCase
         // read only: the flows can be read, nothing proposed or changed
         list($reader) = $this->agent($admin, ['mailbox_ids' => [$a->id], 'read_only' => 1, 'can_publish' => 1]);
         $names = array_column(json_decode($this->rpc($reader, 'tools/list')->getContent(), true)['result']['tools'], 'name');
-        $this->assertSame(['get_catalog', 'list_flows', 'list_tickets', 'simulate_flow'], $names, 'read only wins over "can publish"');
+        $this->assertSame(['get_me', 'get_catalog', 'list_flows', 'list_tickets', 'simulate_flow', 'test_flow'], $names, 'read only wins over "can publish"');
         $api = $this->call('POST', route('workflowpacks.api.propose'), [], [], [], ['HTTP_AUTHORIZATION' => 'Bearer '.$reader, 'CONTENT_TYPE' => 'application/json'],
             json_encode(['blocks' => [['id' => 'b1', 'type' => 'trigger.new_mail']], 'links' => []]));
         $api->assertStatus(403);
@@ -356,7 +357,7 @@ class McpTest extends TestCase
         $agent = $agent->fresh();
         $this->assertSame('Claude 2', $agent->name);
         $this->assertTrue($agent->read_only);
-        $this->assertSame(['get_catalog', 'list_flows', 'list_tickets', 'simulate_flow'], $tools(), 'same key, new rights at once');
+        $this->assertSame(['get_me', 'get_catalog', 'list_flows', 'list_tickets', 'simulate_flow', 'test_flow'], $tools(), 'same key, new rights at once');
         $this->assertTrue(\Modules\WorkflowPacks\Entities\Activity::where('kind', 'agent')->where('message', 'like', 'rights changed%')->exists());
         // an invalid address in the change: nothing changed
         $this->actingAs($admin)->post(route('workflowpacks.ai.agents.update', ['id' => $agent->id]), ['name' => 'X', 'allowed_ips' => 'nope'])->assertSessionHas('flash_error_floating');
@@ -674,7 +675,7 @@ class McpTest extends TestCase
         // nothing ticked: read only (its flows seen, nothing written)
         list($reader) = $this->agent($admin, $form([]));
         $names = array_column(json_decode($this->rpc($reader, 'tools/list')->getContent(), true)['result']['tools'], 'name');
-        $this->assertSame(['get_catalog', 'list_flows', 'list_tickets', 'simulate_flow'], $names);
+        $this->assertSame(['get_me', 'get_catalog', 'list_flows', 'list_tickets', 'simulate_flow', 'test_flow'], $names);
         $this->assertTrue((bool) \Modules\WorkflowPacks\Entities\Agent::orderBy('id', 'desc')->first()->read_only);
 
         // changed from its tile
@@ -736,6 +737,63 @@ class McpTest extends TestCase
         $page = $this->actingAs($admin)->get(route('workflowpacks.ai'))->getContent();
         $this->assertStringContainsString('value="others.deactivate"', $page);
         $this->assertStringContainsString(e(__('workflowpacks::ai.right_deactivate_tip')), $page);
+    }
+
+    /**
+     * The connector and the API give the same tools: for each right alone (none, all), a tool is listed in the connector
+     * exactly when its API call is allowed on its own flow or on another flow of its mailboxes; every tool has its API call.
+     */
+    public function testTheConnectorAndTheApiGiveTheSameTools()
+    {
+        $a = $this->mailbox('A');
+        $admin = $this->user([$a], true);
+        $chain = $this->similarChain();
+        $draft = $chain;
+        unset($draft['name']);
+        $api = function ($token, $method, $route, array $params = [], $body = null) {
+            $res = $this->call($method, route($route, $params), [], [], [], ['HTTP_AUTHORIZATION' => 'Bearer '.$token, 'CONTENT_TYPE' => 'application/json',
+                'HTTP_ACCEPT' => 'application/json'], $body === null ? null : json_encode($body));
+            $error = json_decode($res->getContent(), true)['error'] ?? '';
+            // refused for lack of a right: 403 (its flow) or 404 (another flow is not revealed)
+            return !(($res->getStatusCode() === 403 && ($error === 'read_only' || $error === 'tickets_off' || substr($error, -7) === '_denied'))
+                || ($res->getStatusCode() === 404 && $error === 'not_found'));
+        };
+        $sets = [[], Agent::PERMISSIONS];
+        foreach (Agent::PERMISSIONS as $p) {
+            $sets[] = [$p];
+        }
+        foreach ($sets as $rights) {
+            list($token) = $this->agent($admin, ['mailbox_ids' => [$a->id], 'permissions_sent' => 1, 'permissions' => $rights]);
+            $agent = Agent::orderBy('id', 'desc')->first();
+            $flows = [];
+            foreach (['own' => $agent->id, 'other' => null] as $side => $agentId) {
+                $flows[$side] = Flow::create(['name' => 'Flux '.$side, 'mailbox_ids' => [$a->id], 'active' => true, 'once' => true, 'created_by' => $admin->id,
+                    'agent_id' => $agentId, 'draft' => $draft])->id;
+            }
+            $onFlows = function ($method, $route, $body = null) use ($api, $token, $flows) {
+                return $api($token, $method, $route, ['id' => $flows['own']], $body) || $api($token, $method, $route, ['id' => $flows['other']], $body);
+            };
+            $label = json_encode($rights);
+            $allowed = [
+                'get_me'          => $api($token, 'GET', 'workflowpacks.api.me'),
+                'get_catalog'     => $api($token, 'GET', 'workflowpacks.api.catalog'),
+                'list_flows'      => $api($token, 'GET', 'workflowpacks.api.flows'),
+                'list_tickets'    => $api($token, 'GET', 'workflowpacks.api.tickets'),
+                'simulate_flow'   => $onFlows('POST', 'workflowpacks.api.simulate'),
+                'test_flow'       => $onFlows('POST', 'workflowpacks.api.test'),
+                'update_flow'     => $onFlows('PUT', 'workflowpacks.api.update', $chain),
+                'rename_flow'     => $onFlows('POST', 'workflowpacks.api.rename', ['name' => 'Renommé']),
+                // without confirm: nothing deleted (409 when allowed)
+                'delete_flow'     => $onFlows('POST', 'workflowpacks.api.delete'),
+                'deactivate_flow' => $onFlows('POST', 'workflowpacks.api.deactivate'),
+                'activate_flow'   => $onFlows('POST', 'workflowpacks.api.activate'),
+                'publish_flow'    => $onFlows('POST', 'workflowpacks.api.publish'),
+                'propose_flow'    => $api($token, 'POST', 'workflowpacks.api.propose', [], $chain),
+            ];
+            $listed = array_column(json_decode($this->rpc($token, 'tools/list')->getContent(), true)['result']['tools'], 'name');
+            $this->assertEqualsCanonicalizing(array_keys(array_filter($allowed)), $listed, 'same tools for '.$label);
+            $this->assertSame([], array_values(array_diff($listed, array_keys($allowed))), 'every tool has its API call: '.$label);
+        }
     }
 
     public function testFormerAgentsKeepTheirRights()
