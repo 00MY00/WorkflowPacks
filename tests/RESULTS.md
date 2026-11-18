@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 3.16.0
+# Résultats des tests — Workflow Packs 3.17.0
 
 Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,14 @@ Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 3.17.0 — droits des agents action par action, plages d'adresses, bulles d'aide
+
+| Série | Résultat |
+|---|---|
+| Intégration (instance neuve) | 167 tests ; `McpTest` : page avec le tableau des droits et les bulles, aucun texte manquant ; droits inconnus ignorés ; « modifier les autres » seul : brouillon d'un autre flux de sa boîte modifié, autre boîte refusée, pas d'outil de proposition (API : `propose_denied`), renommer un autre flux sans le droit : 404 ; ses flux seulement (proposer, renommer) : modification refusée (`edit_denied`), simulation permise ; supprimer les autres seulement : son flux refusé, l'autre supprimé ; rien de coché : lecture seule ; droits changés depuis la fiche. Anciens agents : cases traduites sans `others.edit`, colonne vide relue depuis les anciennes cases. Plages début - fin (bornes incluses, IPv6, ordre et famille vérifiés), plusieurs adresses séparées par des virgules : la bonne passe, sinon 403, une plage invalide : rien de créé |
+| Navigateur téléphone 390 px | tableau de 8 actions dans la largeur ; bulle au toucher en bas d'écran, dans l'écran, fermée par Échap ; agent créé (proposer + modifier et supprimer les autres, 2 entrées IP dont une plage) : fiche « droits : 1 sur ses flux, 2 sur les autres · 2 adresses IP » ; pas de défilement horizontal, aucune erreur JavaScript |
+| Navigateur PC 1440 px | bulle au survol sous le « ? », dans l'écran ; aucune erreur JavaScript |
 
 ## 3.16.0 — renommer et supprimer des flux par un agent
 

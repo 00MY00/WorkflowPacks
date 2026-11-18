@@ -93,29 +93,32 @@ class AiController extends Controller
             \App\Mailbox::pluck('id')->map(function ($id) {
                 return (int) $id;
             })->all()));
-        // addresses allowed to use the token: each one a valid address or range, else nothing is saved
+        // addresses allowed to use the token, separated by commas: an address, a range "/24" or "start - end"; each
+        // one valid, else nothing is saved
         $ips = [];
-        foreach (preg_split('/[\s,;]+/', (string) $request->input('allowed_ips', ''), -1, PREG_SPLIT_NO_EMPTY) as $text) {
+        foreach (preg_split('/[,;
+]+/', (string) $request->input('allowed_ips', ''), -1, PREG_SPLIT_NO_EMPTY) as $text) {
+            if (trim($text) === '') {
+                continue;
+            }
             $range = Agent::range($text);
             if ($range === null) {
                 return __('workflowpacks::ai.ips_invalid', ['value' => e(mb_substr($text, 0, 60))]);
             }
             $ips[] = $range;
         }
-        $readOnly = (bool) $request->input('read_only');
+        // the matrix of rights (the form); a request without it (older forms, scripts): the former check boxes
+        $rights = $request->input('permissions_sent')
+            ? array_values(array_intersect(Agent::PERMISSIONS, (array) $request->input('permissions', [])))
+            : Agent::legacyRights($request->only(['read_only', 'can_publish', 'can_activate', 'can_see_all', 'can_publish_others', 'can_delete']));
 
         return [
-            'name'         => mb_substr(trim((string) $request->input('name')) ?: 'Agent', 0, 100),
-            'mailbox_ids'  => $mailboxes,
-            'anonymise'    => !$request->input('full_text'),
-            'read_only'    => $readOnly,
-            'can_publish'  => !$readOnly && (bool) $request->input('can_publish'),
-            'can_activate' => !$readOnly && (bool) $request->input('can_activate'),
-            'can_see_all'  => (bool) $request->input('can_see_all'),
-            'can_publish_others' => !$readOnly && (bool) $request->input('can_publish_others'),
-            'can_delete'   => !$readOnly && (bool) $request->input('can_delete'),
-            'allowed_ips'  => array_values(array_unique($ips)),
-        ];
+            'name'        => mb_substr(trim((string) $request->input('name')) ?: 'Agent', 0, 100),
+            'mailbox_ids' => $mailboxes,
+            'anonymise'   => !$request->input('full_text'),
+            'permissions' => $rights,
+            'allowed_ips' => array_values(array_unique($ips)),
+        ] + Agent::legacyFlags($rights);
     }
 
     public function createAgent(Request $request)
@@ -201,8 +204,7 @@ class AiController extends Controller
     protected static function summary(Agent $a)
     {
         return 'mailboxes ['.implode(',', array_map('intval', (array) $a->mailbox_ids)).']'.($a->anonymise ? '' : ' full text')
-            .($a->read_only ? ' read only' : '').($a->can_activate ? ' activate' : '').($a->can_publish ? ' publish' : '')
-            .($a->can_see_all ? ' see all' : '').($a->can_publish_others ? ' others' : '').($a->can_delete ? ' delete' : '')
+            .' rights ['.implode(',', $a->rights()).']'
             .(array_filter((array) $a->allowed_ips) ? ' ips '.implode(',', (array) $a->allowed_ips) : '');
     }
 

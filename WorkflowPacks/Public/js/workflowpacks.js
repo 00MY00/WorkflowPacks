@@ -163,6 +163,33 @@
     window.addEventListener('resize', actionBarOffset);
 
     // "Copy": the text of a field to the clipboard (the brief for the AI)
+    // "?" next to a setting: its bubble opens on hover (CSS) and on a tap or click; a click elsewhere or Escape closes it
+    var closeTips = function (except) {
+        Array.prototype.forEach.call(document.querySelectorAll('.wp-tip.is-open'), function (tip) {
+            if (tip !== except) {
+                tip.classList.remove('is-open');
+                tip.querySelector('[data-wp-tip]').setAttribute('aria-expanded', 'false');
+            }
+        });
+    };
+    document.addEventListener('click', function (e) {
+        var button = e.target && e.target.closest ? e.target.closest('[data-wp-tip]') : null;
+        if (!button) {
+            closeTips(null);
+            return;
+        }
+        e.preventDefault();
+        var tip = button.parentNode;
+        closeTips(tip);
+        var open = tip.classList.toggle('is-open');
+        button.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+            closeTips(null);
+        }
+    });
+
     document.addEventListener('click', function (e) {
         var button = e.target && e.target.closest ? e.target.closest('[data-wp-copy]') : null;
         var field = button ? document.querySelector(button.getAttribute('data-wp-copy')) : null;

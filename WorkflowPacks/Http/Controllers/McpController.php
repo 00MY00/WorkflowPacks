@@ -139,9 +139,9 @@ class McpController extends BaseController
         $list = [
             ['name' => 'get_catalog', 'title' => 'Blocks and rules', 'description' => 'The blocks a flow can use (their fields and outputs), the rules of a valid flow and an example. Read it first.',
                 'inputSchema' => $none, 'annotations' => ['readOnlyHint' => true]],
-            ['name' => 'list_flows', 'title' => 'Existing flows', 'description' => ($tools->me()['can_see_all'] ? 'Every flow of the help desk' : 'The flows you proposed')
+            ['name' => 'list_flows', 'title' => 'Existing flows', 'description' => ($tools->mayAny(['others.see']) ? 'Every flow of the help desk' : 'The flows you proposed')
                 .' (name, active, published version, mailboxes, blocks and links); "mine" marks the ones you proposed, the only ones you can change.'
-                .($tools->me()['can_publish_others'] ? ' You may also test, publish or switch on the others that run only on your mailboxes.' : ''),
+                .($tools->mayAny(['others.edit', 'others.rename', 'others.delete', 'others.activate', 'others.publish']) ? ' Your rights also cover some of the others that run only on your mailboxes.' : ''),
                 'inputSchema' => $none, 'annotations' => ['readOnlyHint' => true]],
         ];
         if ($tools->mayReadTickets()) {
@@ -161,23 +161,30 @@ class McpController extends BaseController
                 'properties' => ['subject' => ['type' => 'string'], 'from' => ['type' => 'string'], 'body' => ['type' => 'string'], 'status' => ['type' => 'string'],
                     'assigned' => ['type' => 'boolean'], 'replied' => ['type' => 'boolean']]]], 'required' => ['id']],
             'annotations' => ['readOnlyHint' => true]];
-        if (!$tools->mayWrite()) {
-            return $list;
-        }
-        $list[] = ['name' => 'propose_flow', 'title' => 'Propose a flow', 'description' => 'Saves a new flow as a switched-off draft (an administrator reviews and publishes it). Its problems are returned when it is not valid.',
+        $others = $tools->mayAny(['others.edit']) ? ' (or another flow running only on your mailboxes)' : '';
+        if ($tools->mayAny(['own.propose'])) {
+            $list[] = ['name' => 'propose_flow', 'title' => 'Propose a flow', 'description' => 'Saves a new flow as a switched-off draft (an administrator reviews and publishes it). Its problems are returned when it is not valid.',
             'inputSchema' => ['type' => 'object', 'properties' => ['flow' => $flow], 'required' => ['flow']]];
-        $list[] = ['name' => 'update_flow', 'title' => 'Change a flow', 'description' => 'Replaces the draft of one of your flows (the published version keeps running until the next publishing).',
-            'inputSchema' => ['type' => 'object', 'properties' => ['id' => ['type' => 'integer'], 'flow' => $flow], 'required' => ['id', 'flow']]];
-        $list[] = ['name' => 'test_flow', 'title' => 'Test a flow', 'description' => 'Plays the draft of one of your flows on tickets (dry run, nothing written): what each ticket would get.',
+        }
+        if ($tools->mayAny(['own.edit', 'others.edit'])) {
+            $list[] = ['name' => 'update_flow', 'title' => 'Change a flow', 'description' => 'Replaces the draft of one of your flows'.$others
+                .' (the published version keeps running until the next publishing).',
+                'inputSchema' => ['type' => 'object', 'properties' => ['id' => ['type' => 'integer'], 'flow' => $flow], 'required' => ['id', 'flow']]];
+        }
+        if ($tools->mayAny(['own.propose', 'own.edit', 'others.test'])) {
+            $list[] = ['name' => 'test_flow', 'title' => 'Test a flow', 'description' => 'Plays the draft of one of your flows on tickets (dry run, nothing written): what each ticket would get.',
             'inputSchema' => ['type' => 'object', 'properties' => ['id' => ['type' => 'integer'],
                 'ticket_ids' => ['type' => 'array', 'items' => ['type' => 'integer'], 'description' => 'Default: recent tickets of your mailboxes']], 'required' => ['id']],
             'annotations' => ['readOnlyHint' => true]];
-        $list[] = ['name' => 'rename_flow', 'title' => 'Rename a flow', 'description' => 'Changes the name of one of your flows'
-            .($tools->me()['can_publish_others'] ? ' (or of another flow running only on your mailboxes)' : '').'; nothing else changes.',
-            'inputSchema' => ['type' => 'object', 'properties' => ['id' => ['type' => 'integer'], 'name' => ['type' => 'string']], 'required' => ['id', 'name']]];
+        }
+        if ($tools->mayAny(['own.rename', 'others.rename'])) {
+            $list[] = ['name' => 'rename_flow', 'title' => 'Rename a flow', 'description' => 'Changes the name of '
+                .($tools->mayAny(['own.rename']) ? 'one of your flows' : 'a flow').($tools->mayAny(['others.rename']) ? ' (or of another flow running only on your mailboxes)' : '').'; nothing else changes.',
+                'inputSchema' => ['type' => 'object', 'properties' => ['id' => ['type' => 'integer'], 'name' => ['type' => 'string']], 'required' => ['id', 'name']]];
+        }
         if ($tools->mayDelete()) {
             $list[] = ['name' => 'delete_flow', 'title' => 'Delete a flow', 'description' => 'Deletes one of your flows'
-                .($tools->me()['can_publish_others'] ? ' (or another flow running only on your mailboxes)' : '')
+                .($tools->mayAny(['others.delete']) ? ' (or another flow running only on your mailboxes)' : '')
                 .'. Only with confirm: true; a backup is kept first (backup_url, for an administrator); tickets waiting in it leave it as they are. Ask the user before deleting.',
                 'inputSchema' => ['type' => 'object', 'properties' => ['id' => ['type' => 'integer'], 'confirm' => ['type' => 'boolean', 'description' => 'Must be true']],
                     'required' => ['id', 'confirm']], 'annotations' => ['destructiveHint' => true]];
