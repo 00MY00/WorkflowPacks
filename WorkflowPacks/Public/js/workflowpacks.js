@@ -164,6 +164,20 @@
 
     // "Copy": the text of a field to the clipboard (the brief for the AI)
     // "?" next to a setting: its bubble opens on hover (CSS) and on a tap or click; a click elsewhere or Escape closes it
+    // phones: the "Sections" button opens the list of the tabs; it shows the section open now
+    Array.prototype.forEach.call(document.querySelectorAll('[data-wp-tabs]'), function (button) {
+        var list = document.getElementById(button.getAttribute('aria-controls'));
+        if (!list) { return; }
+        var active = list.querySelector('li.active > a');
+        var current = button.querySelector('.wp-tabs-current');
+        if (active && current) { current.textContent = active.textContent.trim(); }
+        button.addEventListener('click', function () {
+            var open = !list.classList.contains('is-open');
+            list.classList.toggle('is-open', open);
+            button.setAttribute('aria-expanded', open ? 'true' : 'false');
+        });
+    });
+
     var closeTips = function (except) {
         Array.prototype.forEach.call(document.querySelectorAll('.wp-tip.is-open'), function (tip) {
             if (tip !== except) {

@@ -544,11 +544,42 @@
 
     /** A side folded or unfolded (kept for next time, except on a phone where they open over the grid). */
     Editor.prototype.side = function (name, on, quiet) {
+        var was = !this.root.classList.contains(name + '-off');
         this.root.classList.toggle(name + '-off', !on);
+        // phones and upright tablets: a side opens over the grid, the back button of the phone closes it
+        if (narrow() && was !== !!on) { this.layer(!!on); }
         var edge = this.q('.wpf-edge-' + name);
         if (edge) { edge.setAttribute('aria-expanded', on ? 'true' : 'false'); }
         if (!quiet && !narrow()) { pref(name, on); }
         this.attention();
+    };
+
+    /**
+     * What opens over the page (a side on a phone, the editor enlarged) takes a step in the history of the browser, so
+     * that the back button of a phone (or of a mouse) closes it instead of leaving the page. Closed by a button: the
+     * step is taken back.
+     */
+    Editor.prototype.layer = function (open) {
+        if (!window.history || !window.history.pushState || this.popping) { return; }
+        if (open) {
+            window.history.pushState({ wpfLayer: true }, '');
+            this.layers = (this.layers || 0) + 1;
+        } else if (this.layers > 0) {
+            this.layers--;
+            this.skipPop = (this.skipPop || 0) + 1;
+            window.history.back();
+        }
+    };
+
+    /** The back button: the last thing opened closes (the menu, a side, then the enlarged editor). */
+    Editor.prototype.back = function () {
+        if (this.skipPop > 0) { this.skipPop--; return; }
+        if (!(this.layers > 0)) { return; }
+        this.layers--;
+        this.popping = true;
+        if (this.openMenu) { this.closeMenu(); }
+        if (!this.root.classList.contains('panel-off') && narrow()) { this.side('panel', false); } else if (!this.root.classList.contains('list-off') && narrow()) { this.side('list', false); } else if (this.root.classList.contains('is-full')) { this.fullPage(false); }
+        this.popping = false;
     };
 
     /** The settings folded while a block is chosen: their button on the grid says so. */
@@ -599,6 +630,7 @@
             if (name === 'delete-many') { self.destroyMany(); }
             if (name === 'reapply' && self.flow) { self.flush().then(function () { window.location.href = self.url('reapply'); }); }
         });
+        window.addEventListener('popstate', function () { self.back(); });
         document.addEventListener('keydown', function (e) {
             var typing = /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName);
             if ((e.key === 'Delete' || e.key === 'Backspace') && self.sel && !typing) {
@@ -834,6 +866,7 @@
     /** "Enlarge": the editor over the whole page; "Reduce" (or Escape) back. */
     Editor.prototype.fullPage = function (on) {
         var full = on === undefined ? !this.root.classList.contains('is-full') : !!on;
+        if (full !== this.root.classList.contains('is-full')) { this.layer(full); }
         this.root.classList.toggle('is-full', full);
         document.body.classList.toggle('wpf-full-open', full);
         var button = this.q('[data-act="fullscreen"]');

@@ -4,11 +4,11 @@
     switches with their help below, Save button, then who updates the module (FreeScout's Modules page, or
     UpdateGuard). The settings form posts to FreeScout's own settings route, which saves the values in its options table.
 --}}
-<p class="margin-top">{{ __('workflowpacks::messages.settings_intro') }}</p>
-<p>
-    <a href="{{ route('workflowpacks.index') }}">{{ __('workflowpacks::messages.menu') }}</a>
-    · <a href="{{ route('workflowpacks.diagnostic') }}">{{ __('workflowpacks::messages.diagnostic') }}</a>
+<p class="margin-top">
+    <a class="btn btn-default" href="{{ route('workflowpacks.index') }}">‹ {{ __('workflowpacks::messages.back_to_module') }}</a>
 </p>
+<p>{{ __('workflowpacks::messages.settings_intro') }}</p>
+<p><a href="{{ route('workflowpacks.diagnostic') }}">{{ __('workflowpacks::messages.diagnostic') }}</a></p>
 
 <form class="form-horizontal margin-top margin-bottom" method="POST" action="" autocomplete="off" id="wp-settings-form">
     {{ csrf_field() }}

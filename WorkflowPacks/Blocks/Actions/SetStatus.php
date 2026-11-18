@@ -31,7 +31,7 @@ class SetStatus extends AbstractBlock
 
     protected static function titleParams(array $params)
     {
-        return ['status' => __('workflowpacks::blocks.values.status.'.($params['status'] ?? ''))];
+        return ['status' => self::choice('values.status', $params['status'] ?? '')];
     }
 
     public function run(Context $ctx, array $params)

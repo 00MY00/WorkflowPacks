@@ -42,7 +42,7 @@ class Push extends AbstractBlock
 
     protected static function titleParams(array $params)
     {
-        return ['to' => __('workflowpacks::blocks.values.to.'.($params['to'] ?? 'assignee'))];
+        return ['to' => self::choice('values.to', $params['to'] ?? 'assignee')];
     }
 
     public static function validate(array $params)

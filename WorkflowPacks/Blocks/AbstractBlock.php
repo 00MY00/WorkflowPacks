@@ -44,6 +44,19 @@ abstract class AbstractBlock implements Block
         return $problems;
     }
 
+    /** Label of a chosen value (blocks.<group>.<value>); not chosen yet or unknown: "…", never the name of a text. */
+    protected static function choice($group, $value)
+    {
+        $value = (string) $value;
+        if ($value === '') {
+            return '…';
+        }
+        $key = 'workflowpacks::blocks.'.$group.'.'.$value;
+        $label = __($key);
+
+        return is_string($label) && $label !== $key ? $label : '…';
+    }
+
     /** Text of a block: blocks.<family>.<name>.<what>, "trigger.new_mail" -> blocks.trigger.new_mail.title. */
     public static function text($type, $what, array $params = [])
     {

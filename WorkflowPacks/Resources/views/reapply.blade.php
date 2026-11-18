@@ -9,6 +9,9 @@
 
 @section('wp_description'){{ __('workflowpacks::reapply.intro') }}@endsection
 
+@section('wp_back'){{ route('workflowpacks.flows', ['flow' => $flow->id]) }}@endsection
+@section('wp_back_label'){{ __('workflowpacks::reapply.back') }}@endsection
+
 @section('wp_content')
     <section class="wp-pack-g">
         <div class="wp-pack-head">

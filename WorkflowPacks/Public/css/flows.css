@@ -178,9 +178,9 @@ body.wpf-full-open { overflow: hidden; }
 }
 /* phones: one line of actions that scrolls sideways, the grid first and big */
 @media (max-width: 767px) {
-  .wpf-toolbar { flex-wrap: nowrap; overflow-x: auto; padding: 4px 6px; gap: 6px; scrollbar-width: none; }
-  .wpf-toolbar::-webkit-scrollbar { display: none; }
-  .wpf-toolbar > * { flex: none; }
+  /* every action in sight (nothing off the screen): the line wraps, the buttons share it */
+  .wpf-toolbar { flex-wrap: wrap; padding: 6px; gap: 6px; }
+  .wpf-toolbar > .btn { flex: 1 1 30%; min-height: 40px; padding: 6px 8px; }
   .wpf-toolbar .wpf-grow, .wpf-toolbar .wpf-status { display: none; }
   /* no Escape key on a phone: "Reduce" and "Fit all" first, always in sight */
   .wpf-toolbar [data-act="fullscreen"], .wpf-toolbar [data-act="fit"] { order: -1; }
@@ -188,6 +188,9 @@ body.wpf-full-open { overflow: hidden; }
   .wpf-app.is-full { padding: 4px; height: 100vh; height: 100dvh; }
   .wpf-app.is-full .wpf-main { height: auto; }
   .wpf-list-item { padding: 8px; }
+  /* closing a side: a large button that says it */
+  .wpf-side-close { width: auto; height: 40px; padding: 0 12px; font-size: 15px; }
+  .wpf-side-close::after { content: ' ' attr(aria-label); font-size: 14px; font-weight: 600; }
   .wpf-list-item > input { width: 18px; height: 18px; }
   .wpf-menu-item { padding: 10px; font-size: 15px; }
 }

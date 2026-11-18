@@ -92,6 +92,8 @@ return [
     'no_processing'      => 'De import verstuurt geen e-mail en verwerkt geen bestaande gesprekken.',
     'confirm'            => 'Import bevestigen',
     'back'               => 'Terug',
+    'sections'           => 'Onderdelen',
+    'back_to_module'     => 'Terug naar Workflow Packs',
     'list_filter'        => 'Regels filteren…',
     'list_unfold'        => 'Alles uitklappen',
     'list_fold'          => 'Alles inklappen',

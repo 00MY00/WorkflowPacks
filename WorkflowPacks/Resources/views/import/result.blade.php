@@ -1,5 +1,7 @@
 @extends('workflowpacks::layout')
 
+@section('wp_back'){{ route('workflowpacks.index') }}@endsection
+
 @section('wp_content')
     @include('workflowpacks::partials.steps', ['step' => 4])
     <div class="alert alert-success">

@@ -4,6 +4,20 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [3.18.2] - 2026-11-18
+
+### Corrigé
+- **Téléphones** : les onglets sortaient de l'écran (Assistant IA, Historique, Paramètres cachés) ; ils sont dans un
+  menu **« Sections »** qui affiche la section ouverte. Sans JavaScript, les onglets restent comme avant.
+- **Éditeur des flux sur téléphone** : la barre d'actions passe à la ligne, plus aucun bouton hors de l'écran
+  (Simuler, Publier) ; le bouton qui replie un panneau est plus grand et dit « Replier ».
+- **Bouton retour** du téléphone (ou de la souris) : il ferme d'abord le panneau ouvert, puis l'éditeur agrandi, au lieu
+  de quitter la page.
+- **Retour en haut des sous-pages** (aperçu d'import et d'export, pack de flux, tickets existants, retrait d'un pack,
+  résultats) : plus besoin de descendre en bas de la page.
+- **Paramètres** : un bouton « Retour à Workflow Packs ».
+- Un bloc pas encore rempli (« Si… », statut, notification) affichait le nom d'un texte au lieu de « … ».
+
 ## [3.18.1] - 2026-11-18
 
 ### Corrigé

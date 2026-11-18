@@ -13,6 +13,8 @@
     <div class="wp-header">
         {{-- title + description on the left, the actions of the page on the right (one primary button) --}}
         <div class="wp-header-text">
+            {{-- sub-pages: the way back at the top (on a phone the buttons at the bottom are far away) --}}
+            @hasSection('wp_back')<a class="wp-back" href="@yield('wp_back')">‹ @yield('wp_back_label', __('workflowpacks::messages.back'))</a>@endif
             <h1>{{ __('workflowpacks::messages.title') }}</h1>
             @hasSection('wp_description')<p class="wp-header-desc">@yield('wp_description')</p>@endif
         </div>
@@ -24,7 +26,10 @@
             $wp_flows = Auth::user()->isAdmin() && \Modules\WorkflowPacks\Services\Engine\Engine::enabled();
             $wp_direct = $wp_flows && !\Modules\WorkflowPacks\Services\Compat\Checker::workflowsReady();
         @endphp
-        <ul class="nav nav-tabs wp-tabs">
+        {{-- phones: the sections in a menu (the tabs would go off the screen); without JavaScript the tabs stay --}}
+        <button type="button" class="wp-tabs-toggle" aria-expanded="false" aria-controls="wp-tabs" data-wp-tabs>
+            <span>☰ {{ __('workflowpacks::messages.sections') }}</span> <span class="wp-tabs-current"></span> <span aria-hidden="true">▾</span></button>
+        <ul class="nav nav-tabs wp-tabs" id="wp-tabs">
             <li class="{{ Route::is('workflowpacks.index') ? 'active' : '' }}"><a href="{{ route('workflowpacks.index') }}">{{ __('workflowpacks::messages.menu') }}</a></li>
             <li class="{{ Route::is('workflowpacks.import*') || Route::is('workflowpacks.reimport') || Route::is('workflowpacks.flowpack') || Route::is('workflowpacks.flowpack.preview') ? 'active' : '' }}"><a href="{{ route($wp_direct ? 'workflowpacks.flowpack' : 'workflowpacks.import') }}">{{ __('workflowpacks::messages.import') }}</a></li>
             <li class="{{ Route::is('workflowpacks.graph') || Route::is('workflowpacks.flows') || Route::is('workflowpacks.reapply*') ? 'active' : '' }}"><a href="{{ route($wp_flows ? 'workflowpacks.flows' : 'workflowpacks.graph') }}">{{ __('workflowpacks::graph.title') }}</a></li>

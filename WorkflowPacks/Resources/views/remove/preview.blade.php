@@ -1,6 +1,8 @@
 @extends('workflowpacks::layout')
 
 {{-- "Remove the pack": what will be deleted, mailbox by mailbox (Services/Plan/Remover). --}}
+@section('wp_back'){{ route('workflowpacks.index') }}@endsection
+
 @section('wp_content')
     @php
         $wp_pack = $plan['pack'];
