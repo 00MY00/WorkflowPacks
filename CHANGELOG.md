@@ -4,6 +4,22 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [3.17.0] - 2026-11-18
+
+### Ajouté
+- **Droits des agents action par action** : un tableau remplace les cases « lecture seule / publier / activer / voir /
+  agir sur les autres / supprimer ». Pour **ses flux** et pour **les autres flux de ses boîtes**, séparément : voir,
+  tester, proposer, **modifier**, **renommer**, **supprimer**, activer après un test réussi, publier sans condition.
+  Nouveau : un agent peut **modifier le brouillon des autres flux** de ses boîtes (`others.edit`, désactivé par défaut).
+  Sans le droit, un autre flux répond « introuvable » (son existence n'est pas révélée).
+- **Adresses IP autorisées** : plusieurs entrées **séparées par des virgules**, et des plages **début - fin**
+  (`192.168.1.10 - 192.168.1.50`), en plus des adresses et plages CIDR.
+- **Bulles d'aide « ? »** sur chaque droit et sur les réglages d'un agent (survol ou clic sur PC, appui sur téléphone).
+
+### Modifié
+- Les agents existants gardent exactement leurs droits (migration des anciennes cases vers le tableau). L'API et le
+  connecteur renvoient `permissions` ; les anciens indicateurs (`read_only`, `can_publish`…) restent fournis.
+
 ## [3.16.0] - 2026-11-18
 
 ### Ajouté

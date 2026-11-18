@@ -601,4 +601,136 @@ class McpTest extends TestCase
         $this->assertNotContains('rename_flow', $names);
         $this->assertNotContains('delete_flow', $names);
     }
+
+    public function testTheMatrixOfRightsActionByActionOnItsFlowsAndOnTheOthers()
+    {
+        $a = $this->mailbox('A');
+        $b = $this->mailbox('B');
+        $admin = $this->user([$a, $b], true);
+        $draft = $this->similarChain();
+        unset($draft['name']);
+        $inA = Flow::create(['name' => 'Autre de A', 'mailbox_ids' => [$a->id], 'active' => false, 'once' => true, 'created_by' => $admin->id, 'draft' => $draft]);
+        $inB = Flow::create(['name' => 'Autre de B', 'mailbox_ids' => [$b->id], 'active' => false, 'once' => true, 'created_by' => $admin->id, 'draft' => $draft]);
+        $form = function (array $rights) use ($a) {
+            return ['mailbox_ids' => [$a->id], 'permissions_sent' => 1, 'permissions' => $rights];
+        };
+
+        // the page: the matrix, each action with its "?" bubble
+        $page = $this->actingAs($admin)->get(route('workflowpacks.ai'))->getContent();
+        $this->assertStringContainsString('name="permissions[]" value="others.edit"', $page);
+        $this->assertStringContainsString('data-wp-tip', $page);
+        $this->assertStringContainsString(e(__('workflowpacks::ai.right_edit_tip')), $page);
+        $this->assertStringNotContainsString('workflowpacks::ai.', $page, 'every text exists');
+
+        // changing the others of its mailboxes, without proposing anything; unknown rights dropped
+        list($editor) = $this->agent($admin, $form(['others.see', 'others.edit', 'own.everything', 'admin']));
+        $agent = \Modules\WorkflowPacks\Entities\Agent::orderBy('id', 'desc')->first();
+        $this->assertEqualsCanonicalizing(['others.see', 'others.edit'], $agent->rights());
+        $names = array_column(json_decode($this->rpc($editor, 'tools/list')->getContent(), true)['result']['tools'], 'name');
+        $this->assertContains('update_flow', $names);
+        $this->assertNotContains('propose_flow', $names);
+        $this->assertNotContains('delete_flow', $names);
+        list($changed, $isError) = $this->tool($editor, 'update_flow', ['id' => $inA->id, 'flow' => $this->similarChain('closed')]);
+        $this->assertFalse($isError, json_encode($changed));
+        $this->assertStringContainsString('closed', json_encode($inA->fresh()->draft));
+        list($out) = $this->tool($editor, 'update_flow', ['id' => $inB->id, 'flow' => $this->similarChain('closed')]);
+        $this->assertSame('mailbox_denied', $out['error'], 'another mailbox: refused');
+        list($out) = $this->tool($editor, 'propose_flow', ['flow' => $this->similarChain()]);
+        $this->assertSame('unknown_tool', $out['error'], 'a tool not listed cannot be called');
+        $api = $this->call('POST', route('workflowpacks.api.propose'), [], [], [], ['HTTP_AUTHORIZATION' => 'Bearer '.$editor, 'CONTENT_TYPE' => 'application/json'],
+            json_encode($this->similarChain()));
+        $this->assertSame('propose_denied', json_decode($api->getContent(), true)['error']);
+        $api = $this->call('POST', route('workflowpacks.api.rename', ['id' => $inA->id]), [], [], [], ['HTTP_AUTHORIZATION' => 'Bearer '.$editor, 'CONTENT_TYPE' => 'application/json'],
+            json_encode(['name' => 'Non']));
+        $api->assertStatus(404);
+        $this->assertSame('not_found', json_decode($api->getContent(), true)['error'], 'an action on the others not given: the flow is not revealed');
+        $this->assertNotSame('Non', $inA->fresh()->name);
+
+        // its own flows only: proposed and renamed, but neither changed nor deleted
+        list($own) = $this->agent($admin, $form(['own.propose', 'own.rename']));
+        list($made) = $this->tool($own, 'propose_flow', ['flow' => $this->similarChain()]);
+        $names = array_column(json_decode($this->rpc($own, 'tools/list')->getContent(), true)['result']['tools'], 'name');
+        $this->assertNotContains('update_flow', $names);
+        $api = $this->call('PUT', route('workflowpacks.api.update', ['id' => $made['id']]), [], [], [], ['HTTP_AUTHORIZATION' => 'Bearer '.$own, 'CONTENT_TYPE' => 'application/json'],
+            json_encode($this->similarChain('closed')));
+        $api->assertStatus(403);
+        $this->assertSame('edit_denied', json_decode($api->getContent(), true)['error']);
+        list($out, $isError) = $this->tool($own, 'rename_flow', ['id' => $made['id'], 'name' => 'Renommé']);
+        $this->assertFalse($isError);
+        list($out) = $this->tool($own, 'simulate_flow', ['id' => $made['id']]);
+        $this->assertArrayNotHasKey('error', $out, 'its flows are always seen and tested');
+        list($me) = $this->tool($own, 'get_catalog');
+        $this->assertNotNull($me);
+
+        // delete the others only (not its own)
+        list($cleaner) = $this->agent($admin, $form(['own.propose', 'others.delete']));
+        list($mine) = $this->tool($cleaner, 'propose_flow', ['flow' => $this->similarChain()]);
+        list($out) = $this->tool($cleaner, 'delete_flow', ['id' => $mine['id'], 'confirm' => true]);
+        $this->assertSame('delete_denied', $out['error']);
+        list($deleted, $isError) = $this->tool($cleaner, 'delete_flow', ['id' => $inA->id, 'confirm' => true]);
+        $this->assertFalse($isError, json_encode($deleted));
+        $this->assertNull(Flow::find($inA->id));
+
+        // nothing ticked: read only (its flows seen, nothing written)
+        list($reader) = $this->agent($admin, $form([]));
+        $names = array_column(json_decode($this->rpc($reader, 'tools/list')->getContent(), true)['result']['tools'], 'name');
+        $this->assertSame(['get_catalog', 'list_flows', 'list_tickets', 'simulate_flow'], $names);
+        $this->assertTrue((bool) \Modules\WorkflowPacks\Entities\Agent::orderBy('id', 'desc')->first()->read_only);
+
+        // changed from its tile
+        $this->actingAs($admin)->post(route('workflowpacks.ai.agents.update', ['id' => $agent->id]), ['name' => 'X'] + $form(['own.propose', 'others.rename']));
+        $this->assertEqualsCanonicalizing(['own.propose', 'others.rename'], $agent->fresh()->rights());
+    }
+
+    public function testFormerAgentsKeepTheirRights()
+    {
+        $agent = \Modules\WorkflowPacks\Entities\Agent::class;
+        $this->assertSame([], $agent::legacyRights(['read_only' => 1, 'can_publish' => 1]));
+        $this->assertEqualsCanonicalizing(['own.propose', 'own.edit', 'own.rename', 'own.activate', 'others.see', 'others.test', 'others.rename', 'others.activate'],
+            $agent::legacyRights(['can_activate' => 1, 'can_see_all' => 1, 'can_publish_others' => 1]));
+        $this->assertNotContains('others.edit', $agent::legacyRights(['can_publish_others' => 1, 'can_publish' => 1, 'can_delete' => 1]), 'they never changed the others');
+        $flags = $agent::legacyFlags(['others.see']);
+        $this->assertTrue($flags['read_only']);
+        $this->assertTrue($flags['can_see_all']);
+        $this->assertFalse($flags['can_publish_others']);
+        // an agent saved without the new column reads its former check boxes
+        $a = $this->mailbox('A');
+        $admin = $this->user([$a], true);
+        $this->agent($admin, ['can_delete' => 1]);
+        $saved = $agent::orderBy('id', 'desc')->first();
+        \DB::table('workflowpacks_agents')->where('id', $saved->id)->update(['permissions' => null]);
+        $this->assertTrue($saved->fresh()->may('own.delete'));
+        $this->assertFalse($saved->fresh()->may('others.delete'));
+    }
+
+    public function testSeveralAddressesAndRangesFromTo()
+    {
+        $agent = \Modules\WorkflowPacks\Entities\Agent::class;
+        $this->assertSame('192.168.1.10-192.168.1.50', $agent::range(' 192.168.1.10 - 192.168.1.50 '));
+        $this->assertTrue($agent::inRange('192.168.1.10', '192.168.1.10-192.168.1.50'));
+        $this->assertTrue($agent::inRange('192.168.1.42', '192.168.1.10-192.168.1.50'));
+        $this->assertTrue($agent::inRange('192.168.1.50', '192.168.1.10-192.168.1.50'));
+        $this->assertFalse($agent::inRange('192.168.1.51', '192.168.1.10-192.168.1.50'));
+        $this->assertFalse($agent::inRange('192.168.1.9', '192.168.1.10-192.168.1.50'));
+        $this->assertFalse($agent::inRange('192.168.2.20', '192.168.1.10-192.168.1.50'));
+        $this->assertTrue($agent::inRange('2001:db8::5', '2001:db8::1-2001:db8::ff'));
+        $this->assertFalse($agent::inRange('10.0.0.1', '2001:db8::1-2001:db8::ff'));
+        $this->assertNull($agent::range('192.168.1.50 - 192.168.1.10'), 'the start after the end');
+        $this->assertNull($agent::range('192.168.1.10 - 2001:db8::1'), 'two families');
+        $this->assertNull($agent::range('192.168.1.10 - '));
+
+        $a = $this->mailbox('A');
+        $admin = $this->user([$a], true);
+        // several addresses and ranges, separated by commas: kept, the right one lets in
+        list($token) = $this->agent($admin, ['allowed_ips' => '203.0.113.7, 198.51.100.1 - 198.51.100.20, 127.0.0.1']);
+        $saved = $agent::orderBy('id', 'desc')->first();
+        $this->assertSame(['203.0.113.7', '198.51.100.1-198.51.100.20', '127.0.0.1'], array_values((array) $saved->allowed_ips));
+        $this->rpc($token, 'tools/list')->assertStatus(200);
+        list($outside) = $this->agent($admin, ['allowed_ips' => '10.0.0.1 - 10.0.0.9, 203.0.113.0/24']);
+        $this->rpc($outside, 'tools/list')->assertStatus(403);
+        // one wrong range: nothing created
+        $count = $agent::count();
+        $this->actingAs($admin)->post(route('workflowpacks.ai.agents.create'), ['name' => 'X', 'allowed_ips' => '10.0.0.1, 10.0.0.9 - 10.0.0.1'])->assertSessionHas('flash_error_floating');
+        $this->assertSame($count, $agent::count());
+    }
 }

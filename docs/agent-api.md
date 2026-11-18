@@ -14,17 +14,40 @@ accès à FreeScout lui-même : un jeton, des droits limités, et une déconnexi
 | Durée d'accès | usage continu : **7, 30 (par défaut), 90 ou 365 jours**, ou sans limite ; à l'échéance le jeton ne marche plus. **Modifiable ensuite** sur la fiche de l'agent (à partir du jour même) ; un agent déconnecté ne peut pas être réactivé |
 | Tickets lisibles | **facultatif** : les seules boîtes dont l'agent peut lire les tickets ; ses flux s'appliquent à ces boîtes. **Aucune cochée** : l'agent voit seulement les flux, aucun ticket |
 | Ne pas anonymiser | décoché par défaut : adresses, téléphones, IBAN, liens et longs numéros masqués |
-| Voir les autres flux | sinon l'agent ne voit et ne simule que **ses** flux (désactivé par défaut ; les agents créés avant 3.15 le gardent) |
-| Lecture seule | voit les flux (et les tickets permis), ne peut **rien proposer ni modifier** ; prime sur « Peut publier » |
-| Peut activer après un test réussi | l'agent peut publier et activer **ses** flux **seulement** si son dernier `test_flow` de **cette version exacte** a réussi (au moins un ticket testé, aucun en erreur), dans les 24 h ; modifié depuis : il faut retester |
-| Agir sur les autres flux | ses droits valent aussi pour les flux qu'il n'a pas créés, **seulement s'ils ne visent que ses boîtes** : les tester, publier, activer, **renommer**, **supprimer** (avec « Peut supprimer ») ; jamais modifier leur contenu |
-| Peut supprimer des flux | supprime ses flux (et les autres de ses boîtes avec le droit précédent), **seulement avec confirmation** (`confirm: true`) ; le flux complet est d'abord **sauvegardé** (téléchargeable par un administrateur), les tickets en attente en sortent tels quels |
-| Peut publier | **désactivé par défaut**. Activé, l'agent peut publier et activer **ses propres** flux, jamais ceux des autres |
-| Adresses IP autorisées | facultatif : seules ces adresses ou plages (`203.0.113.0/24`, `2001:db8::/32`) peuvent utiliser le jeton ; toute autre est refusée et notée dans l'Historique |
+| Droits | un tableau **action × flux** (détail ci-dessous) ; chaque action a sa bulle **?** |
+| Adresses IP autorisées | facultatif, **séparées par des virgules** : une adresse (`203.0.113.7`), une plage CIDR (`203.0.113.0/24`, `2001:db8::/32`) ou une plage **début - fin** (`192.168.1.10 - 192.168.1.50`, même famille, début ≤ fin). Seules celles-ci peuvent utiliser le jeton ; toute autre est refusée et notée dans l'Historique. Une entrée invalide : rien n'est enregistré |
+
+Chaque réglage a une bulle **?** (survol ou clic sur PC, appui sur téléphone ; Échap ou un clic ailleurs la ferme).
+
+### Droits (3.17)
+
+Deux colonnes : **ses flux** (ceux que l'agent a proposés) et **les autres flux de ses boîtes**. Sur les autres flux,
+l'agent n'agit que sur ceux qui **ne visent que ses boîtes** (un flux sur « toutes les boîtes » : seulement s'il les a
+toutes).
+
+| Action | Ses flux | Autres flux |
+|---|---|---|
+| Voir | toujours | `others.see` : listés et lus |
+| Tester, simuler | toujours | `others.test` |
+| Proposer de nouveaux flux | `own.propose` (brouillon désactivé) | — |
+| Modifier (le brouillon) | `own.edit` | `others.edit` |
+| Renommer | `own.rename` | `others.rename` |
+| Supprimer (confirmation, sauvegarde d'abord) | `own.delete` | `others.delete` |
+| Activer après un test réussi (cette version exacte, 24 h) | `own.activate` | `others.activate` |
+| Publier et activer sans condition | `own.publish` | `others.publish` |
+
+- Par défaut à la création : proposer, modifier, renommer ses flux. **Aucune case cochée** : lecture seule.
+- Un outil sans le droit n'est **pas proposé** au connecteur (`unknown_tool` s'il est appelé). Par l'API : `{action}_denied`
+  (403) pour ses flux, ou `read_only` si l'agent n'a aucun droit d'écriture ; pour un autre flux sans le droit :
+  **404 `not_found`**, son existence n'est pas révélée. Hors de ses boîtes : `mailbox_denied`.
+- `GET /me` renvoie `permissions` (la liste ci-dessus) ; `read_only`, `can_publish`, `can_activate`, `can_see_all`,
+  `can_delete` restent fournis, déduits de cette liste.
+- Les agents créés avant 3.17 gardent exactement leurs droits (anciennes cases traduites dans le tableau ; « agir sur
+  les autres flux » n'a jamais permis d'en **modifier** le contenu, `others.edit` reste donc décoché).
 
 Le **jeton** (`wpa_…`) est affiché **une seule fois**, à la création. Seule son empreinte SHA-256 est gardée.
 **Déconnecter** le rend inutilisable immédiatement. **Modifier les droits** (fiche de l'agent : nom, boîtes, anonymisation,
-lecture seule, activation, publication, adresses IP) garde la même clé et la même adresse ; le changement est noté dans
+tableau des droits, adresses IP) garde la même clé et la même adresse ; le changement est noté dans
 l'Historique (avant → après). Un agent **déconnecté ou expiré** peut être **supprimé** de la liste : sa clé disparaît
 définitivement, les flux qu'il a proposés restent comme des flux ordinaires. Un agent déconnecté ne se modifie ni ne se
 réactive : on en crée un nouveau. Chaque action de l'agent est notée dans **Historique** (type
@@ -41,15 +64,18 @@ Claude dispose alors de ces outils (protocole MCP) :
 | Outil | Rôle |
 |---|---|
 | `get_catalog` | les blocs, les règles d'un flux valide et un exemple |
-| `list_flows` | ses flux, ou **tous** avec « Voir les autres flux » (nom, actif, version publiée, boîtes, blocs et liens) ; `mine` : ceux qu'il a proposés |
+| `list_flows` | ses flux, et les autres avec « Voir » sur les autres flux (nom, actif, version publiée, boîtes, blocs et liens) ; `mine` : ceux qu'il a proposés |
 | `simulate_flow` | simule un flux étape par étape (sans e-mail donné : un e-mail qui suit le chemin « oui » est généré) ; renvoie les étapes, un **récit** en clair et `replay_url`, une adresse où un administrateur **revoit la simulation sur le schéma** ; avec un jeton de progression, les étapes arrivent **en direct** |
 | `list_tickets` | seulement si des boîtes sont cochées : les tickets récents de ces boîtes, anonymisés par défaut |
-| `propose_flow` | un nouveau flux, enregistré **en brouillon, désactivé** ; ses problèmes s'il n'est pas valide |
-| `update_flow`, `test_flow` | modifier, tester à blanc (rien n'est écrit) **ses** flux |
-| `activate_flow` | si « Peut activer après un test réussi » (ou « Peut publier ») : publie et active **son** flux, après un test réussi de cette version |
-| `publish_flow` | seulement si « Peut publier » est coché : publier, et activer, **ses** flux |
-| `rename_flow` | renomme son flux (ou un autre de ses boîtes avec « Agir sur les autres flux ») ; seul le nom change |
-| `delete_flow` | avec « Peut supprimer » : supprime le flux, **seulement avec `confirm: true`**, après une sauvegarde (`backup_url`) |
+| `propose_flow` | « Proposer » : un nouveau flux, enregistré **en brouillon, désactivé** ; ses problèmes s'il n'est pas valide |
+| `update_flow` | « Modifier » : remplace le brouillon de son flux, ou d'un autre de ses boîtes avec `others.edit` |
+| `test_flow` | tester à blanc (rien n'est écrit) ses flux, ou les autres avec « Tester » sur les autres flux |
+| `activate_flow` | « Activer après un test réussi » (ou « Publier sans condition ») : publie et active le flux après un test réussi de cette version |
+| `publish_flow` | « Publier et activer sans condition » |
+| `rename_flow` | « Renommer » ; seul le nom change |
+| `delete_flow` | « Supprimer » : **seulement avec `confirm: true`**, après une sauvegarde (`backup_url`) |
+
+Chaque outil n'est proposé que si l'agent a le droit correspondant, pour ses flux ou pour les autres (voir « Droits »).
 
 L'adresse contient le jeton (les connecteurs personnalisés de Claude n'envoient pas d'en-tête) : ne la partagez pas ;
 **Déconnecter** l'agent la rend inutilisable. FreeScout doit être joignable depuis Internet en **https**. Mêmes limites
@@ -78,7 +104,7 @@ Elle répond `404` tant que le moteur interne est désactivé. Utilisez HTTPS.
 
 | Méthode | Chemin | Rôle |
 |---|---|---|
-| GET | `/me` | l'agent : usage, boîtes, anonymisation, droit de publier, expiration |
+| GET | `/me` | l'agent : usage, boîtes, anonymisation, droits (`permissions`), expiration |
 | GET | `/flows?all=1` | tous les flux, en lecture (`mine` : les siens) |
 | POST | `/flows/{id}/rename` | renommer (`{"name": "…"}`) |
 | POST | `/flows/{id}/delete` | supprimer (`{"confirm": true}`, sauvegarde d'abord ; `409 confirm_required` sinon) |
@@ -88,12 +114,12 @@ Elle répond `404` tant que le moteur interne est désactivé. Utilisez HTTPS.
 | GET | `/tickets?mailbox_id=&days=&limit=&search=` | tickets de ses boîtes : numéro, sujet, extrait, domaine, statut, indices (anonymisés selon le réglage) |
 | GET | `/flows` | ses flux : brouillon, version publiée, actif |
 | POST | `/flows` | propose un flux (même JSON que la réponse à l'assistant) : enregistré en **brouillon désactivé** |
-| PUT | `/flows/{id}` | modifie le brouillon d'un de **ses** flux (la version publiée continue de tourner) |
+| PUT | `/flows/{id}` | modifie le brouillon de son flux, ou d'un autre de ses boîtes avec `others.edit` (la version publiée continue de tourner) |
 | POST | `/flows/{id}/test` | joue le brouillon à blanc sur des tickets (`ticket_ids`, ou les 100 derniers de ses boîtes) : effet par ticket |
-| POST | `/flows/{id}/publish` | publie (et active avec `activate=1`) — seulement si « Peut publier » est accordé |
+| POST | `/flows/{id}/publish` | publie (et active avec `activate=1`) — seulement avec « Publier et activer sans condition » |
 
-Erreurs : `401 invalid_token` (jeton inconnu, révoqué ou expiré), `403 mailbox_denied` / `publish_denied`,
-`404 not_found` (pas son flux), `422 invalid_flow` (avec `problems` : bloc, champ, message), `429 too_many_requests`.
+Erreurs : `401 invalid_token` (jeton inconnu, révoqué ou expiré), `403 mailbox_denied` / `read_only` /
+`{action}_denied` (`propose_denied`, `edit_denied`, `publish_denied`…), `404 not_found` (inexistant, ou autre flux sans le droit), `422 invalid_flow` (avec `problems` : bloc, champ, message), `429 too_many_requests`.
 
 ```bash
 curl -H "Authorization: Bearer wpa_…" https://votre-freescout/workflow-packs/api/v1/tickets?limit=50
@@ -110,7 +136,9 @@ curl -X POST -H "Authorization: Bearer wpa_…" -H "Content-Type: application/js
   immédiate, **échéance** automatique (usage continu : 30 jours par défaut).
 - **Anti-force brute** : au-delà de 20 jetons invalides par minute depuis une adresse, elle est refusée pour la minute ;
   chaque agent est limité à 60 requêtes par minute.
-- **Adresses IP autorisées** par agent (facultatif) ; la dernière adresse utilisée est affichée.
+- **Adresses IP autorisées** par agent (facultatif ; adresses, plages CIDR ou début - fin, séparées par des virgules) ;
+  la dernière adresse utilisée est affichée.
+- **Droits par action**, séparés pour ses flux et pour les autres flux de ses boîtes (voir « Droits »).
 - **Droits** : l'agent ne lit que les tickets des boîtes cochées (aucune : aucun ticket), anonymisés par défaut ; ne
   modifie que ses flux ; ne propose rien en lecture seule ; ne publie que si on le lui a permis.
 - **Flux bornés** : un flux d'agent ne peut nommer dans ses blocs que les boîtes de l'agent (« classer dans un dossier »)

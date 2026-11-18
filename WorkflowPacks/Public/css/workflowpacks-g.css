@@ -227,6 +227,26 @@ a.wp-tile:hover, a.wp-tile:focus { border-color: var(--g-primary); text-decorati
 .wp-reapply-scope input { margin-top: 3px; flex: none; }
 .wp-reapply-scope small { display: block; }
 .wp-reapply-checks { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+/* "?" next to a setting: a bubble on hover, focus, tap or click */
+.wp-tip { position: relative; display: inline-block; vertical-align: middle; }
+.wp-tip-btn { width: 18px; height: 18px; padding: 0; border: 1px solid var(--g-border); border-radius: 50%; background: var(--g-soft);
+  color: var(--g-text-2); font-size: 11px; font-weight: 700; line-height: 16px; text-align: center; cursor: help; }
+.wp-tip-btn:hover, .wp-tip-btn:focus { border-color: var(--g-primary); color: var(--g-primary); outline: none; }
+.wp-tip-bubble { display: none; position: absolute; z-index: 40; left: -8px; top: calc(100% + 6px); width: 260px;
+  padding: 8px 10px; border-radius: 10px; background: #1f2937; color: #fff; font-size: 12px; font-weight: 400; line-height: 1.45;
+  text-align: left; white-space: normal; box-shadow: 0 8px 24px rgba(15, 23, 42, .25); }
+.wp-tip:hover .wp-tip-bubble, .wp-tip:focus-within .wp-tip-bubble, .wp-tip.is-open .wp-tip-bubble { display: block; }
+@media (max-width: 767px) {
+  /* phones: at the bottom of the screen, never cut by its edges */
+  .wp-tip-bubble { position: fixed; left: 12px; right: 12px; top: auto; bottom: 12px; width: auto; transform: none; font-size: 14px; }
+}
+/* rights of an agent: actions x its flows / the other flows of its mailboxes */
+.wp-rights { width: 100%; border-collapse: collapse; margin: 6px 0 2px; font-size: 13px; }
+.wp-rights th, .wp-rights td { padding: 5px 6px; border-bottom: 1px solid var(--g-border); }
+.wp-rights thead th { font-size: 12px; color: var(--g-text-2); font-weight: 600; text-align: center; }
+.wp-rights thead th:first-child, .wp-rights tbody th { text-align: left; font-weight: 500; }
+.wp-rights td { text-align: center; width: 28%; }
+.wp-rights input[type=checkbox] { width: 18px; height: 18px; margin: 0; }
 /* a connected agent: name and state, then its actions on their own line, its rights unfolded underneath */
 .wp-tile.wp-agent { flex-wrap: wrap; align-items: flex-start; }
 .wp-agent .wp-tile-name { flex: 1 1 160px; min-width: 0; }

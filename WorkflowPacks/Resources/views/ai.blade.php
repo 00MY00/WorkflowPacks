@@ -84,7 +84,7 @@
                         <div class="wp-tile wp-agent" title="{{ $ag->token_hint }}…">
                             <span class="wp-initials wp-fam-{{ $wp_ui::family($ag->name) }}" aria-hidden="true">{{ $wp_ui::initials($ag->name) }}<span class="wp-state-dot {{ $ag->usable() ? 'is-synced' : 'is-missing' }}"></span></span>
                             <span class="wp-tile-name">{{ $ag->name }}
-                                <span class="wp-tile-note">{{ __('workflowpacks::ai.mode_'.$ag->mode) }}{{ $ag->read_only ? ' · '.__('workflowpacks::ai.read_only_short') : '' }}{{ $ag->can_publish ? ' · '.__('workflowpacks::ai.can_publish_short') : '' }}{{ !$ag->can_publish && $ag->can_activate ? ' · '.__('workflowpacks::ai.can_activate_short') : '' }}{{ $ag->can_see_all ? ' · '.__('workflowpacks::ai.can_see_all_short') : '' }}{{ $ag->can_delete && !$ag->read_only ? ' · '.__('workflowpacks::ai.can_delete_short') : '' }}{{ $ag->can_publish_others && !$ag->read_only ? ' · '.__('workflowpacks::ai.can_publish_others_short') : '' }}{{ array_filter((array) $ag->mailbox_ids) ? '' : ' · '.__('workflowpacks::ai.no_tickets_short') }}{{ array_filter((array) $ag->allowed_ips) ? ' · '.__('workflowpacks::ai.ips_short', ['count' => count(array_filter((array) $ag->allowed_ips))]) : '' }}{{ $ag->usable() && $ag->expires_at ? ' · '.__('workflowpacks::ai.until', ['date' => $ag->expires_at->format('Y-m-d')]) : '' }}{{ $ag->usable() && !$ag->expires_at ? ' · '.__('workflowpacks::ai.no_limit_short') : '' }}{{ $ag->last_ip ? ' · '.$ag->last_ip : '' }}{{ $ag->anonymise ? '' : ' · '.__('workflowpacks::ai.full_text_short') }} · {{ $ag->usable() ? ($ag->last_used_at ? __('workflowpacks::ai.last_used', ['time' => $ag->last_used_at->diffForHumans()]) : __('workflowpacks::ai.never_used')) : __('workflowpacks::ai.disconnected') }}</span>
+                                <span class="wp-tile-note">{{ __('workflowpacks::ai.mode_'.$ag->mode) }}{{ ' · '.__('workflowpacks::ai.rights_short', ['own' => count(preg_grep('/^own\./', $ag->rights())), 'others' => count(preg_grep('/^others\./', $ag->rights()))]) }}{{ array_filter((array) $ag->mailbox_ids) ? '' : ' · '.__('workflowpacks::ai.no_tickets_short') }}{{ array_filter((array) $ag->allowed_ips) ? ' · '.__('workflowpacks::ai.ips_short', ['count' => count(array_filter((array) $ag->allowed_ips))]) : '' }}{{ $ag->usable() && $ag->expires_at ? ' · '.__('workflowpacks::ai.until', ['date' => $ag->expires_at->format('Y-m-d')]) : '' }}{{ $ag->usable() && !$ag->expires_at ? ' · '.__('workflowpacks::ai.no_limit_short') : '' }}{{ $ag->last_ip ? ' · '.$ag->last_ip : '' }}{{ $ag->anonymise ? '' : ' · '.__('workflowpacks::ai.full_text_short') }} · {{ $ag->usable() ? ($ag->last_used_at ? __('workflowpacks::ai.last_used', ['time' => $ag->last_used_at->diffForHumans()]) : __('workflowpacks::ai.never_used')) : __('workflowpacks::ai.disconnected') }}</span>
                             </span>
                             <div class="wp-agent-actions">
                                 @if (!$ag->revoked_at && $ag->mode === 'continuous')
@@ -121,18 +121,13 @@
                                         {{ csrf_field() }}
                                         <label class="wp-ai-field"><span>{{ __('workflowpacks::ai.agent_name') }}</span>
                                             <input type="text" name="name" class="form-control" maxlength="100" required value="{{ $ag->name }}"></label>
-                                        <div class="wp-ai-field"><span>{{ __('workflowpacks::ai.agent_tickets') }}</span>
+                                        <div class="wp-ai-field"><span>{{ __('workflowpacks::ai.agent_tickets') }} @include('workflowpacks::partials.tip', ['text' => __('workflowpacks::ai.tip_tickets')])</span>
                                             <div class="wp-box-checks">
                                                 @foreach ($mailboxes as $m)<label><input type="checkbox" name="mailbox_ids[]" value="{{ $m->id }}" @if (in_array((int) $m->id, array_map('intval', (array) $ag->mailbox_ids), true)) checked @endif> {{ $m->name }}</label>@endforeach
                                             </div></div>
-                                        <label class="wp-ai-check"><input type="checkbox" name="full_text" value="1" @if (!$ag->anonymise) checked @endif> {{ __('workflowpacks::ai.full_text') }}</label>
-                                        <label class="wp-ai-check"><input type="checkbox" name="read_only" value="1" @if ($ag->read_only) checked @endif> {{ __('workflowpacks::ai.read_only') }}</label>
-                                        <label class="wp-ai-check"><input type="checkbox" name="can_see_all" value="1" @if ($ag->can_see_all) checked @endif> {{ __('workflowpacks::ai.can_see_all') }}</label>
-                                        <label class="wp-ai-check"><input type="checkbox" name="can_activate" value="1" @if ($ag->can_activate) checked @endif> {{ __('workflowpacks::ai.can_activate') }}</label>
-                                        <label class="wp-ai-check"><input type="checkbox" name="can_publish_others" value="1" @if ($ag->can_publish_others) checked @endif> {{ __('workflowpacks::ai.can_publish_others') }}</label>
-                                        <label class="wp-ai-check"><input type="checkbox" name="can_delete" value="1" @if ($ag->can_delete) checked @endif> {{ __('workflowpacks::ai.can_delete') }}</label>
-                                        <label class="wp-ai-check"><input type="checkbox" name="can_publish" value="1" @if ($ag->can_publish) checked @endif> {{ __('workflowpacks::ai.can_publish') }}</label>
-                                        <label class="wp-ai-field"><span>{{ __('workflowpacks::ai.ips') }}</span>
+                                        <label class="wp-ai-check"><input type="checkbox" name="full_text" value="1" @if (!$ag->anonymise) checked @endif> {{ __('workflowpacks::ai.full_text') }}</label> @include('workflowpacks::partials.tip', ['text' => __('workflowpacks::ai.tip_full_text')])
+                                        @include('workflowpacks::partials.agent_rights', ['rights' => $ag->rights()])
+                                        <label class="wp-ai-field"><span>{{ __('workflowpacks::ai.ips') }} @include('workflowpacks::partials.tip', ['text' => __('workflowpacks::ai.tip_ips')])</span>
                                             <input type="text" name="allowed_ips" class="form-control wp-mono" maxlength="2000" value="{{ implode(', ', (array) $ag->allowed_ips) }}"></label>
                                         <button type="submit" class="btn btn-primary btn-sm">{{ __('workflowpacks::ai.agent_save') }}</button>
                                     </form>
@@ -154,27 +149,22 @@
                                 <option value="once">{{ __('workflowpacks::ai.mode_once') }}</option>
                                 <option value="continuous">{{ __('workflowpacks::ai.mode_continuous') }}</option>
                             </select></label>
-                        <label class="wp-ai-field"><span>{{ __('workflowpacks::ai.agent_days') }}</span>
+                        <label class="wp-ai-field"><span>{{ __('workflowpacks::ai.agent_days') }} @include('workflowpacks::partials.tip', ['text' => __('workflowpacks::ai.tip_days')])</span>
                             {{-- a continuous access ends by itself (30 days unless chosen otherwise) --}}
                             <select name="days" class="form-control">
                                 @foreach ($agentDays as $d)<option value="{{ $d }}" @if ($d === 30) selected @endif>{{ $d ? __('workflowpacks::ai.days_n', ['n' => $d]) : __('workflowpacks::ai.days_none') }}</option>@endforeach
                             </select></label>
-                        <div class="wp-ai-field"><span>{{ __('workflowpacks::ai.agent_tickets') }}</span>
+                        <div class="wp-ai-field"><span>{{ __('workflowpacks::ai.agent_tickets') }} @include('workflowpacks::partials.tip', ['text' => __('workflowpacks::ai.tip_tickets')])</span>
                             {{-- none ticked: the agent sees the flows only, no ticket --}}
                             <div class="wp-box-checks">
                                 @foreach ($mailboxes as $m)<label><input type="checkbox" name="mailbox_ids[]" value="{{ $m->id }}"> {{ $m->name }}</label>@endforeach
                             </div>
                             <small class="wp-muted">{{ __('workflowpacks::ai.agent_tickets_help') }}</small></div>
                     </div>
-                    <label class="wp-ai-check"><input type="checkbox" name="full_text" value="1"> {{ __('workflowpacks::ai.full_text') }}</label>
-                    <label class="wp-ai-check"><input type="checkbox" name="read_only" value="1"> {{ __('workflowpacks::ai.read_only') }}</label>
-                    <label class="wp-ai-check"><input type="checkbox" name="can_see_all" value="1"> {{ __('workflowpacks::ai.can_see_all') }}</label>
-                    <label class="wp-ai-check"><input type="checkbox" name="can_activate" value="1"> {{ __('workflowpacks::ai.can_activate') }}</label>
-                    <label class="wp-ai-check"><input type="checkbox" name="can_publish_others" value="1"> {{ __('workflowpacks::ai.can_publish_others') }}</label>
-                    <label class="wp-ai-check"><input type="checkbox" name="can_delete" value="1"> {{ __('workflowpacks::ai.can_delete') }}</label>
-                    <label class="wp-ai-check"><input type="checkbox" name="can_publish" value="1"> {{ __('workflowpacks::ai.can_publish') }}</label>
-                    <label class="wp-ai-field"><span>{{ __('workflowpacks::ai.ips') }}</span>
-                        <input type="text" name="allowed_ips" class="form-control wp-mono" maxlength="2000" placeholder="203.0.113.0/24, 2001:db8::/32">
+                    <label class="wp-ai-check"><input type="checkbox" name="full_text" value="1"> {{ __('workflowpacks::ai.full_text') }}</label> @include('workflowpacks::partials.tip', ['text' => __('workflowpacks::ai.tip_full_text')])
+                    @include('workflowpacks::partials.agent_rights', ['rights' => ['own.propose', 'own.edit', 'own.rename']])
+                    <label class="wp-ai-field"><span>{{ __('workflowpacks::ai.ips') }} @include('workflowpacks::partials.tip', ['text' => __('workflowpacks::ai.tip_ips')])</span>
+                        <input type="text" name="allowed_ips" class="form-control wp-mono" maxlength="2000" placeholder="203.0.113.7, 203.0.113.0/24, 192.168.1.10 - 192.168.1.50">
                         <small class="wp-muted">{{ __('workflowpacks::ai.ips_help') }}</small></label>
                     <p class="wp-ai-warn">{!! $wp_ui::icon('shield') !!} {{ __('workflowpacks::ai.can_publish_warn') }}</p>
                     <div class="wp-pack-actions"><button type="submit" class="btn btn-default">{!! $wp_ui::icon('power') !!} {{ __('workflowpacks::ai.agent_create') }}</button></div>

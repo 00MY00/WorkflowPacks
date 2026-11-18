@@ -29,10 +29,9 @@ class AgentTools
         $a = $this->agent;
 
         return ['name' => $a->name, 'mode' => $a->mode, 'mailbox_ids' => array_map('intval', (array) $a->mailbox_ids),
-            'tickets' => $this->mayReadTickets(), 'anonymise' => $a->anonymise, 'read_only' => (bool) $a->read_only,
-            'can_publish' => $a->can_publish && !$a->read_only, 'can_activate' => $this->mayActivate(),
-            'can_see_all' => (bool) $a->can_see_all, 'can_publish_others' => $this->mayActivate() && (bool) $a->can_publish_others,
-            'can_delete' => $this->mayDelete(),
+            'tickets' => $this->mayReadTickets(), 'anonymise' => $a->anonymise, 'permissions' => array_values($a->rights()),
+            'read_only' => !$this->mayAny(Agent::WRITES), 'can_publish' => $this->mayAny(['own.publish', 'others.publish']),
+            'can_activate' => $this->mayActivate(), 'can_see_all' => $a->may('others.see'), 'can_delete' => $this->mayDelete(),
             'expires_at' => $a->expires_at ? $a->expires_at->toIso8601String() : null];
     }
 
@@ -49,7 +48,7 @@ class AgentTools
     public function flows($all = false)
     {
         $numbers = FlowVersion::pluck('number', 'id');
-        $q = $all && $this->agent->can_see_all ? Flow::orderBy('id') : Flow::where('agent_id', $this->agent->id)->orderBy('id');
+        $q = $all && $this->agent->may('others.see') ? Flow::orderBy('id') : Flow::where('agent_id', $this->agent->id)->orderBy('id');
 
         return ['flows' => $q->get()->map(function (Flow $f) use ($numbers) {
             return ['id' => (int) $f->id, 'name' => $f->name, 'active' => $f->active, 'version' => $numbers[$f->version_id] ?? null,
@@ -86,23 +85,24 @@ class AgentTools
         return ['anonymised' => $this->agent->anonymise, 'tickets' => $tickets];
     }
 
-    /** Proposing and changing flows: not for an agent that only reads. */
-    public function mayWrite()
+    /** One of these rights at least. */
+    public function mayAny(array $rights)
     {
-        return !$this->agent->read_only;
+        return (bool) array_intersect($rights, $this->agent->rights());
     }
 
-    protected function write()
+    /** The refusal of an action on its own flows: "read_only" for an agent that changes nothing at all. */
+    protected function denied($action)
     {
-        if (!$this->mayWrite()) {
-            throw new AgentToolError(403, 'read_only');
-        }
+        return new AgentToolError(403, $this->mayAny(Agent::WRITES) ? $action.'_denied' : 'read_only');
     }
 
     /** A new flow (same JSON as the answer of the AI assistant), saved as a draft, switched off. */
     public function propose($json)
     {
-        $this->write();
+        if (!$this->agent->may('own.propose')) {
+            throw $this->denied('propose');
+        }
         $answer = $this->read($json);
         $this->scope($answer['draft']);
         $agent = $this->agent;
@@ -117,11 +117,13 @@ class AgentTools
         return ['id' => (int) $flow->id, 'name' => $flow->name, 'state' => 'draft'];
     }
 
-    /** Its own flow changed (draft); the published version keeps running until the next publishing. */
+    /**
+     * A flow changed (draft): its own ones, or the others of its mailboxes with "edit the other flows". The published
+     * version keeps running until the next publishing.
+     */
     public function update($id, $json)
     {
-        $this->write();
-        $flow = $this->own($id);
+        $flow = $this->target($id, 'edit');
         $answer = $this->read($json);
         $this->scope($answer['draft']);
         $flow->update(['draft' => $answer['draft']] + ($answer['name'] !== '' ? ['name' => $answer['name']] : []));
@@ -141,7 +143,7 @@ class AgentTools
     public function test($id, array $ticketIds = [])
     {
         $result = $this->play($id, $ticketIds);
-        $flow = $this->target($id, 'publish');
+        $flow = $this->target($id, 'test');
         $failed = array_keys(array_filter($result['tickets'], function ($t) {
             return ($t['end'] ?? '') === \Modules\WorkflowPacks\Entities\FlowRun::FAILED;
         }));
@@ -209,10 +211,10 @@ class AgentTools
             'replay_url' => route('workflowpacks.flows', ['flow' => $flow->id, 'replay' => $key])];
     }
 
-    /** May delete flows (never read only). */
+    /** May delete flows (its own ones or others). */
     public function mayDelete()
     {
-        return !$this->agent->read_only && (bool) $this->agent->can_delete;
+        return $this->mayAny(['own.delete', 'others.delete']);
     }
 
     /**
@@ -220,12 +222,11 @@ class AgentTools
      */
     public function rename($id, $name)
     {
-        $this->write();
         $name = mb_substr(trim((string) $name), 0, 191);
         if ($name === '') {
             throw new AgentToolError(422, 'name_required');
         }
-        $flow = $this->actOn($id);
+        $flow = $this->target($id, 'rename');
         $before = $flow->name;
         $flow->update(['name' => $name]);
         History::add('agent', 'ok', ['user_id' => $this->agent->created_by, 'subject' => $this->agent->name.' → '.$name,
@@ -241,10 +242,7 @@ class AgentTools
      */
     public function deleteFlow($id, $confirm)
     {
-        if (!$this->mayDelete()) {
-            throw new AgentToolError(403, 'delete_denied');
-        }
-        $flow = $this->actOn($id);
+        $flow = $this->target($id, 'delete');
         if (!$confirm) {
             throw new AgentToolError(409, 'confirm_required');
         }
@@ -262,25 +260,10 @@ class AgentTools
             'backup_url' => route('workflowpacks.backup', ['id' => $backup->id, 'part' => 'pack'])];
     }
 
-    /** A flow it may change the name of or delete: its own ones, the others with "act on the other flows"; within its mailboxes. */
-    protected function actOn($id)
-    {
-        $flow = Flow::find((int) $id);
-        $mine = $flow && (int) $flow->agent_id === (int) $this->agent->id;
-        if (!$flow || (!$mine && !($this->agent->can_publish_others && !$this->agent->read_only))) {
-            throw new AgentToolError(404, 'not_found');
-        }
-        if (!$mine) {
-            $this->inMailboxes($flow);
-        }
-
-        return $flow;
-    }
-
     /** May switch on its own flows: allowed to publish, or allowed to switch on after a passed test (never read only). */
     public function mayActivate()
     {
-        return !$this->agent->read_only && ($this->agent->can_publish || $this->agent->can_activate);
+        return $this->mayAny(['own.activate', 'own.publish', 'others.activate', 'others.publish']);
     }
 
     /**
@@ -289,14 +272,13 @@ class AgentTools
      */
     public function activate($id)
     {
-        if (!$this->mayActivate()) {
-            throw new AgentToolError(403, 'activate_denied');
-        }
-        $flow = $this->target($id, 'publish');
+        // switched on at will with "publish", after a passed test with "switch on after a test"
+        $flow = $this->target($id, ['activate', 'publish']);
         $this->inMailboxes($flow);
+        $free = $this->agent->may($this->side($flow).'.publish');
         $tested = \Cache::get(self::testKey($flow->id));
         $ok = $tested && (int) $tested['agent'] === (int) $this->agent->id && $tested['passed'] && $tested['hash'] === self::fingerprint($flow);
-        if (!$this->agent->can_publish && !$ok) {
+        if (!$free && !$ok) {
             throw new AgentToolError(409, 'test_required');
         }
         $result = (new Publisher())->publish($flow, $this->agent->created_by ? \App\User::find($this->agent->created_by) : null);
@@ -324,7 +306,7 @@ class AgentTools
     /** The dry run itself. */
     protected function play($id, array $ticketIds = [])
     {
-        $flow = $this->target($id, 'publish');
+        $flow = $this->target($id, 'test');
         $agent = $this->agent;
         $ids = array_map('intval', $ticketIds);
         $allowed = \App\Conversation::whereIn('id', $ids ?: [0])->get(['id', 'mailbox_id'])->filter(function ($c) use ($agent) {
@@ -340,9 +322,6 @@ class AgentTools
     /** Publish (and switch on) its own flow: only when the administrator allowed it for this agent. */
     public function publish($id, $activate = false)
     {
-        if (!$this->agent->can_publish || $this->agent->read_only) {
-            throw new AgentToolError(403, 'publish_denied');
-        }
         $flow = $this->target($id, 'publish');
         $this->inMailboxes($flow);
         $result = (new Publisher())->publish($flow, $this->agent->created_by ? \App\User::find($this->agent->created_by) : null);
@@ -407,27 +386,41 @@ class AgentTools
         return $answer;
     }
 
-    /**
-     * A flow it may act on: its own ones always; "see": the others too when it may see them; "publish": the others too
-     * when its publishing / switching on rights cover them (and then only within its mailboxes, checked when publishing).
-     */
-    protected function target($id, $what)
+    /** "own" for the flows it proposed, "others" for the rest. */
+    protected function side(Flow $flow)
     {
-        $flow = Flow::find((int) $id);
-        $mine = $flow && (int) $flow->agent_id === (int) $this->agent->id;
-        $allowed = $what === 'see' ? $this->agent->can_see_all : ($this->agent->can_publish_others && $this->mayActivate());
-        if (!$flow || (!$mine && !$allowed)) {
-            throw new AgentToolError(404, 'not_found');
-        }
-
-        return $flow;
+        return (int) $flow->agent_id === (int) $this->agent->id ? 'own' : 'others';
     }
 
-    protected function own($id)
+    /**
+     * The flow of an action ("see", "test", "edit", "rename", "delete", "activate", "publish"; several: any of them).
+     * Its own flows: seen and tested always, the rest with the matching "own." right (else refused, with the reason).
+     * The other flows: only with the matching "others." right (else "not found": their existence is not told), and
+     * for a change, only when they run on its mailboxes only.
+     */
+    protected function target($id, $actions)
     {
-        $flow = Flow::where('id', (int) $id)->where('agent_id', $this->agent->id)->first();
+        $actions = (array) $actions;
+        $flow = Flow::find((int) $id);
         if (!$flow) {
             throw new AgentToolError(404, 'not_found');
+        }
+        $side = $this->side($flow);
+        $reading = !array_diff($actions, ['see', 'test']);
+        if ($side === 'own' && $reading) {
+            return $flow;
+        }
+        $allowed = $this->mayAny(array_map(function ($a) use ($side) {
+            return $side.'.'.$a;
+        }, $actions));
+        if (!$allowed) {
+            if ($side === 'own') {
+                throw $this->denied($actions[0]);
+            }
+            throw new AgentToolError(404, 'not_found');
+        }
+        if ($side === 'others' && !$reading) {
+            $this->inMailboxes($flow);
         }
 
         return $flow;
