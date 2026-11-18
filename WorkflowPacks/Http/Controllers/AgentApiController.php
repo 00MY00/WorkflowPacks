@@ -148,6 +148,10 @@ class AgentApiController extends BaseController
         if (!$agent) {
             return $this->fail($status, $code);
         }
+        // a flow is a few kilobytes: anything far bigger is refused before being read
+        if (strlen($request->getContent()) > McpController::MAX_BYTES) {
+            return $this->fail(413, 'too_large');
+        }
         try {
             return self::protect(response()->json($action(new AgentTools($agent))));
         } catch (AgentToolError $e) {

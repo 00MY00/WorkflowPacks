@@ -21,6 +21,8 @@ use Modules\WorkflowPacks\Services\ModuleInfo;
 class McpController extends BaseController
 {
     const VERSIONS = ['2025-06-18', '2025-03-26', '2024-11-05'];
+    const MAX_BATCH = 20;
+    const MAX_BYTES = 1048576;
 
     public function handle(Request $request, $token = null)
     {
@@ -46,7 +48,7 @@ class McpController extends BaseController
             return response()->json(['jsonrpc' => '2.0', 'id' => null, 'error' => ['code' => -32001, 'message' => $code]], $status);
         }
         // a request of a few kilobytes at most is expected (a flow): anything far bigger is refused before reading it
-        if (strlen($request->getContent()) > 1048576) {
+        if (strlen($request->getContent()) > self::MAX_BYTES) {
             return response()->json(['jsonrpc' => '2.0', 'id' => null, 'error' => ['code' => -32600, 'message' => 'too large']], 413);
         }
         $body = json_decode($request->getContent(), true);
@@ -55,6 +57,10 @@ class McpController extends BaseController
         }
         $tools = new AgentTools($agent);
         $batch = array_keys($body) === range(0, count($body) - 1);
+        // a batch of a few messages at most: one request must not stand for hundreds
+        if ($batch && count($body) > self::MAX_BATCH) {
+            return response()->json(['jsonrpc' => '2.0', 'id' => null, 'error' => ['code' => -32600, 'message' => 'batch too large']], 413);
+        }
         $answers = [];
         foreach ($batch ? $body : [$body] as $message) {
             $answer = is_array($message) ? $this->answer($tools, $message) : self::error(null, -32600, 'invalid request');

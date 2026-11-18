@@ -102,6 +102,7 @@ class AgentTools
     {
         $this->write();
         $answer = $this->read($json);
+        $this->scope($answer['draft']);
         $agent = $this->agent;
         $flow = Flow::create(['name' => $answer['name'] ?: $agent->name, 'mailbox_ids' => array_map('intval', (array) $agent->mailbox_ids),
             'active' => false, 'once' => true, 'draft' => $answer['draft'], 'created_by' => $agent->created_by, 'agent_id' => $agent->id]);
@@ -120,6 +121,7 @@ class AgentTools
         $this->write();
         $flow = $this->own($id);
         $answer = $this->read($json);
+        $this->scope($answer['draft']);
         $flow->update(['draft' => $answer['draft']] + ($answer['name'] !== '' ? ['name' => $answer['name']] : []));
         $this->log('changed', $flow);
 
@@ -149,6 +151,13 @@ class AgentTools
             throw new AgentToolError(403, 'publish_denied');
         }
         $flow = $this->own($id);
+        // published, a flow runs on its mailboxes (none: every mailbox): only within the mailboxes given to the agent
+        $mine = array_map('intval', array_filter((array) $this->agent->mailbox_ids));
+        $targets = array_map('intval', (array) $flow->mailbox_ids);
+        if (!$mine || !$targets || array_diff($targets, $mine)) {
+            throw new AgentToolError(403, 'mailbox_denied');
+        }
+        $this->scope((array) $flow->draft);
         $result = (new Publisher())->publish($flow, $this->agent->created_by ? \App\User::find($this->agent->created_by) : null);
         if (!$result['ok']) {
             throw new AgentToolError(422, 'invalid_flow', $result['problems']);
@@ -159,6 +168,27 @@ class AgentTools
         $this->log('published', $flow);
 
         return ['id' => (int) $flow->id, 'version' => (int) $result['version']->number, 'active' => (bool) $flow->fresh()->active];
+    }
+
+    /**
+     * A flow of an agent stays within what it was given: a mailbox named in a block ("file into a folder") and the
+     * example tickets of "Looks like" must belong to its mailboxes (the tickets it may read).
+     */
+    protected function scope(array $draft)
+    {
+        $mine = array_map('intval', array_filter((array) $this->agent->mailbox_ids));
+        foreach ((array) ($draft['blocks'] ?? []) as $block) {
+            $params = (array) ($block['params'] ?? []);
+            if (!empty($params['mailbox']) && !in_array((int) $params['mailbox'], $mine, true)) {
+                throw new AgentToolError(403, 'mailbox_denied');
+            }
+            if (($block['type'] ?? '') === 'condition.similar') {
+                $ids = \Modules\WorkflowPacks\Blocks\Conditions\Similar::ids($params['examples'] ?? []);
+                if ($ids && (!$mine || \App\Conversation::whereIn('id', $ids)->whereNotIn('mailbox_id', $mine)->exists())) {
+                    throw new AgentToolError(403, 'examples_denied');
+                }
+            }
+        }
     }
 
     protected function read($json)

@@ -188,4 +188,71 @@ class McpTest extends TestCase
         $this->assertNull($range::range('10.0.0.0/33'));
         $this->assertNull($range::range('host.example.test'));
     }
+
+    public function testAnAgentFlowStaysWithinTheMailboxesGivenAndRequestsAreBounded()
+    {
+        $a = $this->mailbox('A');
+        $b = $this->mailbox('B');
+        $admin = $this->user([$a, $b], true);
+        $chain = function (array $block) {
+            return ['name' => 'Borne', 'blocks' => [['id' => 'b1', 'type' => 'trigger.new_mail'], ['id' => 'b2'] + $block],
+                'links' => [['from' => 'b1', 'port' => 'next', 'to' => 'b2']]];
+        };
+        // allowed to publish but given no mailbox: a published flow would run on every mailbox, refused
+        list($wide) = $this->agent($admin, ['can_publish' => 1]);
+        list($made) = $this->tool($wide, 'propose_flow', ['flow' => $chain(['type' => 'action.status', 'params' => ['status' => 'pending']])]);
+        list($refused, $isError) = $this->tool($wide, 'publish_flow', ['id' => $made['id']]);
+        $this->assertTrue($isError);
+        $this->assertSame('mailbox_denied', $refused['error']);
+        $this->assertNull(Flow::find($made['id'])->version_id);
+
+        // given mailbox A: a block naming mailbox B, or examples taken from B, are refused
+        list($agent) = $this->agent($admin, ['mailbox_ids' => [$a->id], 'can_publish' => 1]);
+        list($out, $isError) = $this->tool($agent, 'propose_flow', ['flow' => $chain(['type' => 'action.imap_folder', 'params' => ['path' => 'X', 'mailbox' => $b->id]])]);
+        $this->assertTrue($isError);
+        $this->assertSame('mailbox_denied', $out['error']);
+        $other = new \App\Conversation();
+        $other->type = \App\Conversation::TYPE_EMAIL;
+        $other->mailbox_id = $b->id;
+        $other->subject = 'Ailleurs';
+        $other->state = \App\Conversation::STATE_PUBLISHED;
+        $other->status = \App\Conversation::STATUS_ACTIVE;
+        $other->source_via = \App\Conversation::PERSON_CUSTOMER;
+        $other->source_type = \App\Conversation::SOURCE_TYPE_EMAIL;
+        $other->save();
+        list($out, $isError) = $this->tool($agent, 'propose_flow', ['flow' => $chain(['type' => 'condition.similar', 'params' => ['examples' => [$other->id], 'threshold' => 50]])]);
+        $this->assertTrue($isError);
+        $this->assertSame('examples_denied', $out['error']);
+        // within its mailbox: proposed and published
+        list($made, $isError) = $this->tool($agent, 'propose_flow', ['flow' => $chain(['type' => 'action.status', 'params' => ['status' => 'pending']])]);
+        $this->assertFalse($isError);
+        list($published, $isError) = $this->tool($agent, 'publish_flow', ['id' => $made['id']]);
+        $this->assertFalse($isError, json_encode($published));
+        // its flow given every mailbox afterwards: it can no longer publish it
+        Flow::where('id', $made['id'])->update(['mailbox_ids' => json_encode([])]);
+        list($out, $isError) = $this->tool($agent, 'publish_flow', ['id' => $made['id']]);
+        $this->assertSame('mailbox_denied', $out['error']);
+
+        // bounded requests: a batch of more than 20 messages, a body over 1 MB
+        $batch = array_map(function ($i) {
+            return ['jsonrpc' => '2.0', 'id' => $i, 'method' => 'ping'];
+        }, range(1, 21));
+        $this->call('POST', route('workflowpacks.mcp', ['token' => $agent]), [], [], [], ['CONTENT_TYPE' => 'application/json'], json_encode($batch))->assertStatus(413);
+        $this->call('POST', route('workflowpacks.api.propose'), [], [], [], ['HTTP_AUTHORIZATION' => 'Bearer '.$agent, 'CONTENT_TYPE' => 'application/json'],
+            str_repeat(' ', 1048577))->assertStatus(413);
+    }
+
+    public function testNamesInMessagesAreEscaped()
+    {
+        $a = $this->mailbox('A');
+        $admin = $this->user([$a], true);
+        // a pack (from anywhere) with a flow named with markup, that cannot be published: its name in the message, escaped
+        $pack = json_encode(['format' => 'workflowpacks-flows', 'version' => 1, 'key' => 'piege', 'name' => 'Piège', 'flows' => [[
+            'key' => 'x', 'name' => '<img src=x onerror=alert(1)>', 'blocks' => [['id' => 'b1', 'type' => 'trigger.new_mail'], ['id' => 'b2', 'type' => 'condition.ticket', 'params' => []]],
+            'links' => [['from' => 'b1', 'port' => 'next', 'to' => 'b2']]]]]);
+        $res = $this->actingAs($admin)->post(route('workflowpacks.flowpack.confirm'), ['pack_carry' => $pack, 'after_publish' => 1]);
+        $message = (string) $res->getSession()->get('flash_error_floating');
+        $this->assertStringContainsString('&lt;img', $message);
+        $this->assertStringNotContainsString('<img', $message);
+    }
 }

@@ -14,6 +14,11 @@ class DiagnosticController extends Controller
 {
     public function index(Request $request)
     {
+        // administrators (route) — checked again here, as every other page of the module
+        $this->guard();
+        if (!auth()->user()->isAdmin()) {
+            \Helper::denyAccess();
+        }
         $result = Checker::run(true);
         $catalog = null;
         $mailboxes = collect();

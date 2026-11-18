@@ -98,7 +98,7 @@ class FlowPackController extends Controller
         }
         $back = redirect()->route('workflowpacks.flows')->with('flash_success_floating', implode(' ', $messages));
 
-        return $refused ? $back->with('flash_error_floating', __('workflowpacks::flowpack.after_refused', ['list' => implode(' · ', array_slice($refused, 0, 10))])) : $back;
+        return $refused ? $back->with('flash_error_floating', __('workflowpacks::flowpack.after_refused', ['list' => e(implode(' · ', array_slice($refused, 0, 10)))])) : $back;
     }
 
     /** The page (flows to include, name of the pack), then with "download": those flows as a pack to download. */

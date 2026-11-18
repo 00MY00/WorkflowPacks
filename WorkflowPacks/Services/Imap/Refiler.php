@@ -89,10 +89,10 @@ class Refiler
             $ok .= ' '.__('workflowpacks::messages.refile_without_folder', ['count' => $r['no_folder']]);
         }
         if ($r['no_imap']) {
-            $notes[] = __('workflowpacks::messages.refile_no_imap', ['list' => implode(', ', array_slice($r['no_imap'], 0, 10))]);
+            $notes[] = __('workflowpacks::messages.refile_no_imap', ['list' => e(implode(', ', array_slice($r['no_imap'], 0, 10)))]);
         }
         if ($r['refused']) {
-            $notes[] = __('workflowpacks::messages.rules_refused', ['list' => implode(' · ', array_slice($r['refused'], 0, 10))]);
+            $notes[] = __('workflowpacks::messages.rules_refused', ['list' => e(implode(' · ', array_slice($r['refused'], 0, 10)))]);
         }
 
         return [$ok, $notes ? implode(' ', $notes) : null];

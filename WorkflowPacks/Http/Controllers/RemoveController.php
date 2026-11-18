@@ -80,7 +80,7 @@ class RemoveController extends Controller
         \Modules\WorkflowPacks\Services\History::add('remove', 'ok', ['subject' => $pack->name, 'message' => __('workflowpacks::messages.forget_history')]);
 
         return redirect()->route('workflowpacks.index')->with('flash_success_floating',
-            __('workflowpacks::messages.forget_done', ['name' => $pack->name, 'url' => route('workflowpacks.backup', ['id' => $backup->id, 'part' => 'pack'])]));
+            __('workflowpacks::messages.forget_done', ['name' => e($pack->name), 'url' => route('workflowpacks.backup', ['id' => $backup->id, 'part' => 'pack'])]));
     }
 
     /** Backup made before a removal: the pack as imported ("pack") or everything that was deleted ("full"). */

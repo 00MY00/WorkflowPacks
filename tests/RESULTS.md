@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 3.12.1
+# Résultats des tests — Workflow Packs 3.12.2
 
 Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,13 @@ Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 3.12.2 — revue de sécurité des points d'entrée
+
+| Série | Résultat |
+|---|---|
+| Revue | toutes les actions publiques des contrôleurs : contrôle d'accès présent (rôle, puis droit sur la boîte dans les services du schéma) ; sorties brutes des vues : valeurs échappées ; `innerHTML` : icônes fixes seulement ; recherche de tickets paramétrée ; packs fournis par liste blanche |
+| Intégration (instance neuve) | 153 tests ; `McpTest` : agent sans boîte ne publie pas, bloc visant une autre boîte refusé, exemples d'une autre boîte refusés, flux dans sa boîte proposé et publié, flux élargi ensuite à toutes les boîtes : plus publiable ; lot de 21 messages et corps de plus de 1 Mo : 413 ; nom piégé d'un pack échappé dans le message |
 
 ## 3.12.1 — page du connecteur dans un navigateur
 
