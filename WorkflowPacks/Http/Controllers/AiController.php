@@ -108,12 +108,32 @@ class AiController extends Controller
             'anonymise'   => !$request->input('full_text'),
             'read_only'   => $readOnly,
             'can_publish' => !$readOnly && (bool) $request->input('can_publish'),
+            'can_activate' => !$readOnly && (bool) $request->input('can_activate'),
             'allowed_ips' => array_values(array_unique($ips)),
             'created_by'  => auth()->id(),
         ] + ($continuous && $days ? ['expires_at' => \Carbon\Carbon::now()->addDays($days)] : []));
         \Modules\WorkflowPacks\Services\History::add('agent', 'ok', ['subject' => $agent->name, 'message' => 'connected ('.$agent->mode.')']);
 
         return $this->page('ai', $this->data(['newToken' => $token, 'newAgent' => $agent]));
+    }
+
+    /**
+     * Length of access changed (from today): 7 to 365 days, or until disconnected. A disconnected agent stays
+     * disconnected (a new one is made instead), an access for one use keeps its 24 hours.
+     */
+    public function agentExpiry(Request $request, $id)
+    {
+        $this->guardAi();
+        $agent = Agent::findOrFail((int) $id);
+        $days = (int) $request->input('days', 30);
+        if ($agent->revoked_at || $agent->mode !== Agent::CONTINUOUS || !in_array($days, Agent::DAYS, true)) {
+            return redirect()->route('workflowpacks.ai')->with('flash_error_floating', __('workflowpacks::ai.expiry_refused'));
+        }
+        $agent->update(['expires_at' => $days ? \Carbon\Carbon::now()->addDays($days) : null]);
+        \Modules\WorkflowPacks\Services\History::add('agent', 'ok', ['subject' => $agent->name, 'message' => 'length of access: '.($days ? $days.' day(s)' : 'no limit')]);
+
+        return redirect()->route('workflowpacks.ai')->with('flash_success_floating', $days
+            ? __('workflowpacks::ai.expiry_changed', ['date' => $agent->expires_at->format('Y-m-d')]) : __('workflowpacks::ai.expiry_none'));
     }
 
     /** Disconnected at once: its token no longer works. */
