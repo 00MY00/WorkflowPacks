@@ -66,6 +66,13 @@ class McpController extends BaseController
             return response()->json(['jsonrpc' => '2.0', 'id' => null, 'error' => ['code' => -32700, 'message' => 'parse error']], 400);
         }
         $tools = new AgentTools($agent);
+        // a simulation followed live (the client reads a stream and gave a progress token): each step sent as it comes,
+        // then the result; without a token, the usual JSON answer (sturdier behind proxies)
+        if (($body['method'] ?? '') === 'tools/call' && (($body['params']['name'] ?? '') === 'simulate_flow')
+            && isset($body['params']['_meta']['progressToken'])
+            && strpos((string) $request->header('Accept'), 'text/event-stream') !== false) {
+            return $this->streamSimulation($tools, $body);
+        }
         $batch = array_keys($body) === range(0, count($body) - 1);
         // a batch of a few messages at most: one request must not stand for hundreds
         if ($batch && count($body) > self::MAX_BATCH) {
@@ -132,7 +139,9 @@ class McpController extends BaseController
         $list = [
             ['name' => 'get_catalog', 'title' => 'Blocks and rules', 'description' => 'The blocks a flow can use (their fields and outputs), the rules of a valid flow and an example. Read it first.',
                 'inputSchema' => $none, 'annotations' => ['readOnlyHint' => true]],
-            ['name' => 'list_flows', 'title' => 'Existing flows', 'description' => 'Every flow of the help desk (name, active, published version, mailboxes, blocks and links); "mine" marks the ones you proposed, the only ones you can change.',
+            ['name' => 'list_flows', 'title' => 'Existing flows', 'description' => ($tools->me()['can_see_all'] ? 'Every flow of the help desk' : 'The flows you proposed')
+                .' (name, active, published version, mailboxes, blocks and links); "mine" marks the ones you proposed, the only ones you can change.'
+                .($tools->me()['can_publish_others'] ? ' You may also test, publish or switch on the others that run only on your mailboxes.' : ''),
                 'inputSchema' => $none, 'annotations' => ['readOnlyHint' => true]],
         ];
         if ($tools->mayReadTickets()) {
@@ -144,6 +153,14 @@ class McpController extends BaseController
                     'search'     => ['type' => 'string', 'description' => 'Subject containing'],
                 ]], 'annotations' => ['readOnlyHint' => true]];
         }
+        // reading only: a simulation writes nothing
+        $list[] = ['name' => 'simulate_flow', 'title' => 'Simulate a flow', 'description' => 'Plays a flow step by step with a sample e-mail (dry run, nothing written or sent). '
+            .'Without "mail", an e-mail is made to take the positive path to the end (texts near the examples for "Looks like"). Returns each step (block, decision, changes, time), '
+            .'a story in plain words to explain it, and replay_url: give it to the user, an administrator sees the simulation played on the diagram. With a progress token, steps are streamed.',
+            'inputSchema' => ['type' => 'object', 'properties' => ['id' => ['type' => 'integer'], 'mail' => ['type' => 'object', 'description' => 'Optional: subject, from, body, status (active|pending|closed|spam), assigned, replied',
+                'properties' => ['subject' => ['type' => 'string'], 'from' => ['type' => 'string'], 'body' => ['type' => 'string'], 'status' => ['type' => 'string'],
+                    'assigned' => ['type' => 'boolean'], 'replied' => ['type' => 'boolean']]]], 'required' => ['id']],
+            'annotations' => ['readOnlyHint' => true]];
         if (!$tools->mayWrite()) {
             return $list;
         }
@@ -198,6 +215,9 @@ class McpController extends BaseController
                 case 'test_flow':
                     $out = $tools->test($a['id'] ?? 0, (array) ($a['ticket_ids'] ?? []));
                     break;
+                case 'simulate_flow':
+                    $out = $tools->simulate($a['id'] ?? 0, $a['mail'] ?? null);
+                    break;
                 case 'activate_flow':
                     $out = $tools->activate($a['id'] ?? 0);
                     break;
@@ -211,6 +231,29 @@ class McpController extends BaseController
 
             return ['content' => [['type' => 'text', 'text' => $text]], 'isError' => true];
         }
+    }
+
+    /** The steps of a simulation as MCP progress notifications (when the client gave a progress token), then the result. */
+    protected function streamSimulation(AgentTools $tools, array $m)
+    {
+        $id = $m['id'] ?? null;
+        $args = is_array($m['params']['arguments'] ?? null) ? $m['params']['arguments'] : [];
+        $progress = $m['params']['_meta']['progressToken'] ?? null;
+
+        return AgentApiController::events(function ($send) use ($tools, $id, $args, $progress) {
+            try {
+                $out = $tools->simulate($args['id'] ?? 0, $args['mail'] ?? null);
+            } catch (AgentToolError $e) {
+                $send('message', self::result($id, ['content' => [['type' => 'text', 'text' => json_encode(array_filter(['error' => $e->codeName, 'problems' => $e->problems]))]], 'isError' => true]));
+
+                return;
+            }
+            foreach ($out['story'] as $i => $line) {
+                $send('message', ['jsonrpc' => '2.0', 'method' => 'notifications/progress',
+                    'params' => ['progressToken' => $progress, 'progress' => $i + 1, 'total' => count($out['story']), 'message' => $line]]);
+            }
+            $send('message', self::result($id, ['content' => [['type' => 'text', 'text' => json_encode($out, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)]], 'isError' => false]));
+        });
     }
 
     /** An unknown or disconnected address used: in History once an hour per caller (enough to understand, not a flood). */

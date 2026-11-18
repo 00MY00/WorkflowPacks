@@ -17,10 +17,10 @@ class Agent extends Model
 
     protected $table = 'workflowpacks_agents';
 
-    protected $fillable = ['name', 'token_hash', 'token_hint', 'mode', 'mailbox_ids', 'anonymise', 'can_publish', 'can_activate', 'read_only', 'allowed_ips',
+    protected $fillable = ['name', 'token_hash', 'token_hint', 'mode', 'mailbox_ids', 'anonymise', 'can_publish', 'can_activate', 'can_see_all', 'can_publish_others', 'read_only', 'allowed_ips',
         'last_ip', 'expires_at', 'last_used_at', 'revoked_at', 'created_by'];
 
-    protected $casts = ['mailbox_ids' => 'array', 'anonymise' => 'boolean', 'can_publish' => 'boolean', 'can_activate' => 'boolean', 'read_only' => 'boolean', 'allowed_ips' => 'array'];
+    protected $casts = ['mailbox_ids' => 'array', 'anonymise' => 'boolean', 'can_publish' => 'boolean', 'can_activate' => 'boolean', 'can_see_all' => 'boolean', 'can_publish_others' => 'boolean', 'read_only' => 'boolean', 'allowed_ips' => 'array'];
 
     /** Lengths of access offered for a continuous agent (days; 0: until it is disconnected). */
     const DAYS = [7, 30, 90, 365, 0];

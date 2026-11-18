@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 3.14.0
+# Résultats des tests — Workflow Packs 3.15.0
 
 Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,13 @@ Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 3.15.0 — e-mail qui passe, simulation des agents (direct, rediffusion), droits sur les autres flux
+
+| Série | Résultat |
+|---|---|
+| Intégration | `SampleMailTest` : contient / ne contient pas / se termine par / commence par / égal / statut / assigné / répondu rendus vrais, fin atteinte ; « Ressemble à… » au-dessus du seuil avec deux exemples réels ; sans exemple et valeur d'un autre bloc : indiqués ; appel réservé aux administrateurs ; simulation avec « assigné ». `McpTest` : `simulate_flow` sans e-mail (généré, chemin « oui ») et avec e-mail (chemin « non »), étapes, récit, rediffusion ouverte par un administrateur, clé de rediffusion inconnue ignorée ; diffusion : 3 notifications de progression puis le résultat ; API JSON ; sans droits : flux des autres ni listés ni simulés ; « voir » : listés et simulés, pas activés ; « autres flux » : testé puis activé dans sa boîte, autre boîte refusée, jamais modifié ; droits retirés depuis la page |
+| Navigateur PC 1440 px | adresse de rediffusion : note « simulation partagée », même e-mail, 3 étapes jouées et éclairées ; Ctrl+A : 3 blocs sur 3 ; bouton « Tout » : 3 sur 3 ; « Générer un e-mail qui passe » : fin du flux atteinte en 3 étapes ; aucune erreur JavaScript |
 
 ## 3.14.0 — modifier et supprimer un agent
 

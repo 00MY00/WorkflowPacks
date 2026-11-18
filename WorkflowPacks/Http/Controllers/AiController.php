@@ -111,6 +111,8 @@ class AiController extends Controller
             'read_only'    => $readOnly,
             'can_publish'  => !$readOnly && (bool) $request->input('can_publish'),
             'can_activate' => !$readOnly && (bool) $request->input('can_activate'),
+            'can_see_all'  => (bool) $request->input('can_see_all'),
+            'can_publish_others' => !$readOnly && (bool) $request->input('can_publish_others'),
             'allowed_ips'  => array_values(array_unique($ips)),
         ];
     }
@@ -199,6 +201,7 @@ class AiController extends Controller
     {
         return 'mailboxes ['.implode(',', array_map('intval', (array) $a->mailbox_ids)).']'.($a->anonymise ? '' : ' full text')
             .($a->read_only ? ' read only' : '').($a->can_activate ? ' activate' : '').($a->can_publish ? ' publish' : '')
+            .($a->can_see_all ? ' see all' : '').($a->can_publish_others ? ' others' : '')
             .(array_filter((array) $a->allowed_ips) ? ' ips '.implode(',', (array) $a->allowed_ips) : '');
     }
 

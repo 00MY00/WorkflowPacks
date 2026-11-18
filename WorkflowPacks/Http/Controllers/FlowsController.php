@@ -35,6 +35,8 @@ class FlowsController extends Controller
         return $this->page('flows', [
             'config' => [
                 'open'      => (int) $request->input('flow') ?: null,
+                // a simulation shared by an agent: its e-mail, played on the diagram when the page opens
+                'replay'    => self::replay($request),
                 'urls'      => [
                     'data'     => route('workflowpacks.flows.data'),
                     'store'    => route('workflowpacks.flows.store'),
@@ -48,6 +50,7 @@ class FlowsController extends Controller
                     'tickets'  => route('workflowpacks.flows.tickets'),
                     'similar_test' => route('workflowpacks.flows.similar_test'),
                     'simulate' => route('workflowpacks.flows.simulate', ['id' => '__ID__']),
+                    'sample'   => route('workflowpacks.flows.sample', ['id' => '__ID__']),
                     'path'     => route('workflowpacks.flows.path', ['id' => '__ID__']),
                     'reapply'  => route('workflowpacks.reapply', ['id' => '__ID__']),
                 ],
@@ -265,6 +268,18 @@ class FlowsController extends Controller
             'date' => $c->created_at ? $c->created_at->format('Y-m-d') : ''];
     }
 
+    /** The simulation of an agent to replay (its address holds a random key, kept a day), only for the flow it was made on. */
+    protected static function replay(Request $request)
+    {
+        $key = (string) $request->input('replay');
+        if (!preg_match('/^[0-9a-f]{24}$/', $key)) {
+            return null;
+        }
+        $data = \Cache::get('workflowpacks.replay.'.$key);
+
+        return $data && (int) $data['flow'] === (int) $request->input('flow') ? $data : null;
+    }
+
     /** The folders of the module already on the mail server of a mailbox, for the "file into a folder" block. */
     public function imapFolders(Request $request)
     {
@@ -316,17 +331,28 @@ class FlowsController extends Controller
         }
         $mail = (array) $request->input('mail');
         $status = in_array($mail['status'] ?? '', ['active', 'pending', 'closed', 'spam'], true) ? $mail['status'] : 'active';
-        $trace = (new Engine($this->registry))->simulate($def, [
-            'subject' => mb_substr((string) ($mail['subject'] ?? ''), 0, 255),
-            'from'    => mb_substr((string) ($mail['from'] ?? ''), 0, 191),
-            'body'    => mb_substr((string) ($mail['body'] ?? ''), 0, 20000),
-            'status'  => $status,
-            'user_id' => 0,
-            'replied' => !empty($mail['replied']),
-            'folder'  => '',
-        ]);
+        $trace = (new Engine($this->registry))->simulate($def, (new \Modules\WorkflowPacks\Services\Engine\SampleMail($this->registry))->ticketOf([
+            'subject' => (string) ($mail['subject'] ?? ''), 'from' => (string) ($mail['from'] ?? ''), 'body' => (string) ($mail['body'] ?? ''),
+            'status' => $status, 'assigned' => !empty($mail['assigned']), 'replied' => !empty($mail['replied'])]));
 
         return response()->json(['ok' => true] + $trace);
+    }
+
+    /**
+     * "An e-mail that goes through": a sample e-mail for the simulation, made to take the positive path of the draft
+     * (Services\Engine\SampleMail), with whether it reached the end and what could not be made true. Nothing written.
+     */
+    public function sampleMail(Request $request, $id)
+    {
+        $this->guardEngine();
+        Flow::findOrFail((int) $id);
+        $draft = self::clean((array) $request->input('draft'));
+        $problems = Definition::from($draft)->validate($this->registry);
+        if ($problems) {
+            return response()->json(['ok' => false, 'problems' => $problems], 422);
+        }
+
+        return response()->json(['ok' => true] + (new \Modules\WorkflowPacks\Services\Engine\SampleMail($this->registry))->build($draft));
     }
 
     /**

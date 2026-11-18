@@ -13,6 +13,8 @@ class McpTest extends TestCase
     {
         parent::setUp();
         \Option::set(Engine::OPTION, true);
+        // counters of the connector (wrong keys per address, rate) start again for each test
+        \Cache::flush();
     }
 
     protected function agent($admin, array $form)
@@ -32,7 +34,9 @@ class McpTest extends TestCase
 
     protected function tool($token, $name, array $arguments = [])
     {
-        $result = json_decode($this->rpc($token, 'tools/call', ['name' => $name, 'arguments' => $arguments])->getContent(), true)['result'];
+        $raw = $this->rpc($token, 'tools/call', ['name' => $name, 'arguments' => $arguments])->getContent();
+        $result = json_decode($raw, true)['result'] ?? null;
+        $this->assertNotNull($result, $name.': '.substr((string) $raw, 0, 400));
 
         return [json_decode($result['content'][0]['text'], true), $result['isError']];
     }
@@ -43,7 +47,7 @@ class McpTest extends TestCase
         $admin = $this->user([$a], true);
         $existing = Flow::create(['name' => 'Déjà là', 'mailbox_ids' => [], 'active' => false, 'once' => true, 'created_by' => $admin->id,
             'draft' => ['blocks' => [['id' => 'b1', 'type' => 'trigger.new_mail']], 'links' => []]]);
-        list($token, $page) = $this->agent($admin, []);
+        list($token, $page) = $this->agent($admin, ['can_see_all' => 1]);
         // the address of the connector is shown once, with the token
         $this->seeIn($page, route('workflowpacks.mcp', ['token' => $token]));
 
@@ -54,7 +58,7 @@ class McpTest extends TestCase
         $this->rpc($token, 'notifications/initialized', [], null)->assertStatus(202);
 
         $names = array_column(json_decode($this->rpc($token, 'tools/list')->getContent(), true)['result']['tools'], 'name');
-        $this->assertSame(['get_catalog', 'list_flows', 'propose_flow', 'update_flow', 'test_flow'], $names, 'no mailbox: no ticket; not allowed to publish');
+        $this->assertSame(['get_catalog', 'list_flows', 'simulate_flow', 'propose_flow', 'update_flow', 'test_flow'], $names, 'no mailbox: no ticket; not allowed to publish');
 
         list($catalog) = $this->tool($token, 'get_catalog');
         $this->assertContains('condition.similar', array_column($catalog['blocks'], 'type'));
@@ -125,7 +129,7 @@ class McpTest extends TestCase
         // read only: the flows can be read, nothing proposed or changed
         list($reader) = $this->agent($admin, ['mailbox_ids' => [$a->id], 'read_only' => 1, 'can_publish' => 1]);
         $names = array_column(json_decode($this->rpc($reader, 'tools/list')->getContent(), true)['result']['tools'], 'name');
-        $this->assertSame(['get_catalog', 'list_flows', 'list_tickets'], $names, 'read only wins over "can publish"');
+        $this->assertSame(['get_catalog', 'list_flows', 'list_tickets', 'simulate_flow'], $names, 'read only wins over "can publish"');
         $api = $this->call('POST', route('workflowpacks.api.propose'), [], [], [], ['HTTP_AUTHORIZATION' => 'Bearer '.$reader, 'CONTENT_TYPE' => 'application/json'],
             json_encode(['blocks' => [['id' => 'b1', 'type' => 'trigger.new_mail']], 'links' => []]));
         $api->assertStatus(403);
@@ -352,7 +356,7 @@ class McpTest extends TestCase
         $agent = $agent->fresh();
         $this->assertSame('Claude 2', $agent->name);
         $this->assertTrue($agent->read_only);
-        $this->assertSame(['get_catalog', 'list_flows', 'list_tickets'], $tools(), 'same key, new rights at once');
+        $this->assertSame(['get_catalog', 'list_flows', 'list_tickets', 'simulate_flow'], $tools(), 'same key, new rights at once');
         $this->assertTrue(\Modules\WorkflowPacks\Entities\Activity::where('kind', 'agent')->where('message', 'like', 'rights changed%')->exists());
         // an invalid address in the change: nothing changed
         $this->actingAs($admin)->post(route('workflowpacks.ai.agents.update', ['id' => $agent->id]), ['name' => 'X', 'allowed_ips' => 'nope'])->assertSessionHas('flash_error_floating');
@@ -374,5 +378,116 @@ class McpTest extends TestCase
         $this->assertNotNull($kept, 'its flows stay');
         $this->assertNull($kept->agent_id);
         $this->rpc($token, 'tools/list')->assertStatus(404);
+    }
+
+    protected function similarChain($status = 'pending')
+    {
+        return ['name' => 'Suivi', 'blocks' => [['id' => 'b1', 'type' => 'trigger.new_mail'],
+            ['id' => 'b2', 'type' => 'condition.ticket', 'params' => ['var' => 'ticket.subject', 'operator' => 'contains', 'value' => 'facture']],
+            ['id' => 'b3', 'type' => 'action.status', 'params' => ['status' => $status]]],
+            'links' => [['from' => 'b1', 'port' => 'next', 'to' => 'b2'], ['from' => 'b2', 'port' => 'yes', 'to' => 'b3']]];
+    }
+
+    public function testAnAgentSimulatesAFlowFollowsItLiveAndGivesALinkToReplayIt()
+    {
+        $a = $this->mailbox('A');
+        $admin = $this->user([$a], true);
+        list($token) = $this->agent($admin, ['mailbox_ids' => [$a->id]]);
+        list($made) = $this->tool($token, 'propose_flow', ['flow' => $this->similarChain()]);
+        // no e-mail given: one is made to take the positive path to the end
+        list($sim, $isError) = $this->tool($token, 'simulate_flow', ['id' => $made['id']]);
+        $this->assertFalse($isError, json_encode($sim));
+        $this->assertTrue($sim['mail_made']);
+        $this->assertStringContainsStringIgnoringCase('facture', $sim['mail']['subject']);
+        $this->assertSame(['b1', 'b2', 'b3'], array_column($sim['steps'], 'block'));
+        $this->assertSame('yes', $sim['steps'][1]['output']);
+        $this->assertCount(3, $sim['story']);
+        $this->assertNotEmpty($sim['steps'][2]['changes']);
+        // an e-mail given: its own path
+        list($other) = $this->tool($token, 'simulate_flow', ['id' => $made['id'], 'mail' => ['subject' => 'Bonjour', 'from' => 'a@example.test', 'body' => 'x']]);
+        $this->assertFalse($other['mail_made']);
+        $this->assertSame('no', $other['steps'][1]['output']);
+        // the replay address: the editor plays the same e-mail (administrators)
+        $page = $this->actingAs($admin)->get($sim['replay_url'])->assertStatus(200);
+        $this->assertStringContainsString(json_encode($sim['mail']['subject']), $page->getContent());
+        $this->assertStringNotContainsString('"replay":{', $this->actingAs($admin)->get(route('workflowpacks.flows', ['flow' => $made['id'], 'replay' => str_repeat('a', 24)]))->getContent());
+
+        // streamed: the steps as progress notifications, then the result
+        $res = $this->call('POST', route('workflowpacks.mcp', ['token' => $token]), [], [], [], ['CONTENT_TYPE' => 'application/json', 'HTTP_ACCEPT' => 'application/json, text/event-stream'],
+            json_encode(['jsonrpc' => '2.0', 'id' => 7, 'method' => 'tools/call', 'params' => ['name' => 'simulate_flow', 'arguments' => ['id' => $made['id']], '_meta' => ['progressToken' => 'p1']]]));
+        $this->assertStringContainsString('text/event-stream', $res->headers->get('Content-Type'));
+        // every chunk kept (the server flushes after each step, as a stream should)
+        $stream = '';
+        ob_start(function ($chunk) use (&$stream) {
+            $stream .= $chunk;
+
+            return '';
+        });
+        $res->baseResponse->sendContent();
+        ob_end_clean();
+        $this->assertSame(3, substr_count($stream, 'notifications/progress'));
+        $this->assertStringContainsString('"id":7', $stream);
+        $this->assertStringContainsString('replay_url', $stream);
+        // through the API, as JSON
+        $api = json_decode($this->call('POST', route('workflowpacks.api.simulate', ['id' => $made['id']]), [], [], [], ['HTTP_AUTHORIZATION' => 'Bearer '.$token, 'HTTP_ACCEPT' => 'application/json'])->getContent(), true);
+        $this->assertCount(3, $api['steps']);
+    }
+
+    public function testRightsOnTheOtherFlows()
+    {
+        $a = $this->mailbox('A');
+        $b = $this->mailbox('B');
+        $admin = $this->user([$a, $b], true);
+        $ticket = new \App\Conversation();
+        $ticket->type = \App\Conversation::TYPE_EMAIL;
+        $ticket->mailbox_id = $a->id;
+        $ticket->subject = 'Votre facture';
+        $ticket->state = \App\Conversation::STATE_PUBLISHED;
+        $ticket->status = \App\Conversation::STATUS_ACTIVE;
+        $ticket->source_via = \App\Conversation::PERSON_CUSTOMER;
+        $ticket->source_type = \App\Conversation::SOURCE_TYPE_EMAIL;
+        $ticket->save();
+        $draft = $this->similarChain();
+        unset($draft['name']);
+        $inA = Flow::create(['name' => 'Flux de A', 'mailbox_ids' => [$a->id], 'active' => false, 'once' => true, 'created_by' => $admin->id, 'draft' => $draft]);
+        $inB = Flow::create(['name' => 'Flux de B', 'mailbox_ids' => [$b->id], 'active' => false, 'once' => true, 'created_by' => $admin->id, 'draft' => $draft]);
+
+        // without the rights: neither seen nor simulated
+        list($plain) = $this->agent($admin, ['mailbox_ids' => [$a->id], 'can_activate' => 1]);
+        list($flows) = $this->tool($plain, 'list_flows');
+        $this->assertSame([], $flows['flows']);
+        list($out, $isError) = $this->tool($plain, 'simulate_flow', ['id' => $inA->id]);
+        $this->assertSame('not_found', $out['error']);
+        list($out) = $this->tool($plain, 'activate_flow', ['id' => $inA->id]);
+        $this->assertSame('not_found', $out['error']);
+
+        // seeing the others: listed and simulated, still not published
+        list($seer) = $this->agent($admin, ['mailbox_ids' => [$a->id], 'can_see_all' => 1, 'can_activate' => 1]);
+        list($flows) = $this->tool($seer, 'list_flows');
+        $this->assertEqualsCanonicalizing(['Flux de A', 'Flux de B'], array_column($flows['flows'], 'name'));
+        list($sim, $isError) = $this->tool($seer, 'simulate_flow', ['id' => $inB->id]);
+        $this->assertFalse($isError);
+        list($out) = $this->tool($seer, 'activate_flow', ['id' => $inA->id]);
+        $this->assertSame('not_found', $out['error']);
+
+        // acting on the others of its mailboxes: tested then switched on; another mailbox refused; never changed
+        list($actor) = $this->agent($admin, ['mailbox_ids' => [$a->id], 'can_see_all' => 1, 'can_activate' => 1, 'can_publish_others' => 1]);
+        list($test) = $this->tool($actor, 'test_flow', ['id' => $inA->id, 'ticket_ids' => [$ticket->id]]);
+        $this->assertTrue($test['verdict']['passed']);
+        list($on, $isError) = $this->tool($actor, 'activate_flow', ['id' => $inA->id]);
+        $this->assertFalse($isError, json_encode($on));
+        $this->assertTrue($inA->fresh()->active);
+        $this->tool($actor, 'test_flow', ['id' => $inB->id]);
+        list($out) = $this->tool($actor, 'activate_flow', ['id' => $inB->id]);
+        $this->assertSame('mailbox_denied', $out['error']);
+        $this->assertFalse($inB->fresh()->active);
+        list($out) = $this->tool($actor, 'update_flow', ['id' => $inA->id, 'flow' => $this->similarChain('closed')]);
+        $this->assertSame('not_found', $out['error']);
+        // rights shown and changed from the page
+        $agent = \Modules\WorkflowPacks\Entities\Agent::orderBy('id', 'desc')->first();
+        $this->assertTrue($agent->can_see_all && $agent->can_publish_others);
+        $this->actingAs($admin)->post(route('workflowpacks.ai.agents.update', ['id' => $agent->id]), ['name' => 'X', 'mailbox_ids' => [$a->id]]);
+        $this->assertFalse($agent->fresh()->can_see_all);
+        $this->assertFalse($agent->fresh()->can_publish_others);
     }
 }

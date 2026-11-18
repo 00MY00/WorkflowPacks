@@ -52,6 +52,7 @@
             {{-- what is chosen on the grid: delete it, open its settings (with a finger, after a long press) --}}
             <div class="wpf-selbar" role="toolbar" hidden>
                 <span class="wpf-selbar-count"></span>
+                <button type="button" class="btn btn-sm btn-default" data-act="select-all" title="Ctrl+A">{{ __('workflowpacks::flows.sel_all') }}</button>
                 <button type="button" class="btn btn-sm btn-danger-soft" data-act="delete-sel">{{ __('workflowpacks::flows.sel_delete') }}</button>
                 <button type="button" class="btn btn-sm btn-default" data-act="settings-sel">⚙ {{ __('workflowpacks::flows.settings') }}</button>
                 <button type="button" class="wpf-selbar-x" data-act="clear-sel" aria-label="{{ __('workflowpacks::flows.sel_clear') }}" title="{{ __('workflowpacks::flows.sel_clear') }}">×</button>

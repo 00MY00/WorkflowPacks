@@ -14,8 +14,10 @@ accès à FreeScout lui-même : un jeton, des droits limités, et une déconnexi
 | Durée d'accès | usage continu : **7, 30 (par défaut), 90 ou 365 jours**, ou sans limite ; à l'échéance le jeton ne marche plus. **Modifiable ensuite** sur la fiche de l'agent (à partir du jour même) ; un agent déconnecté ne peut pas être réactivé |
 | Tickets lisibles | **facultatif** : les seules boîtes dont l'agent peut lire les tickets ; ses flux s'appliquent à ces boîtes. **Aucune cochée** : l'agent voit seulement les flux, aucun ticket |
 | Ne pas anonymiser | décoché par défaut : adresses, téléphones, IBAN, liens et longs numéros masqués |
+| Voir les autres flux | sinon l'agent ne voit et ne simule que **ses** flux (désactivé par défaut ; les agents créés avant 3.15 le gardent) |
 | Lecture seule | voit les flux (et les tickets permis), ne peut **rien proposer ni modifier** ; prime sur « Peut publier » |
 | Peut activer après un test réussi | l'agent peut publier et activer **ses** flux **seulement** si son dernier `test_flow` de **cette version exacte** a réussi (au moins un ticket testé, aucun en erreur), dans les 24 h ; modifié depuis : il faut retester |
+| Publier et activer les autres flux | ses droits de publication ou d'activation après test valent aussi pour les flux qu'il n'a pas créés, **seulement s'ils ne visent que ses boîtes** ; il peut les tester, jamais les modifier |
 | Peut publier | **désactivé par défaut**. Activé, l'agent peut publier et activer **ses propres** flux, jamais ceux des autres |
 | Adresses IP autorisées | facultatif : seules ces adresses ou plages (`203.0.113.0/24`, `2001:db8::/32`) peuvent utiliser le jeton ; toute autre est refusée et notée dans l'Historique |
 
@@ -38,7 +40,8 @@ Claude dispose alors de ces outils (protocole MCP) :
 | Outil | Rôle |
 |---|---|
 | `get_catalog` | les blocs, les règles d'un flux valide et un exemple |
-| `list_flows` | **tous** les flux (nom, actif, version publiée, boîtes, blocs et liens) ; `mine` : ceux qu'il a proposés |
+| `list_flows` | ses flux, ou **tous** avec « Voir les autres flux » (nom, actif, version publiée, boîtes, blocs et liens) ; `mine` : ceux qu'il a proposés |
+| `simulate_flow` | simule un flux étape par étape (sans e-mail donné : un e-mail qui suit le chemin « oui » est généré) ; renvoie les étapes, un **récit** en clair et `replay_url`, une adresse où un administrateur **revoit la simulation sur le schéma** ; avec un jeton de progression, les étapes arrivent **en direct** |
 | `list_tickets` | seulement si des boîtes sont cochées : les tickets récents de ces boîtes, anonymisés par défaut |
 | `propose_flow` | un nouveau flux, enregistré **en brouillon, désactivé** ; ses problèmes s'il n'est pas valide |
 | `update_flow`, `test_flow` | modifier, tester à blanc (rien n'est écrit) **ses** flux |
@@ -74,6 +77,7 @@ Elle répond `404` tant que le moteur interne est désactivé. Utilisez HTTPS.
 |---|---|---|
 | GET | `/me` | l'agent : usage, boîtes, anonymisation, droit de publier, expiration |
 | GET | `/flows?all=1` | tous les flux, en lecture (`mine` : les siens) |
+| POST | `/flows/{id}/simulate` | simuler (corps facultatif `{"mail": {…}}`) ; avec `Accept: text/event-stream`, les étapes arrivent une à une (événements `step`, puis `result`) |
 | POST | `/flows/{id}/activate` | publier et activer son flux après un test réussi (`409 test_required` sinon) |
 | GET | `/catalog` | les règles d'un flux, les blocs (champs, sorties, variables) et un exemple, comme dans le dossier de l'assistant |
 | GET | `/tickets?mailbox_id=&days=&limit=&search=` | tickets de ses boîtes : numéro, sujet, extrait, domaine, statut, indices (anonymisés selon le réglage) |

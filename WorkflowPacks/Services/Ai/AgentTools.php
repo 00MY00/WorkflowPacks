@@ -31,6 +31,7 @@ class AgentTools
         return ['name' => $a->name, 'mode' => $a->mode, 'mailbox_ids' => array_map('intval', (array) $a->mailbox_ids),
             'tickets' => $this->mayReadTickets(), 'anonymise' => $a->anonymise, 'read_only' => (bool) $a->read_only,
             'can_publish' => $a->can_publish && !$a->read_only, 'can_activate' => $this->mayActivate(),
+            'can_see_all' => (bool) $a->can_see_all, 'can_publish_others' => $this->mayActivate() && (bool) $a->can_publish_others,
             'expires_at' => $a->expires_at ? $a->expires_at->toIso8601String() : null];
     }
 
@@ -47,7 +48,7 @@ class AgentTools
     public function flows($all = false)
     {
         $numbers = FlowVersion::pluck('number', 'id');
-        $q = $all ? Flow::orderBy('id') : Flow::where('agent_id', $this->agent->id)->orderBy('id');
+        $q = $all && $this->agent->can_see_all ? Flow::orderBy('id') : Flow::where('agent_id', $this->agent->id)->orderBy('id');
 
         return ['flows' => $q->get()->map(function (Flow $f) use ($numbers) {
             return ['id' => (int) $f->id, 'name' => $f->name, 'active' => $f->active, 'version' => $numbers[$f->version_id] ?? null,
@@ -139,7 +140,7 @@ class AgentTools
     public function test($id, array $ticketIds = [])
     {
         $result = $this->play($id, $ticketIds);
-        $flow = $this->own($id);
+        $flow = $this->target($id, 'publish');
         $failed = array_keys(array_filter($result['tickets'], function ($t) {
             return ($t['end'] ?? '') === \Modules\WorkflowPacks\Entities\FlowRun::FAILED;
         }));
@@ -150,6 +151,61 @@ class AgentTools
             'can_activate' => $passed && $this->mayActivate()];
 
         return $result;
+    }
+
+    const REPLAY_MINUTES = 1440;
+
+    /**
+     * A flow simulated step by step, with the e-mail given or, without one, an e-mail made to take its positive path
+     * (Services\Engine\SampleMail). Every flow can be simulated (it reads them all); nothing is written or sent.
+     * Steps (block, decision, changes, time), a story in plain words, and an address where an administrator replays it
+     * in the editor (the same e-mail, played on the diagram).
+     */
+    public function simulate($id, $mail = null)
+    {
+        $flow = $this->target($id, 'see');
+        $registry = new \Modules\WorkflowPacks\Services\Engine\BlockRegistry();
+        $draft = (array) ($flow->draft ?: []);
+        $problems = \Modules\WorkflowPacks\Services\Engine\Definition::from($draft)->validate($registry);
+        if ($problems) {
+            throw new AgentToolError(422, 'invalid_flow', $problems);
+        }
+        $sample = new \Modules\WorkflowPacks\Services\Engine\SampleMail($registry);
+        $made = !is_array($mail) || !array_filter($mail, function ($v) {
+            return $v !== null && $v !== '';
+        });
+        if ($made) {
+            $mail = $sample->build($draft)['mail'];
+        }
+        $statuses = ['active', 'pending', 'closed', 'spam'];
+        $mail = ['subject' => mb_substr((string) ($mail['subject'] ?? ''), 0, 255), 'from' => mb_substr((string) ($mail['from'] ?? ''), 0, 191),
+            'body' => mb_substr((string) ($mail['body'] ?? ''), 0, 20000), 'status' => in_array($mail['status'] ?? '', $statuses, true) ? $mail['status'] : 'active',
+            'assigned' => !empty($mail['assigned']), 'replied' => !empty($mail['replied'])];
+        $trace = (new \Modules\WorkflowPacks\Services\Engine\Engine($registry))->simulate(\Modules\WorkflowPacks\Services\Engine\Definition::from($draft), $sample->ticketOf($mail));
+        $types = [];
+        $titles = [];
+        foreach ((array) ($draft['blocks'] ?? []) as $b) {
+            $class = $registry->get($b['type'] ?? '');
+            $types[$b['id'] ?? ''] = (string) ($b['type'] ?? '');
+            $titles[$b['id'] ?? ''] = $class ? $class::title((array) ($b['params'] ?? [])) : (string) ($b['type'] ?? '');
+        }
+        $steps = [];
+        foreach ($trace['events'] as $i => $ev) {
+            $steps[] = ['n' => $i + 1, 'at_seconds' => (int) $ev['at'], 'block' => $ev['block'], 'type' => $types[$ev['block']] ?? '',
+                'title' => $titles[$ev['block']] ?? $ev['block'], 'output' => $ev['output'], 'decision' => (string) $ev['summary'],
+                'changes' => array_map([Answer::class, 'change'], (array) $ev['changes']), 'level' => (int) $ev['level']];
+        }
+        $story = array_map(function ($s) {
+            return $s['n'].'. '.$s['title'].($s['decision'] !== '' && $s['decision'] !== $s['title'] ? ' — '.$s['decision'] : '')
+                // the decision of a condition already ends with its output ("… → yes")
+                .($s['output'] && strpos($s['decision'], '→') === false ? ' → '.$s['output'] : '').($s['changes'] ? ' ['.implode(' ; ', $s['changes']).']' : '');
+        }, $steps);
+        $key = bin2hex(random_bytes(12));
+        \Cache::put('workflowpacks.replay.'.$key, ['flow' => (int) $flow->id, 'mail' => $mail], self::REPLAY_MINUTES);
+
+        return ['flow' => ['id' => (int) $flow->id, 'name' => $flow->name], 'mail' => $mail, 'mail_made' => $made, 'steps' => $steps,
+            'end' => $trace['end'], 'story' => $story,
+            'replay_url' => route('workflowpacks.flows', ['flow' => $flow->id, 'replay' => $key])];
     }
 
     /** May switch on its own flows: allowed to publish, or allowed to switch on after a passed test (never read only). */
@@ -167,7 +223,7 @@ class AgentTools
         if (!$this->mayActivate()) {
             throw new AgentToolError(403, 'activate_denied');
         }
-        $flow = $this->own($id);
+        $flow = $this->target($id, 'publish');
         $this->inMailboxes($flow);
         $tested = \Cache::get(self::testKey($flow->id));
         $ok = $tested && (int) $tested['agent'] === (int) $this->agent->id && $tested['passed'] && $tested['hash'] === self::fingerprint($flow);
@@ -199,7 +255,7 @@ class AgentTools
     /** The dry run itself. */
     protected function play($id, array $ticketIds = [])
     {
-        $flow = $this->own($id);
+        $flow = $this->target($id, 'publish');
         $agent = $this->agent;
         $ids = array_map('intval', $ticketIds);
         $allowed = \App\Conversation::whereIn('id', $ids ?: [0])->get(['id', 'mailbox_id'])->filter(function ($c) use ($agent) {
@@ -218,7 +274,7 @@ class AgentTools
         if (!$this->agent->can_publish || $this->agent->read_only) {
             throw new AgentToolError(403, 'publish_denied');
         }
-        $flow = $this->own($id);
+        $flow = $this->target($id, 'publish');
         $this->inMailboxes($flow);
         $result = (new Publisher())->publish($flow, $this->agent->created_by ? \App\User::find($this->agent->created_by) : null);
         if (!$result['ok']) {
@@ -272,6 +328,22 @@ class AgentTools
         }
 
         return $answer;
+    }
+
+    /**
+     * A flow it may act on: its own ones always; "see": the others too when it may see them; "publish": the others too
+     * when its publishing / switching on rights cover them (and then only within its mailboxes, checked when publishing).
+     */
+    protected function target($id, $what)
+    {
+        $flow = Flow::find((int) $id);
+        $mine = $flow && (int) $flow->agent_id === (int) $this->agent->id;
+        $allowed = $what === 'see' ? $this->agent->can_see_all : ($this->agent->can_publish_others && $this->mayActivate());
+        if (!$flow || (!$mine && !$allowed)) {
+            throw new AgentToolError(404, 'not_found');
+        }
+
+        return $flow;
     }
 
     protected function own($id)

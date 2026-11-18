@@ -75,6 +75,7 @@ Route::group([
     Route::post('/flows/{id}/toggle', $admins + ['uses' => 'FlowsController@toggle'])->name('workflowpacks.flows.toggle');
     Route::post('/flows/{id}/delete', $admins + ['uses' => 'FlowsController@destroy'])->name('workflowpacks.flows.destroy');
     Route::post('/flows/{id}/simulate', $admins + ['uses' => 'FlowsController@simulate'])->name('workflowpacks.flows.simulate');
+    Route::post('/flows/{id}/sample-mail', $admins + ['uses' => 'FlowsController@sampleMail'])->name('workflowpacks.flows.sample');
     Route::get('/flows/{id}/path', $admins + ['uses' => 'FlowsController@path'])->name('workflowpacks.flows.path');
     // a flow applied to the tickets already there (in progress / existing), in batches
     Route::get('/flows/{id}/reapply', $admins + ['uses' => 'FlowReapplyController@show'])->name('workflowpacks.reapply');
@@ -115,6 +116,7 @@ Route::group([
     Route::post('/flows/{id}/test', 'AgentApiController@test')->name('workflowpacks.api.test');
     Route::post('/flows/{id}/publish', 'AgentApiController@publish')->name('workflowpacks.api.publish');
     Route::post('/flows/{id}/activate', 'AgentApiController@activate')->name('workflowpacks.api.activate');
+    Route::post('/flows/{id}/simulate', 'AgentApiController@simulate')->name('workflowpacks.api.simulate');
 });
 
 /*

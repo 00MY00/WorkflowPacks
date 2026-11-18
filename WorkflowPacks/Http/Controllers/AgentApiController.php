@@ -76,6 +76,53 @@ class AgentApiController extends BaseController
         });
     }
 
+    /** The flow simulated (mail given or made); "Accept: text/event-stream": the steps come one by one (server-sent events). */
+    public function simulate(Request $request, $id)
+    {
+        if (strpos((string) $request->header('Accept'), 'text/event-stream') !== false) {
+            $header = (string) $request->header('Authorization');
+            list($agent, $status, $code) = self::agentOf(stripos($header, 'Bearer ') === 0 ? trim(substr($header, 7)) : null, $request);
+            if (!$agent) {
+                return $this->fail($status, $code);
+            }
+            try {
+                $out = (new AgentTools($agent))->simulate($id, $request->input('mail'));
+            } catch (AgentToolError $e) {
+                return $this->fail($e->status, $e->codeName, $e->problems);
+            }
+
+            return self::protect(self::events(function ($send) use ($out) {
+                foreach ($out['steps'] as $i => $step) {
+                    $send('step', $step + ['story' => $out['story'][$i]]);
+                }
+                $send('result', $out);
+            }));
+        }
+
+        return $this->guarded($request, function (AgentTools $tools) use ($request, $id) {
+            return $tools->simulate($id, $request->input('mail'));
+        });
+    }
+
+    /** A response of server-sent events: $produce receives send(event, data), each one written at once. */
+    public static function events(\Closure $produce)
+    {
+        $response = new \Symfony\Component\HttpFoundation\StreamedResponse(function () use ($produce) {
+            $produce(function ($event, $data) {
+                echo ($event ? 'event: '.$event."\n" : '').'data: '.json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)."\n\n";
+                if (ob_get_level() > 0) {
+                    @ob_flush();
+                }
+                flush();
+            });
+        });
+        $response->headers->set('Content-Type', 'text/event-stream');
+        // proxies (nginx, Cloudflare) pass each event at once instead of keeping them
+        $response->headers->set('X-Accel-Buffering', 'no');
+
+        return $response;
+    }
+
     public function activate(Request $request, $id)
     {
         return $this->guarded($request, function (AgentTools $tools) use ($id) {
