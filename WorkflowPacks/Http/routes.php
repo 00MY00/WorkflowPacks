@@ -91,6 +91,8 @@ Route::group([
     Route::post('/ai/agents', $admins + ['uses' => 'AiController@createAgent'])->name('workflowpacks.ai.agents.create');
     Route::post('/ai/agents/{id}/revoke', $admins + ['uses' => 'AiController@revokeAgent'])->name('workflowpacks.ai.agents.revoke');
     Route::post('/ai/agents/{id}/expiry', $admins + ['uses' => 'AiController@agentExpiry'])->name('workflowpacks.ai.agents.expiry');
+    Route::post('/ai/agents/{id}/update', $admins + ['uses' => 'AiController@updateAgent'])->name('workflowpacks.ai.agents.update');
+    Route::post('/ai/agents/{id}/delete', $admins + ['uses' => 'AiController@deleteAgent'])->name('workflowpacks.ai.agents.delete');
     // automatic clean-up of a managed e-mail folder (diagram: side panel of the folder; settings: list)
     Route::post('/retention', $admins + ['uses' => 'RetentionController@save'])->name('workflowpacks.retention.save');
     Route::post('/retention/remove', $admins + ['uses' => 'RetentionController@remove'])->name('workflowpacks.retention.remove');

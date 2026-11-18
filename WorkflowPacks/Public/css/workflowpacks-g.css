@@ -227,6 +227,14 @@ a.wp-tile:hover, a.wp-tile:focus { border-color: var(--g-primary); text-decorati
 .wp-reapply-scope input { margin-top: 3px; flex: none; }
 .wp-reapply-scope small { display: block; }
 .wp-reapply-checks { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+/* a connected agent: name and state, then its actions on their own line, its rights unfolded underneath */
+.wp-tile.wp-agent { flex-wrap: wrap; align-items: flex-start; }
+.wp-agent .wp-tile-name { flex: 1 1 160px; min-width: 0; }
+.wp-agent-actions { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; flex: 1 1 100%; }
+.wp-agent-edit { flex: 1 1 100%; }
+.wp-agent-edit > summary { list-style: none; padding-left: 0; }
+.wp-agent-edit > summary::-webkit-details-marker { display: none; }
+.wp-agent-edit form { display: flex; flex-direction: column; gap: 6px; padding: 8px 0 4px; }
 .wp-agent-expiry { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
 .wp-agent-expiry .form-control { width: auto; }
 .wp-after { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
