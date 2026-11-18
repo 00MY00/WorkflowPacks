@@ -1,5 +1,7 @@
 @extends('workflowpacks::layout')
 
+@section('wp_back'){{ route('workflowpacks.import') }}@endsection
+
 @section('wp_content')
     @include('workflowpacks::partials.steps', ['step' => 3])
     @if ($warning)<div class="alert alert-warning">{{ $warning }}</div>@endif

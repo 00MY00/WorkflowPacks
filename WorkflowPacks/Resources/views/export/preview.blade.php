@@ -1,5 +1,7 @@
 @extends('workflowpacks::layout')
 
+@section('wp_back'){{ route('workflowpacks.export') }}@endsection
+
 @section('wp_content')
     <h3>{{ __('workflowpacks::messages.export_title') }} — {{ $pack['name'] }} <code>{{ $pack['key'] }}</code> <span class="wp-muted">{{ $pack['pack_version'] ?? '' }}</span></h3>
     @include('workflowpacks::partials.problems', ['problems' => $problems, 'title' => __('workflowpacks::messages.export_invalid')])

@@ -5,6 +5,8 @@
 
 @section('wp_description'){{ __('workflowpacks::flowpack.intro') }}@endsection
 
+@section('wp_back'){{ route('workflowpacks.flowpack') }}@endsection
+
 @section('wp_content')
     <section class="wp-pack-g">
         <div class="wp-pack-head">

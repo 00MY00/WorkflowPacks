@@ -94,6 +94,8 @@ return [
     'no_processing'      => 'The import sends no email and processes no existing conversation.',
     'confirm'            => 'Confirm the import',
     'back'               => 'Back',
+    'sections'           => 'Sections',
+    'back_to_module'     => 'Back to Workflow Packs',
     'list_filter'        => 'Filter the rules…',
     'list_unfold'        => 'Unfold all',
     'list_fold'          => 'Fold all',

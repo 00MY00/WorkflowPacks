@@ -48,9 +48,10 @@ class Ticket extends AbstractBlock
 
     protected static function titleParams(array $params)
     {
+        // a block not filled in yet: "…" rather than the name of a missing text
         return [
-            'var'      => self::varLabel($params['var'] ?? ''),
-            'operator' => __('workflowpacks::blocks.ops.'.($params['operator'] ?? '')),
+            'var'      => self::varLabel((string) ($params['var'] ?? '')) ?: '…',
+            'operator' => self::choice('ops', $params['operator'] ?? ''),
             'value'    => self::short($params['value'] ?? '', 40),
         ];
     }

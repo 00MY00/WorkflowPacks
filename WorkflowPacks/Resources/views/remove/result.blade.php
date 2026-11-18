@@ -1,5 +1,7 @@
 @extends('workflowpacks::layout')
 
+@section('wp_back'){{ route('workflowpacks.index') }}@endsection
+
 @section('wp_content')
     <h3>{{ __('workflowpacks::messages.remove_title', ['name' => $plan['pack']->name]) }} <code>{{ $plan['pack']->pack_key }}</code></h3>
     <div class="alert alert-success">

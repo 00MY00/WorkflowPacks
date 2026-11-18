@@ -1,5 +1,7 @@
 @extends('workflowpacks::layout')
 
+@section('wp_back'){{ route('workflowpacks.import') }}@endsection
+
 @section('wp_content')
     @include('workflowpacks::partials.steps', ['step' => 2])
     @include('workflowpacks::partials.problems', ['problems' => $problems])

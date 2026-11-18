@@ -92,6 +92,8 @@ return [
     'no_processing'      => 'La importación no envía ningún correo ni procesa ninguna conversación existente.',
     'confirm'            => 'Confirmar la importación',
     'back'               => 'Volver',
+    'sections'           => 'Secciones',
+    'back_to_module'     => 'Volver a Workflow Packs',
     'list_filter'        => 'Filtrar las reglas…',
     'list_unfold'        => 'Desplegar todo',
     'list_fold'          => 'Plegar todo',

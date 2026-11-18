@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 3.18.1
+# Résultats des tests — Workflow Packs 3.18.2
 
 Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,14 @@ Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 3.18.2 — téléphones et tablettes
+
+| Série | Résultat |
+|---|---|
+| Intégration (instance neuve) | 171 tests ; `MobileNavigationTest` : menu « Sections » sur les pages, pas de retour sur une page d'onglet, retour en haut de « tickets existants » vers l'éditeur, bouton « Retour à Workflow Packs » dans les paramètres ; titres d'un bloc vide sans nom de texte |
+| Parcours téléphone 390 px | 9 pages : aucune erreur JavaScript, pas de défilement horizontal ; éditeur : flux créé, bloc ajouté par « + », panneaux Paramètres et Flux ouverts puis repliés, agrandir / réduire ; les 6 actions visibles ; bouton retour : ferme le panneau (la page reste), puis la liste, puis l'éditeur agrandi ; menu Sections : 8 sections dans l'écran ; paramètres : bouton retour en haut |
+| Parcours tablette 820 px | même parcours ; onglets sur deux lignes (pas de menu), tout visible, aucune erreur JavaScript |
 
 ## 3.18.1 — mêmes outils pour le connecteur et l'API
 

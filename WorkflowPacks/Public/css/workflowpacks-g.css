@@ -263,3 +263,18 @@ a.wp-tile:hover, a.wp-tile:focus { border-color: var(--g-primary); text-decorati
 .wp-reapply-checks label { font-weight: 400; margin: 0; }
 .wp-box-checks { display: flex; flex-direction: column; gap: 2px; max-height: 168px; overflow-y: auto; padding: 6px 10px; border: 1px solid var(--g-border); border-radius: 8px; }
 .wp-box-checks label { font-weight: 400; margin: 0; overflow-wrap: anywhere; }
+
+/* the way back at the top of a sub-page */
+.wp-page .wp-back { display: inline-flex; align-items: center; min-height: 36px; margin: 0 0 4px; padding: 4px 10px 4px 6px; border-radius: 8px;
+  color: var(--g-primary); font-weight: 600; font-size: 14px; text-decoration: none; }
+.wp-page .wp-back:hover, .wp-page .wp-back:focus { background: var(--g-soft); text-decoration: none; }
+/* phones: the sections in a menu (the tabs would go off the screen); without JavaScript the tabs stay as they are */
+.wp-tabs-toggle { display: none; }
+@media (max-width: 767px) {
+  .wp-js .wp-tabs-toggle { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 44px; padding: 8px 14px; border: 0; border-radius: 12px;
+    background: var(--g-neutral); color: var(--g-text); font-size: 15px; font-weight: 600; text-align: left; }
+  .wp-js .wp-tabs-toggle .wp-tabs-current { flex: 1; color: var(--g-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .wp-js .wp-tabs { display: none; }
+  .wp-js .wp-tabs.is-open { display: flex; flex-direction: column; flex-wrap: nowrap; overflow: visible; margin-top: 6px; width: 100%; }
+  .wp-js .wp-tabs.is-open > li > a { min-height: 44px; font-size: 15px; }
+}

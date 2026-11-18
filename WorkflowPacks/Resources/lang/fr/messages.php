@@ -96,6 +96,8 @@ return [
     'no_processing'      => 'L’import n’envoie aucun e-mail et ne traite aucune conversation existante.',
     'confirm'            => 'Confirmer l’import',
     'back'               => 'Retour',
+    'sections'           => 'Sections',
+    'back_to_module'     => 'Retour à Workflow Packs',
     'list_filter'        => 'Filtrer les règles…',
     'list_unfold'        => 'Tout déplier',
     'list_fold'          => 'Tout replier',
