@@ -11,10 +11,11 @@ accès à FreeScout lui-même : un jeton, des droits limités, et une déconnexi
 |---|---|
 | Nom | affiché dans la liste et dans l'historique |
 | Usage | **unique** : le jeton ferme après la **première proposition** ou au bout de **24 h** ; **continu** : jusqu'à l'échéance choisie |
-| Durée d'accès | usage continu : **7, 30 (par défaut), 90 ou 365 jours**, ou sans limite ; à l'échéance le jeton ne marche plus |
+| Durée d'accès | usage continu : **7, 30 (par défaut), 90 ou 365 jours**, ou sans limite ; à l'échéance le jeton ne marche plus. **Modifiable ensuite** sur la fiche de l'agent (à partir du jour même) ; un agent déconnecté ne peut pas être réactivé |
 | Tickets lisibles | **facultatif** : les seules boîtes dont l'agent peut lire les tickets ; ses flux s'appliquent à ces boîtes. **Aucune cochée** : l'agent voit seulement les flux, aucun ticket |
 | Ne pas anonymiser | décoché par défaut : adresses, téléphones, IBAN, liens et longs numéros masqués |
 | Lecture seule | voit les flux (et les tickets permis), ne peut **rien proposer ni modifier** ; prime sur « Peut publier » |
+| Peut activer après un test réussi | l'agent peut publier et activer **ses** flux **seulement** si son dernier `test_flow` de **cette version exacte** a réussi (au moins un ticket testé, aucun en erreur), dans les 24 h ; modifié depuis : il faut retester |
 | Peut publier | **désactivé par défaut**. Activé, l'agent peut publier et activer **ses propres** flux, jamais ceux des autres |
 | Adresses IP autorisées | facultatif : seules ces adresses ou plages (`203.0.113.0/24`, `2001:db8::/32`) peuvent utiliser le jeton ; toute autre est refusée et notée dans l'Historique |
 
@@ -37,6 +38,7 @@ Claude dispose alors de ces outils (protocole MCP) :
 | `list_tickets` | seulement si des boîtes sont cochées : les tickets récents de ces boîtes, anonymisés par défaut |
 | `propose_flow` | un nouveau flux, enregistré **en brouillon, désactivé** ; ses problèmes s'il n'est pas valide |
 | `update_flow`, `test_flow` | modifier, tester à blanc (rien n'est écrit) **ses** flux |
+| `activate_flow` | si « Peut activer après un test réussi » (ou « Peut publier ») : publie et active **son** flux, après un test réussi de cette version |
 | `publish_flow` | seulement si « Peut publier » est coché : publier, et activer, **ses** flux |
 
 L'adresse contient le jeton (les connecteurs personnalisés de Claude n'envoient pas d'en-tête) : ne la partagez pas ;
@@ -47,6 +49,11 @@ Ouverte dans un navigateur, l'adresse affiche seulement « Le connecteur est joi
 moyen de vérifier qu'elle est accessible depuis Internet. C'est Claude qui vient chercher les données : FreeScout doit
 être joignable en https depuis Internet (déjà le cas s'il l'est pour vous de l'extérieur ; sinon un tunnel, sans port
 à ouvrir, ou le port 443 redirigé).
+
+**« Le serveur a demandé une connexion (401) »** dans Claude, ou adresse refusée : l'adresse appartient à un agent
+déconnecté, expiré ou inexistant (le connecteur répond alors 404 « adresse inconnue » ; l'Historique note la tentative).
+Créez un nouvel agent (ou prolongez sa durée s'il a seulement expiré) et collez sa **nouvelle** adresse dans Claude ;
+dans Claude, le connecteur se configure **sans authentification** (la clé est dans l'adresse).
 
 **Derrière Cloudflare** : si Claude n'arrive pas à se connecter, voir dans Cloudflare › Security › Events si ses
 requêtes sont bloquées (règles du pare-feu, « Bot Fight Mode ») et autoriser le chemin `/workflow-packs/mcp/`. Le champ
@@ -63,6 +70,7 @@ Elle répond `404` tant que le moteur interne est désactivé. Utilisez HTTPS.
 |---|---|---|
 | GET | `/me` | l'agent : usage, boîtes, anonymisation, droit de publier, expiration |
 | GET | `/flows?all=1` | tous les flux, en lecture (`mine` : les siens) |
+| POST | `/flows/{id}/activate` | publier et activer son flux après un test réussi (`409 test_required` sinon) |
 | GET | `/catalog` | les règles d'un flux, les blocs (champs, sorties, variables) et un exemple, comme dans le dossier de l'assistant |
 | GET | `/tickets?mailbox_id=&days=&limit=&search=` | tickets de ses boîtes : numéro, sujet, extrait, domaine, statut, indices (anonymisés selon le réglage) |
 | GET | `/flows` | ses flux : brouillon, version publiée, actif |

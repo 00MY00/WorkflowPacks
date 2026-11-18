@@ -227,6 +227,8 @@ a.wp-tile:hover, a.wp-tile:focus { border-color: var(--g-primary); text-decorati
 .wp-reapply-scope input { margin-top: 3px; flex: none; }
 .wp-reapply-scope small { display: block; }
 .wp-reapply-checks { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.wp-agent-expiry { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+.wp-agent-expiry .form-control { width: auto; }
 .wp-after { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
 .wp-after .wpf-check { font-weight: normal; margin: 0; display: inline-flex; gap: 6px; align-items: center; }
 .wp-after-apply { margin: 4px 0 0 22px; }

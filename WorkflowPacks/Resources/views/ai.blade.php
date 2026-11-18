@@ -84,8 +84,18 @@
                         <div class="wp-tile" title="{{ $ag->token_hint }}…">
                             <span class="wp-initials wp-fam-{{ $wp_ui::family($ag->name) }}" aria-hidden="true">{{ $wp_ui::initials($ag->name) }}<span class="wp-state-dot {{ $ag->usable() ? 'is-synced' : 'is-missing' }}"></span></span>
                             <span class="wp-tile-name">{{ $ag->name }}
-                                <span class="wp-tile-note">{{ __('workflowpacks::ai.mode_'.$ag->mode) }}{{ $ag->read_only ? ' · '.__('workflowpacks::ai.read_only_short') : '' }}{{ $ag->can_publish ? ' · '.__('workflowpacks::ai.can_publish_short') : '' }}{{ array_filter((array) $ag->mailbox_ids) ? '' : ' · '.__('workflowpacks::ai.no_tickets_short') }}{{ array_filter((array) $ag->allowed_ips) ? ' · '.__('workflowpacks::ai.ips_short', ['count' => count(array_filter((array) $ag->allowed_ips))]) : '' }}{{ $ag->usable() && $ag->expires_at ? ' · '.__('workflowpacks::ai.until', ['date' => $ag->expires_at->format('Y-m-d')]) : '' }}{{ $ag->last_ip ? ' · '.$ag->last_ip : '' }}{{ $ag->anonymise ? '' : ' · '.__('workflowpacks::ai.full_text_short') }} · {{ $ag->usable() ? ($ag->last_used_at ? __('workflowpacks::ai.last_used', ['time' => $ag->last_used_at->diffForHumans()]) : __('workflowpacks::ai.never_used')) : __('workflowpacks::ai.disconnected') }}</span>
+                                <span class="wp-tile-note">{{ __('workflowpacks::ai.mode_'.$ag->mode) }}{{ $ag->read_only ? ' · '.__('workflowpacks::ai.read_only_short') : '' }}{{ $ag->can_publish ? ' · '.__('workflowpacks::ai.can_publish_short') : '' }}{{ !$ag->can_publish && $ag->can_activate ? ' · '.__('workflowpacks::ai.can_activate_short') : '' }}{{ array_filter((array) $ag->mailbox_ids) ? '' : ' · '.__('workflowpacks::ai.no_tickets_short') }}{{ array_filter((array) $ag->allowed_ips) ? ' · '.__('workflowpacks::ai.ips_short', ['count' => count(array_filter((array) $ag->allowed_ips))]) : '' }}{{ $ag->usable() && $ag->expires_at ? ' · '.__('workflowpacks::ai.until', ['date' => $ag->expires_at->format('Y-m-d')]) : '' }}{{ $ag->last_ip ? ' · '.$ag->last_ip : '' }}{{ $ag->anonymise ? '' : ' · '.__('workflowpacks::ai.full_text_short') }} · {{ $ag->usable() ? ($ag->last_used_at ? __('workflowpacks::ai.last_used', ['time' => $ag->last_used_at->diffForHumans()]) : __('workflowpacks::ai.never_used')) : __('workflowpacks::ai.disconnected') }}</span>
                             </span>
+                            @if (!$ag->revoked_at && $ag->mode === 'continuous')
+                                {{-- length of access changed from today (an expired one can be given time again; a disconnected one cannot) --}}
+                                <form method="POST" action="{{ route('workflowpacks.ai.agents.expiry', ['id' => $ag->id]) }}" class="wp-agent-expiry">
+                                    {{ csrf_field() }}
+                                    <select name="days" class="form-control input-sm" aria-label="{{ __('workflowpacks::ai.agent_days') }}">
+                                        @foreach ($agentDays as $d)<option value="{{ $d }}" @if ($d === 30) selected @endif>{{ $d ? __('workflowpacks::ai.days_n', ['n' => $d]) : __('workflowpacks::ai.days_none') }}</option>@endforeach
+                                    </select>
+                                    <button type="submit" class="btn btn-default btn-sm">{{ __('workflowpacks::ai.expiry_button') }}</button>
+                                </form>
+                            @endif
                             @if ($ag->usable())
                                 <form method="POST" action="{{ route('workflowpacks.ai.agents.revoke', ['id' => $ag->id]) }}">
                                     {{ csrf_field() }}
@@ -122,6 +132,7 @@
                     </div>
                     <label class="wp-ai-check"><input type="checkbox" name="full_text" value="1"> {{ __('workflowpacks::ai.full_text') }}</label>
                     <label class="wp-ai-check"><input type="checkbox" name="read_only" value="1"> {{ __('workflowpacks::ai.read_only') }}</label>
+                    <label class="wp-ai-check"><input type="checkbox" name="can_activate" value="1"> {{ __('workflowpacks::ai.can_activate') }}</label>
                     <label class="wp-ai-check"><input type="checkbox" name="can_publish" value="1"> {{ __('workflowpacks::ai.can_publish') }}</label>
                     <label class="wp-ai-field"><span>{{ __('workflowpacks::ai.ips') }}</span>
                         <input type="text" name="allowed_ips" class="form-control wp-mono" maxlength="2000" placeholder="203.0.113.0/24, 2001:db8::/32">

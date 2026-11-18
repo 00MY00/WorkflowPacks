@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 3.12.2
+# Résultats des tests — Workflow Packs 3.13.0
 
 Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,13 @@ Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 3.13.0 — activation après test réussi, durée d'accès modifiable, 404 pour une adresse de connecteur inconnue
+
+| Série | Résultat |
+|---|---|
+| Intégration (instance neuve) | 155 tests ; `McpTest` : `activate_flow` présent avec le droit (sans `publish_flow`) ; refusé sans test, puis accepté après un test réussi ; refusé de nouveau après une modification du flux, jusqu'au nouveau test ; test sans ticket = échec ; rien d'écrit par le test ; API 409 sans test ; absent en lecture seule ; durée changée à 90 jours, sans limite, agent expiré prolongé puis utilisable, agent déconnecté jamais réactivé, réservé aux administrateurs ; adresse inconnue ou déconnectée : 404 `unknown_address` |
+| Navigateur téléphone 390 px | agent créé « active après test », 7 jours ; durée changée sur sa fiche à 365 jours, message de confirmation, pas de défilement horizontal, aucune erreur JavaScript |
 
 ## 3.12.2 — revue de sécurité des points d'entrée
 

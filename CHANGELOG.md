@@ -4,6 +4,22 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [3.13.0] - 2026-11-18
+
+### Ajouté
+- **Activer un flux après un test réussi** (connecteur `activate_flow`, API `POST /flows/{id}/activate`) : nouveau droit
+  par agent « Peut activer après un test réussi », distinct de « Peut publier ». Le flux est publié et activé seulement
+  si le dernier `test_flow` de **cette version exacte** a réussi (au moins un ticket testé, aucun en erreur), dans les
+  24 h ; modifié depuis : il faut retester (`test_required`). Toujours dans les boîtes de l'agent, jamais en lecture
+  seule ; noté dans l'Historique. `test_flow` renvoie maintenant son verdict.
+- **Durée d'accès d'un agent modifiable** sur sa fiche (7, 30, 90, 365 jours ou sans limite, à partir du jour même) ;
+  un agent expiré peut être prolongé, un agent déconnecté jamais.
+
+### Corrigé
+- Claude affichait « configuré pour ne pas nécessiter de connexion, mais le serveur a demandé une connexion (401) »
+  avec l'adresse d'un agent déconnecté ou expiré : le 401 lui faisait croire à une connexion OAuth. Le connecteur
+  répond maintenant 404 « adresse inconnue, déconnectée ou expirée » (noté dans l'Historique) ; l'API garde son 401.
+
 ## [3.12.2] - 2026-11-18
 
 ### Sécurité (revue des points d'entrée)

@@ -76,6 +76,13 @@ class AgentApiController extends BaseController
         });
     }
 
+    public function activate(Request $request, $id)
+    {
+        return $this->guarded($request, function (AgentTools $tools) use ($id) {
+            return $tools->activate($id);
+        });
+    }
+
     /**
      * The agent of a request, or the reason of the refusal: [Agent|null, status, code]. In this order: engine on, https
      * (the token never travels in clear; a local address is accepted for tests), too many wrong tokens from this

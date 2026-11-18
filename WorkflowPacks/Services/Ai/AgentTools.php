@@ -30,7 +30,7 @@ class AgentTools
 
         return ['name' => $a->name, 'mode' => $a->mode, 'mailbox_ids' => array_map('intval', (array) $a->mailbox_ids),
             'tickets' => $this->mayReadTickets(), 'anonymise' => $a->anonymise, 'read_only' => (bool) $a->read_only,
-            'can_publish' => $a->can_publish && !$a->read_only,
+            'can_publish' => $a->can_publish && !$a->read_only, 'can_activate' => $this->mayActivate(),
             'expires_at' => $a->expires_at ? $a->expires_at->toIso8601String() : null];
     }
 
@@ -128,8 +128,76 @@ class AgentTools
         return ['id' => (int) $flow->id, 'state' => 'draft'];
     }
 
-    /** The draft played on tickets of its mailboxes (dry run, nothing written): what each one would get. */
+    /** Hours a passed test stays valid for "activate" (the draft must not change in between). */
+    const TEST_VALID_MINUTES = 1440;
+
+    /**
+     * The draft played on tickets of its mailboxes (dry run, nothing written): what each one would get, and the verdict:
+     * passed = at least one ticket played and none stopped on an error. A passed verdict is kept for this very draft
+     * (its fingerprint), so that "activate" can rely on it.
+     */
     public function test($id, array $ticketIds = [])
+    {
+        $result = $this->play($id, $ticketIds);
+        $flow = $this->own($id);
+        $failed = array_keys(array_filter($result['tickets'], function ($t) {
+            return ($t['end'] ?? '') === \Modules\WorkflowPacks\Entities\FlowRun::FAILED;
+        }));
+        $passed = count($result['tickets']) > 0 && !$failed;
+        \Cache::put(self::testKey($flow->id), ['agent' => (int) $this->agent->id, 'hash' => self::fingerprint($flow), 'passed' => $passed,
+            'tickets' => count($result['tickets'])], self::TEST_VALID_MINUTES);
+        $result['verdict'] = ['passed' => $passed, 'tickets' => count($result['tickets']), 'failed' => array_values($failed),
+            'can_activate' => $passed && $this->mayActivate()];
+
+        return $result;
+    }
+
+    /** May switch on its own flows: allowed to publish, or allowed to switch on after a passed test (never read only). */
+    public function mayActivate()
+    {
+        return !$this->agent->read_only && ($this->agent->can_publish || $this->agent->can_activate);
+    }
+
+    /**
+     * Its own flow published and switched on. Allowed to publish: at once. Allowed to switch on after a test only: the
+     * last test_flow of this very draft (unchanged since) must have passed, within a day. Within its mailboxes only.
+     */
+    public function activate($id)
+    {
+        if (!$this->mayActivate()) {
+            throw new AgentToolError(403, 'activate_denied');
+        }
+        $flow = $this->own($id);
+        $this->inMailboxes($flow);
+        $tested = \Cache::get(self::testKey($flow->id));
+        $ok = $tested && (int) $tested['agent'] === (int) $this->agent->id && $tested['passed'] && $tested['hash'] === self::fingerprint($flow);
+        if (!$this->agent->can_publish && !$ok) {
+            throw new AgentToolError(409, 'test_required');
+        }
+        $result = (new Publisher())->publish($flow, $this->agent->created_by ? \App\User::find($this->agent->created_by) : null);
+        if (!$result['ok']) {
+            throw new AgentToolError(422, 'invalid_flow', $result['problems']);
+        }
+        $flow->update(['active' => true]);
+        \Cache::forget(self::testKey($flow->id));
+        $this->log($ok ? 'switched on after a passed test ('.$tested['tickets'].' ticket(s))' : 'published and switched on', $flow);
+
+        return ['id' => (int) $flow->id, 'version' => (int) $result['version']->number, 'active' => true, 'tested' => (bool) $ok];
+    }
+
+    protected static function testKey($flowId)
+    {
+        return 'workflowpacks.agent.tested.'.(int) $flowId;
+    }
+
+    /** What exactly was tested: the blocks and links of the draft. */
+    protected static function fingerprint(Flow $flow)
+    {
+        return hash('sha256', json_encode((array) $flow->draft));
+    }
+
+    /** The dry run itself. */
+    protected function play($id, array $ticketIds = [])
     {
         $flow = $this->own($id);
         $agent = $this->agent;
@@ -151,13 +219,7 @@ class AgentTools
             throw new AgentToolError(403, 'publish_denied');
         }
         $flow = $this->own($id);
-        // published, a flow runs on its mailboxes (none: every mailbox): only within the mailboxes given to the agent
-        $mine = array_map('intval', array_filter((array) $this->agent->mailbox_ids));
-        $targets = array_map('intval', (array) $flow->mailbox_ids);
-        if (!$mine || !$targets || array_diff($targets, $mine)) {
-            throw new AgentToolError(403, 'mailbox_denied');
-        }
-        $this->scope((array) $flow->draft);
+        $this->inMailboxes($flow);
         $result = (new Publisher())->publish($flow, $this->agent->created_by ? \App\User::find($this->agent->created_by) : null);
         if (!$result['ok']) {
             throw new AgentToolError(422, 'invalid_flow', $result['problems']);
@@ -168,6 +230,17 @@ class AgentTools
         $this->log('published', $flow);
 
         return ['id' => (int) $flow->id, 'version' => (int) $result['version']->number, 'active' => (bool) $flow->fresh()->active];
+    }
+
+    /** Published, a flow runs on its mailboxes (none: every mailbox): only within the mailboxes given to the agent. */
+    protected function inMailboxes(Flow $flow)
+    {
+        $mine = array_map('intval', array_filter((array) $this->agent->mailbox_ids));
+        $targets = array_map('intval', (array) $flow->mailbox_ids);
+        if (!$mine || !$targets || array_diff($targets, $mine)) {
+            throw new AgentToolError(403, 'mailbox_denied');
+        }
+        $this->scope((array) $flow->draft);
     }
 
     /**

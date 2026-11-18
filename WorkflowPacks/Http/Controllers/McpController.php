@@ -42,9 +42,19 @@ class McpController extends BaseController
             return response('', 405, ['Allow' => 'POST']);
         }
         $header = (string) $request->header('Authorization');
+        $inAddress = (bool) $token;
         $token = $token ?: (stripos($header, 'Bearer ') === 0 ? trim(substr($header, 7)) : null);
         list($agent, $status, $code) = AgentApiController::agentOf($token, $request);
         if (!$agent) {
+            // the address holds the key: an unknown, disconnected or expired one is an address that no longer exists
+            // (404). A 401 would make Claude believe that a sign-in (OAuth) is expected, which is never the case here.
+            if ($inAddress && $code === 'invalid_token') {
+                self::noteUnknown($request);
+
+                return response()->json(['jsonrpc' => '2.0', 'id' => null, 'error' => ['code' => -32001,
+                    'message' => 'unknown_address: this connector address is unknown, disconnected or expired; create a new connected agent in Workflow Packs and use its address']], 404);
+            }
+
             return response()->json(['jsonrpc' => '2.0', 'id' => null, 'error' => ['code' => -32001, 'message' => $code]], $status);
         }
         // a request of a few kilobytes at most is expected (a flow): anything far bigger is refused before reading it
@@ -110,7 +120,8 @@ class McpController extends BaseController
         .'actions). Start with get_catalog (the blocks, the rules and an example), look at the existing flows with list_flows, '
         .'and when the administrator allowed it read tickets with list_tickets (anonymised by default). Propose a new flow '
         .'with propose_flow: it is saved as a switched-off draft that an administrator reviews; test it on tickets with '
-        .'test_flow (dry run, nothing is written) and change it with update_flow. Only the flows you proposed can be changed. '
+        .'test_flow (dry run, nothing is written) and change it with update_flow. When allowed, activate_flow switches on a flow '
+        .'whose last test passed. Only the flows you proposed can be changed. '
         .'Nothing is ever sent to customers by these tools.';
 
     /** The tools this agent may use (publish only when allowed, tickets only when mailboxes were given). */
@@ -144,6 +155,13 @@ class McpController extends BaseController
             'inputSchema' => ['type' => 'object', 'properties' => ['id' => ['type' => 'integer'],
                 'ticket_ids' => ['type' => 'array', 'items' => ['type' => 'integer'], 'description' => 'Default: recent tickets of your mailboxes']], 'required' => ['id']],
             'annotations' => ['readOnlyHint' => true]];
+        if ($tools->mayActivate()) {
+            $list[] = ['name' => 'activate_flow', 'title' => 'Switch a flow on', 'description' => 'Publishes and switches on one of your flows. '
+                .($tools->me()['can_publish'] ? 'Allowed at once.' : 'Only after test_flow passed on this very draft (unchanged since): test it first.')
+                .' It then runs on new e-mails.',
+                'inputSchema' => ['type' => 'object', 'properties' => ['id' => ['type' => 'integer']], 'required' => ['id']],
+                'annotations' => ['destructiveHint' => true]];
+        }
         if ($tools->me()['can_publish']) {
             $list[] = ['name' => 'publish_flow', 'title' => 'Publish a flow', 'description' => 'Publishes one of your flows (and switches it on with activate: true). It then runs on new e-mails.',
                 'inputSchema' => ['type' => 'object', 'properties' => ['id' => ['type' => 'integer'], 'activate' => ['type' => 'boolean']], 'required' => ['id']],
@@ -180,6 +198,9 @@ class McpController extends BaseController
                 case 'test_flow':
                     $out = $tools->test($a['id'] ?? 0, (array) ($a['ticket_ids'] ?? []));
                     break;
+                case 'activate_flow':
+                    $out = $tools->activate($a['id'] ?? 0);
+                    break;
                 default:
                     $out = $tools->publish($a['id'] ?? 0, !empty($a['activate']));
             }
@@ -189,6 +210,17 @@ class McpController extends BaseController
             $text = json_encode(array_filter(['error' => $e->codeName, 'problems' => $e->problems]), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
             return ['content' => [['type' => 'text', 'text' => $text]], 'isError' => true];
+        }
+    }
+
+    /** An unknown or disconnected address used: in History once an hour per caller (enough to understand, not a flood). */
+    protected static function noteUnknown(Request $request)
+    {
+        $key = 'workflowpacks.mcp.unknown.'.md5((string) $request->ip()).'.'.date('YmdH');
+        if (!\Cache::has($key)) {
+            \Cache::put($key, 1, 61);
+            \Modules\WorkflowPacks\Services\History::add('agent', 'failed', ['subject' => 'MCP',
+                'message' => 'connector address unknown, disconnected or expired (caller '.$request->ip().')']);
         }
     }
 

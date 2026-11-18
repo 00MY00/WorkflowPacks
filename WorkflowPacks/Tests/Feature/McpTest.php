@@ -82,7 +82,10 @@ class McpTest extends TestCase
 
         $unknown = json_decode($this->rpc($token, 'resources/list')->getContent(), true);
         $this->assertSame(-32601, $unknown['error']['code']);
-        $this->rpc('wpa_00', 'tools/list')->assertStatus(401);
+        // an unknown address: 404 (a 401 would make Claude expect a sign-in), with the reason
+        $gone = $this->rpc('wpa_00', 'tools/list');
+        $gone->assertStatus(404);
+        $this->assertStringContainsString('unknown_address', $gone->getContent());
         $this->call('GET', route('workflowpacks.mcp', ['token' => $token]), [], [], [], ['HTTP_ACCEPT' => 'application/json, text/event-stream'])->assertStatus(405);
         // opened in a browser: a page saying what it is (nothing about the agent); an MCP client asking for a stream: 405
         $page = $this->call('GET', route('workflowpacks.mcp', ['token' => $token]), [], [], [], ['HTTP_ACCEPT' => 'text/html,application/xhtml+xml']);
@@ -112,7 +115,7 @@ class McpTest extends TestCase
         $this->assertTrue(Flow::find($made['id'])->active);
         // disconnected: the address no longer works
         \Modules\WorkflowPacks\Entities\Agent::orderBy('id', 'desc')->first()->revoke();
-        $this->rpc($token, 'tools/list')->assertStatus(401);
+        $this->rpc($token, 'tools/list')->assertStatus(404);
     }
 
     public function testRightsOfTheAgentAndSecurityOfTheConnection()
@@ -153,7 +156,7 @@ class McpTest extends TestCase
         \Cache::flush();
         for ($i = 0; $i < 20; $i++) {
             $r = $this->rpc('wpa_'.str_repeat('0', 48), 'tools/list');
-            $this->assertSame(401, $r->getStatusCode(), $r->getContent());
+            $this->assertSame(404, $r->getStatusCode(), $r->getContent());
         }
         $this->rpc($local, 'tools/list')->assertStatus(429);
         \Cache::flush();
@@ -254,5 +257,82 @@ class McpTest extends TestCase
         $message = (string) $res->getSession()->get('flash_error_floating');
         $this->assertStringContainsString('&lt;img', $message);
         $this->assertStringNotContainsString('<img', $message);
+    }
+
+    public function testAnAgentSwitchesOnItsFlowOnlyAfterAPassedTestOfThatVeryDraft()
+    {
+        $a = $this->mailbox('A');
+        $admin = $this->user([$a], true);
+        $ticket = new \App\Conversation();
+        $ticket->type = \App\Conversation::TYPE_EMAIL;
+        $ticket->mailbox_id = $a->id;
+        $ticket->subject = 'Promo de la semaine';
+        $ticket->customer_email = 'client@example.test';
+        $ticket->state = \App\Conversation::STATE_PUBLISHED;
+        $ticket->status = \App\Conversation::STATUS_ACTIVE;
+        $ticket->source_via = \App\Conversation::PERSON_CUSTOMER;
+        $ticket->source_type = \App\Conversation::SOURCE_TYPE_EMAIL;
+        $ticket->save();
+        list($token) = $this->agent($admin, ['mailbox_ids' => [$a->id], 'can_activate' => 1]);
+        $names = array_column(json_decode($this->rpc($token, 'tools/list')->getContent(), true)['result']['tools'], 'name');
+        $this->assertContains('activate_flow', $names);
+        $this->assertNotContains('publish_flow', $names, 'switching on after a test only, not publishing at will');
+
+        $flow = ['name' => 'Promos', 'blocks' => [['id' => 'b1', 'type' => 'trigger.new_mail'], ['id' => 'b2', 'type' => 'action.status', 'params' => ['status' => 'pending']]],
+            'links' => [['from' => 'b1', 'port' => 'next', 'to' => 'b2']]];
+        list($made) = $this->tool($token, 'propose_flow', ['flow' => $flow]);
+        // not tested yet: refused
+        list($out, $isError) = $this->tool($token, 'activate_flow', ['id' => $made['id']]);
+        $this->assertTrue($isError);
+        $this->assertSame('test_required', $out['error']);
+        // tested and passed: switched on
+        list($test) = $this->tool($token, 'test_flow', ['id' => $made['id'], 'ticket_ids' => [$ticket->id]]);
+        $this->assertTrue($test['verdict']['passed']);
+        $this->assertTrue($test['verdict']['can_activate']);
+        // changed after the test: the test no longer counts
+        $flow['blocks'][1]['params']['status'] = 'closed';
+        $this->tool($token, 'update_flow', ['id' => $made['id'], 'flow' => $flow]);
+        list($out) = $this->tool($token, 'activate_flow', ['id' => $made['id']]);
+        $this->assertSame('test_required', $out['error']);
+        $this->tool($token, 'test_flow', ['id' => $made['id'], 'ticket_ids' => [$ticket->id]]);
+        list($on, $isError) = $this->tool($token, 'activate_flow', ['id' => $made['id']]);
+        $this->assertFalse($isError, json_encode($on));
+        $this->assertTrue($on['tested']);
+        $saved = Flow::find($made['id']);
+        $this->assertTrue($saved->active);
+        $this->assertNotNull($saved->version_id);
+        $this->assertSame((int) \App\Conversation::STATUS_ACTIVE, (int) $ticket->fresh()->status, 'the test wrote nothing');
+        // a test with no ticket at all does not pass
+        list($none) = $this->tool($token, 'test_flow', ['id' => $made['id'], 'ticket_ids' => [999999]]);
+        $this->assertFalse($none['verdict']['passed']);
+
+        // through the API too
+        list($made2) = $this->tool($token, 'propose_flow', ['flow' => ['name' => 'API'] + $flow]);
+        $this->call('POST', route('workflowpacks.api.activate', ['id' => $made2['id']]), [], [], [], ['HTTP_AUTHORIZATION' => 'Bearer '.$token])->assertStatus(409);
+        // read only, or no such right: never
+        list($reader) = $this->agent($admin, ['mailbox_ids' => [$a->id], 'can_activate' => 1, 'read_only' => 1]);
+        $this->assertNotContains('activate_flow', array_column(json_decode($this->rpc($reader, 'tools/list')->getContent(), true)['result']['tools'], 'name'));
+    }
+
+    public function testTheLengthOfAccessOfAnAgentIsChangedAfterwards()
+    {
+        $a = $this->mailbox('A');
+        $admin = $this->user([$a], true);
+        list($token) = $this->agent($admin, ['days' => 7]);
+        $agent = \Modules\WorkflowPacks\Entities\Agent::orderBy('id', 'desc')->first();
+        $this->actingAs($admin)->post(route('workflowpacks.ai.agents.expiry', ['id' => $agent->id]), ['days' => 90])->assertSessionHas('flash_success_floating');
+        $this->assertSame(90, (int) round(\Carbon\Carbon::now()->diffInHours($agent->fresh()->expires_at) / 24));
+        $this->actingAs($admin)->post(route('workflowpacks.ai.agents.expiry', ['id' => $agent->id]), ['days' => 0]);
+        $this->assertNull($agent->fresh()->expires_at, 'until disconnected');
+        // expired: given time again works; disconnected: never brought back
+        $agent->update(['expires_at' => \Carbon\Carbon::now()->subDay()]);
+        $this->rpc($token, 'tools/list')->assertStatus(404);
+        $this->actingAs($admin)->post(route('workflowpacks.ai.agents.expiry', ['id' => $agent->id]), ['days' => 30]);
+        $this->rpc($token, 'tools/list')->assertStatus(200);
+        $agent->fresh()->revoke();
+        $this->actingAs($admin)->post(route('workflowpacks.ai.agents.expiry', ['id' => $agent->id]), ['days' => 30])->assertSessionHas('flash_error_floating');
+        $this->rpc($token, 'tools/list')->assertStatus(404);
+        // not for someone else than an administrator, nor an invalid length
+        $this->actingAs($this->user([$a], false, true))->post(route('workflowpacks.ai.agents.expiry', ['id' => $agent->id]), ['days' => 30])->assertStatus(403);
     }
 }
