@@ -6,6 +6,8 @@ return [
     'back'                => 'Voltar ao editor',
     'inactive'            => 'desativado',
     'not_published'       => 'Este fluxo ainda não foi publicado. Esta página aplica a versão publicada de um fluxo aos tickets já existentes; publique-o primeiro. Para escolher os e-mails de exemplo de um bloco “Parece com…”, não é preciso publicar nada: é no editor, nas configurações do bloco.',
+    'draft_note'          => 'Este fluxo ainda não foi publicado: a estimativa e a simulação usam o rascunho, nada é gravado. “Publicar e aplicar” o publica e depois inicia o tratamento.',
+    'publish_and_start'   => 'Publicar e aplicar',
     'publish_refused_title' => 'Impossível publicar: corrigir no editor',
     'publish_now'         => 'Publicar agora',
     'published_now'       => 'Versão :n publicada: você pode aplicá-la aos tickets já existentes.',

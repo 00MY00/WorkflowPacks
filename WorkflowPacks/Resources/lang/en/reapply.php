@@ -6,6 +6,8 @@ return [
     'back'                => 'Back to the editor',
     'inactive'            => 'switched off',
     'not_published'       => 'This flow is not published yet. This page applies the published version of a flow to the tickets already there; publish it first. To choose the example e-mails of a “Looks like” block, nothing to publish: it is in the editor, in the settings of the block.',
+    'draft_note'          => 'This flow is not published yet: the estimate and the dry run use its draft, nothing is written. “Publish and apply” publishes it then starts the run.',
+    'publish_and_start'   => 'Publish and apply',
     'publish_refused_title' => 'Cannot publish: to fix in the editor',
     'publish_now'         => 'Publish now',
     'published_now'       => 'Version :n published: you can apply it to the tickets already there.',

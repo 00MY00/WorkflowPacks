@@ -77,20 +77,28 @@ class Reapply
         return FlowRun::where('flow_id', $flow->id)->where('state', FlowRun::WAITING)->where('version_id', '!=', (int) $flow->version_id);
     }
 
-    /** @return array ['total', 'minutes', 'risky' => [types], 'running' => count, 'sample' => Answer::test()|null] */
+    /**
+     * Flow never published: the draft is used for the dry run (it is published when the run is started); its problems,
+     * when there are some, instead of the dry run.
+     *
+     * @return array ['total', 'minutes', 'risky' => [types], 'sample' => Answer::test()|null, 'draft' => bool, 'problems' => [texts]]
+     */
     public function estimate(Flow $flow, array $o, $withSample = true)
     {
         $existing = $o['scope'] === FlowReapply::SCOPE_EXISTING;
         $total = $existing ? self::tickets($flow, $o)->count() : self::runs($flow)->count();
-        $types = array_column((array) ($flow->version->data['blocks'] ?? []), 'type');
+        $draft = !$flow->version_id;
+        $data = $draft ? (array) ($flow->draft ?: []) : (array) $flow->version->data;
+        $problems = $draft ? array_column(Definition::from($data)->validate($this->engine->registry()), 'message') : [];
+        $types = array_column((array) ($data['blocks'] ?? []), 'type');
         $sample = null;
-        if ($existing && $withSample && $total) {
+        if ($existing && $withSample && $total && !$problems) {
             $ids = self::tickets($flow, $o)->orderBy('id', 'desc')->limit(self::SAMPLE)->pluck('id')->all();
-            $sample = (new \Modules\WorkflowPacks\Services\Ai\Answer($this->engine->registry()))->test((array) $flow->version->data, $ids);
+            $sample = (new \Modules\WorkflowPacks\Services\Ai\Answer($this->engine->registry()))->test($data, $ids);
         }
 
         return ['total' => $total, 'minutes' => (int) ceil($total / $o['batch']) * $o['every'],
-            'risky' => array_values(array_intersect(self::RISKY, $types)), 'sample' => $sample];
+            'risky' => array_values(array_intersect(self::RISKY, $types)), 'sample' => $sample, 'draft' => $draft, 'problems' => $problems];
     }
 
     /** Null: a job is already going on for this flow (one at a time), or nothing to do. */

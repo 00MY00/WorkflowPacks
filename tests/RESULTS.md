@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 3.11.0
+# Résultats des tests — Workflow Packs 3.12.0
 
 Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,14 @@ Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 3.12.0 — connecteur Claude, droits et sécurité des agents, tickets existants d'un brouillon
+
+| Série | Résultat |
+|---|---|
+| Intégration (instance neuve) | 151 tests ; `McpTest` : initialisation, outils selon les droits (sans boîte : pas de tickets ; publication seulement si permise ; lecture seule : rien d'écriture, prime sur la publication), catalogue, tous les flux lus, proposition en brouillon, flux des autres non modifiables, flux invalide refusé, méthode inconnue, mauvais jeton, GET refusé, déconnexion ; adresses IP autorisées / refusées, adresse invalide à la création refusée ; durée 7 jours / sans limite ; http refusé (`https_required`), https accepté ; 20 jetons invalides puis refus même avec le bon ; en-têtes `no-store`, `nosniff` ; lecture de tickets dans l'Historique ; plages IPv4 / IPv6 ; `AgentApiTest` inchangé après le partage du code ; `FlowReapplyTest` : flux jamais publié simulé sur le brouillon, « Publier et appliquer » publie puis lance, brouillon à problème non publié |
+| Client MCP officiel (`@modelcontextprotocol/sdk` 1.17.0, Streamable HTTP) | connexion, 6 outils, catalogue (10 blocs), 5 tickets anonymisés, flux proposé en brouillon, test à blanc : 3 newsletters fermées, 3 tickets inchangés |
+| Navigateur PC 1440 px et téléphone 390 px | Tickets existants d'un flux jamais publié : choix affichés, estimation sur le brouillon (6 tickets, 3 fermés), bouton « Publier et appliquer » ; agent : champs durée, lecture seule, adresses IP, tickets facultatifs ; adresse du connecteur affichée une fois, alerte https sur une adresse http ; fiche « sans tickets · jusqu'au … » ; aucune erreur JavaScript |
 
 ## 3.11.0 — plusieurs exemples ajoutés ensemble, problèmes de publication affichés sur la page
 

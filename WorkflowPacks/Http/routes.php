@@ -112,3 +112,14 @@ Route::group([
     Route::post('/flows/{id}/test', 'AgentApiController@test')->name('workflowpacks.api.test');
     Route::post('/flows/{id}/publish', 'AgentApiController@publish')->name('workflowpacks.api.publish');
 });
+
+/*
+ * Connector for Claude (Model Context Protocol, McpController): the token of a connected agent in the address (Claude's
+ * custom connectors send no header) or in "Authorization: Bearer"; no session, no cookie, outside the "web" group.
+ */
+Route::group([
+    'prefix'    => \Helper::getSubdirectory().'/workflow-packs',
+    'namespace' => 'Modules\WorkflowPacks\Http\Controllers',
+], function () {
+    Route::match(['get', 'post', 'delete'], '/mcp/{token?}', 'McpController@handle')->where('token', 'wpa_[0-9a-f]{1,96}')->name('workflowpacks.mcp');
+});

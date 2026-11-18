@@ -66,6 +66,16 @@
                     <input type="text" class="form-control wp-mono" id="wp-ai-token" value="{{ $newToken }}" readonly aria-label="{{ __('workflowpacks::ai.token_once') }}">
                     <button type="button" class="btn btn-default btn-sm" data-wp-copy="#wp-ai-token" data-wp-copied="{{ __('workflowpacks::ai.copied') }}">{!! $wp_ui::icon('note') !!} {{ __('workflowpacks::ai.copy') }}</button>
                     <p>{{ __('workflowpacks::ai.api_url') }} <code>{{ $apiUrl }}</code></p>
+                    @if ($mcpUrl)
+                        {{-- Claude (chat): this address in Settings › Connectors; it holds the token, keep it private --}}
+                        <p><strong>{{ __('workflowpacks::ai.mcp_title') }}</strong> {{ __('workflowpacks::ai.mcp_help') }}</p>
+                        <input type="text" class="form-control wp-mono" id="wp-ai-mcp" value="{{ $mcpUrl }}" readonly aria-label="{{ __('workflowpacks::ai.mcp_title') }}">
+                        <button type="button" class="btn btn-default btn-sm" data-wp-copy="#wp-ai-mcp" data-wp-copied="{{ __('workflowpacks::ai.copied') }}">{!! $wp_ui::icon('note') !!} {{ __('workflowpacks::ai.copy') }}</button>
+                        <p class="wp-ai-warn">{!! $wp_ui::icon('shield') !!} {{ __('workflowpacks::ai.mcp_warn') }}</p>
+                        @if (strpos($mcpUrl, 'https://') !== 0)
+                            <p class="text-danger">{!! $wp_ui::icon('shield') !!} {{ __('workflowpacks::ai.https_needed') }}</p>
+                        @endif
+                    @endif
                 </div>
             @endif
             @if ($agents->count())
@@ -74,7 +84,7 @@
                         <div class="wp-tile" title="{{ $ag->token_hint }}…">
                             <span class="wp-initials wp-fam-{{ $wp_ui::family($ag->name) }}" aria-hidden="true">{{ $wp_ui::initials($ag->name) }}<span class="wp-state-dot {{ $ag->usable() ? 'is-synced' : 'is-missing' }}"></span></span>
                             <span class="wp-tile-name">{{ $ag->name }}
-                                <span class="wp-tile-note">{{ __('workflowpacks::ai.mode_'.$ag->mode) }}{{ $ag->can_publish ? ' · '.__('workflowpacks::ai.can_publish_short') : '' }}{{ $ag->anonymise ? '' : ' · '.__('workflowpacks::ai.full_text_short') }} · {{ $ag->usable() ? ($ag->last_used_at ? __('workflowpacks::ai.last_used', ['time' => $ag->last_used_at->diffForHumans()]) : __('workflowpacks::ai.never_used')) : __('workflowpacks::ai.disconnected') }}</span>
+                                <span class="wp-tile-note">{{ __('workflowpacks::ai.mode_'.$ag->mode) }}{{ $ag->read_only ? ' · '.__('workflowpacks::ai.read_only_short') : '' }}{{ $ag->can_publish ? ' · '.__('workflowpacks::ai.can_publish_short') : '' }}{{ array_filter((array) $ag->mailbox_ids) ? '' : ' · '.__('workflowpacks::ai.no_tickets_short') }}{{ array_filter((array) $ag->allowed_ips) ? ' · '.__('workflowpacks::ai.ips_short', ['count' => count(array_filter((array) $ag->allowed_ips))]) : '' }}{{ $ag->usable() && $ag->expires_at ? ' · '.__('workflowpacks::ai.until', ['date' => $ag->expires_at->format('Y-m-d')]) : '' }}{{ $ag->last_ip ? ' · '.$ag->last_ip : '' }}{{ $ag->anonymise ? '' : ' · '.__('workflowpacks::ai.full_text_short') }} · {{ $ag->usable() ? ($ag->last_used_at ? __('workflowpacks::ai.last_used', ['time' => $ag->last_used_at->diffForHumans()]) : __('workflowpacks::ai.never_used')) : __('workflowpacks::ai.disconnected') }}</span>
                             </span>
                             @if ($ag->usable())
                                 <form method="POST" action="{{ route('workflowpacks.ai.agents.revoke', ['id' => $ag->id]) }}">
@@ -98,13 +108,24 @@
                                 <option value="once">{{ __('workflowpacks::ai.mode_once') }}</option>
                                 <option value="continuous">{{ __('workflowpacks::ai.mode_continuous') }}</option>
                             </select></label>
-                        <label class="wp-ai-field"><span>{{ __('workflowpacks::ai.mailboxes') }}</span>
-                            <select name="mailbox_ids[]" class="form-control" multiple size="3" required>
-                                @foreach ($mailboxes as $m)<option value="{{ $m->id }}">{{ $m->name }}</option>@endforeach
+                        <label class="wp-ai-field"><span>{{ __('workflowpacks::ai.agent_days') }}</span>
+                            {{-- a continuous access ends by itself (30 days unless chosen otherwise) --}}
+                            <select name="days" class="form-control">
+                                @foreach ($agentDays as $d)<option value="{{ $d }}" @if ($d === 30) selected @endif>{{ $d ? __('workflowpacks::ai.days_n', ['n' => $d]) : __('workflowpacks::ai.days_none') }}</option>@endforeach
                             </select></label>
+                        <div class="wp-ai-field"><span>{{ __('workflowpacks::ai.agent_tickets') }}</span>
+                            {{-- none ticked: the agent sees the flows only, no ticket --}}
+                            <div class="wp-box-checks">
+                                @foreach ($mailboxes as $m)<label><input type="checkbox" name="mailbox_ids[]" value="{{ $m->id }}"> {{ $m->name }}</label>@endforeach
+                            </div>
+                            <small class="wp-muted">{{ __('workflowpacks::ai.agent_tickets_help') }}</small></div>
                     </div>
                     <label class="wp-ai-check"><input type="checkbox" name="full_text" value="1"> {{ __('workflowpacks::ai.full_text') }}</label>
+                    <label class="wp-ai-check"><input type="checkbox" name="read_only" value="1"> {{ __('workflowpacks::ai.read_only') }}</label>
                     <label class="wp-ai-check"><input type="checkbox" name="can_publish" value="1"> {{ __('workflowpacks::ai.can_publish') }}</label>
+                    <label class="wp-ai-field"><span>{{ __('workflowpacks::ai.ips') }}</span>
+                        <input type="text" name="allowed_ips" class="form-control wp-mono" maxlength="2000" placeholder="203.0.113.0/24, 2001:db8::/32">
+                        <small class="wp-muted">{{ __('workflowpacks::ai.ips_help') }}</small></label>
                     <p class="wp-ai-warn">{!! $wp_ui::icon('shield') !!} {{ __('workflowpacks::ai.can_publish_warn') }}</p>
                     <div class="wp-pack-actions"><button type="submit" class="btn btn-default">{!! $wp_ui::icon('power') !!} {{ __('workflowpacks::ai.agent_create') }}</button></div>
                 </form>

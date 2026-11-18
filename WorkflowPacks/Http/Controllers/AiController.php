@@ -88,14 +88,29 @@ class AiController extends Controller
             \App\Mailbox::pluck('id')->map(function ($id) {
                 return (int) $id;
             })->all()));
+        // addresses allowed to use the token: each one a valid address or range, else nothing is created
+        $ips = [];
+        foreach (preg_split('/[\s,;]+/', (string) $request->input('allowed_ips', ''), -1, PREG_SPLIT_NO_EMPTY) as $text) {
+            $range = Agent::range($text);
+            if ($range === null) {
+                return redirect()->route('workflowpacks.ai')->with('flash_error_floating', __('workflowpacks::ai.ips_invalid', ['value' => mb_substr($text, 0, 60)]));
+            }
+            $ips[] = $range;
+        }
+        $continuous = $request->input('mode') === Agent::CONTINUOUS;
+        $days = (int) $request->input('days', 30);
+        $days = in_array($days, Agent::DAYS, true) ? $days : 30;
+        $readOnly = (bool) $request->input('read_only');
         list($agent, $token) = Agent::issue([
             'name'        => mb_substr(trim((string) $request->input('name')) ?: 'Agent', 0, 100),
-            'mode'        => $request->input('mode') === Agent::CONTINUOUS ? Agent::CONTINUOUS : Agent::ONCE,
+            'mode'        => $continuous ? Agent::CONTINUOUS : Agent::ONCE,
             'mailbox_ids' => $mailboxes,
             'anonymise'   => !$request->input('full_text'),
-            'can_publish' => (bool) $request->input('can_publish'),
+            'read_only'   => $readOnly,
+            'can_publish' => !$readOnly && (bool) $request->input('can_publish'),
+            'allowed_ips' => array_values(array_unique($ips)),
             'created_by'  => auth()->id(),
-        ]);
+        ] + ($continuous && $days ? ['expires_at' => \Carbon\Carbon::now()->addDays($days)] : []));
         \Modules\WorkflowPacks\Services\History::add('agent', 'ok', ['subject' => $agent->name, 'message' => 'connected ('.$agent->mode.')']);
 
         return $this->page('ai', $this->data(['newToken' => $token, 'newAgent' => $agent]));
@@ -119,6 +134,9 @@ class AiController extends Controller
             'newToken'  => null,
             'newAgent'  => null,
             'apiUrl'    => url(\Helper::getSubdirectory().'/workflow-packs/api/v1'),
+            // the connector of Claude: the token in the address, shown once with it
+            'mcpUrl'    => !empty($extra['newToken']) ? route('workflowpacks.mcp', ['token' => $extra['newToken']]) : null,
+            'agentDays' => Agent::DAYS,
             'mailboxes' => \App\Mailbox::orderBy('name')->get(['id', 'name']),
             'brief'     => null,
             'count'     => 0,

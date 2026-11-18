@@ -6,6 +6,8 @@ return [
     'back'                => 'Terug naar de editor',
     'inactive'            => 'uitgeschakeld',
     'not_published'       => 'Deze stroom is nog niet gepubliceerd. Deze pagina past de gepubliceerde versie van een stroom toe op de tickets die er al zijn; publiceer hem eerst. Om de voorbeeld-e-mails van een blok „Lijkt op…” te kiezen hoeft niets gepubliceerd te worden: dat gebeurt in de editor, in de instellingen van het blok.',
+    'draft_note'          => 'Deze stroom is nog niet gepubliceerd: de schatting en de proefrun gebruiken zijn concept, er wordt niets geschreven. „Publiceren en toepassen” publiceert hem en start dan de verwerking.',
+    'publish_and_start'   => 'Publiceren en toepassen',
     'publish_refused_title' => 'Publiceren onmogelijk: op te lossen in de editor',
     'publish_now'         => 'Nu publiceren',
     'published_now'       => 'Versie :n gepubliceerd: u kunt hem toepassen op de tickets die er al zijn.',

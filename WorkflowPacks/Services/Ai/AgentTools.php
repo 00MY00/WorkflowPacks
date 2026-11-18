@@ -1,0 +1,188 @@
+<?php
+
+namespace Modules\WorkflowPacks\Services\Ai;
+
+use Modules\WorkflowPacks\Entities\Agent;
+use Modules\WorkflowPacks\Entities\Flow;
+use Modules\WorkflowPacks\Entities\FlowVersion;
+use Modules\WorkflowPacks\Services\Engine\Publisher;
+use Modules\WorkflowPacks\Services\History;
+
+/**
+ * What a connected AI agent may do, the same through the JSON API (AgentApiController) and the MCP connector of
+ * Claude (McpController): read the catalog and the flows, read the tickets of the mailboxes it was given (anonymised
+ * unless chosen otherwise; none given: no ticket at all), propose flows as switched-off drafts, change and test its
+ * own flows, publish them only when allowed. Every change is written in History. Refusals: AgentToolError.
+ */
+class AgentTools
+{
+    /** @var Agent */
+    protected $agent;
+
+    public function __construct(Agent $agent)
+    {
+        $this->agent = $agent;
+    }
+
+    public function me()
+    {
+        $a = $this->agent;
+
+        return ['name' => $a->name, 'mode' => $a->mode, 'mailbox_ids' => array_map('intval', (array) $a->mailbox_ids),
+            'tickets' => $this->mayReadTickets(), 'anonymise' => $a->anonymise, 'read_only' => (bool) $a->read_only,
+            'can_publish' => $a->can_publish && !$a->read_only,
+            'expires_at' => $a->expires_at ? $a->expires_at->toIso8601String() : null];
+    }
+
+    /** The blocks and the rules of a flow: the same as in the brief of the AI assistant. */
+    public function catalog()
+    {
+        return ['rules' => Brief::RULES, 'blocks' => (new Brief())->blocks(), 'example' => Brief::example()];
+    }
+
+    /**
+     * The flows: its own ones ($all false, the JSON API), or every flow to read them, its own ones marked ($all true:
+     * the connector, "see the rules"). Only its own ones can be changed.
+     */
+    public function flows($all = false)
+    {
+        $numbers = FlowVersion::pluck('number', 'id');
+        $q = $all ? Flow::orderBy('id') : Flow::where('agent_id', $this->agent->id)->orderBy('id');
+
+        return ['flows' => $q->get()->map(function (Flow $f) use ($numbers) {
+            return ['id' => (int) $f->id, 'name' => $f->name, 'active' => $f->active, 'version' => $numbers[$f->version_id] ?? null,
+                'mailbox_ids' => array_map('intval', (array) $f->mailbox_ids), 'mine' => (int) $f->agent_id === (int) $this->agent->id,
+                'draft' => $f->draft];
+        })->values()->all()];
+    }
+
+    public function mayReadTickets()
+    {
+        return (bool) array_filter((array) $this->agent->mailbox_ids);
+    }
+
+    /** Tickets of the mailboxes it was given: text cut, anonymised unless the administrator chose otherwise. */
+    public function tickets(array $in)
+    {
+        if (!$this->mayReadTickets()) {
+            throw new AgentToolError(403, 'tickets_off');
+        }
+        $mailboxes = !empty($in['mailbox_id']) ? [(int) $in['mailbox_id']] : array_map('intval', (array) $this->agent->mailbox_ids);
+        foreach ($mailboxes as $id) {
+            if (!$this->agent->mayRead($id)) {
+                throw new AgentToolError(403, 'mailbox_denied');
+            }
+        }
+
+        $tickets = (new Brief())->tickets([
+            'mailbox_ids' => $mailboxes, 'days' => (int) ($in['days'] ?? 30), 'limit' => (int) ($in['limit'] ?? 100),
+            'search' => (string) ($in['search'] ?? ''), 'anonymise' => $this->agent->anonymise]);
+        // personal data read by an outside tool: written in History each time
+        History::add('agent', 'ok', ['user_id' => $this->agent->created_by, 'subject' => $this->agent->name,
+            'message' => 'read '.count($tickets).' ticket(s)'.($this->agent->anonymise ? ' (anonymised)' : ' (full text)')]);
+
+        return ['anonymised' => $this->agent->anonymise, 'tickets' => $tickets];
+    }
+
+    /** Proposing and changing flows: not for an agent that only reads. */
+    public function mayWrite()
+    {
+        return !$this->agent->read_only;
+    }
+
+    protected function write()
+    {
+        if (!$this->mayWrite()) {
+            throw new AgentToolError(403, 'read_only');
+        }
+    }
+
+    /** A new flow (same JSON as the answer of the AI assistant), saved as a draft, switched off. */
+    public function propose($json)
+    {
+        $this->write();
+        $answer = $this->read($json);
+        $agent = $this->agent;
+        $flow = Flow::create(['name' => $answer['name'] ?: $agent->name, 'mailbox_ids' => array_map('intval', (array) $agent->mailbox_ids),
+            'active' => false, 'once' => true, 'draft' => $answer['draft'], 'created_by' => $agent->created_by, 'agent_id' => $agent->id]);
+        $this->log('proposed', $flow);
+        // an access for one use closes after its proposal
+        if ($agent->mode === Agent::ONCE) {
+            $agent->revoke();
+        }
+
+        return ['id' => (int) $flow->id, 'name' => $flow->name, 'state' => 'draft'];
+    }
+
+    /** Its own flow changed (draft); the published version keeps running until the next publishing. */
+    public function update($id, $json)
+    {
+        $this->write();
+        $flow = $this->own($id);
+        $answer = $this->read($json);
+        $flow->update(['draft' => $answer['draft']] + ($answer['name'] !== '' ? ['name' => $answer['name']] : []));
+        $this->log('changed', $flow);
+
+        return ['id' => (int) $flow->id, 'state' => 'draft'];
+    }
+
+    /** The draft played on tickets of its mailboxes (dry run, nothing written): what each one would get. */
+    public function test($id, array $ticketIds = [])
+    {
+        $flow = $this->own($id);
+        $agent = $this->agent;
+        $ids = array_map('intval', $ticketIds);
+        $allowed = \App\Conversation::whereIn('id', $ids ?: [0])->get(['id', 'mailbox_id'])->filter(function ($c) use ($agent) {
+            return $agent->mayRead($c->mailbox_id);
+        })->pluck('id')->all();
+        if (!$ids && $this->mayReadTickets()) {
+            $allowed = array_column((new Brief())->tickets(['mailbox_ids' => (array) $agent->mailbox_ids, 'limit' => 100, 'anonymise' => true]), 'id');
+        }
+
+        return (new Answer())->test((array) $flow->draft, $allowed);
+    }
+
+    /** Publish (and switch on) its own flow: only when the administrator allowed it for this agent. */
+    public function publish($id, $activate = false)
+    {
+        if (!$this->agent->can_publish || $this->agent->read_only) {
+            throw new AgentToolError(403, 'publish_denied');
+        }
+        $flow = $this->own($id);
+        $result = (new Publisher())->publish($flow, $this->agent->created_by ? \App\User::find($this->agent->created_by) : null);
+        if (!$result['ok']) {
+            throw new AgentToolError(422, 'invalid_flow', $result['problems']);
+        }
+        if ($activate) {
+            $flow->update(['active' => true]);
+        }
+        $this->log('published', $flow);
+
+        return ['id' => (int) $flow->id, 'version' => (int) $result['version']->number, 'active' => (bool) $flow->fresh()->active];
+    }
+
+    protected function read($json)
+    {
+        $answer = (new Answer())->read(is_string($json) ? $json : json_encode($json));
+        if (!$answer['ok'] || $answer['problems']) {
+            throw new AgentToolError(422, 'invalid_flow', $answer['problems']);
+        }
+
+        return $answer;
+    }
+
+    protected function own($id)
+    {
+        $flow = Flow::where('id', (int) $id)->where('agent_id', $this->agent->id)->first();
+        if (!$flow) {
+            throw new AgentToolError(404, 'not_found');
+        }
+
+        return $flow;
+    }
+
+    protected function log($what, Flow $flow)
+    {
+        History::add('agent', 'ok', ['user_id' => $this->agent->created_by, 'subject' => $this->agent->name.' → '.$flow->name, 'message' => $what.' #'.$flow->id]);
+    }
+}
