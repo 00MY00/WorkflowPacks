@@ -170,28 +170,44 @@ class FlowReapplyTest extends TestCase
         $this->assertSame(FlowReapply::STOPPED, FlowReapply::where('flow_id', $flow->id)->first()->state);
     }
 
-    public function testAFlowNotPublishedCanBePublishedFromThePage()
+    public function testAFlowNeverPublishedIsTriedOnItsDraftThenPublishedAndApplied()
     {
         $a = $this->mailbox('A');
         $admin = $this->user([$a], true);
+        $t1 = $this->ticket($a);
         $flow = Flow::create(['name' => 'Brouillon', 'mailbox_ids' => [$a->id], 'active' => false, 'once' => true, 'created_by' => $admin->id,
             'draft' => ['blocks' => [['id' => 'b1', 'type' => 'trigger.new_mail'], ['id' => 'b2', 'type' => 'action.status', 'params' => ['status' => 'pending']]],
                 'links' => [['from' => 'b1', 'port' => 'next', 'to' => 'b2']]]]);
+        // no dead end: the choices are there, the dry run uses the draft (nothing written, nothing published)
         $page = $this->actingAs($admin)->get(route('workflowpacks.reapply', ['id' => $flow->id]))->assertStatus(200);
-        $this->seeIn($page, e(__('workflowpacks::reapply.not_published')));
-        $this->seeIn($page, route('workflowpacks.reapply.publish', ['id' => $flow->id]));
-        $this->actingAs($admin)->post(route('workflowpacks.reapply.publish', ['id' => $flow->id]))->assertRedirect(route('workflowpacks.reapply', ['id' => $flow->id]));
+        $this->seeIn($page, e(__('workflowpacks::reapply.draft_note')));
+        $this->seeIn($page, e(__('workflowpacks::reapply.scope_existing')));
+        $estimate = $this->actingAs($admin)->post(route('workflowpacks.reapply.estimate', ['id' => $flow->id]), ['scope' => 'existing']);
+        $this->seeIn($estimate, e(__('workflowpacks::reapply.publish_and_start')));
+        $data = $estimate->original->getData()['estimate'];
+        $this->assertTrue($data['draft']);
+        $this->assertSame(1, $data['total']);
+        $this->assertCount(1, $data['sample']['tickets'], 'dry run on the draft');
+        $this->assertNull($flow->fresh()->version_id);
+        $this->assertSame(\App\Conversation::STATUS_ACTIVE, (int) $t1->fresh()->status);
+        // "Publish and apply": published, then the run starts
+        $this->actingAs($admin)->post(route('workflowpacks.reapply.start', ['id' => $flow->id]), ['scope' => 'existing'])
+            ->assertRedirect(route('workflowpacks.reapply', ['id' => $flow->id]));
         $this->assertNotNull($flow->fresh()->version_id);
-        $this->seeIn($this->actingAs($admin)->get(route('workflowpacks.reapply', ['id' => $flow->id])), e(__('workflowpacks::reapply.scope_existing')));
+        $this->assertSame(1, FlowReapply::where('flow_id', $flow->id)->count());
 
-        // a flow with problems: not published, its problems said
-        $broken = Flow::create(['name' => 'Cassé', 'mailbox_ids' => [], 'active' => false, 'once' => true, 'created_by' => $admin->id,
-            'draft' => ['blocks' => [['id' => 'b1', 'type' => 'trigger.new_mail'], ['id' => 'b2', 'type' => 'condition.ticket', 'params' => []]],
+        // a draft with problems: shown instead of the dry run, and not published by "Publish and apply"
+        $broken = Flow::create(['name' => 'Cassé', 'mailbox_ids' => [$a->id], 'active' => false, 'once' => true, 'created_by' => $admin->id,
+            'draft' => ['blocks' => [['id' => 'b1', 'type' => 'trigger.new_mail'], ['id' => 'b2', 'type' => 'condition.similar', 'params' => ['threshold' => 75]]],
                 'links' => [['from' => 'b1', 'port' => 'next', 'to' => 'b2']]]]);
-        $this->actingAs($admin)->post(route('workflowpacks.reapply.publish', ['id' => $broken->id]))->assertSessionHas('wp_publish_problems');
-        $this->seeIn($this->actingAs($admin)->withSession(['wp_publish_problems' => ['Si… — Valeur requise.']])->get(route('workflowpacks.reapply', ['id' => $broken->id])),
-            e(__('workflowpacks::reapply.publish_refused_title')));
+        $this->ticket($a);
+        $bad = $this->actingAs($admin)->post(route('workflowpacks.reapply.estimate', ['id' => $broken->id]), ['scope' => 'existing']);
+        $this->assertNotEmpty($bad->original->getData()['estimate']['problems']);
+        $this->assertNull($bad->original->getData()['estimate']['sample']);
+        $this->seeIn($bad, e(__('workflowpacks::reapply.publish_refused_title')));
+        $this->actingAs($admin)->post(route('workflowpacks.reapply.start', ['id' => $broken->id]), ['scope' => 'existing'])->assertSessionHas('wp_publish_problems');
         $this->assertNull($broken->fresh()->version_id);
+        $this->assertSame(0, FlowReapply::where('flow_id', $broken->id)->count());
         $this->actingAs($this->user([$a], false, true))->post(route('workflowpacks.reapply.publish', ['id' => $flow->id]))->assertStatus(403);
     }
 }

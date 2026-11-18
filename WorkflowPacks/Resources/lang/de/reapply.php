@@ -6,6 +6,8 @@ return [
     'back'                => 'Zurück zum Editor',
     'inactive'            => 'ausgeschaltet',
     'not_published'       => 'Dieser Ablauf ist noch nicht veröffentlicht. Diese Seite wendet die veröffentlichte Version eines Ablaufs auf vorhandene Tickets an; zuerst veröffentlichen. Um die Beispiel-E-Mails eines Blocks „Ähnelt…“ zu wählen, muss nichts veröffentlicht werden: das geschieht im Editor, in den Einstellungen des Blocks.',
+    'draft_note'          => 'Dieser Ablauf ist noch nicht veröffentlicht: Schätzung und Probelauf nutzen seinen Entwurf, nichts wird geschrieben. „Veröffentlichen und anwenden“ veröffentlicht ihn und startet dann den Durchlauf.',
+    'publish_and_start'   => 'Veröffentlichen und anwenden',
     'publish_refused_title' => 'Veröffentlichung unmöglich: im Editor zu beheben',
     'publish_now'         => 'Jetzt veröffentlichen',
     'published_now'       => 'Version :n veröffentlicht: Sie können sie auf die vorhandenen Tickets anwenden.',

@@ -10,14 +10,38 @@ accès à FreeScout lui-même : un jeton, des droits limités, et une déconnexi
 | Réglage | Effet |
 |---|---|
 | Nom | affiché dans la liste et dans l'historique |
-| Usage | **unique** : le jeton ferme après la **première proposition** ou au bout de **24 h** ; **continu** : jusqu'à la déconnexion |
-| Boîtes | les seules dont l'agent peut lire les tickets ; ses flux s'appliquent à ces boîtes |
+| Usage | **unique** : le jeton ferme après la **première proposition** ou au bout de **24 h** ; **continu** : jusqu'à l'échéance choisie |
+| Durée d'accès | usage continu : **7, 30 (par défaut), 90 ou 365 jours**, ou sans limite ; à l'échéance le jeton ne marche plus |
+| Tickets lisibles | **facultatif** : les seules boîtes dont l'agent peut lire les tickets ; ses flux s'appliquent à ces boîtes. **Aucune cochée** : l'agent voit seulement les flux, aucun ticket |
 | Ne pas anonymiser | décoché par défaut : adresses, téléphones, IBAN, liens et longs numéros masqués |
+| Lecture seule | voit les flux (et les tickets permis), ne peut **rien proposer ni modifier** ; prime sur « Peut publier » |
 | Peut publier | **désactivé par défaut**. Activé, l'agent peut publier et activer **ses propres** flux, jamais ceux des autres |
+| Adresses IP autorisées | facultatif : seules ces adresses ou plages (`203.0.113.0/24`, `2001:db8::/32`) peuvent utiliser le jeton ; toute autre est refusée et notée dans l'Historique |
 
 Le **jeton** (`wpa_…`) est affiché **une seule fois**, à la création. Seule son empreinte SHA-256 est gardée.
 **Déconnecter** le rend inutilisable immédiatement. Chaque action de l'agent est notée dans **Historique** (type
 « Agent IA connecté »).
+
+## Connecteur Claude (chat)
+
+Pour que **Claude dans le chat** (claude.ai, application de bureau ou mobile) voie les règles et propose des flux, sans
+programme à écrire : connectez un agent (usage **continu** conseillé), puis copiez l'**adresse du connecteur** affichée
+avec le jeton, et dans **Claude › Paramètres › Connecteurs › Ajouter un connecteur personnalisé**, collez-la.
+
+Claude dispose alors de ces outils (protocole MCP) :
+
+| Outil | Rôle |
+|---|---|
+| `get_catalog` | les blocs, les règles d'un flux valide et un exemple |
+| `list_flows` | **tous** les flux (nom, actif, version publiée, boîtes, blocs et liens) ; `mine` : ceux qu'il a proposés |
+| `list_tickets` | seulement si des boîtes sont cochées : les tickets récents de ces boîtes, anonymisés par défaut |
+| `propose_flow` | un nouveau flux, enregistré **en brouillon, désactivé** ; ses problèmes s'il n'est pas valide |
+| `update_flow`, `test_flow` | modifier, tester à blanc (rien n'est écrit) **ses** flux |
+| `publish_flow` | seulement si « Peut publier » est coché : publier, et activer, **ses** flux |
+
+L'adresse contient le jeton (les connecteurs personnalisés de Claude n'envoient pas d'en-tête) : ne la partagez pas ;
+**Déconnecter** l'agent la rend inutilisable. FreeScout doit être joignable depuis Internet en **https**. Mêmes limites
+que l'API : 60 requêtes par minute, rien d'envoyé aux clients, chaque action dans l'Historique.
 
 ## Utiliser l'API
 
@@ -28,6 +52,7 @@ Elle répond `404` tant que le moteur interne est désactivé. Utilisez HTTPS.
 | Méthode | Chemin | Rôle |
 |---|---|---|
 | GET | `/me` | l'agent : usage, boîtes, anonymisation, droit de publier, expiration |
+| GET | `/flows?all=1` | tous les flux, en lecture (`mine` : les siens) |
 | GET | `/catalog` | les règles d'un flux, les blocs (champs, sorties, variables) et un exemple, comme dans le dossier de l'assistant |
 | GET | `/tickets?mailbox_id=&days=&limit=&search=` | tickets de ses boîtes : numéro, sujet, extrait, domaine, statut, indices (anonymisés selon le réglage) |
 | GET | `/flows` | ses flux : brouillon, version publiée, actif |
@@ -47,10 +72,19 @@ curl -X POST -H "Authorization: Bearer wpa_…" -H "Content-Type: application/js
 
 ## Sécurité
 
-- Aucune session ni aucun cookie : ces routes sont hors du groupe « web » de FreeScout. Le jeton est vérifié à
-  chaque requête.
-- L'agent ne voit que ses boîtes, ne modifie que ses flux, et ne publie que si on le lui a permis.
-- Les vecteurs de ressemblance sont calculés sur le serveur ; l'agent désigne des tickets par leur numéro.
-- Le module ne fait lui-même **aucun appel réseau** : c'est l'agent qui appelle l'API.
-
-Prévu ensuite : la même API exposée comme serveur **MCP**, pour que Claude s'y connecte directement.
+- **HTTPS obligatoire** : l'API et le connecteur refusent les requêtes en http (`https_required`), pour que le jeton ne
+  circule jamais en clair ; seule une adresse locale (`localhost`) est acceptée, pour les tests. Derrière un proxy
+  inverse, FreeScout doit savoir que la connexion d'origine est en https (proxy de confiance).
+- **Jeton** : 192 bits aléatoires, seule son empreinte SHA-256 est gardée, affiché une seule fois ; **déconnexion**
+  immédiate, **échéance** automatique (usage continu : 30 jours par défaut).
+- **Anti-force brute** : au-delà de 20 jetons invalides par minute depuis une adresse, elle est refusée pour la minute ;
+  chaque agent est limité à 60 requêtes par minute.
+- **Adresses IP autorisées** par agent (facultatif) ; la dernière adresse utilisée est affichée.
+- **Droits** : l'agent ne lit que les tickets des boîtes cochées (aucune : aucun ticket), anonymisés par défaut ; ne
+  modifie que ses flux ; ne propose rien en lecture seule ; ne publie que si on le lui a permis.
+- **Traçabilité** : chaque lecture de tickets, proposition, modification, publication et adresse refusée est notée dans
+  l'Historique.
+- Réponses jamais mises en cache (`Cache-Control: no-store`), requêtes de plus de 1 Mo refusées, aucune session ni
+  cookie (hors du groupe « web » de FreeScout).
+- Les vecteurs de ressemblance sont calculés sur le serveur. Le module ne fait lui-même **aucun appel réseau** : c'est
+  l'agent (ou Claude) qui l'appelle.

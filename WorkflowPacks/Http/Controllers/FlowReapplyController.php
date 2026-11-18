@@ -27,7 +27,7 @@ class FlowReapplyController extends Controller
         $flow = $this->flow($id);
         $o = Reapply::options($request->all());
 
-        return $this->view($flow, $o, $flow->version_id ? (new Reapply())->estimate($flow, $o) : null);
+        return $this->view($flow, $o, (new Reapply())->estimate($flow, $o));
     }
 
     public function start(Request $request, $id)
@@ -39,6 +39,14 @@ class FlowReapplyController extends Controller
         if ($estimate['risky'] && !$request->input('confirm_risky')) {
             return $this->view($flow, $o, (new Reapply())->estimate($flow, $o))->with('wp_risky_missing', true);
         }
+        // never published: published here, then applied (one step; its problems on the page when it cannot be)
+        if (!$flow->version_id) {
+            $published = $this->publishFlow($flow);
+            if ($published !== true) {
+                return $published;
+            }
+            $flow = $flow->fresh(['version']);
+        }
         $job = (new Reapply())->start($flow, $o, auth()->user());
         $message = $job ? __('workflowpacks::reapply.started', ['count' => $job->total]) : __('workflowpacks::reapply.nothing');
 
@@ -49,10 +57,20 @@ class FlowReapplyController extends Controller
     public function publish($id)
     {
         $flow = $this->flow($id);
+        $published = $this->publishFlow($flow);
+
+        return $published === true
+            ? redirect()->route('workflowpacks.reapply', ['id' => $flow->id])->with('flash_success_floating', __('workflowpacks::reapply.published_now', ['n' => $flow->fresh(['version'])->version->number]))
+            : $published;
+    }
+
+    /** True when published, else the way back to this page with the problems to fix (shown on the page). */
+    protected function publishFlow(Flow $flow)
+    {
         $result = (new \Modules\WorkflowPacks\Services\Engine\Publisher())->publish($flow, auth()->user());
         $back = redirect()->route('workflowpacks.reapply', ['id' => $flow->id]);
         if ($result['ok']) {
-            return $back->with('flash_success_floating', __('workflowpacks::reapply.published_now', ['n' => $result['version']->number]));
+            return true;
         }
         // shown on the page itself (not a floating message that goes away): what to fix in the editor
         $registry = new \Modules\WorkflowPacks\Services\Engine\BlockRegistry();

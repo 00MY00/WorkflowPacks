@@ -85,8 +85,9 @@ barre tient sur une ligne qui défile (Réduire et Tout voir en tête).
 
 Un flux s'applique d'abord aux **nouveaux** e-mails. Pour l'appliquer aussi aux tickets déjà présents : bouton
 **Tickets existants** de l'éditeur, ou **OK** à la question posée juste après chaque **Publier**. C'est la version
-publiée qui est appliquée : un flux jamais publié affiche **Publier maintenant** sur cette page ; s'il ne peut pas
-l'être, ses problèmes restent affichés sur la page, à corriger dans l'éditeur. Choisir les e-mails d'exemple d'un
+publiée qui est appliquée. Pour un flux **jamais publié**, la page s'utilise quand même : l'estimation et la simulation
+à blanc se font sur son **brouillon** (rien n'est écrit), et **Publier et appliquer** le publie puis lance le traitement.
+S'il a des problèmes, ils sont affichés sur la page, à corriger dans l'éditeur. Choisir les e-mails d'exemple d'un
 « Ressemble à… » ne demande pas de publier : c'est dans les réglages du bloc.
 
 | Choix | Effet |

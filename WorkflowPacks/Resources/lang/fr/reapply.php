@@ -6,6 +6,8 @@ return [
     'back'                => 'Retour à l’éditeur',
     'inactive'            => 'désactivé',
     'not_published'       => 'Ce flux n’est pas encore publié. Cette page applique la version publiée d’un flux aux tickets déjà là ; publiez-le d’abord. Pour choisir les e-mails d’exemple d’un bloc « Ressemble à… », rien à publier : c’est dans l’éditeur, dans les réglages du bloc.',
+    'draft_note'          => 'Ce flux n’est pas encore publié : l’estimation et la simulation utilisent son brouillon, rien n’est écrit. « Publier et appliquer » le publie puis lance le traitement.',
+    'publish_and_start'   => 'Publier et appliquer',
     'publish_refused_title' => 'Publication impossible : à corriger dans l’éditeur',
     'publish_now'         => 'Publier maintenant',
     'published_now'       => 'Version :n publiée : vous pouvez l’appliquer aux tickets déjà là.',

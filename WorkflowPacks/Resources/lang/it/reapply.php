@@ -6,6 +6,8 @@ return [
     'back'                => 'Torna all’editor',
     'inactive'            => 'disattivato',
     'not_published'       => 'Questo flusso non è ancora pubblicato. Questa pagina applica la versione pubblicata di un flusso ai ticket già presenti; pubblicatelo prima. Per scegliere le e-mail di esempio di un blocco «Somiglia a…», non serve pubblicare: si fa nell’editor, nelle impostazioni del blocco.',
+    'draft_note'          => 'Questo flusso non è ancora pubblicato: la stima e la prova usano la sua bozza, non viene scritto nulla. «Pubblica e applica» lo pubblica e poi avvia il trattamento.',
+    'publish_and_start'   => 'Pubblica e applica',
     'publish_refused_title' => 'Pubblicazione impossibile: da correggere nell’editor',
     'publish_now'         => 'Pubblica ora',
     'published_now'       => 'Versione :n pubblicata: potete applicarla ai ticket già presenti.',

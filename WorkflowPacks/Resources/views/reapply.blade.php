@@ -24,18 +24,15 @@
         </div>
 
         <div class="wp-pack-body">
+            {{-- never published: no dead end, the dry run uses the draft and "Publish and apply" publishes it first --}}
             @if (!$flow->version)
-                <p class="wp-ai-warn">{!! $wp_ui::icon('info') !!} {{ __('workflowpacks::reapply.not_published') }}</p>
-                @if (session('wp_publish_problems'))
-                    <div class="alert alert-warning"><strong>{{ __('workflowpacks::reapply.publish_refused_title') }}</strong>
-                        <ul>@foreach (session('wp_publish_problems') as $line)<li>{{ $line }}</li>@endforeach</ul></div>
-                @endif
-                <form method="POST" action="{{ route('workflowpacks.reapply.publish', ['id' => $flow->id]) }}" class="wp-pack-actions">
-                    {{ csrf_field() }}
-                    <button type="submit" class="btn btn-primary">{!! $wp_ui::icon('check') !!} {{ __('workflowpacks::reapply.publish_now') }}</button>
-                    <a class="btn btn-link" href="{{ route('workflowpacks.flows', ['flow' => $flow->id]) }}">{{ __('workflowpacks::reapply.back') }}</a>
-                </form>
-            @else
+                <p class="wp-muted">{!! $wp_ui::icon('info') !!} {{ __('workflowpacks::reapply.draft_note') }}</p>
+            @endif
+            @if (session('wp_publish_problems'))
+                <div class="alert alert-warning"><strong>{{ __('workflowpacks::reapply.publish_refused_title') }}</strong>
+                    <ul>@foreach (session('wp_publish_problems') as $line)<li>{{ $line }}</li>@endforeach</ul>
+                    <a href="{{ route('workflowpacks.flows', ['flow' => $flow->id]) }}">{{ __('workflowpacks::reapply.back') }}</a></div>
+            @endif
                 @if ($job)
                     {{-- the job going on (or the last one) --}}
                     <div class="wp-reapply-job">
@@ -98,6 +95,11 @@
                             @else
                                 <p><strong>{{ __('workflowpacks::reapply.total', ['count' => $estimate['total']]) }}</strong> ·
                                     {{ __('workflowpacks::reapply.duration', ['minutes' => $estimate['minutes'], 'batch' => $o['batch'], 'every' => $o['every']]) }}</p>
+                                @if (!empty($estimate['problems']))
+                                    <div class="alert alert-warning"><strong>{{ __('workflowpacks::reapply.publish_refused_title') }}</strong>
+                                        <ul>@foreach ($estimate['problems'] as $line)<li>{{ $line }}</li>@endforeach</ul>
+                                        <a href="{{ route('workflowpacks.flows', ['flow' => $flow->id]) }}">{{ __('workflowpacks::reapply.back') }}</a></div>
+                                @endif
                                 @if ($estimate['sample'])
                                     <p class="wp-muted">{{ __('workflowpacks::reapply.sample_title', ['count' => count($estimate['sample']['tickets'])]) }}</p>
                                     <div class="wp-tiles">
@@ -114,13 +116,12 @@
                                     <label class="wpf-check @if (!empty($wp_risky_missing)) text-danger @endif"><input type="checkbox" name="confirm_risky" value="1"> {{ __('workflowpacks::reapply.confirm_risky') }}</label>
                                 @endif
                                 <div class="wp-actionbar">
-                                    <button type="submit" class="btn btn-primary" formaction="{{ route('workflowpacks.reapply.start', ['id' => $flow->id]) }}">{!! $wp_ui::icon('refresh') !!} {{ __('workflowpacks::reapply.start') }}</button>
+                                    <button type="submit" class="btn btn-primary" formaction="{{ route('workflowpacks.reapply.start', ['id' => $flow->id]) }}">{!! $wp_ui::icon('refresh') !!} {{ $flow->version ? __('workflowpacks::reapply.start') : __('workflowpacks::reapply.publish_and_start') }}</button>
                                 </div>
                             @endif
                         @endif
                     </form>
                 @endif
-            @endif
         </div>
     </section>
 @endsection

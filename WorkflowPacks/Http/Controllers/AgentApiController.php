@@ -5,193 +5,158 @@ namespace Modules\WorkflowPacks\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller as BaseController;
 use Modules\WorkflowPacks\Entities\Agent;
-use Modules\WorkflowPacks\Entities\Flow;
-use Modules\WorkflowPacks\Entities\FlowVersion;
-use Modules\WorkflowPacks\Services\Ai\Answer;
-use Modules\WorkflowPacks\Services\Ai\Brief;
+use Modules\WorkflowPacks\Services\Ai\AgentToolError;
+use Modules\WorkflowPacks\Services\Ai\AgentTools;
 use Modules\WorkflowPacks\Services\Engine\Engine;
-use Modules\WorkflowPacks\Services\Engine\Publisher;
-use Modules\WorkflowPacks\Services\History;
 
 /**
  * JSON API for a connected AI agent (docs/agent-api.md): "Authorization: Bearer wpa_…". The token is checked on every
- * request (not revoked, not expired), 60 requests a minute at most. The agent reads only the mailboxes it was given
- * (anonymised unless the administrator chose otherwise), proposes flows as drafts (switched off), changes only the
- * flows it created, and publishes only when it was allowed to. Every change is written in History.
- * No session, no cookie: these routes are outside FreeScout's "web" group (routes.php).
+ * request (not revoked, not expired), 60 requests a minute at most. What the agent may do is in Services\Ai\AgentTools
+ * (the same for the MCP connector of Claude). No session, no cookie: these routes are outside FreeScout's "web" group.
  */
 class AgentApiController extends BaseController
 {
     const PER_MINUTE = 60;
-
-    /** @var Agent */
-    protected $agent;
+    /** wrong tokens from one address in a minute before it is refused (a token cannot be guessed, this keeps it so) */
+    const FAILURES_PER_MINUTE = 20;
 
     public function me(Request $request)
     {
-        return $this->guarded($request, function (Agent $agent) {
-            return ['name' => $agent->name, 'mode' => $agent->mode, 'mailbox_ids' => array_map('intval', (array) $agent->mailbox_ids),
-                'anonymise' => $agent->anonymise, 'can_publish' => $agent->can_publish,
-                'expires_at' => $agent->expires_at ? $agent->expires_at->toIso8601String() : null];
+        return $this->guarded($request, function (AgentTools $tools) {
+            return $tools->me();
         });
     }
 
-    /** The blocks and the rules of a flow: the same as in the brief of the AI assistant. */
     public function catalog(Request $request)
     {
-        return $this->guarded($request, function () {
-            return ['rules' => Brief::RULES, 'blocks' => (new Brief())->blocks(), 'example' => Brief::example()];
+        return $this->guarded($request, function (AgentTools $tools) {
+            return $tools->catalog();
         });
     }
 
     public function tickets(Request $request)
     {
-        return $this->guarded($request, function (Agent $agent) use ($request) {
-            $mailboxes = $request->input('mailbox_id') ? [(int) $request->input('mailbox_id')] : array_map('intval', (array) $agent->mailbox_ids);
-            foreach ($mailboxes as $id) {
-                if (!$agent->mayRead($id)) {
-                    return $this->fail(403, 'mailbox_denied');
-                }
-            }
-
-            return ['anonymised' => $agent->anonymise, 'tickets' => (new Brief())->tickets([
-                'mailbox_ids' => $mailboxes, 'days' => (int) $request->input('days', 30), 'limit' => (int) $request->input('limit', 100),
-                'search' => (string) $request->input('search', ''), 'anonymise' => $agent->anonymise])];
+        return $this->guarded($request, function (AgentTools $tools) use ($request) {
+            return $tools->tickets($request->only(['mailbox_id', 'days', 'limit', 'search']));
         });
     }
 
     public function flows(Request $request)
     {
-        return $this->guarded($request, function (Agent $agent) {
-            $numbers = FlowVersion::pluck('number', 'id');
-
-            return ['flows' => Flow::where('agent_id', $agent->id)->orderBy('id')->get()->map(function (Flow $f) use ($numbers) {
-                return ['id' => (int) $f->id, 'name' => $f->name, 'active' => $f->active, 'version' => $numbers[$f->version_id] ?? null,
-                    'draft' => $f->draft];
-            })->values()];
+        return $this->guarded($request, function (AgentTools $tools) use ($request) {
+            return $tools->flows((bool) $request->input('all'));
         });
     }
 
-    /** A new flow (same JSON as the answer of the AI assistant), saved as a draft, switched off. */
     public function propose(Request $request)
     {
-        return $this->guarded($request, function (Agent $agent) use ($request) {
-            $answer = (new Answer())->read($request->getContent());
-            if (!$answer['ok'] || $answer['problems']) {
-                return $this->fail(422, 'invalid_flow', $answer['problems']);
-            }
-            $flow = Flow::create(['name' => $answer['name'] ?: $agent->name, 'mailbox_ids' => array_map('intval', (array) $agent->mailbox_ids),
-                'active' => false, 'once' => true, 'draft' => $answer['draft'], 'created_by' => $agent->created_by, 'agent_id' => $agent->id]);
-            $this->log($agent, 'proposed', $flow);
-            // an access for one use closes after its proposal
-            if ($agent->mode === Agent::ONCE) {
-                $agent->revoke();
-            }
-
-            return ['id' => (int) $flow->id, 'name' => $flow->name, 'state' => 'draft'];
+        return $this->guarded($request, function (AgentTools $tools) use ($request) {
+            return $tools->propose($request->getContent());
         });
     }
 
-    /** Its own flow changed (draft); the published version keeps running until the next publishing. */
     public function update(Request $request, $id)
     {
-        return $this->guarded($request, function (Agent $agent) use ($request, $id) {
-            $flow = $this->own($agent, $id);
-            if (!$flow) {
-                return $this->fail(404, 'not_found');
-            }
-            $answer = (new Answer())->read($request->getContent());
-            if (!$answer['ok'] || $answer['problems']) {
-                return $this->fail(422, 'invalid_flow', $answer['problems']);
-            }
-            $flow->update(['draft' => $answer['draft']] + ($answer['name'] !== '' ? ['name' => $answer['name']] : []));
-            $this->log($agent, 'changed', $flow);
-
-            return ['id' => (int) $flow->id, 'state' => 'draft'];
+        return $this->guarded($request, function (AgentTools $tools) use ($request, $id) {
+            return $tools->update($id, $request->getContent());
         });
     }
 
-    /** The draft played on tickets of its mailboxes (dry run, nothing written): what each one would get. */
     public function test(Request $request, $id)
     {
-        return $this->guarded($request, function (Agent $agent) use ($request, $id) {
-            $flow = $this->own($agent, $id);
-            if (!$flow) {
-                return $this->fail(404, 'not_found');
-            }
-            $ids = array_map('intval', (array) $request->input('ticket_ids', []));
-            $allowed = \App\Conversation::whereIn('id', $ids ?: [0])->get(['id', 'mailbox_id'])->filter(function ($c) use ($agent) {
-                return $agent->mayRead($c->mailbox_id);
-            })->pluck('id')->all();
-            if (!$ids) {
-                $allowed = array_column((new Brief())->tickets(['mailbox_ids' => (array) $agent->mailbox_ids, 'limit' => 100, 'anonymise' => true]), 'id');
-            }
-
-            return (new Answer())->test((array) $flow->draft, $allowed);
+        return $this->guarded($request, function (AgentTools $tools) use ($request, $id) {
+            return $tools->test($id, (array) $request->input('ticket_ids', []));
         });
     }
 
-    /** Publish (and switch on) its own flow: only when the administrator allowed it for this agent. */
     public function publish(Request $request, $id)
     {
-        return $this->guarded($request, function (Agent $agent) use ($request, $id) {
-            if (!$agent->can_publish) {
-                return $this->fail(403, 'publish_denied');
-            }
-            $flow = $this->own($agent, $id);
-            if (!$flow) {
-                return $this->fail(404, 'not_found');
-            }
-            $result = (new Publisher())->publish($flow, $agent->created_by ? \App\User::find($agent->created_by) : null);
-            if (!$result['ok']) {
-                return $this->fail(422, 'invalid_flow', $result['problems']);
-            }
-            if ($request->input('activate')) {
-                $flow->update(['active' => true]);
-            }
-            $this->log($agent, 'published', $flow);
-
-            return ['id' => (int) $flow->id, 'version' => (int) $result['version']->number, 'active' => (bool) $flow->fresh()->active];
+        return $this->guarded($request, function (AgentTools $tools) use ($request, $id) {
+            return $tools->publish($id, (bool) $request->input('activate'));
         });
     }
 
-    // ------------------------------------------------------------------------------------------------ helpers
-
-    /** Token, expiry, rate; then the action. Errors are JSON with a stable code. */
-    protected function guarded(Request $request, \Closure $action)
+    /**
+     * The agent of a request, or the reason of the refusal: [Agent|null, status, code]. In this order: engine on, https
+     * (the token never travels in clear; a local address is accepted for tests), too many wrong tokens from this
+     * address, the token (not revoked, not expired), the addresses allowed for it, its rate.
+     */
+    public static function agentOf($token, Request $request)
     {
         if (!Engine::enabled()) {
-            return $this->fail(404, 'engine_off');
+            return [null, 404, 'engine_off'];
         }
-        $header = (string) $request->header('Authorization');
-        $agent = stripos($header, 'Bearer ') === 0 ? Agent::byToken(trim(substr($header, 7))) : null;
+        if (!self::overHttps($request) && !in_array($request->getHost(), ['localhost', '127.0.0.1', '[::1]'], true)) {
+            return [null, 403, 'https_required'];
+        }
+        $ip = (string) $request->ip();
+        $failures = 'workflowpacks.agent.fail.'.md5($ip).'.'.date('YmdHi');
+        if ((int) \Cache::get($failures, 0) >= self::FAILURES_PER_MINUTE) {
+            return [null, 429, 'too_many_requests'];
+        }
+        $agent = Agent::byToken($token);
         if (!$agent) {
-            return $this->fail(401, 'invalid_token');
+            \Cache::put($failures, (int) \Cache::get($failures, 0) + 1, 2);
+
+            return [null, 401, 'invalid_token'];
+        }
+        if (!$agent->allowsIp($ip)) {
+            \Modules\WorkflowPacks\Services\History::add('agent', 'failed', ['user_id' => $agent->created_by, 'subject' => $agent->name, 'message' => 'address refused: '.$ip]);
+
+            return [null, 403, 'address_refused'];
         }
         $key = 'workflowpacks.agent.rate.'.$agent->id.'.'.date('YmdHi');
         $count = (int) \Cache::get($key, 0) + 1;
         \Cache::put($key, $count, 2);
         if ($count > self::PER_MINUTE) {
-            return $this->fail(429, 'too_many_requests');
+            return [null, 429, 'too_many_requests'];
         }
-        $agent->forceFill(['last_used_at' => \Carbon\Carbon::now()])->save();
-        $result = $action($agent);
+        $agent->forceFill(['last_used_at' => \Carbon\Carbon::now(), 'last_ip' => mb_substr($ip, 0, 45)])->save();
 
-        return $result instanceof \Symfony\Component\HttpFoundation\Response ? $result : response()->json($result);
+        return [$agent, 200, ''];
     }
 
-    protected function own(Agent $agent, $id)
+    /**
+     * Did this request really come over https? FreeScout's own secure() answers from its configured address (APP_URL),
+     * not from the connection, so the connection is read here, with the signs FreeScout itself trusts: HTTPS of the
+     * server, the protocol given by a reverse proxy, Cloudflare's visitor scheme.
+     */
+    public static function overHttps(Request $request)
     {
-        return Flow::where('id', (int) $id)->where('agent_id', $agent->id)->first();
+        return in_array(strtolower((string) $request->server('HTTPS')), ['on', '1'], true)
+            || in_array(strtolower((string) $request->server('X_FORWARDED_PROTO')), ['https', 'on', 'ssl', '1'], true)
+            || strtolower((string) $request->headers->get('X-Forwarded-Proto')) === 'https'
+            || (string) $request->headers->get('CF-Visitor') === '{"scheme":"https"}';
+    }
+
+    /** Answers of the API and the connector: never kept in a cache, never read as another type. */
+    public static function protect($response)
+    {
+        $response->headers->set('Cache-Control', 'no-store, private');
+        $response->headers->set('Pragma', 'no-cache');
+        $response->headers->set('X-Content-Type-Options', 'nosniff');
+        $response->headers->set('Referrer-Policy', 'no-referrer');
+
+        return $response;
+    }
+
+    /** Token, expiry, rate; then the action. Errors are JSON with a stable code. */
+    protected function guarded(Request $request, \Closure $action)
+    {
+        $header = (string) $request->header('Authorization');
+        list($agent, $status, $code) = self::agentOf(stripos($header, 'Bearer ') === 0 ? trim(substr($header, 7)) : null, $request);
+        if (!$agent) {
+            return $this->fail($status, $code);
+        }
+        try {
+            return self::protect(response()->json($action(new AgentTools($agent))));
+        } catch (AgentToolError $e) {
+            return $this->fail($e->status, $e->codeName, $e->problems);
+        }
     }
 
     protected function fail($status, $code, array $problems = [])
     {
-        return response()->json(array_filter(['error' => $code, 'problems' => $problems]), $status);
-    }
-
-    protected function log(Agent $agent, $what, Flow $flow)
-    {
-        History::add('agent', 'ok', ['user_id' => $agent->created_by, 'subject' => $agent->name.' → '.$flow->name, 'message' => $what.' #'.$flow->id]);
+        return self::protect(response()->json(array_filter(['error' => $code, 'problems' => $problems]), $status));
     }
 }

@@ -4,6 +4,26 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [3.12.0] - 2026-11-18
+
+### Ajouté
+- **Connecteur Claude (chat)** : à la création d'un agent connecté, une adresse à coller dans Claude › Paramètres ›
+  Connecteurs. Claude (claude.ai, bureau, mobile) voit alors les flux, les tickets des boîtes permises (anonymisés par
+  défaut), propose des flux en brouillon désactivé, les teste à blanc et les modifie ; publie seulement si permis
+  (protocole MCP, outils `get_catalog`, `list_flows`, `list_tickets`, `propose_flow`, `update_flow`, `test_flow`,
+  `publish_flow`). Vérifié avec le client MCP officiel.
+- **Droits des agents** : **lecture seule** ; **durée d'accès** (7, 30 par défaut, 90, 365 jours ou sans limite) ;
+  **adresses IP autorisées** ; tickets **facultatifs** (aucune boîte cochée : l'agent ne voit que les flux).
+- **Sécurité** de l'API et du connecteur : **https obligatoire** (la connexion réelle est vérifiée ; adresse locale
+  seulement pour les tests), **anti-force brute** (20 jetons invalides par minute et par adresse), chaque **lecture de
+  tickets** et chaque adresse refusée notées dans l'Historique, dernière adresse affichée, réponses jamais mises en
+  cache, requêtes de plus de 1 Mo refusées.
+- API : `GET /flows?all=1` lit tous les flux.
+
+### Modifié
+- **Tickets existants** d'un flux jamais publié : plus d'impasse. Estimation et simulation à blanc sur le brouillon,
+  bouton **Publier et appliquer** (ses problèmes affichés sur la page s'il ne peut pas être publié).
+
 ## [3.11.0] - 2026-11-17
 
 ### Ajouté
