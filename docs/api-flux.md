@@ -52,7 +52,7 @@ Une action par changement : un flux qui ferme le ticket puis ajoute une note don
 | `after` | `closed` | valeur après |
 | `origin` | `new_mail` | comment le ticket est entré dans le flux (tableau ci-dessous) |
 | `temporary` | `false` | `true` pour un flux temporaire |
-| `at` | `2026-11-19 10:42:00` | date et heure (UTC, comme les dates de FreeScout) |
+| `at` | `2026-11-19 10:42:00` | date et heure dans le fuseau de FreeScout (`APP_TIMEZONE`), comme ses autres dates enregistrées |
 
 | `field` | `before` / `after` |
 |---|---|
