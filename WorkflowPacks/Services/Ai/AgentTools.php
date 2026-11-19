@@ -51,7 +51,8 @@ class AgentTools
     public function flows($all = false)
     {
         $numbers = FlowVersion::pluck('number', 'id');
-        $q = $all && $this->agent->may('others.see') ? Flow::orderBy('id') : Flow::where('agent_id', $this->agent->id)->orderBy('id');
+        // the temporary flows (a list of tickets handled once by an administrator) are never shown to an agent
+        $q = $all && $this->agent->may('others.see') ? Flow::permanent()->orderBy('id') : Flow::permanent()->where('agent_id', $this->agent->id)->orderBy('id');
 
         return ['flows' => $q->get()->map(function (Flow $f) use ($numbers) {
             return ['id' => (int) $f->id, 'name' => $f->name, 'active' => $f->active, 'version' => $numbers[$f->version_id] ?? null,
@@ -377,9 +378,10 @@ class AgentTools
         if (!$statuses || array_diff($statuses, $limits['statuses'])) {
             throw new AgentToolError(403, 'limit_statuses', ['allowed' => $limits['statuses']]);
         }
-        $period = isset($in['period']) ? (int) $in['period'] : $limits['period_max'];
-        if (!in_array($period, Reapply::PERIODS, true) || ($limits['period_max'] > 0 && ($period === 0 || $period > $limits['period_max']))) {
-            throw new AgentToolError(403, 'limit_period', ['max_days' => $limits['period_max'], 'offered' => Reapply::PERIODS]);
+        // any number of days back, up to its limit (0 = all, only when it has no limit)
+        $period = isset($in['period']) ? Reapply::period($in['period']) : $limits['period_max'];
+        if ($period === null || ($limits['period_max'] > 0 && ($period === 0 || $period > $limits['period_max']))) {
+            throw new AgentToolError(403, 'limit_period', ['max_days' => $limits['period_max'], 'most' => Reapply::MAX_DAYS]);
         }
         $tags = isset($in['tags']) ? TicketScope::tags((array) $in['tags']) : $limits['tags'];
         if ($limits['tags'] && (!$tags || array_diff($tags, $limits['tags']))) {
@@ -537,7 +539,7 @@ class AgentTools
     {
         $actions = (array) $actions;
         $flow = Flow::find((int) $id);
-        if (!$flow) {
+        if (!$flow || $flow->temporary) {
             throw new AgentToolError(404, 'not_found');
         }
         $side = $this->side($flow);

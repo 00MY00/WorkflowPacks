@@ -104,13 +104,13 @@ class Agent extends Model
 
     /**
      * Limits of "apply to the existing tickets", from a form or as saved: statuses among active / pending / closed, a
-     * period offered, tags (none: any), users that exist (0: nobody assigned; none: any), a number of tickets offered.
+     * period (days back, 0: no limit), tags (none: any), users that exist (0: nobody assigned; none: any), a number of tickets offered.
      */
     public static function cleanLimits(array $in)
     {
         $d = self::REAPPLY_DEFAULTS;
         $scope = \Modules\WorkflowPacks\Services\Engine\TicketScope::class;
-        $period = (int) ($in['period_max'] ?? $d['period_max']);
+        $period = \Modules\WorkflowPacks\Services\Engine\Reapply::period($in['period_max'] ?? $d['period_max']);
         $max = (int) ($in['max_tickets'] ?? $d['max_tickets']);
         $users = array_values(array_diff($scope::assignees((array) ($in['assignees'] ?? [])), [$scope::UNASSIGNED]));
         $known = $users ? \App\User::whereIn('id', $users)->pluck('id')->map(function ($id) {
@@ -121,7 +121,8 @@ class Agent extends Model
 
         return [
             'statuses'    => array_values(array_intersect($scope::STATUSES, (array) ($in['statuses'] ?? $d['statuses']))),
-            'period_max'  => in_array($period, \Modules\WorkflowPacks\Services\Engine\Reapply::PERIODS, true) ? $period : $d['period_max'],
+            // any number of days back (1 to 3650), 0: no limit
+            'period_max'  => $period === null ? $d['period_max'] : $period,
             'tags'        => $scope::tags($tags),
             'assignees'   => array_values(array_filter($assignees, function ($id) use ($known, $scope) {
                 return $id === $scope::UNASSIGNED || in_array($id, $known, true);

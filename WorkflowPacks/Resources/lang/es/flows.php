@@ -154,4 +154,9 @@ return [
     'path_cancelled'  => 'Salió del flujo (cancelado).',
     'path_done'       => 'Recorrido terminado.',
     'path_failed'     => 'Detenido por un error.',
+    // temporary flows (3.20)
+    'temp_note'       => 'Flujo temporal: :count ticket(s). No se inicia con los correos nuevos; «Lanzar» lo publica, lo aplica a su lista y luego se elimina (como muy tarde el :date).',
+    'temp_launch'     => 'Lanzar en los :count tickets',
+    'temp_badge'      => 'Temporal · :count tickets',
+    'temp_launch_ask' => 'Publicado. ¿Lanzarlo ahora en los :count tickets de su lista?',
 ];

@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 3.19.0
+# Résultats des tests — Workflow Packs 3.20.0
 
 Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,13 @@ Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 3.20.0 — flux temporaires, tickets sans action, API des flux, jours en arrière libres
+
+| Série | Résultat |
+|---|---|
+| Intégration (instance neuve) | **182 tests, 2 333 assertions, tous verts**. `FlowReportTest` : chaque changement d'un vrai passage annoncé (statut, utilisateur assigné en id, note sans son texte, aucun nom), rien pour un essai à blanc ; un module qui plante en recevant l'action n'arrête pas le flux ; lectures `ticket_changes` (filtre par champ, ids invalides ignorés), `flow_stats` (par statut et valeur, par boîte, par période), `untreated` ; flux supprimé : encore nommé dans les statistiques. `TempFlowsTest` : flux temporaire demandé par un module, sa liste seulement (ticket fermé compris, autre ticket intact), origine `temporary`, supprimé une fois fini, action `temp_flow_finished`, Historique, statistiques gardées ; administrateur seulement (connecté, ou `user_id` sans connexion), liste vide ou de plus de 5 000 tickets refusée, flux invalide gardé en brouillon, suppression sans confirmation refusée, moteur éteint ; jamais activé (éditeur, action groupée, modèle), jamais déclenché, invisible et introuvable pour un agent, absent de l'export, supprimé à expiration (tickets en attente annulés) ; page des tickets sans action (filtres, aucun statut : aucun ticket), flux créé et ouvert dans l'éditeur, « Tickets existants » sur sa liste quoi qu'envoie le formulaire, non-administrateur refusé. `AgentReapplyTest` : jours en arrière de 1 à 3650 (valeurs invalides refusées), limite de 45 jours d'un agent (35 permis, 46 refusé), sans limite ; champ de jours dans l'éditeur et sur la fiche de l'agent |
+| Navigateur téléphone 390 px et PC 1440 px | page des tickets sans action (365 jours, 3 tickets), flux temporaire créé : éditeur avec la mention et « Lancer sur les 3 tickets », sans case « Activé » ; « Tickets existants » sans période ni statuts ; champ de jours de l'agent (0 à 3650, choix proposés) ; pas de défilement horizontal, aucun texte manquant, aucune erreur JavaScript |
 
 ## 3.19.0 — agents : appliquer aux tickets existants, avec limites
 

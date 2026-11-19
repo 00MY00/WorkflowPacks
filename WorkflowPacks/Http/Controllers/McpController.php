@@ -218,7 +218,7 @@ class McpController extends BaseController
                     'id'            => ['type' => 'integer'],
                     'scope'         => ['type' => 'string', 'enum' => ['existing', 'running']],
                     'statuses'      => ['type' => 'array', 'items' => ['type' => 'string', 'enum' => ['active', 'pending', 'closed']]],
-                    'period'        => ['type' => 'integer', 'description' => 'Tickets created in the last days: 7, 30, 90, 365, or 0 for all (within your limit)'],
+                    'period'        => ['type' => 'integer', 'description' => 'Tickets created in the last N days (1 to 3650), or 0 for all; at most reapply_limits.period_max of get_me (0 there: no limit)'],
                     'tags'          => ['type' => 'array', 'items' => ['type' => 'string'], 'description' => 'Only tickets having one of these tags'],
                     'assignees'     => ['type' => 'array', 'items' => ['type' => ['integer', 'string']], 'description' => 'Assigned user ids, "unassigned" for nobody'],
                     'confirm'       => ['type' => 'boolean', 'description' => 'true to start; ask the user first'],

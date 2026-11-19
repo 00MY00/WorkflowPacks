@@ -19,7 +19,10 @@ class Reapply
 {
     const BATCHES = [10, 25, 50, 100, 200, 500];
     const EVERY = [1, 2, 5, 10, 30, 60];
-    const PERIODS = [7, 30, 90, 365, 0];   // days, 0: all
+    /** quick choices of the period (days, 0: all); any number of days from 1 to MAX_DAYS is accepted too */
+    const PERIODS = [7, 30, 90, 365, 0];
+    /** at most this many days back (ten years) */
+    const MAX_DAYS = 3650;
     const SAMPLE = 20;
     /** blocks worth a warning and a ticked confirmation before starting */
     const RISKY = ['action.delete', 'action.push'];
@@ -32,17 +35,31 @@ class Reapply
         $this->engine = $engine ?: new Engine();
     }
 
+    /**
+     * A period in days: 0 (all) or 1 to MAX_DAYS; anything else (not a number, negative, too far): null.
+     */
+    public static function period($value)
+    {
+        if (is_int($value) || (is_string($value) && preg_match('/^\s*\d{1,6}\s*$/', $value))) {
+            $days = (int) $value;
+
+            return $days >= 0 && $days <= self::MAX_DAYS ? $days : null;
+        }
+
+        return null;
+    }
+
     /** Options from a request, always within the allowed values. */
     public static function options(array $in)
     {
         $statuses = array_values(array_intersect((array) ($in['statuses'] ?? ['active', 'pending']), ['active', 'pending', 'closed']));
-        $period = (int) ($in['period'] ?? 30);
+        $period = self::period($in['period'] ?? 30);
         $batch = (int) ($in['batch'] ?? 50);
         $every = (int) ($in['every'] ?? 1);
 
         return [
             'scope'    => ($in['scope'] ?? '') === FlowReapply::SCOPE_RUNNING ? FlowReapply::SCOPE_RUNNING : FlowReapply::SCOPE_EXISTING,
-            'period'   => in_array($period, self::PERIODS, true) ? $period : 30,
+            'period'   => $period === null ? 30 : $period,
             'statuses' => $statuses ?: ['active', 'pending'],
             'batch'    => in_array($batch, self::BATCHES, true) ? $batch : 50,
             'every'    => in_array($every, self::EVERY, true) ? $every : 1,
@@ -135,7 +152,7 @@ class Reapply
         $f = TicketScope::clean($o);
 
         return array_filter(['period' => $f['period'], 'statuses' => $f['statuses'], 'mailboxes' => $f['mailboxes'],
-            'assignees' => $f['assignees'], 'tags' => $f['tags']], function ($v) {
+            'assignees' => $f['assignees'], 'tags' => $f['tags'], 'ids' => $f['ids']], function ($v) {
                 return $v !== [];
             });
     }
@@ -181,13 +198,16 @@ class Reapply
     public function batch(FlowReapply $job)
     {
         $flow = Flow::with('version')->find($job->flow_id);
-        if (!$flow || !$flow->version) {
+        // a temporary flow only ever runs on its list: a job without it is stopped
+        if (!$flow || !$flow->version || ($flow->temporary && empty($job->options['ids']))) {
             $job->update(['state' => FlowReapply::STOPPED]);
 
             return 0;
         }
         $o = ['period' => (int) ($job->options['period'] ?? 30), 'statuses' => (array) ($job->options['statuses'] ?? ['active', 'pending'])]
-            + array_intersect_key((array) $job->options, array_flip(['mailboxes', 'assignees', 'tags']));
+            + array_intersect_key((array) $job->options, array_flip(['mailboxes', 'assignees', 'tags', 'ids']));
+        // how the tickets enter the flow, told to the other modules with each change
+        $origin = $flow->temporary ? FlowRun::ORIGIN_TEMPORARY : ($job->agent_id ? FlowRun::ORIGIN_AGENT : FlowRun::ORIGIN_REAPPLY);
         $tags = self::filters($flow, $o)['tags'];
         $count = 0;
         $handled = 0;
@@ -209,7 +229,7 @@ class Reapply
             foreach ($scanned as $conversation) {
                 $cursor = (int) $conversation->id;
                 if (isset($kept[$cursor])) {
-                    $started += $this->engine->start($flow, $conversation) ? 1 : 0;
+                    $started += $this->engine->start($flow, $conversation, $origin) ? 1 : 0;
                     $handled++;
                 }
                 $count++;

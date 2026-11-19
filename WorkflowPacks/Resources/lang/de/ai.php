@@ -140,4 +140,7 @@ return [
     'agent_new' => 'Agent verbinden',
     'agent_name' => 'Name des Agenten',
     'agent_create' => 'Token erstellen',
+    // limit of days back (3.20)
+    'limit_period_tip'  => 'Wie viele Tage der Agent höchstens zurückgehen darf (Erstellungsdatum der Tickets). 0: ohne Grenze.',
+    'limit_period_help' => 'Tage zurück, höchstens (0: ohne Grenze).',
 ];

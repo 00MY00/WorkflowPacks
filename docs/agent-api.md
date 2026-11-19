@@ -28,14 +28,14 @@ Avec le droit « Appliquer aux tickets existants », un agent applique un flux *
 | Limite | Par défaut | Effet |
 |---|---|---|
 | Statuts permis | Actif, En attente | l'agent peut viser ces statuts (ou moins), jamais Fermé s'il n'est pas coché |
-| Période au plus | 30 jours | date de création des tickets ; « Tout » permet aussi `period: 0` |
+| Période au plus | 30 jours | nombre de jours en arrière, au choix de 1 à 3650 (date de création des tickets) ; 0 : sans limite, `period: 0` permis |
 | Tickets au plus par lancement | 500 | au-delà : `422 too_many_tickets` (avec le nombre), rien n'est lancé |
 | Étiquettes | toutes | seulement les tickets ayant l'une de ces étiquettes (module Tags de FreeScout, sinon étiquettes d'e-mail de RefreshGlobal) |
 | Assignés à | tous | seulement les tickets de ces techniciens et / ou « personne » |
 | Flux qui suppriment ou notifient | refusés | permis : l'agent doit encore envoyer `confirm_risky: true` |
 
 L'agent peut demander **moins** (`statuses`, `period`, `tags`, `assignees`), jamais plus : sinon `403 limit_statuses`,
-`limit_period`, `limit_tags` ou `limit_assignees`, avec ce qui est permis (`problems.allowed`). Sans `confirm: true`,
+`limit_period` (avec `problems.max_days`), `limit_tags` ou `limit_assignees`, avec ce qui est permis (`problems.allowed`). Sans `confirm: true`,
 rien n'est fait : il reçoit le nombre de tickets, la durée et un **essai à blanc** sur les plus récents, à montrer à
 l'utilisateur. Un seul lancement à la fois par flux ; `reapply_control` donne l'état, met en pause, reprend ou arrête.
 Chaque lancement est noté dans l'Historique et sur la page « Tickets existants » du flux.
@@ -141,7 +141,7 @@ Elle répond `404` tant que le moteur interne est désactivé. Utilisez HTTPS.
 | POST | `/flows/{id}/simulate` | simuler (corps facultatif `{"mail": {…}}`) ; avec `Accept: text/event-stream`, les étapes arrivent une à une (événements `step`, puis `result`) |
 | POST | `/flows/{id}/activate` | publier et activer son flux après un test réussi (`409 test_required` sinon) |
 | POST | `/flows/{id}/deactivate` | désactiver le flux (droit « Désactiver ») |
-| POST | `/flows/{id}/reapply` | appliquer aux tickets existants : `{"statuses": [...], "period": 30, "tags": [...], "assignees": [12, "unassigned"]}` → estimation ; avec `"confirm": true` → lancé |
+| POST | `/flows/{id}/reapply` | appliquer aux tickets existants : `{"statuses": [...], "period": 45, "tags": [...], "assignees": [12, "unassigned"]}` → estimation ; avec `"confirm": true` → lancé |
 | POST | `/flows/{id}/reapply/control` | `{"action": "status" \| "pause" \| "resume" \| "stop"}` |
 | GET | `/catalog` | les règles d'un flux, les blocs (champs, sorties, variables) et un exemple, comme dans le dossier de l'assistant |
 | GET | `/tickets?mailbox_id=&days=&limit=&search=` | tickets de ses boîtes : numéro, sujet, extrait, domaine, statut, indices (anonymisés selon le réglage) |

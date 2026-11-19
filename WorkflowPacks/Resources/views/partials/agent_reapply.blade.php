@@ -17,12 +17,9 @@
                     <label><input type="checkbox" name="reapply[statuses][]" value="{{ $wp_s }}" @if (in_array($wp_s, $limits['statuses'], true)) checked @endif> {{ __('workflowpacks::blocks.values.status.'.$wp_s) }}</label>
                 @endforeach
             </div></div>
-        <label class="wp-ai-field"><span>{{ __('workflowpacks::ai.limit_period') }}</span>
-            <select name="reapply[period_max]" class="form-control">
-                @foreach (\Modules\WorkflowPacks\Services\Engine\Reapply::PERIODS as $wp_p)
-                    <option value="{{ $wp_p }}" @if ($wp_p === $limits['period_max']) selected @endif>{{ $wp_p ? __('workflowpacks::reapply.days', ['n' => $wp_p]) : __('workflowpacks::reapply.period_all') }}</option>
-                @endforeach
-            </select></label>
+        <label class="wp-ai-field"><span>{{ __('workflowpacks::ai.limit_period') }} @include('workflowpacks::partials.tip', ['text' => __('workflowpacks::ai.limit_period_tip')])</span>
+            @include('workflowpacks::partials.period_days', ['wp_name' => 'reapply[period_max]', 'wp_value' => $limits['period_max']])
+            <small class="wp-muted">{{ __('workflowpacks::ai.limit_period_help') }}</small></label>
         <label class="wp-ai-field"><span>{{ __('workflowpacks::ai.limit_max') }}</span>
             <select name="reapply[max_tickets]" class="form-control">
                 @foreach (\Modules\WorkflowPacks\Entities\Agent::REAPPLY_MAX as $wp_m)

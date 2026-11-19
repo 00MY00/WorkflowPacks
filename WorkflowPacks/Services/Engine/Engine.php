@@ -41,8 +41,9 @@ class Engine
 
     /**
      * A ticket enters a flow (its trigger matched). Null: not started (already went through it, "once per ticket").
+     * $origin: how it entered (FlowRun::ORIGIN_*), told to the other modules with each change.
      */
-    public function start(Flow $flow, $conversation)
+    public function start(Flow $flow, $conversation, $origin = FlowRun::ORIGIN_NEW_MAIL)
     {
         $version = $flow->version;
         if (!$version) {
@@ -57,7 +58,8 @@ class Engine
             return null;
         }
         $run = FlowRun::create(['flow_id' => $flow->id, 'version_id' => $version->id, 'conversation_id' => $conversation->id,
-            'block' => $trigger['id'], 'state' => FlowRun::RUNNING, 'vars' => []]);
+            'block' => $trigger['id'], 'state' => FlowRun::RUNNING, 'vars' => [], 'origin' => mb_substr((string) $origin, 0, 20),
+            'flow_name' => mb_substr((string) $flow->name, 0, 191)]);
         $this->continueRun($run, $version, $conversation, null);
 
         return $run;
@@ -82,10 +84,14 @@ class Engine
         $ctx = Context::forConversation($conversation, (array) $run->vars);
         $ctx->actor = self::actor($version);
         $def = Definition::from($version->data);
-        $log = function ($block, Result $r, array $changes, $level) use ($run) {
-            FlowEvent::create(['run_id' => $run->id, 'flow_id' => $run->flow_id, 'conversation_id' => $run->conversation_id,
+        $log = function ($block, Result $r, array $changes, $level) use ($run, $version, $conversation) {
+            $event = FlowEvent::create(['run_id' => $run->id, 'flow_id' => $run->flow_id, 'conversation_id' => $run->conversation_id,
                 'block' => $block, 'output' => $r->output, 'summary' => mb_substr($r->summary, 0, 255), 'changes' => $changes ?: null,
                 'level' => $level]);
+            // the other modules are told what the flow changed (RefreshGlobal: statistics); never a dry run
+            if ($changes) {
+                FlowReport::changed($event, $run, $version, $conversation);
+            }
         };
         $end = $this->walk($def, $ctx, $run->block, $resume, (int) $run->attempts, $log);
         if ($end['state'] === FlowRun::FAILED) {

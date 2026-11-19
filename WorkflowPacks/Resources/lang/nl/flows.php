@@ -154,4 +154,9 @@ return [
     'path_cancelled'  => 'Stroom verlaten (geannuleerd).',
     'path_done'       => 'Pad afgerond.',
     'path_failed'     => 'Gestopt op een fout.',
+    // temporary flows (3.20)
+    'temp_note'       => 'Tijdelijke flow: :count ticket(s). Hij start niet bij nieuwe e-mails; „Uitvoeren” publiceert hem, past hem op zijn lijst toe en daarna verwijdert hij zichzelf (uiterlijk op :date).',
+    'temp_launch'     => 'Uitvoeren op de :count tickets',
+    'temp_badge'      => 'Tijdelijk · :count tickets',
+    'temp_launch_ask' => 'Gepubliceerd. Nu uitvoeren op de :count tickets van zijn lijst?',
 ];

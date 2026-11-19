@@ -102,7 +102,7 @@ S'il a des problèmes, ils sont affichés sur la page, à corriger dans l'édite
 
 | Choix | Effet |
 |---|---|
-| **Tickets existants** | les tickets des boîtes du flux, sur une période (7, 30, 90, 365 jours ou tous, selon leur date de création) et avec les statuts cochés (ouvert, en attente, fermé), passent dans le flux comme si leur e-mail venait d'arriver. « Une fois par ticket » reste respecté : un ticket déjà passé n'y repasse pas. |
+| **Tickets existants** | les tickets des boîtes du flux, sur une période (un nombre de jours en arrière, de 1 à 3650, ou 0 pour tous, selon leur date de création ; 7, 30, 90 et 365 sont proposés) et avec les statuts cochés (ouvert, en attente, fermé), passent dans le flux comme si leur e-mail venait d'arriver. « Une fois par ticket » reste respecté : un ticket déjà passé n'y repasse pas. |
 | **Tickets en cours** | les tickets en attente dans une ancienne version continuent dans la version publiée, au même bloc. Si ce bloc n'existe plus, le ticket sort du flux (rien n'est annulé). |
 
 1. **Estimer et simuler** : le nombre de tickets concernés, la durée prévue et une **simulation à blanc** sur les
@@ -117,6 +117,29 @@ S'il a des problèmes, ils sont affichés sur la page, à corriger dans l'édite
 
 Le flux n'a pas besoin d'être activé pour être appliqué aux tickets existants : c'est la version publiée qui est
 utilisée.
+
+## Tickets sans action d'un flux et flux temporaires (3.20)
+
+Lien **Tickets sans action d'un flux…** sous la liste des flux. La page montre les tickets sur lesquels **aucun flux
+n'a jamais rien changé** (statut, assignation, note, dossier…), filtrés par boîtes, statuts et nombre de jours en
+arrière, avec les 20 plus récents.
+
+**Créer le flux temporaire** fait un flux pour cette liste (5 000 tickets au plus) : vide, ou copie d'un flux existant.
+Il s'ouvre dans l'éditeur sans rien faire, avec la mention « Temporaire · N tickets ».
+
+- Il ne se déclenche **jamais** sur les nouveaux e-mails : la case « Activé » n'apparaît pas et toute activation est
+  refusée.
+- **Lancer sur les N tickets** ouvre « Tickets existants » : estimation, essai à blanc, confirmation pour les blocs qui
+  suppriment ou notifient, puis traitement par lots. Il s'applique à **sa liste seulement**, quels que soient le statut
+  et la date des tickets.
+- Il **se supprime tout seul** dès que le traitement est fini et qu'aucun ticket n'attend plus dans un délai. Au plus
+  tard : 30 jours après le lancement, ou 7 jours s'il n'est jamais lancé. Les tickets qui attendaient encore quittent
+  alors le flux.
+- Ce qu'il a fait reste dans l'Historique et dans les statistiques (son nom est gardé avec chaque ticket).
+- Il n'est jamais montré aux agents IA ni exporté dans un pack.
+
+D'autres modules (RefreshGlobal) peuvent créer un flux temporaire pour leur propre liste et suivre ce que font les
+flux : [api-flux.md](api-flux.md).
 
 ## Notifications push (module WebPush)
 

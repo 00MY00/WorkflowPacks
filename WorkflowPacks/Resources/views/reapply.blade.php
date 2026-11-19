@@ -20,7 +20,11 @@
                 <h2 class="wp-pack-name">{{ $flow->name }}</h2>
                 <div class="wp-pills">
                     @if ($flow->version)<span class="wp-pill wp-pill-indigo">{{ __('workflowpacks::flows.published', ['n' => $flow->version->number]) }}</span>@endif
-                    <span class="wp-pill">{{ $flow->active ? __('workflowpacks::flows.active') : __('workflowpacks::reapply.inactive') }}</span>
+                    @if ($flow->temporary)
+                        <span class="wp-pill wp-pill-slug">{{ __('workflowpacks::temp.pill', ['count' => count($flow->tickets())]) }}</span>
+                    @else
+                        <span class="wp-pill">{{ $flow->active ? __('workflowpacks::flows.active') : __('workflowpacks::reapply.inactive') }}</span>
+                    @endif
                 </div>
             </div>
             <a class="btn btn-link" href="{{ route('workflowpacks.flows', ['flow' => $flow->id]) }}">{{ __('workflowpacks::reapply.back') }}</a>
@@ -30,6 +34,10 @@
             {{-- never published: no dead end, the dry run uses the draft and "Publish and apply" publishes it first --}}
             @if (!$flow->version)
                 <p class="wp-muted">{!! $wp_ui::icon('info') !!} {{ __('workflowpacks::reapply.draft_note') }}</p>
+            @endif
+            @if ($flow->temporary)
+                <p class="wp-muted">{!! $wp_ui::icon('clock') !!} {{ __('workflowpacks::temp.reapply_note', ['count' => count($flow->tickets()),
+                    'date' => $flow->expires_at ? $flow->expires_at->format('Y-m-d') : '']) }}</p>
             @endif
             @if (session('wp_publish_problems'))
                 <div class="alert alert-warning"><strong>{{ __('workflowpacks::reapply.publish_refused_title') }}</strong>
@@ -61,6 +69,7 @@
                 @if (!$wp_active)
                     <form method="POST" action="{{ route('workflowpacks.reapply.estimate', ['id' => $flow->id]) }}">
                         {{ csrf_field() }}
+                        @if (!$flow->temporary)
                         <fieldset class="wp-reapply-scopes">
                             <legend>{{ __('workflowpacks::reapply.scope') }}</legend>
                             <label class="wp-reapply-scope"><input type="radio" name="scope" value="existing" @if ($o['scope'] === 'existing') checked @endif>
@@ -68,17 +77,19 @@
                             <label class="wp-reapply-scope"><input type="radio" name="scope" value="running" @if ($o['scope'] === 'running') checked @endif @if (!$running) disabled @endif>
                                 <span><strong>{{ __('workflowpacks::reapply.scope_running') }} ({{ $running }})</strong><small class="wp-muted">{{ __('workflowpacks::reapply.scope_running_help') }}</small></span></label>
                         </fieldset>
+                        @endif
                         <div class="wp-ai-grid">
+                            {{-- a temporary flow: its list of tickets, whatever their status or date --}}
+                            @if (!$flow->temporary)
                             <label class="wp-ai-field"><span>{{ __('workflowpacks::reapply.period') }}</span>
-                                <select name="period" class="form-control">
-                                    @foreach ($wp_R::PERIODS as $d)<option value="{{ $d }}" @if ($o['period'] === $d) selected @endif>{{ $d ? __('workflowpacks::reapply.days', ['n' => $d]) : __('workflowpacks::reapply.period_all') }}</option>@endforeach
-                                </select></label>
+                                @include('workflowpacks::partials.period_days', ['wp_name' => 'period', 'wp_value' => $o['period']])</label>
                             <div class="wp-ai-field"><span>{{ __('workflowpacks::reapply.statuses') }}</span>
                                 <div class="wp-reapply-checks">
                                     @foreach (['active', 'pending', 'closed'] as $s)
                                         <label><input type="checkbox" name="statuses[]" value="{{ $s }}" @if (in_array($s, $o['statuses'], true)) checked @endif> {{ __('workflowpacks::blocks.values.status.'.$s) }}</label>
                                     @endforeach
                                 </div></div>
+                            @endif
                             <label class="wp-ai-field"><span>{{ __('workflowpacks::reapply.batch') }}</span>
                                 <select name="batch" class="form-control">
                                     @foreach ($wp_R::BATCHES as $b)<option value="{{ $b }}" @if ($o['batch'] === $b) selected @endif>{{ $b }}</option>@endforeach
@@ -88,7 +99,7 @@
                                     @foreach ($wp_R::EVERY as $m)<option value="{{ $m }}" @if ($o['every'] === $m) selected @endif>{{ __('workflowpacks::reapply.minutes', ['n' => $m]) }}</option>@endforeach
                                 </select></label>
                         </div>
-                        <small class="wp-muted">{{ __('workflowpacks::reapply.period_help') }}</small>
+                        @if (!$flow->temporary)<small class="wp-muted">{{ __('workflowpacks::reapply.period_help') }}</small>@endif
                         <div class="wp-pack-actions"><button type="submit" class="btn btn-default">{!! $wp_ui::icon('check') !!} {{ __('workflowpacks::reapply.estimate') }}</button></div>
 
                         @if ($estimate)

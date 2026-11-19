@@ -32,6 +32,8 @@ remplacées pour chacune (`{{mailbox.email}}`, `{{mailbox.name}}`, `{{mailbox.id
   [WP] » qui déplace l'e-mail reçu dans un dossier de la boîte e-mail (serveur IMAP), créé s'il manque, toujours sous
   le préfixe `[WP]`. Voir [docs/dossiers-email.md](docs/dossiers-email.md). Le dossier actuel de chaque ticket
   est gardé, affiché dans le ticket et lisible par les autres modules ([docs/api-dossiers.md](docs/api-dossiers.md)).
+  **Tickets sans action d'un flux** et **flux temporaires** qui traitent une liste puis se suppriment ; ce que font les
+  flux est lisible par les autres modules, par exemple pour des statistiques ([docs/api-flux.md](docs/api-flux.md), 3.20).
 - **Règles minuteur et nettoyage automatique** : « supprimer les tickets fermés après 30 jours » (conditions de délai
   de Workflows, en minutes, heures ou jours, avec « Ajouter un délai » dans l'éditeur), et « les e-mails de
   `[WP] Newsletters` vont à la corbeille après 7 jours » (réglé dans le Schéma, appliqué toutes les 15 minutes). Voir

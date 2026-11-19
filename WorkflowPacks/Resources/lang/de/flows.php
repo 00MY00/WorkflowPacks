@@ -154,4 +154,9 @@ return [
     'path_cancelled'  => 'Ablauf verlassen (abgebrochen).',
     'path_done'       => 'Weg beendet.',
     'path_failed'     => 'Bei einem Fehler gestoppt.',
+    // temporary flows (3.20)
+    'temp_note'       => 'Temporärer Ablauf: :count Ticket(s). Er startet nicht bei neuen E-Mails; „Anwenden“ veröffentlicht ihn, wendet ihn auf seine Liste an, dann löscht er sich (spätestens am :date).',
+    'temp_launch'     => 'Auf die :count Tickets anwenden',
+    'temp_badge'      => 'Temporär · :count Tickets',
+    'temp_launch_ask' => 'Veröffentlicht. Jetzt auf die :count Tickets seiner Liste anwenden?',
 ];

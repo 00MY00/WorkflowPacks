@@ -234,6 +234,12 @@
             this.q('.wpf-name').value = flow.name;
             this.q('.wpf-once').checked = flow.once;
             this.q('.wpf-active').checked = flow.active;
+            // a temporary flow never starts on new e-mails: no "switched on", its list and how it ends instead
+            this.q('.wpf-active-row').hidden = !!flow.temporary;
+            var temp = this.q('.wpf-temp');
+            temp.hidden = !flow.temporary;
+            temp.textContent = flow.temporary ? fill(this.t.temp_note, { count: flow.tickets, date: flow.expires_at || '' }) : '';
+            this.q('[data-act="reapply"]').textContent = flow.temporary ? fill(this.t.temp_launch, { count: flow.tickets }) : this.t.reapply_button;
             this.boxes();
         }
         this.state();
@@ -259,7 +265,8 @@
                 self.listTools();
                 if (self.show === 'checked') { self.relayout(); }
             } } });
-            var note = (src.version ? fill(t.published, { n: src.version }) : t.unpublished) + ' · ' + (src.active ? t.active : t.inactive);
+            var note = (src.version ? fill(t.published, { n: src.version }) : t.unpublished) + ' · '
+                + (src.temporary ? fill(t.temp_badge, { count: src.tickets }) : (src.active ? t.active : t.inactive));
             ul.appendChild(h('li', { class: 'wpf-list-item' + (current ? ' is-current' : '') }, [box,
                 h('button', { type: 'button', class: 'wpf-list-open', 'aria-current': current ? 'true' : null, on: { click: function () {
                     if (current) { return; }
@@ -1411,7 +1418,7 @@
                 self.state();
                 self.status(self.t.published_ok + ' ' + fill(self.t.published, { n: res.data.version }), 'ok');
                 // the new version for new tickets; the ones already there only when asked
-                if (window.confirm(self.t.reapply_ask)) { window.location.href = self.url('reapply'); }
+                if (window.confirm(self.flow.temporary ? fill(self.t.temp_launch_ask, { count: self.flow.tickets }) : self.t.reapply_ask)) { window.location.href = self.url('reapply'); }
             } else {
                 self.flow.problems = res.data.problems || [];
                 self.select(null);

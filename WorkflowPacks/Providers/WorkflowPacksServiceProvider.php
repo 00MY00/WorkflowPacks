@@ -60,6 +60,8 @@ class WorkflowPacksServiceProvider extends ServiceProvider
         \Modules\WorkflowPacks\Services\Imap\TicketFolders::register();
         // internal flow engine (on by default since 3.3): FreeScout's events start the flows
         \Modules\WorkflowPacks\Services\Engine\Listener::register();
+        // what the flows do, for the other modules (RefreshGlobal), and the temporary flows they may ask for
+        \Modules\WorkflowPacks\Services\Engine\FlowReport::register();
         // condition "E-mail tag" of the rules: origin tags of RefreshGlobal (spam, inbox, folder:…), when it is installed
         \Modules\WorkflowPacks\Services\MailTags::register();
         // conditions "Assigned" and "A reply was sent" (branch blocks of the flow view)

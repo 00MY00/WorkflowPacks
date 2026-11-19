@@ -50,4 +50,7 @@ return [
     'refresh'             => 'Aktualisieren',
     'history_start'       => 'Angewendet auf :count Ticket(s) (:scope)',
     'history_done'        => ':done Ticket(s) bearbeitet, :started durch den Ablauf',
+    // any number of days back (3.20)
+    'days_unit' => 'Tage',
+    'days_help' => 'Anzahl Tage zurück (1 bis :max), 0 für alle.',
 ];
