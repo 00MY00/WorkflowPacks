@@ -64,6 +64,9 @@ Route::group([
     Route::post('/flows/import/preview', $admins + ['uses' => 'FlowPackController@preview'])->name('workflowpacks.flowpack.preview');
     Route::post('/flows/import/confirm', $admins + ['uses' => 'FlowPackController@confirm'])->name('workflowpacks.flowpack.confirm');
     Route::get('/flows/export', $admins + ['uses' => 'FlowPackController@export'])->name('workflowpacks.flowpack.export');
+    // the tickets no flow has acted on, and a temporary flow for them
+    Route::get('/flows/untreated', $admins + ['uses' => 'UntreatedController@show'])->name('workflowpacks.untreated');
+    Route::post('/flows/untreated', $admins + ['uses' => 'UntreatedController@create'])->name('workflowpacks.untreated.create');
     Route::post('/flows', $admins + ['uses' => 'FlowsController@store'])->name('workflowpacks.flows.store');
     Route::post('/flows/delete-many', $admins + ['uses' => 'FlowsController@destroyMany'])->name('workflowpacks.flows.destroy_many');
     Route::post('/flows/bulk', $admins + ['uses' => 'FlowsController@bulk'])->name('workflowpacks.flows.bulk');

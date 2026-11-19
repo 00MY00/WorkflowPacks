@@ -17,6 +17,8 @@ class TicketScope
     const MAX_TAGS = 20;
     /** at most this many tickets are looked at to count those having a tag */
     const MAX_SCAN = 50000;
+    /** a list of tickets (temporary flows): at most this many */
+    const MAX_IDS = 5000;
 
     /** The filters, cleaned: unknown statuses dropped, integers, tags normalised. */
     public static function clean(array $f)
@@ -27,7 +29,25 @@ class TicketScope
             'period'    => max(0, (int) ($f['period'] ?? 0)),
             'assignees' => self::assignees((array) ($f['assignees'] ?? [])),
             'tags'      => self::tags((array) ($f['tags'] ?? [])),
+            // a list of tickets given (temporary flow): only those; a list with no valid id matches none ([0]); no
+            // list (or an empty one, as cleaned before): no restriction
+            'ids'       => !empty($f['ids']) ? (self::ids((array) $f['ids']) ?: [0]) : [],
         ];
+    }
+
+    /** Ticket ids: positive integers, each once, in order, at most $max (MAX_IDS). */
+    public static function ids(array $values, $max = self::MAX_IDS)
+    {
+        $ids = [];
+        foreach ($values as $v) {
+            if ((is_int($v) || (is_string($v) && ctype_digit($v))) && (int) $v > 0) {
+                $ids[(int) $v] = true;
+            }
+        }
+        $ids = array_keys($ids);
+        sort($ids);
+
+        return array_slice($ids, 0, (int) $max);
     }
 
     /** User ids, 0 for "nobody assigned" ("unassigned" accepted). */
@@ -82,6 +102,9 @@ class TicketScope
         $query->whereIn('status', $statuses ?: [0]);
         if ($f['mailboxes']) {
             $query->whereIn('mailbox_id', $f['mailboxes']);
+        }
+        if (!empty($f['ids'])) {
+            $query->whereIn('id', $f['ids']);
         }
         if ($f['period'] > 0) {
             $query->where('created_at', '>=', \Carbon\Carbon::now()->subDays($f['period']));

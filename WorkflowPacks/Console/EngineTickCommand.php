@@ -25,6 +25,8 @@ class EngineTickCommand extends Command
         $this->line((new Scheduler())->tick().' ticket(s) woken.');
         // flows applied to the tickets already there: one batch of each due job
         $this->line((new \Modules\WorkflowPacks\Services\Engine\Reapply())->tick().' ticket(s) of re-applied flows.');
+        // temporary flows whose work is over (or expired): deleted
+        $this->line(\Modules\WorkflowPacks\Services\Engine\TempFlows::cleanup().' temporary flow(s) finished.');
 
         return 0;
     }

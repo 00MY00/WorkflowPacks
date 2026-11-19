@@ -42,6 +42,8 @@
                 <button type="button" class="btn btn-default btn-sm wpf-list-del" data-act="delete-many" disabled>{{ __('workflowpacks::flows.delete_many_none') }}</button>
             </div>
             <ul class="wpf-list-items"></ul>
+            {{-- the tickets no flow has acted on: a temporary flow for them --}}
+            <a class="btn btn-link btn-sm wpf-list-untreated" href="{{ route('workflowpacks.untreated') }}">{{ __('workflowpacks::temp.untreated_link') }}</a>
         </aside>
         <div class="wpf-stage">
             <svg class="wpf-canvas" xmlns="http://www.w3.org/2000/svg"><g class="wpf-vp"><g class="wpf-others"></g><g class="wpf-act"><g class="wpf-frames"></g><g class="wpf-links"></g><g class="wpf-blocks"></g></g></g></svg>
@@ -71,7 +73,9 @@
                     <div class="wpf-boxes-list"></div>
                 </details>
                 <label class="wpf-check" title="{{ __('workflowpacks::flows.once_help') }}"><input type="checkbox" class="wpf-once"> {{ __('workflowpacks::flows.once') }}</label>
-                <label class="wpf-check"><input type="checkbox" class="wpf-active"> {{ __('workflowpacks::flows.active') }}</label>
+                <label class="wpf-check wpf-active-row"><input type="checkbox" class="wpf-active"> {{ __('workflowpacks::flows.active') }}</label>
+                {{-- a temporary flow: its list of tickets, launched once, then deleted --}}
+                <p class="wpf-temp" role="note" hidden></p>
                 <div class="wpf-inline">
                     <button type="button" class="btn btn-default btn-sm" data-act="reapply" title="{{ __('workflowpacks::reapply.intro') }}">{{ __('workflowpacks::flows.reapply_button') }}</button>
                     <button type="button" class="btn btn-link btn-sm text-danger" data-act="delete-flow">{{ __('workflowpacks::flows.delete_flow') }}</button>

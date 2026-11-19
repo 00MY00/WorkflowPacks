@@ -89,9 +89,13 @@ class Context
         $this->vars[$key] = $value;
     }
 
-    public function change($field, $before, $after)
+    /**
+     * A change, as shown (texts: names, labels); $raw: the values for the other modules when they differ from what is
+     * shown ([before, after]: user ids, a number), kept after them (Services\Engine\FlowReport).
+     */
+    public function change($field, $before, $after, array $raw = null)
     {
-        $this->changes[] = [$field, $before, $after];
+        $this->changes[] = $raw ? [$field, $before, $after, $raw[0] ?? null, $raw[1] ?? null] : [$field, $before, $after];
     }
 
     /** Fields read only when needed: the text of the first e-mail, whether the team has replied. */

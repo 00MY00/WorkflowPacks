@@ -4,6 +4,27 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [3.20.0] - 2026-11-19
+
+### Ajouté
+- **Tickets sans action d'un flux** (lien sous la liste des flux) : les tickets sur lesquels aucun flux n'a jamais rien
+  changé, par boîtes, statuts et jours en arrière ; **flux temporaire** pour cette liste (vide ou copie d'un flux,
+  5 000 tickets au plus), construit dans l'éditeur, lancé une fois sur sa liste seulement, puis supprimé tout seul
+  (au plus tard 30 jours après le lancement, 7 jours s'il n'est jamais lancé). Jamais activé, jamais montré aux agents,
+  jamais exporté.
+- **API pour les autres modules** ([docs/api-flux.md](docs/api-flux.md)), par Eventy : action
+  `workflowpacks.ticket_changed` à chaque changement fait par un flux (flux, version, champ, avant, après, origine ;
+  jamais de texte, jamais pour un essai) ; lectures `workflowpacks.ticket_changes`, `workflowpacks.flow_stats`,
+  `workflowpacks.untreated`, `workflowpacks.info` ; flux temporaire demandé par un module (`workflowpacks.temp_flow`,
+  administrateurs seulement), suivi (`workflowpacks.temp_flow_status`, action `workflowpacks.temp_flow_finished`).
+
+### Modifié
+- **Tickets existants** (éditeur, connecteur et API) : n'importe quel nombre de jours en arrière, de 1 à 3650 (0 :
+  tous), au lieu des seuls choix 7, 30, 90 et 365 ; la limite « Période au plus » d'un agent se règle de même au jour
+  près.
+- Chaque passage d'un ticket dans un flux garde son origine (nouvel e-mail, tickets existants, agent, temporaire) et
+  le nom du flux, pour les statistiques après la suppression d'un flux.
+
 ## [3.19.0] - 2026-11-18
 
 ### Ajouté

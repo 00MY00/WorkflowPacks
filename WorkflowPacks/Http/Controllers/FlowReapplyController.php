@@ -19,13 +19,13 @@ class FlowReapplyController extends Controller
     {
         $flow = $this->flow($id);
 
-        return $this->view($flow, Reapply::options($request->all()), null);
+        return $this->view($flow, $this->options($request, $flow), null);
     }
 
     public function estimate(Request $request, $id)
     {
         $flow = $this->flow($id);
-        $o = Reapply::options($request->all());
+        $o = $this->options($request, $flow);
 
         return $this->view($flow, $o, (new Reapply())->estimate($flow, $o));
     }
@@ -33,7 +33,7 @@ class FlowReapplyController extends Controller
     public function start(Request $request, $id)
     {
         $flow = $this->flow($id);
-        $o = Reapply::options($request->all());
+        $o = $this->options($request, $flow);
         $estimate = (new Reapply())->estimate($flow, $o, false);
         // blocks that delete or notify: started only when it was ticked
         if ($estimate['risky'] && !$request->input('confirm_risky')) {
@@ -48,6 +48,9 @@ class FlowReapplyController extends Controller
             $flow = $flow->fresh(['version']);
         }
         $job = (new Reapply())->start($flow, $o, auth()->user());
+        if ($job && $flow->temporary) {
+            \Modules\WorkflowPacks\Services\Engine\TempFlows::started($flow);
+        }
         $message = $job ? __('workflowpacks::reapply.started', ['count' => $job->total]) : __('workflowpacks::reapply.nothing');
 
         return redirect()->route('workflowpacks.reapply', ['id' => $flow->id])->with($job ? 'flash_success_floating' : 'flash_error_floating', $message);
@@ -95,6 +98,14 @@ class FlowReapplyController extends Controller
         }
 
         return redirect()->route('workflowpacks.reapply', ['id' => $flow->id]);
+    }
+
+    /** The choices of the page; a temporary flow: its list of tickets only (any status, any date). */
+    protected function options(Request $request, Flow $flow)
+    {
+        $o = Reapply::options($request->all());
+
+        return $flow->temporary ? \Modules\WorkflowPacks\Services\Engine\TempFlows::options($flow, $o) : $o;
     }
 
     protected function view(Flow $flow, array $o, $estimate)

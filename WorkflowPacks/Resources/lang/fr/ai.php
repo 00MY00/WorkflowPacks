@@ -140,4 +140,7 @@ return [
     'agent_new' => 'Connecter un agent',
     'agent_name' => 'Nom de l’agent',
     'agent_create' => 'Créer le jeton',
+    // limit of days back (3.20)
+    'limit_period_tip'  => 'Combien de jours en arrière l’agent peut remonter au plus (date de création des tickets). 0 : sans limite.',
+    'limit_period_help' => 'Jours en arrière, au plus (0 : sans limite).',
 ];

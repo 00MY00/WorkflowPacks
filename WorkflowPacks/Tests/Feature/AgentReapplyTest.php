@@ -256,4 +256,51 @@ class AgentReapplyTest extends TestCase
         $out = json_decode($rpc('tools/call', ['name' => 'reapply_flow', 'arguments' => ['id' => $flow->id]])['result']['content'][0]['text'], true);
         $this->assertSame('limit_statuses', $out['error']);
     }
+
+    public function testAnyNumberOfDaysBackWithinTheLimitSetForTheAgent()
+    {
+        // the period: any number of days from 1 to 3650, 0 for all; anything else refused
+        foreach ([['45', 45], [45, 45], [0, 0], [3650, 3650], [3651, null], [-1, null], ['abc', null], ['4.5', null], [null, null]] as $case) {
+            $this->assertSame($case[1], Reapply::period($case[0]), json_encode($case));
+        }
+        $this->assertSame(45, Reapply::options(['period' => '45'])['period']);
+        $this->assertSame(30, Reapply::options(['period' => 99999])['period'], 'too far: the default');
+
+        $a = $this->mailbox('A');
+        $admin = $this->user([$a], true);
+        $recent = $this->ticket($a);
+        $old = $this->ticket($a);
+        $older = $this->ticket($a);
+        \DB::table('conversations')->where('id', $old->id)->update(['created_at' => \Carbon\Carbon::now()->subDays(40)]);
+        \DB::table('conversations')->where('id', $older->id)->update(['created_at' => \Carbon\Carbon::now()->subDays(50)]);
+        $flow = $this->flow($a, $admin);
+
+        // limited to 45 days back (any number, not only the quick choices)
+        $token = $this->agent($admin, [$a], ['others.see', 'others.reapply'], ['statuses' => ['active'], 'period_max' => '45']);
+        $this->assertSame(45, Agent::orderBy('id', 'desc')->first()->reapplyLimits()['period_max']);
+        list($status, $out) = $this->api($token, $flow->id);
+        $this->assertSame([200, 2, 45], [$status, $out['total'], $out['filters']['period']], json_encode($out));
+        list($status, $out) = $this->api($token, $flow->id, ['period' => 35]);
+        $this->assertSame(1, $out['total']);
+        list($status, $out) = $this->api($token, $flow->id, ['period' => 46]);
+        $this->assertSame([403, 'limit_period', 45], [$status, $out['error'], $out['problems']['max_days']]);
+        list($status, $out) = $this->api($token, $flow->id, ['period' => 'loin']);
+        $this->assertSame('limit_period', $out['error']);
+
+        // no limit (0): every date, as far as asked
+        $token = $this->agent($admin, [$a], ['others.see', 'others.reapply'], ['statuses' => ['active'], 'period_max' => 0]);
+        list($status, $out) = $this->api($token, $flow->id, ['period' => 0]);
+        $this->assertSame(3, $out['total']);
+        list($status, $out) = $this->api($token, $flow->id, ['period' => 400]);
+        $this->assertSame(3, $out['total']);
+
+        // the editor: a number of days, kept; the agent form: the same field
+        $page = $this->actingAs($admin)->post(route('workflowpacks.reapply.estimate', ['id' => $flow->id]), ['scope' => 'existing', 'period' => 45, 'statuses' => ['active']]);
+        $this->assertSame(2, $page->original->getData()['estimate']['total']);
+        $this->assertStringContainsString('type="number" name="period"', $page->getContent());
+        $this->assertStringContainsString('value="45"', $page->getContent());
+        $ai = $this->actingAs($admin)->get(route('workflowpacks.ai'))->getContent();
+        $this->assertStringContainsString('name="reapply[period_max]"', $ai);
+        $this->assertStringContainsString('max="3650"', $ai);
+    }
 }

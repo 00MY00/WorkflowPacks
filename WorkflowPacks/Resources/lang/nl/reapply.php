@@ -50,4 +50,7 @@ return [
     'refresh'             => 'Vernieuwen',
     'history_start'       => 'Toegepast op :count ticket(s) (:scope)',
     'history_done'        => ':done ticket(s) verwerkt, :started door de stroom',
+    // any number of days back (3.20)
+    'days_unit' => 'dagen',
+    'days_help' => 'Aantal dagen terug (1 tot :max), 0 voor alle.',
 ];

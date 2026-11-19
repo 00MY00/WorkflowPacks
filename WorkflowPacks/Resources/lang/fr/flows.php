@@ -154,4 +154,9 @@ return [
     'path_cancelled'  => 'Sorti du flux (annulé).',
     'path_done'       => 'Parcours terminé.',
     'path_failed'     => 'Arrêté sur une erreur.',
+    // temporary flows (3.20)
+    'temp_note'       => 'Flux temporaire : :count ticket(s). Il ne se déclenche pas sur les nouveaux e-mails ; « Lancer » le publie, l’applique à sa liste, puis il se supprime (au plus tard le :date).',
+    'temp_launch'     => 'Lancer sur les :count tickets',
+    'temp_badge'      => 'Temporaire · :count tickets',
+    'temp_launch_ask' => 'Publié. Lancer maintenant sur les :count tickets de sa liste ?',
 ];

@@ -154,4 +154,9 @@ return [
     'path_cancelled'  => 'Left the flow (cancelled).',
     'path_done'       => 'Path finished.',
     'path_failed'     => 'Stopped on an error.',
+    // temporary flows (3.20)
+    'temp_note'       => 'Temporary flow: :count ticket(s). It does not start on new e-mails; "Run" publishes it, applies it to its list, then it deletes itself (at the latest on :date).',
+    'temp_launch'     => 'Run on the :count tickets',
+    'temp_badge'      => 'Temporary · :count tickets',
+    'temp_launch_ask' => 'Published. Run it now on the :count tickets of its list?',
 ];

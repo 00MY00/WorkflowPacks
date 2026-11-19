@@ -47,7 +47,7 @@ class TicketActions
             $this->ctx->conversation->changeUser($userId > 0 ? $userId : null, $this->ctx->actor, true);
         }
         $this->ctx->ticket['user_id'] = max(0, $userId);
-        $this->ctx->change('assignee', self::userName($before), self::userName($userId));
+        $this->ctx->change('assignee', self::userName($before), self::userName($userId), [$before ?: null, $userId > 0 ? $userId : null]);
 
         return true;
     }
@@ -108,7 +108,7 @@ class TicketActions
         $names = array_map(function ($u) {
             return $u->getFullName();
         }, array_slice($users, 0, 5));
-        $this->ctx->change('push', '', implode(', ', $names).(count($users) > 5 ? ' (+'.(count($users) - 5).')' : '').' : '.mb_substr($title, 0, 60));
+        $this->ctx->change('push', '', implode(', ', $names).(count($users) > 5 ? ' (+'.(count($users) - 5).')' : '').' : '.mb_substr($title, 0, 60), [null, count($users)]);
 
         return true;
     }

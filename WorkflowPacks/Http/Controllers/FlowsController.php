@@ -53,6 +53,7 @@ class FlowsController extends Controller
                     'sample'   => route('workflowpacks.flows.sample', ['id' => '__ID__']),
                     'path'     => route('workflowpacks.flows.path', ['id' => '__ID__']),
                     'reapply'  => route('workflowpacks.reapply', ['id' => '__ID__']),
+                    'untreated' => route('workflowpacks.untreated'),
                 ],
                 'catalog'   => $this->catalog(),
                 'mailboxes' => \App\Mailbox::orderBy('name')->get(['id', 'name', 'email', 'in_server', 'in_username'])->map(function ($m) {
@@ -116,7 +117,7 @@ class FlowsController extends Controller
             'name'        => mb_substr(trim((string) $request->input('name', $flow->name)) ?: $flow->name, 0, 191),
             'mailbox_ids' => $mailboxes,
             'once'        => (bool) $request->input('once', true),
-            'draft'       => self::clean($draft),
+            'draft'       => Definition::clean($draft),
         ]);
 
         return response()->json(['ok' => true] + $this->check($flow->draft));
@@ -138,6 +139,9 @@ class FlowsController extends Controller
         $this->guardEngine();
         $flow = Flow::findOrFail((int) $id);
         $on = (bool) $request->input('active');
+        if ($on && $flow->temporary) {
+            return response()->json(['ok' => false, 'message' => __('workflowpacks::temp.never_active')], 422);
+        }
         if ($on && !$flow->version_id) {
             return response()->json(['ok' => false, 'message' => __('workflowpacks::flows.publish_first')], 422);
         }
@@ -173,7 +177,7 @@ class FlowsController extends Controller
             if ($action === 'publish') {
                 $result = (new Publisher($this->registry))->publish($flow, auth()->user());
                 $result['ok'] ? $done++ : $refused[] = $flow->name;
-            } elseif ($action === 'activate' && !$flow->version_id) {
+            } elseif ($action === 'activate' && (!$flow->version_id || $flow->temporary)) {
                 $refused[] = $flow->name;
             } else {
                 $flow->update(['active' => $action === 'activate']);
@@ -319,7 +323,7 @@ class FlowsController extends Controller
     {
         $this->guardEngine();
         Flow::findOrFail((int) $id);
-        $draft = self::clean((array) $request->input('draft'));
+        $draft = Definition::clean((array) $request->input('draft'));
         $def = Definition::from($draft);
         $problems = $def->validate($this->registry);
         if ($problems) {
@@ -342,7 +346,7 @@ class FlowsController extends Controller
     {
         $this->guardEngine();
         Flow::findOrFail((int) $id);
-        $draft = self::clean((array) $request->input('draft'));
+        $draft = Definition::clean((array) $request->input('draft'));
         $problems = Definition::from($draft)->validate($this->registry);
         if ($problems) {
             return response()->json(['ok' => false, 'problems' => $problems], 422);
@@ -394,28 +398,10 @@ class FlowsController extends Controller
     {
         return ['id' => (int) $flow->id, 'name' => (string) $flow->name, 'active' => (bool) $flow->active, 'once' => (bool) $flow->once,
             'mailbox_ids' => array_map('intval', (array) $flow->mailbox_ids), 'version' => $number, 'waiting' => $waiting,
+            // a temporary flow: its list of tickets, deleted at the latest then
+            'temporary' => (bool) $flow->temporary, 'tickets' => $flow->temporary ? count($flow->tickets()) : 0,
+            'expires_at' => $flow->temporary && $flow->expires_at ? $flow->expires_at->format('Y-m-d') : null,
             'draft' => $flow->draft ?: ['blocks' => [], 'links' => []]] + $this->check($flow->draft ?: []);
-    }
-
-    /** Only the known keys of a draft (positions kept for the editor). */
-    protected static function clean(array $draft)
-    {
-        $blocks = [];
-        foreach (array_slice(array_values((array) ($draft['blocks'] ?? [])), 0, Definition::MAX_BLOCKS) as $b) {
-            if (!is_array($b)) {
-                continue;
-            }
-            $blocks[] = ['id' => mb_substr((string) ($b['id'] ?? ''), 0, 40), 'type' => mb_substr((string) ($b['type'] ?? ''), 0, 60),
-                'params' => (array) ($b['params'] ?? []), 'x' => (int) ($b['x'] ?? 0), 'y' => (int) ($b['y'] ?? 0)];
-        }
-        $links = [];
-        foreach (array_slice(array_values((array) ($draft['links'] ?? [])), 0, Definition::MAX_BLOCKS * 3) as $l) {
-            if (is_array($l)) {
-                $links[] = ['from' => (string) ($l['from'] ?? ''), 'port' => (string) ($l['port'] ?? 'next'), 'to' => (string) ($l['to'] ?? '')];
-            }
-        }
-
-        return ['blocks' => $blocks, 'links' => $links];
     }
 
     protected function catalog()

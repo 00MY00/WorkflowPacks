@@ -50,4 +50,7 @@ return [
     'refresh'             => 'Aggiorna',
     'history_start'       => 'Applicato a :count ticket (:scope)',
     'history_done'        => ':done ticket elaborati, :started passati nel flusso',
+    // any number of days back (3.20)
+    'days_unit' => 'giorni',
+    'days_help' => 'Numero di giorni indietro (da 1 a :max), 0 per tutti.',
 ];

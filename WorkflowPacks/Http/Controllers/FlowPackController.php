@@ -107,11 +107,12 @@ class FlowPackController extends Controller
         $this->guardEngine();
         if (!$request->input('download')) {
             // ids given (the "Export this pack" of the home page): only those ticked at first
-            return $this->page('flowpack.export', ['flows' => Flow::orderBy('name')->get(['id', 'name', 'active', 'version_id']),
+            return $this->page('flowpack.export', ['flows' => Flow::permanent()->orderBy('name')->get(['id', 'name', 'active', 'version_id']),
                 'chosen' => array_map('intval', (array) $request->input('ids', []))]);
         }
         $ids = array_map('intval', (array) $request->input('ids', []));
-        $flows = $ids ? Flow::whereIn('id', $ids)->orderBy('id')->get() : Flow::orderBy('id')->get();
+        // a temporary flow is never exported (its list of tickets belongs to this help desk only)
+        $flows = $ids ? Flow::permanent()->whereIn('id', $ids)->orderBy('id')->get() : Flow::permanent()->orderBy('id')->get();
         $name = trim((string) $request->input('name')) ?: __('workflowpacks::flowpack.export_name');
         $json = json_encode(FlowPack::export($flows, $name), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 

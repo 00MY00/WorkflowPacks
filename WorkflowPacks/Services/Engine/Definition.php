@@ -15,6 +15,28 @@ class Definition
     public $blocks = [];
     /** @var array "from|port" => to */
     public $links = [];
+
+    /** Only the known keys of a draft (positions kept for the editor). */
+    public static function clean(array $draft)
+    {
+        $blocks = [];
+        foreach (array_slice(array_values((array) ($draft['blocks'] ?? [])), 0, self::MAX_BLOCKS) as $b) {
+            if (!is_array($b)) {
+                continue;
+            }
+            $blocks[] = ['id' => mb_substr((string) ($b['id'] ?? ''), 0, 40), 'type' => mb_substr((string) ($b['type'] ?? ''), 0, 60),
+                'params' => (array) ($b['params'] ?? []), 'x' => (int) ($b['x'] ?? 0), 'y' => (int) ($b['y'] ?? 0)];
+        }
+        $links = [];
+        foreach (array_slice(array_values((array) ($draft['links'] ?? [])), 0, self::MAX_BLOCKS * 3) as $l) {
+            if (is_array($l)) {
+                $links[] = ['from' => (string) ($l['from'] ?? ''), 'port' => (string) ($l['port'] ?? 'next'), 'to' => (string) ($l['to'] ?? '')];
+            }
+        }
+
+        return ['blocks' => $blocks, 'links' => $links];
+    }
+
     /** @var array problems found while reading */
     protected $read = [];
 

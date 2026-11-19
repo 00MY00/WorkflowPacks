@@ -154,4 +154,9 @@ return [
     'path_cancelled'  => 'Uscito dal flusso (annullato).',
     'path_done'       => 'Percorso terminato.',
     'path_failed'     => 'Fermato su un errore.',
+    // temporary flows (3.20)
+    'temp_note'       => 'Flusso temporaneo: :count ticket. Non parte con le nuove e-mail; «Avvia» lo pubblica, lo applica al suo elenco, poi si elimina (al più tardi il :date).',
+    'temp_launch'     => 'Avvia sui :count ticket',
+    'temp_badge'      => 'Temporaneo · :count ticket',
+    'temp_launch_ask' => 'Pubblicato. Avviarlo ora sui :count ticket del suo elenco?',
 ];
