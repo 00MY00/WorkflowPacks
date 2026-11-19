@@ -4,6 +4,14 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [3.20.1] - 2026-11-19
+
+### Modifié
+- `get_me` (connecteur et API) dit clairement la limite de jours en arrière de l'agent : `reapply_limits.period_max`
+  (jusqu'à 3650 ; 0 : sans limite), plus `period_unlimited`, `period_most` (3650) et `period_help` en clair, pour qu'une
+  IA ne la prenne pas pour une liste de choix fixes.
+- Lecture des tickets par un agent (`list_tickets`, `GET /tickets`) : `days` de 1 à 3650 (30 par défaut).
+
 ## [3.20.0] - 2026-11-19
 
 ### Ajouté

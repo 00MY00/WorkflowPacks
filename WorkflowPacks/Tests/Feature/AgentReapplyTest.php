@@ -303,4 +303,44 @@ class AgentReapplyTest extends TestCase
         $this->assertStringContainsString('name="reapply[period_max]"', $ai);
         $this->assertStringContainsString('max="3650"', $ai);
     }
+
+    public function testGetMeShowsTheDaysBackSetForTheAgentUpTo3650()
+    {
+        $a = $this->mailbox('A');
+        $admin = $this->user([$a], true);
+        $this->ticket($a);
+        $flow = $this->flow($a, $admin);
+        $token = $this->agent($admin, [$a], ['others.see', 'others.reapply'], ['statuses' => ['active'], 'period_max' => 3650]);
+        $agent = Agent::orderBy('id', 'desc')->first();
+        $me = function () use ($token) {
+            $rpc = json_decode($this->call('POST', route('workflowpacks.mcp', ['token' => $token]), [], [], [],
+                ['CONTENT_TYPE' => 'application/json', 'HTTP_ACCEPT' => 'application/json'],
+                json_encode(['jsonrpc' => '2.0', 'id' => 1, 'method' => 'tools/call', 'params' => ['name' => 'get_me', 'arguments' => []]]))->getContent(), true);
+            $api = json_decode($this->call('GET', route('workflowpacks.api.me'), [], [], [], ['HTTP_AUTHORIZATION' => 'Bearer '.$token, 'HTTP_ACCEPT' => 'application/json'])->getContent(), true);
+
+            return [json_decode($rpc['result']['content'][0]['text'], true)['reapply_limits'], $api['reapply_limits']];
+        };
+
+        // the connector and the API: 3650 days, said plainly
+        list($connector, $api) = $me();
+        $this->assertSame([3650, false, 3650], [$connector['period_max'], $connector['period_unlimited'], $connector['period_most']]);
+        $this->assertStringContainsString('1 to 3650', $connector['period_help']);
+        $this->assertSame($connector, $api, 'the same for the connector and the API');
+        // and usable: 3650 days back accepted, one more refused
+        list($status, $out) = $this->api($token, $flow->id, ['period' => 3650]);
+        $this->assertSame([200, 3650], [$status, $out['filters']['period']], json_encode($out));
+        list($status, $out) = $this->api($token, $flow->id, ['period' => 3651]);
+        $this->assertSame([403, 'limit_period'], [$status, $out['error']]);
+
+        // changed from its tile: 1000 days, then no limit
+        foreach ([['1000', 1000, false], ['0', 0, true]] as list($sent, $days, $unlimited)) {
+            $this->actingAs($admin)->post(route('workflowpacks.ai.agents.update', ['id' => $agent->id]), ['name' => 'Claude', 'mailbox_ids' => [$a->id],
+                'permissions_sent' => 1, 'permissions' => ['others.see', 'others.reapply'], 'reapply_sent' => 1,
+                'reapply' => ['statuses' => ['active'], 'period_max' => $sent]]);
+            list($connector) = $me();
+            $this->assertSame([$days, $unlimited], [$connector['period_max'], $connector['period_unlimited']], $sent);
+        }
+        list($status, $out) = $this->api($token, $flow->id, ['period' => 0]);
+        $this->assertSame(200, $status, 'no limit: all the tickets');
+    }
 }

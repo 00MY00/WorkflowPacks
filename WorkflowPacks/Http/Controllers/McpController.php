@@ -152,7 +152,7 @@ class McpController extends BaseController
             $list[] = ['name' => 'list_tickets', 'title' => 'Tickets', 'description' => 'Recent tickets of the mailboxes you were given: id, subject, beginning of the first e-mail (anonymised unless the administrator chose otherwise).',
                 'inputSchema' => ['type' => 'object', 'properties' => [
                     'mailbox_id' => ['type' => 'integer', 'description' => 'One of your mailboxes (default: all of them)'],
-                    'days'       => ['type' => 'integer', 'description' => 'Last days (default 30)'],
+                    'days'       => ['type' => 'integer', 'description' => 'Tickets created in the last N days: 1 to 3650 (default 30)'],
                     'limit'      => ['type' => 'integer', 'description' => 'At most (default 100, max 200)'],
                     'search'     => ['type' => 'string', 'description' => 'Subject containing'],
                 ]], 'annotations' => ['readOnlyHint' => true]];

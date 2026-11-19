@@ -64,7 +64,9 @@ toutes).
   (403) pour ses flux, ou `read_only` si l'agent n'a aucun droit d'écriture ; pour un autre flux sans le droit :
   **404 `not_found`**, son existence n'est pas révélée. Hors de ses boîtes : `mailbox_denied`.
 - `GET /me` renvoie `permissions` (la liste ci-dessus) ; `read_only`, `can_publish`, `can_activate`, `can_see_all`,
-  `can_delete`, `can_deactivate`, `can_reapply` restent fournis ; `reapply_limits` donne ses limites, déduits de cette liste.
+  `can_delete`, `can_deactivate`, `can_reapply` restent fournis ; `reapply_limits` donne ses limites
+  (`period_max` : jours en arrière au plus, jusqu'à 3650, 0 sans limite ; `period_unlimited`, `period_most`,
+  `period_help` le disent en clair), déduits de cette liste.
 - Les agents créés avant 3.17 gardent exactement leurs droits (anciennes cases traduites dans le tableau ; « agir sur
   les autres flux » n'a jamais permis d'en **modifier** le contenu, `others.edit` reste donc décoché). « Désactiver »
   (3.18) n'est donné à aucun agent existant : à cocher sur sa fiche. Activer ne donne pas le droit de désactiver.
@@ -144,7 +146,7 @@ Elle répond `404` tant que le moteur interne est désactivé. Utilisez HTTPS.
 | POST | `/flows/{id}/reapply` | appliquer aux tickets existants : `{"statuses": [...], "period": 45, "tags": [...], "assignees": [12, "unassigned"]}` → estimation ; avec `"confirm": true` → lancé |
 | POST | `/flows/{id}/reapply/control` | `{"action": "status" \| "pause" \| "resume" \| "stop"}` |
 | GET | `/catalog` | les règles d'un flux, les blocs (champs, sorties, variables) et un exemple, comme dans le dossier de l'assistant |
-| GET | `/tickets?mailbox_id=&days=&limit=&search=` | tickets de ses boîtes : numéro, sujet, extrait, domaine, statut, indices (anonymisés selon le réglage) |
+| GET | `/tickets?mailbox_id=&days=&limit=&search=` | tickets de ses boîtes (`days` : 1 à 3650, 30 par défaut) : numéro, sujet, extrait, domaine, statut, indices (anonymisés selon le réglage) |
 | GET | `/flows` | ses flux : brouillon, version publiée, actif |
 | POST | `/flows` | propose un flux (même JSON que la réponse à l'assistant) : enregistré en **brouillon désactivé** |
 | PUT | `/flows/{id}` | modifie le brouillon de son flux, ou d'un autre de ses boîtes avec `others.edit` (la version publiée continue de tourner) |
