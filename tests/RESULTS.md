@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 3.20.0
+# Résultats des tests — Workflow Packs 3.20.1
 
 Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,12 @@ Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 3.20.1 — `get_me` et les jours en arrière
+
+| Série | Résultat |
+|---|---|
+| Intégration (instance neuve) | `AgentReapplyTest` : agent limité à 3650 jours depuis le formulaire, `get_me` du connecteur et `/me` de l'API identiques (3650, `period_unlimited` faux, `period_most` 3650, aide en clair) ; 3650 jours acceptés, 3651 refusés ; changé depuis la fiche à 1000 puis 0 (sans limite), relu par `get_me` ; `period: 0` accepté sans limite |
 
 ## 3.20.0 — flux temporaires, tickets sans action, API des flux, jours en arrière libres
 

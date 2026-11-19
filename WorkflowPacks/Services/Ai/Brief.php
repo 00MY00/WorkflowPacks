@@ -64,7 +64,8 @@ class Brief
         $limit = max(1, min(self::MAX_TICKETS, (int) ($options['limit'] ?? 100)));
         $query = \App\Conversation::whereIn('mailbox_id', (array) $options['mailbox_ids'])
             ->where('state', \App\Conversation::STATE_PUBLISHED)
-            ->where('created_at', '>=', \Carbon\Carbon::now()->subDays(max(1, (int) ($options['days'] ?? 30))));
+            // 1 to 3650 days back (Reapply::MAX_DAYS)
+            ->where('created_at', '>=', \Carbon\Carbon::now()->subDays(max(1, min(\Modules\WorkflowPacks\Services\Engine\Reapply::MAX_DAYS, (int) ($options['days'] ?? 30)))));
         if (trim((string) ($options['search'] ?? '')) !== '') {
             $query->where('subject', 'like', '%'.str_replace(['%', '_'], ['\%', '\_'], trim($options['search'])).'%');
         }

@@ -35,7 +35,19 @@ class AgentTools
             'read_only' => !$this->mayAny(Agent::WRITES), 'can_publish' => $this->mayAny(['own.publish', 'others.publish']),
             'can_activate' => $this->mayActivate(), 'can_see_all' => $a->may('others.see'), 'can_delete' => $this->mayDelete(),
             'can_deactivate' => $this->mayDeactivate(), 'can_reapply' => $this->mayReapply(),
-            'reapply_limits' => $this->mayReapply() ? $a->reapplyLimits() : null, 'expires_at' => $a->expires_at ? $a->expires_at->toIso8601String() : null];
+            'reapply_limits' => $this->mayReapply() ? self::limitsShown($a->reapplyLimits()) : null, 'expires_at' => $a->expires_at ? $a->expires_at->toIso8601String() : null];
+    }
+
+    /**
+     * Its limits as an agent reads them: period_max in days back (any number up to Reapply::MAX_DAYS, 0: no limit),
+     * said plainly too, so that it is never taken for a fixed list of choices.
+     */
+    protected static function limitsShown(array $limits)
+    {
+        return $limits + ['period_unlimited' => $limits['period_max'] === 0, 'period_most' => Reapply::MAX_DAYS,
+            'period_help' => $limits['period_max'] === 0
+                ? 'period: any number of days back from 1 to '.Reapply::MAX_DAYS.', or 0 for all'
+                : 'period: any number of days back from 1 to '.$limits['period_max']];
     }
 
     /** The blocks and the rules of a flow: the same as in the brief of the AI assistant. */
