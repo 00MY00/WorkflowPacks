@@ -145,7 +145,15 @@ flux : [api-flux.md](api-flux.md).
 
 Le bloc **Notification push** confie la notification au module **WebPush** (FreeScout installé comme application
 sur téléphone et ordinateur). Workflow Packs n'envoie rien lui-même : WebPush chiffre et livre la notification aux
-appareils des agents, et ses **heures calmes** sont respectées. Un clic sur la notification ouvre le ticket.
+appareils des agents. Un clic sur la notification ouvre le ticket.
+
+Les réglages de WebPush sont repris (chacun seulement si la version installée de WebPush l'a) :
+
+- **Masquer le contenu** : la notification ne montre que le numéro du ticket et « Nouvelle activité », rien de lisible
+  sur un écran verrouillé (ni le titre ni le texte du bloc) ;
+- l'**icône** et la **petite icône** de la barre d'état choisies dans ses réglages ;
+- ses boutons **Répondre** et, pour un ticket qui n'est pas le sien, **M'assigner** ;
+- les **heures calmes** de chaque agent (versions de WebPush qui les ont).
 
 - Seuls les utilisateurs actifs qui ont accès à la boîte du ticket sont notifiés.
 - Sortie **erreur** si le module WebPush est absent ou désactivé, ou s'il n'y a personne à notifier (ticket non

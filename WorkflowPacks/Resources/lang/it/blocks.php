@@ -148,4 +148,6 @@ return [
         'examples'     => 'Scegliete da 1 a :max e-mail di esempio nelle impostazioni del blocco (cercare, selezionare, aggiungere).',
         'percent'      => 'Percentuale da 0 a 100.',
     ],
+    // a push notification when WebPush hides the content (locked screens)
+    'push_hidden' => 'Nuova attività',
 ];

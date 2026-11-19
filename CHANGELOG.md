@@ -4,6 +4,15 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [3.20.2] - 2026-11-19
+
+### Corrigé
+- **Bloc Notification push avec WebPush 1.3.0** : le réglage **Masquer le contenu** de WebPush est respecté (seulement
+  le numéro du ticket sur un écran verrouillé ; avant, le titre et le texte du bloc s'affichaient quand même).
+- La notification reprend l'icône et la petite icône de la barre d'état réglées dans WebPush, et ses boutons
+  « Répondre » / « M'assigner », comme ses propres notifications. Les versions plus anciennes de WebPush restent
+  prises en charge (heures calmes comprises).
+
 ## [3.20.1] - 2026-11-19
 
 ### Modifié

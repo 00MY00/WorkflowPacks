@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 3.20.1
+# Résultats des tests — Workflow Packs 3.20.2
 
 Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,13 @@ Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+
+## 3.20.2 — bloc Notification push et WebPush 1.3.0
+
+| Série | Résultat |
+|---|---|
+| Intégration (instance neuve) | **184 tests, 2 353 assertions, tous verts**. `PushBlockTest` : icône et petite icône de WebPush, boutons par agent (« Répondre » pour son ticket, « M'assigner » + « Répondre » pour un collègue), seules ses clés de boutons reprises ; « Masquer le contenu » : seulement le numéro, ni titre ni texte |
+| Vrai module WebPush 1.3.0 (instance de test) | appareil fictif abonné, faux service push local, contenu déchiffré comme un téléphone : signature VAPID, chiffrement aes128gcm, titre et texte avec variables, lien vers le ticket, compteur ajouté par WebPush, icône et petite icône de ses réglages, bouton « Répondre » traduit, « Masquer le contenu » (numéro seulement, « New activity »), module désactivé : rien envoyé et sortie erreur |
 
 ## 3.20.1 — `get_me` et les jours en arrière
 
