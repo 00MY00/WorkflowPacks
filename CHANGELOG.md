@@ -4,6 +4,13 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [4.0.1] - 2026-11-22
+
+### Corrigé
+- La route `workflowpacks.graph` (ancien schéma des règles), utilisée par d'autres modules comme RefreshGlobal pour
+  leurs liens, existe à nouveau et mène à l'éditeur des flux (redirection permanente). RefreshGlobal ne signale plus
+  `RG-ROUTE-07` et son lien « règles » refonctionne. Contrôlée par `workflowpacks:health` et par un test.
+
 ## [4.0.0] - 2026-11-21
 
 Workflow Packs ne dépend plus du module Workflows : le module, ce sont les flux de son propre moteur.

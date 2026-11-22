@@ -28,7 +28,9 @@ class HealthCommand extends Command
         'Jobs\FileIntoImapFolder'];
     const VIEWS = ['flows', 'reapply', 'untreated', 'ai', 'history', 'diagnostic', 'settings', 'separation', 'layout'];
     const ROUTES = ['workflowpacks.index', 'workflowpacks.flows', 'workflowpacks.flows.data', 'workflowpacks.history', 'workflowpacks.diagnostic',
-        'workflowpacks.flowpack', 'workflowpacks.ai', 'workflowpacks.api.me', 'workflowpacks.mcp'];
+        'workflowpacks.flowpack', 'workflowpacks.ai', 'workflowpacks.api.me', 'workflowpacks.mcp',
+        // linked to by other modules (RefreshGlobal): never removed without them knowing
+        'workflowpacks.graph'];
 
     public function handle()
     {

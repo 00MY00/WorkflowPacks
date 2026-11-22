@@ -13,6 +13,9 @@ Route::group([
 
     // home: the editor of the flows (the page of the separation from Workflows while it waits for a decision)
     Route::get('/', $admins + ['uses' => 'FlowsController@home'])->name('workflowpacks.index');
+    // former address of the diagram of the rules (3.x), kept for the other modules that link to it (RefreshGlobal) and
+    // for bookmarks: leads to the editor of the flows
+    Route::get('/graph', $admins + ['uses' => 'FlowsController@formerDiagram'])->name('workflowpacks.graph');
     // separation from Workflows (4.0): what will be deleted, its backup, confirm or stay on the previous version
     Route::get('/separation', $admins + ['uses' => 'SeparationController@show'])->name('workflowpacks.separation');
     Route::get('/separation/backup', $admins + ['uses' => 'SeparationController@backup'])->name('workflowpacks.separation.backup');

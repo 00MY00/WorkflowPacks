@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 4.0.0
+# Résultats des tests — Workflow Packs 4.0.1
 
 Date : 2026-11-22. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -12,6 +12,12 @@ Date : 2026-11-22. Environnements Docker jetables, données de test uniquement (
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | plus utilisé depuis 4.0 ; **bouchon de test** `tests/stubs/Workflows` seulement pour la séparation (règles laissées par les packs de règles). Le module officiel, payant, n'a jamais été testé. |
+
+## 4.0.1 — route `workflowpacks.graph` gardée
+
+| Série | Résultat |
+|---|---|
+| Intégration (instance neuve) | `SafetyTest` : `workflowpacks.graph` redirige (301) un administrateur vers l'éditeur des flux, refusée aux autres ; `workflowpacks:health` la contrôle |
 
 ## 4.0.0 — séparation de Workflows
 
