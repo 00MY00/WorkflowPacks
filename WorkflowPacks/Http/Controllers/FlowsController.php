@@ -42,6 +42,14 @@ class FlowsController extends Controller
         return redirect()->route('workflowpacks.flows');
     }
 
+    /** The address of the diagram of the rules of 3.x (route "workflowpacks.graph", used by other modules): the flows. */
+    public function formerDiagram()
+    {
+        $this->guard();
+
+        return redirect()->route('workflowpacks.flows', [], 301);
+    }
+
     public function show(Request $request)
     {
         $this->guardEngine();

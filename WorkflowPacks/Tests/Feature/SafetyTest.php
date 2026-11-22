@@ -38,6 +38,9 @@ class SafetyTest extends TestCase
             $html = $this->actingAs($admin)->get(route($page))->assertStatus(200)->getContent();
             $this->assertStringNotContainsString('workflowpacks::', strip_tags($html), $page.': every text exists');
         }
+        // the former address of the diagram (linked to by RefreshGlobal): the flows, for administrators only
+        $this->actingAs($admin)->get(route('workflowpacks.graph'))->assertStatus(301)->assertRedirect(route('workflowpacks.flows'));
+        $this->actingAs($this->user([$a]))->get(route('workflowpacks.graph'))->assertStatus(403);
         // not logged in: the login page
         \Auth::logout();
         $this->get(route('workflowpacks.index'))->assertStatus(302);

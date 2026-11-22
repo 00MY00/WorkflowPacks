@@ -14,6 +14,18 @@ dossier ou filtrer la liste.
 - **Disponibilité :** l'API n'existe que si la table `workflowpacks_ticket_folders` existe, c'est-à-dire si
   Workflow Packs 1.14.0 ou plus récent est installé et migré.
 
+## Adresses stables du module
+
+Les autres modules peuvent faire des liens vers ces routes (à vérifier avec `\Route::has()`), réservées aux
+administrateurs :
+
+| Route | Page |
+|---|---|
+| `workflowpacks.index` | accueil du module (éditeur des flux) |
+| `workflowpacks.flows` | éditeur des flux |
+| `workflowpacks.history` | historique (rangements, nettoyages, flux, agents) |
+| `workflowpacks.graph` | ancienne adresse du schéma des règles (3.x), gardée : mène à l'éditeur des flux |
+
 ## Filtres Eventy (recommandé)
 
 Les filtres Eventy ne créent aucune dépendance. Si Workflow Packs n'est pas installé, Eventy renvoie la valeur par
