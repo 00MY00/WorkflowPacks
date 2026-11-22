@@ -13,8 +13,8 @@ class ModuleInfo
 {
     const MODULE = 'WorkflowPacks';
     const ALIAS = 'workflowpacks';
-    const TABLES = ['workflowpacks_packs', 'workflowpacks_links', 'workflowpacks_imports', 'workflowpacks_resources', 'workflowpacks_layouts',
-        'workflowpacks_backups', 'workflowpacks_retention', 'workflowpacks_activity', 'workflowpacks_ticket_folders',
+    /** tables of the module (the packs of Workflows rules had more: Services\Separation::LEGACY_TABLES) */
+    const TABLES = ['workflowpacks_backups', 'workflowpacks_retention', 'workflowpacks_activity', 'workflowpacks_ticket_folders',
         'workflowpacks_flows', 'workflowpacks_flow_versions', 'workflowpacks_flow_runs', 'workflowpacks_flow_events', 'workflowpacks_agents',
         'workflowpacks_flow_reapply'];
     const UPDATEGUARD_URL = 'https://github.com/00MY00/UpdateGuard';

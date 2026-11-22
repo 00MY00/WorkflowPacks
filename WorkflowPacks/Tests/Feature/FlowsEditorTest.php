@@ -35,8 +35,10 @@ class FlowsEditorTest extends TestCase
     {
         $a = $this->mailbox('A');
         $admin = $this->user([$a], true);
+        // engine off: a page saying so (not an error), the calls of the editor refused
         \Option::set(Engine::OPTION, false);
-        $this->actingAs($admin)->get(route('workflowpacks.flows'))->assertStatus(403);
+        $this->seeIn($this->actingAs($admin)->get(route('workflowpacks.flows'))->assertStatus(200), e(__('workflowpacks::messages.engine_off')));
+        $this->actingAs($admin)->postJson(route('workflowpacks.flows.store'), ['name' => 'x'])->assertStatus(409);
         \Option::set(Engine::OPTION, true);
         $this->seeIn($this->actingAs($admin)->get(route('workflowpacks.flows'))->assertStatus(200), 'wpf-app');
         $agent = $this->user([$a], false, true);

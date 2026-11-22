@@ -75,9 +75,46 @@ class Push extends AbstractBlock
             return html_entity_decode($ctx->render((string) $text), ENT_QUOTES, 'UTF-8');
         };
         $title = trim($plain($params['title'] ?? '')) ?: (string) ($ctx->ticket['subject'] ?? '');
-        $ctx->actions()->push($users, $title, $plain($params['text']));
+        $report = $ctx->actions()->push($users, $title, $plain($params['text']));
 
-        return Result::next('next', self::title($params));
+        return Result::next('next', self::outcome($ctx, $params, $report));
+    }
+
+    /**
+     * What became of it, said in the path of the ticket: devices that took it, agents in their quiet hours, agents
+     * without any device, devices that refused. Received by nobody: also written in History, so that it is seen (the
+     * flow goes on: a missed notification never stops the blocks after it).
+     */
+    protected static function outcome(Context $ctx, array $params, $report)
+    {
+        if ($report === null) {
+            return self::title($params);
+        }
+        $names = function (array $list) {
+            return implode(', ', array_slice($list, 0, 5)).(count($list) > 5 ? ' (+'.(count($list) - 5).')' : '');
+        };
+        $parts = [];
+        if ($report['sent']) {
+            $parts[] = self::text(self::type(), 'sent', ['count' => $report['sent']]);
+        }
+        if ($report['silenced']) {
+            $parts[] = self::text(self::type(), 'silenced', ['names' => $names($report['silenced'])]);
+        }
+        if ($report['no_device']) {
+            $parts[] = self::text(self::type(), 'no_device', ['names' => $names($report['no_device'])]);
+        }
+        if ($report['devices'] > $report['sent']) {
+            $parts[] = self::text(self::type(), 'refused', ['count' => $report['devices'] - $report['sent']]);
+        }
+        if ($report['sent']) {
+            return self::title($params).' — '.implode(' · ', $parts);
+        }
+        $summary = self::text(self::type(), 'not_received').' — '.implode(' · ', $parts);
+        \Modules\WorkflowPacks\Services\History::add('flow', 'skipped', ['mailbox_id' => $ctx->ticket['mailbox_id'] ?? null,
+            'conversation_id' => $ctx->conversation ? $ctx->conversation->id : null, 'subject' => (string) ($ctx->ticket['subject'] ?? ''),
+            'message' => $summary]);
+
+        return $summary;
     }
 
     /** @return \App\User[] active users who can see the mailbox of the ticket */

@@ -86,7 +86,8 @@ class Engine
         $def = Definition::from($version->data);
         $log = function ($block, Result $r, array $changes, $level) use ($run, $version, $conversation) {
             $event = FlowEvent::create(['run_id' => $run->id, 'flow_id' => $run->flow_id, 'conversation_id' => $run->conversation_id,
-                'block' => $block, 'output' => $r->output, 'summary' => mb_substr($r->summary, 0, 255), 'changes' => $changes ?: null,
+                // a wait that runs its block again on wake-up has no output: '' in the journal
+                'block' => $block, 'output' => (string) $r->output, 'summary' => mb_substr($r->summary, 0, 255), 'changes' => $changes ?: null,
                 'level' => $level]);
             // the other modules are told what the flow changed (RefreshGlobal: statistics); never a dry run
             if ($changes) {
@@ -196,7 +197,7 @@ class Engine
             return ['events' => [], 'end' => FlowRun::FAILED];
         }
         $log = function ($block, Result $r, array $changes, $level) use (&$events, $ctx, $start) {
-            $events[] = ['at' => $ctx->now->diffInSeconds($start), 'block' => $block, 'output' => $r->output, 'summary' => $r->summary,
+            $events[] = ['at' => $ctx->now->diffInSeconds($start), 'block' => $block, 'output' => (string) $r->output, 'summary' => $r->summary,
                 'changes' => $changes, 'level' => $level, 'ticket' => $ctx->ticket];
         };
         $state = ['state' => FlowRun::RUNNING, 'block' => $trigger['id'], 'resume' => null, 'attempts' => 0];

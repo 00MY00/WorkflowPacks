@@ -37,6 +37,14 @@ return [
             'decision' => 'Gelijkenis :score % (onderwerp :subject %, tekst :body %), drempel :threshold % → :output',
             'help'     => 'Vergelijkt het ticket lokaal met voorbeeldtickets (hun id).',
         ],
+        'mail_tag' => [
+            'name'     => 'E-maillabel',
+            'title'    => 'Als de e-mail het label „:tag” :has',
+            'decision' => 'Labels: :tags → :output',
+            'help'     => 'Controleert de labels die RefreshGlobal aan de e-mail gaf (inbox, spam, map…).',
+            'missing'  => 'Module RefreshGlobal ontbreekt of staat uit: geen labels.',
+            'waiting'  => 'Wachten op de labels van RefreshGlobal (nieuwe e-mail).',
+        ],
     ],
     'wait'      => [
         'duration' => [
@@ -70,6 +78,11 @@ return [
             'name'  => 'Pushmelding',
             'title' => 'Pushmelding: :to',
             'help'  => 'Stuurt een melding naar de telefoon of computer van de agenten (module WebPush), met respect voor hun stille uren.',
+            'sent'          => 'verzonden naar :count apparaat/apparaten',
+            'silenced'      => 'stille uren: :names',
+            'no_device'     => 'geen apparaat geabonneerd: :names',
+            'refused'       => ':count apparaat/apparaten hebben haar niet aanvaard (logboek van FreeScout, regels [WebPush])',
+            'not_received'  => 'Pushmelding niet ontvangen',
         ],
         'delete'      => [
             'name'  => 'Ticket verwijderen',
@@ -112,6 +125,10 @@ return [
             'pending' => 'In afwachting',
             'closed'  => 'Gesloten',
             'spam'    => 'Spam',
+        ],
+        'has'    => [
+            'has'     => 'heeft',
+            'has_not' => 'niet heeft',
         ],
         'nobody' => 'niemand',
         'to'     => [

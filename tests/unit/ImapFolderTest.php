@@ -1,8 +1,6 @@
 <?php
 
 use Modules\WorkflowPacks\Services\Imap\FolderPath;
-use Modules\WorkflowPacks\Services\Pack\RuleCompiler;
-use Modules\WorkflowPacks\Services\Pack\VariableResolver;
 
 test('Dossiers e-mail : chemin écrit dans la règle -> niveaux sur le serveur, sous le préfixe', function () {
     same(['segments' => ['Factures', 'Fournisseurs'], 'error' => null], FolderPath::parse(' Factures / Fournisseurs/ '));
@@ -31,27 +29,6 @@ test('Dossiers e-mail : préfixe des réglages nettoyé, [WP] par défaut', func
     same('[WP]', FolderPath::prefix('***'));
     same('[Tri] Auto', FolderPath::prefix(' [Tri] Auto/* '));
     same(20, mb_strlen(FolderPath::prefix(str_repeat('A', 40))));
-});
-
-test('Dossiers e-mail : action compilée avec variables, nom contrôlé, message clair si l’option est désactivée', function () {
-    $catalog = require __DIR__.'/fixtures/catalog.php';
-    $vars = VariableResolver::forMailbox(4, 'sales@example.test', 'Ventes', [], []);
-    $rule = function ($value) {
-        return ['key' => 'r', 'name' => 'Factures', 'type' => 'automatic', 'settings' => ['apply_to_prev' => false, 'max_executions' => 1],
-            'conditions' => ['all' => [['type' => 'subject', 'operator' => 'contains', 'value' => 'facture']]],
-            'actions' => [['type' => FolderPath::ACTION, 'value' => $value]]];
-    };
-    // option désactivée : l'action n'est pas dans le catalogue
-    $off = new RuleCompiler($catalog, config_workflows(), ['automatic' => 1, 'manual' => 2]);
-    same(['WP-IMAP-01'], codes($off->compile($rule('Factures'), $vars, 4)['problems']));
-
-    // option activée : l'action est ajoutée au catalogue par le filtre workflows.actions_config
-    $catalog['actions'][FolderPath::ACTION] = ['title' => 'Ranger', 'group' => 'Workflow Packs', 'operators' => null, 'values' => null];
-    $on = new RuleCompiler($catalog, config_workflows(), ['automatic' => 1, 'manual' => 2]);
-    $r = $on->compile($rule('Factures/{{mailbox.name}}'), $vars, 4);
-    check($r['problems']->isEmpty(), implode("\n", $r['problems']->lines()));
-    same([[['type' => FolderPath::ACTION, 'value' => 'Factures/Ventes']]], $r['attributes']['actions']);
-    same(['WP-IMAP-02'], codes($on->compile($rule('Factures/*'), $vars, 4)['problems']));
 });
 
 test('Dossier actuel des tickets : dossier de la règle retrouvé depuis le chemin du serveur (historique d’avant 1.14.0)', function () {

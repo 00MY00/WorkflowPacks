@@ -2,40 +2,40 @@
 
 namespace Modules\WorkflowPacks\Http\Controllers;
 
-use Modules\WorkflowPacks\Providers\WorkflowPacksServiceProvider;
 use Modules\WorkflowPacks\Services\Compat\Checker;
+use Modules\WorkflowPacks\Services\Engine\Engine;
 
 abstract class Controller extends \App\Http\Controllers\Controller
 {
-    /** 403 unless the user may manage the workflows of at least one mailbox. */
+    /** Administrators only (the flows act on every mailbox): 403 for anyone else. */
     protected function guard()
     {
-        if (!WorkflowPacksServiceProvider::userCanUse()) {
+        $user = auth()->user();
+        if (!$user || !$user->isAdmin()) {
             \Helper::denyAccess();
         }
     }
 
-    /** Page of the module, with the data every view uses (Refresh look, compatibility state). */
+    /**
+     * Administrators, and the flow engine on (Manage › Settings › Workflow Packs). Engine off: a page saying so, with
+     * the way to switch it on again, instead of an error (a JSON answer for the editor's calls).
+     */
+    protected function guardEngine()
+    {
+        $this->guard();
+        if (!Engine::enabled()) {
+            throw new \Illuminate\Http\Exceptions\HttpResponseException(request()->expectsJson()
+                ? response()->json(['ok' => false, 'message' => __('workflowpacks::messages.engine_off')], 409)
+                : response($this->page('engine_off')->render(), 200));
+        }
+    }
+
+    /** Page of the module, with the data every view uses (Refresh look, state of the module). */
     protected function page($view, array $data = [])
     {
         return view('workflowpacks::'.$view, $data + [
             'wpRefresh' => Checker::refreshActive(),
             'compat'    => Checker::run(),
         ]);
-    }
-
-    /** Pages of the packs of rules and their equivalent for the flows (Workflows missing, engine on, administrators). */
-    const FLOW_PAGES = ['workflowpacks.import' => 'workflowpacks.flowpack', 'workflowpacks.export' => 'workflowpacks.flowpack.export',
-        'workflowpacks.graph' => 'workflowpacks.flows'];
-
-    /** Page shown instead of a form when Workflows is missing or not compatible. */
-    protected function blockedPage()
-    {
-        $flowPage = self::FLOW_PAGES[(string) \Route::currentRouteName()] ?? null;
-        if ($flowPage && Checker::workflowsOptional() && auth()->user()->isAdmin()) {
-            return redirect()->route($flowPage);
-        }
-
-        return $this->page('blocked', ['reasons' => Checker::blockingReasons()]);
     }
 }

@@ -2,120 +2,10 @@
 
 namespace Modules\WorkflowPacks\Services;
 
-use Modules\WorkflowPacks\Services\Pack\ConditionTranslator;
-use Modules\WorkflowPacks\Services\Pack\Fingerprint;
-use Modules\WorkflowPacks\Services\Pack\VariableResolver;
-use Modules\WorkflowPacks\Services\Workflows\Bridge;
 
-/** Helpers of the views. Every value is escaped here; variables are highlighted after escaping. */
+/** Helpers of the views: icons, initials and colours of the mailboxes, info blocks of a description. Values escaped. */
 class Ui
 {
-    /** Escaped value (text or JSON), {{variables}} highlighted. */
-    public static function value($value)
-    {
-        if ($value === null || $value === '') {
-            return '';
-        }
-        // delay of a date condition ({ number, metric }): "30 day(s)"
-        if (is_array($value) && \Modules\WorkflowPacks\Services\Pack\Timer::check($value)['error'] === null) {
-            return e(\Modules\WorkflowPacks\Services\Pack\Timer::label(\Modules\WorkflowPacks\Services\Pack\Timer::check($value)['value']));
-        }
-        $text = is_string($value) ? $value : json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-        if (mb_strlen($text) > 300) {
-            $text = mb_substr($text, 0, 300).'…';
-        }
-        $html = e($text);
-
-        return preg_replace('/\{\{\s*([a-z][a-z0-9_.]*)\s*\}\}/', '<span class="wp-var" title="'.e(__('workflowpacks::messages.variable')).'">{{$1}}</span>', $html);
-    }
-
-    /** Groups of a pack condition tree for the schematic view: list of OR lists. */
-    public static function groups($tree)
-    {
-        if (!is_array($tree)) {
-            return [];
-        }
-        if (isset($tree['any'])) {
-            return [(array) $tree['any']];
-        }
-        $groups = [];
-        foreach ((array) ($tree['all'] ?? []) as $item) {
-            $groups[] = isset($item['any']) ? (array) $item['any'] : [$item];
-        }
-
-        return $groups;
-    }
-
-    /** Native attributes compiled for a mailbox -> pack-shaped rule, for the schematic view. */
-    public static function ruleFromAttributes(array $attributes, array $base)
-    {
-        $actions = [];
-        foreach (Fingerprint::decodeActions($attributes['actions'], (array) Bridge::config('json_value_actions')) as $a) {
-            $actions[] = $a;
-        }
-
-        return [
-            'key'        => $base['key'],
-            'name'       => $attributes['name'],
-            'type'       => $base['type'],
-            'settings'   => $base['settings'],
-            'requires'   => $base['requires'] ?? [],
-            'conditions' => ConditionTranslator::fromNative($attributes['conditions']),
-            'actions'    => $actions,
-        ];
-    }
-
-    /** Kind of sensitive action (send / forward / delete / move) or ''. */
-    public static function sensitive($type)
-    {
-        return (string) (Bridge::config('sensitive_actions')[$type] ?? '');
-    }
-
-    public static function hasVariables($rule)
-    {
-        $p = new \Modules\WorkflowPacks\Services\Pack\Problems();
-
-        return (bool) VariableResolver::namesIn($rule, '', $p);
-    }
-
-    /** Label of a catalog entry when Workflows is available, else the identifier. */
-    public static function label($kind, $type, $mailboxId = null)
-    {
-        try {
-            if ($mailboxId) {
-                $catalog = Bridge::catalog($mailboxId);
-                if (isset($catalog[$kind][$type]['title'])) {
-                    return $catalog[$kind][$type]['title'];
-                }
-            }
-        } catch (\Throwable $e) {
-        }
-
-        return $type;
-    }
-
-    /**
-     * Readable name of a condition / action for a summary: the catalog of the given mailbox, else of the first
-     * mailbox the user manages (looked up once per request), else the identifier.
-     */
-    public static function title($kind, $type, $mailboxId = null)
-    {
-        static $fallback = null;
-        if (!$mailboxId) {
-            if ($fallback === null) {
-                try {
-                    $fallback = auth()->check() ? (int) optional(Bridge::editableMailboxes(auth()->user())->first())->id : 0;
-                } catch (\Throwable $e) {
-                    $fallback = 0;
-                }
-            }
-            $mailboxId = $fallback;
-        }
-
-        return self::label($kind, $type, $mailboxId);
-    }
-
-    /** Line icons (24 x 24, stroke only, 16 px by default): the same drawing language as the diagram. */
     const ICONS = [
         'package' => ['M4 7.5 12 4l8 3.5v9L12 20l-8-3.5z', 'M4 7.5l8 3.5 8-3.5', 'M12 11v9'],
         'refresh' => ['M20 11a8 8 0 0 0-14.9-3.9L4 8', 'M4 4v4h4', 'M4 13a8 8 0 0 0 14.9 3.9L20 16', 'M20 20v-4h-4'],
@@ -138,7 +28,7 @@ class Ui
         'tag'     => ['M3 12V4h8l10 10-8 8z', 'M7.5 7.5h.01'],
         'layers'  => ['M12 3 3 8l9 5 9-5z', 'M3 13l9 5 9-5'],
     ];
-    /** Colour families (background / text) of the mailboxes and of the categories of rules: chosen by the name, never listed. */
+    /** Colour families (background / text) of the mailboxes: chosen by the name, never listed. */
     const FAMILIES = 4;
 
     /** Inline SVG icon (decorative: the text next to it, or the aria-label of its button, says what it means). */
@@ -169,21 +59,6 @@ class Ui
         return (int) (sprintf('%u', crc32(mb_strtolower(trim((string) $name)))) % self::FAMILIES);
     }
 
-    /** Category of a rule from what it does: [icon, family] for its icon square. */
-    public static function category(array $rule)
-    {
-        $types = array_map(function ($a) {
-            return (string) ($a['type'] ?? '');
-        }, (array) ($rule['actions'] ?? []));
-        foreach ([['delete', 'trash', 3], ['delete_forever', 'trash', 3], ['status', 'closed', 2], ['wp_imap_folder', 'folder', 3],
-            ['move', 'folder', 3], ['assign', 'person', 1], ['note', 'note', 0], ['notification', 'mail', 1]] as $c) {
-            if (in_array($c[0], $types, true)) {
-                return [$c[1], $c[2]];
-            }
-        }
-
-        return ['zap', 0];
-    }
 
     /**
      * A description cut into info blocks, one idea each: the sentences of the original text, nothing removed. A

@@ -288,3 +288,16 @@ a.wp-tile:hover, a.wp-tile:focus { border-color: var(--g-primary); text-decorati
 .wp-untreated-create { margin-top: 14px; }
 .wp-reapply-limits { margin: 10px 0; padding: 4px 12px 10px; border: 1px solid var(--g-border); border-radius: 12px; }
 .wp-reapply-limits > summary { display: flex; align-items: center; gap: 6px; min-height: 44px; font-weight: 600; color: var(--g-text); cursor: pointer; }
+
+/* Manage › Settings › Workflow Packs: add a clean-up of an e-mail folder (3.21), fields side by side, stacked on phones */
+.wp-retention-add { margin-top: 12px; padding: 10px 12px; border: 1px solid var(--g-border, #e5e7eb); border-radius: 10px; }
+.wp-retention-fields { display: flex; flex-wrap: wrap; gap: 10px; margin: 8px 0; }
+.wp-retention-fields > label { display: flex; flex-direction: column; gap: 4px; flex: 1 1 180px; min-width: 0; font-weight: 600; }
+.wp-retention-delay { display: flex; gap: 6px; }
+.wp-retention-delay .form-control { min-width: 0; }
+/* separation from Workflows: the three choices side by side, stacked on phones */
+.wp-separation-choices { display: flex; flex-wrap: wrap; gap: 12px; }
+.wp-separation-choice { flex: 1 1 260px; min-width: 0; padding: 12px; border: 1px solid var(--g-border, #e5e7eb); border-radius: 12px; }
+.wp-separation-choice h4 { margin-top: 0; }
+.wp-separation-choice code { word-break: break-all; }
+.wp-separation-list li { margin-bottom: 4px; }

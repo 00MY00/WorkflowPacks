@@ -101,7 +101,7 @@
 </script>
 <script src="{{ asset(\Module::getPublicPath('workflowpacks').'/js/workflowpacks.js') }}?v={{ \Modules\WorkflowPacks\Services\ModuleInfo::version() }}" {!! \Helper::cspNonceAttr() !!}></script>
 
-{{-- automatic clean-up of the managed e-mail folders: set from the side panel of a folder in the diagram --}}
+{{-- automatic clean-up of the managed e-mail folders: the list (remove), then a form to add one --}}
 @php $wp_R = \Modules\WorkflowPacks\Services\Imap\Retention::all(); @endphp
 <h3 class="subheader">{{ __('workflowpacks::messages.retention_list') }}</h3>
 <div class="form-horizontal margin-bottom">
@@ -112,13 +112,34 @@
                     {{ csrf_field() }}
                     <input type="hidden" name="folder" value="{{ $wp_r->folder }}">
                     <i class="glyphicon glyphicon-trash" aria-hidden="true"></i> <strong>{{ \Modules\WorkflowPacks\Services\Imap\FolderPath::label($wp_r->folder, \Modules\WorkflowPacks\Services\Imap\ImapFolders::prefix()) }}</strong> —
-                    {{ __('workflowpacks::messages.'.($wp_r->mode === 'delete' ? 'retention_row_delete' : 'retention_row_trash'), ['delay' => \Modules\WorkflowPacks\Services\Pack\Timer::label(['number' => (int) $wp_r->number, 'metric' => $wp_r->metric])]) }}
+                    {{ __('workflowpacks::messages.'.($wp_r->mode === 'delete' ? 'retention_row_delete' : 'retention_row_trash'), ['delay' => \Modules\WorkflowPacks\Services\Support\Timer::label(['number' => (int) $wp_r->number, 'metric' => $wp_r->metric])]) }}
                     <button type="submit" class="btn btn-link btn-xs">{{ __('workflowpacks::messages.retention_remove_btn') }}</button>
                 </form>
             @empty
                 <p class="text-muted">{{ __('workflowpacks::messages.retention_none') }}</p>
             @endforelse
             <p class="form-help">{{ __('workflowpacks::messages.retention_settings_help') }}</p>
+            <form method="POST" action="{{ route('workflowpacks.retention.save') }}" class="wp-retention-add">
+                {{ csrf_field() }}
+                <strong>{{ __('workflowpacks::messages.retention_add_title') }}</strong>
+                <div class="wp-retention-fields">
+                    <label>{{ __('workflowpacks::messages.retention_folder') }}
+                        <input type="text" name="folder" class="form-control" maxlength="250" required placeholder="Newsletters/Promos"></label>
+                    <label>{{ __('workflowpacks::messages.retention_after') }}
+                        <span class="wp-retention-delay">
+                            <input type="number" name="number" class="form-control" min="1" max="100000" step="1" value="7" required inputmode="numeric">
+                            <select name="metric" class="form-control">
+                                @foreach (['d', 'h', 'i'] as $wp_m)<option value="{{ $wp_m }}">{{ __('workflowpacks::flows.unit_'.$wp_m) }}</option>@endforeach
+                            </select>
+                        </span></label>
+                    <label>{{ __('workflowpacks::messages.retention_mode') }}
+                        <select name="mode" class="form-control">
+                            <option value="trash">{{ __('workflowpacks::messages.retention_mode_trash') }}</option>
+                            <option value="delete">{{ __('workflowpacks::messages.retention_mode_delete') }}</option>
+                        </select></label>
+                </div>
+                <button type="submit" class="btn btn-default">{{ __('workflowpacks::messages.retention_add_btn') }}</button>
+            </form>
         </div>
     </div>
 </div>

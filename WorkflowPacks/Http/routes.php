@@ -2,57 +2,26 @@
 
 /*
  * Same pattern as the other FreeScout modules: "web" group (CSRF), FreeScout's subdirectory prefix, "auth" + "roles".
- * The permission on each mailbox is checked again by the controllers for every request (Workflow::canEditWorkflows).
+ * Administrators only: the flows act on every mailbox. The controllers check it again for every request.
  */
 Route::group([
     'middleware' => 'web',
     'prefix'     => \Helper::getSubdirectory().'/workflow-packs',
     'namespace'  => 'Modules\WorkflowPacks\Http\Controllers',
 ], function () {
-    $users = ['middleware' => ['auth', 'roles'], 'roles' => ['admin', 'user']];
     $admins = ['middleware' => ['auth', 'roles'], 'roles' => ['admin']];
 
-    Route::get('/', $users + ['uses' => 'PacksController@index'])->name('workflowpacks.index');
-    Route::get('/import', $users + ['uses' => 'PacksController@upload'])->name('workflowpacks.import');
-    Route::post('/import/configure', $users + ['uses' => 'PacksController@configure'])->name('workflowpacks.import.configure');
-    Route::post('/import/preview', $users + ['uses' => 'PacksController@preview'])->name('workflowpacks.import.preview');
-    Route::post('/import/confirm', $users + ['uses' => 'PacksController@confirm'])->name('workflowpacks.import.confirm');
-    Route::get('/packs/{key}/reimport', $users + ['uses' => 'PacksController@reimport'])->name('workflowpacks.reimport');
-    // enable / disable rules from the list of the packs (one rule or the ticked ones)
-    Route::post('/rules/toggle', $users + ['uses' => 'PacksController@toggleRules'])->name('workflowpacks.rules.toggle');
-    // remove a pack: preview -> confirmation (with a backup first) -> backup download
-    Route::get('/packs/{key}/remove', $users + ['uses' => 'RemoveController@preview'])->name('workflowpacks.remove');
-    Route::post('/packs/{key}/remove', $users + ['uses' => 'RemoveController@confirm'])->name('workflowpacks.remove.confirm');
-    // without the Workflows module: the pack forgotten by Workflow Packs (its rules cannot be reached)
-    Route::post('/packs/{key}/forget', $admins + ['uses' => 'RemoveController@forget'])->name('workflowpacks.forget');
-    Route::get('/backups/{id}', $users + ['uses' => 'RemoveController@backup'])->name('workflowpacks.backup');
+    // home: the editor of the flows (the page of the separation from Workflows while it waits for a decision)
+    Route::get('/', $admins + ['uses' => 'FlowsController@home'])->name('workflowpacks.index');
+    // separation from Workflows (4.0): what will be deleted, its backup, confirm or stay on the previous version
+    Route::get('/separation', $admins + ['uses' => 'SeparationController@show'])->name('workflowpacks.separation');
+    Route::get('/separation/backup', $admins + ['uses' => 'SeparationController@backup'])->name('workflowpacks.separation.backup');
+    Route::post('/separation', $admins + ['uses' => 'SeparationController@confirm'])->name('workflowpacks.separation.confirm');
+    // backups kept by the module (a flow deleted by an agent, the data of the separation)
+    Route::get('/backups/{id}', $admins + ['uses' => 'BackupController@download'])->name('workflowpacks.backup');
 
-    Route::get('/export', $users + ['uses' => 'ExportController@form'])->name('workflowpacks.export');
-    Route::post('/export', $users + ['uses' => 'ExportController@preview'])->name('workflowpacks.export.preview');
-    Route::post('/export/download', $users + ['uses' => 'ExportController@download'])->name('workflowpacks.export.download');
-    Route::post('/export/group', $users + ['uses' => 'ExportController@group'])->name('workflowpacks.export.group');
-    Route::post('/export/update-pack', $users + ['uses' => 'ExportController@updatePack'])->name('workflowpacks.export.update_pack');
-
-    // diagram (page + JSON endpoints of Public/js/graph)
-    Route::get('/graph', $users + ['uses' => 'GraphController@show'])->name('workflowpacks.graph');
-    Route::get('/graph/data', $users + ['uses' => 'GraphController@data'])->name('workflowpacks.graph.data');
-    Route::post('/graph/layout', $users + ['uses' => 'GraphController@saveLayout'])->name('workflowpacks.graph.layout');
-    Route::get('/graph/rule/{id}', $users + ['uses' => 'GraphController@rule'])->name('workflowpacks.graph.rule');
-    Route::get('/graph/catalog/{mailbox_id}', $users + ['uses' => 'GraphController@catalog'])->name('workflowpacks.graph.catalog');
-    Route::post('/graph/rule', $users + ['uses' => 'GraphController@saveRule'])->name('workflowpacks.graph.save');
-    Route::post('/graph/rule/{id}/toggle', $users + ['uses' => 'GraphController@toggle'])->name('workflowpacks.graph.toggle');
-    Route::post('/graph/rules/toggle', $users + ['uses' => 'GraphController@toggleMany'])->name('workflowpacks.graph.toggle_many');
-    Route::post('/graph/rules/previous', $users + ['uses' => 'GraphController@previousMany'])->name('workflowpacks.graph.previous_many');
-    Route::post('/graph/rules/refile', $users + ['uses' => 'GraphController@refileMany'])->name('workflowpacks.graph.refile_many');
-    Route::post('/graph/simulate', $users + ['uses' => 'GraphController@simulate'])->name('workflowpacks.graph.simulate');
-    Route::get('/graph/sample/{id}', $users + ['uses' => 'GraphController@sample'])->name('workflowpacks.graph.sample');
-    Route::post('/graph/delete/plan', $users + ['uses' => 'GraphController@deletePlan'])->name('workflowpacks.graph.delete_plan');
-    Route::post('/graph/delete', $users + ['uses' => 'GraphController@delete'])->name('workflowpacks.graph.delete');
-    Route::post('/graph/delete/undo', $users + ['uses' => 'GraphController@undoDelete'])->name('workflowpacks.graph.delete_undo');
-    Route::post('/graph/rule/{id}/apply', $users + ['uses' => 'GraphController@apply'])->name('workflowpacks.graph.apply');
-
-    // history of what the module did (+ diagnostic of the e-mail filing for administrators)
-    Route::get('/history', $users + ['uses' => 'HistoryController@index'])->name('workflowpacks.history');
+    // history of what the module did (+ diagnostic of the e-mail filing)
+    Route::get('/history', $admins + ['uses' => 'HistoryController@index'])->name('workflowpacks.history');
     Route::get('/history/inspect', $admins + ['uses' => 'HistoryController@inspect'])->name('workflowpacks.history.inspect');
     Route::get('/history/trace', $admins + ['uses' => 'HistoryController@trace'])->name('workflowpacks.history.trace');
     Route::get('/diagnostic', $admins + ['uses' => 'DiagnosticController@index'])->name('workflowpacks.diagnostic');
@@ -97,7 +66,7 @@ Route::group([
     Route::post('/ai/agents/{id}/expiry', $admins + ['uses' => 'AiController@agentExpiry'])->name('workflowpacks.ai.agents.expiry');
     Route::post('/ai/agents/{id}/update', $admins + ['uses' => 'AiController@updateAgent'])->name('workflowpacks.ai.agents.update');
     Route::post('/ai/agents/{id}/delete', $admins + ['uses' => 'AiController@deleteAgent'])->name('workflowpacks.ai.agents.delete');
-    // automatic clean-up of a managed e-mail folder (diagram: side panel of the folder; settings: list)
+    // automatic clean-up of a managed e-mail folder (settings: list)
     Route::post('/retention', $admins + ['uses' => 'RetentionController@save'])->name('workflowpacks.retention.save');
     Route::post('/retention/remove', $admins + ['uses' => 'RetentionController@remove'])->name('workflowpacks.retention.remove');
 });

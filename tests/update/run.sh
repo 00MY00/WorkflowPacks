@@ -14,6 +14,8 @@
 #
 # Checks after each update: installed version = latest release, workflowpacks:health ok, workflowpacks:check not blocking,
 # tables workflowpacks_resources (1.2) and workflowpacks_layouts (1.3) present, data of the previous version kept (packs, links, workflows).
+# From 4.0 the update deletes nothing: the data of the packs of rules stays until an administrator confirms the separation
+# from Workflows (page of the module), so these checks still hold after updating to 4.x.
 # Results: tests/update/last-run.md
 #
 set -Eeuo pipefail

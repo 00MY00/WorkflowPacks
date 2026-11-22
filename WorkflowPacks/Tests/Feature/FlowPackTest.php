@@ -148,9 +148,8 @@ class FlowPackTest extends TestCase
         $this->assertSame('mon-flux', $mine->fresh()->pack_key);
         $this->assertSame(9, Flow::count());
 
-        // the home page lists the flows by the pack they came from, each one opening in the diagram
-        $home = $this->actingAs($admin)->get(route('workflowpacks.index'))->assertStatus(200);
-        $this->assertStringNotContainsString(e(__('workflowpacks::messages.no_packs')), $home->getContent());
+        // the Export tab lists the flows by the pack they came from, each one opening in the editor
+        $home = $this->actingAs($admin)->get(route('workflowpacks.flowpack.export'))->assertStatus(200);
         $this->seeIn($home, 'tri-emails-multilingue-flux');
         $this->seeIn($home, e($read['pack']['name']));
         $this->seeIn($home, route('workflowpacks.flows', ['flow' => $mine->id]));
@@ -215,7 +214,8 @@ class FlowPackTest extends TestCase
         $this->seeIn($bad, e(__('workflowpacks::flowpack.bad_format')));
         $bad = $this->actingAs($admin)->post(route('workflowpacks.flowpack.preview'), ['bundled' => '../../module.json']);
         $this->seeIn($bad, e(__('workflowpacks::flowpack.not_json')));
+        // engine off: a page saying so
         \Option::set(Engine::OPTION, false);
-        $this->actingAs($admin)->get(route('workflowpacks.flowpack'))->assertStatus(403);
+        $this->seeIn($this->actingAs($admin)->get(route('workflowpacks.flowpack'))->assertStatus(200), e(__('workflowpacks::messages.engine_off')));
     }
 }

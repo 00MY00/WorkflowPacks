@@ -30,29 +30,28 @@ jobs:
         if: matrix.php == '8.2'
         run: shellcheck install.sh tools/build-release.sh tests/integration/run.sh tests/update/run.sh
 
-  schema:
+  scripts:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
         with:
           node-version: '24'
-      - run: npm install --no-save ajv@8.17.1 && node tests/schema/validate.js
-      - name: Diagram scripts (syntax + automatic layouts)
+      - name: Scripts of the pages (syntax) and of the flow editor (tests)
         run: |
-          for f in WorkflowPacks/Public/js/graph/*.js WorkflowPacks/Public/js/*.js; do node --check "$f"; done
+          for f in WorkflowPacks/Public/js/*.js WorkflowPacks/Public/js/flows/*.js; do node --check "$f"; done
           for t in tests/js/*.test.js; do node "$t"; done
 
   integration:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
-      - name: FreeScout + Workflows test stub + PHPUnit (Docker)
+      - name: FreeScout + PHPUnit (Docker)
         run: bash tests/integration/run.sh
 
   release:
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: [lint-unit, schema, integration]
+    needs: [lint-unit, scripts, integration]
     runs-on: ubuntu-24.04
     permissions:
       contents: write

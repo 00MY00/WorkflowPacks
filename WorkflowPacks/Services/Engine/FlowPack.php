@@ -243,6 +243,32 @@ class FlowPack
         return ['format' => self::FORMAT, 'version' => 1, 'key' => self::slug($name), 'name' => $name, 'pack_version' => '1.0.0', 'flows' => $out];
     }
 
+    /**
+     * The flows by the pack they came from (the flows made here last); temporary flows never.
+     *
+     * @return array [['key' => string ('' = made here), 'name' => string, 'flows' => [Flow…]]]
+     */
+    public static function groups()
+    {
+        $groups = [];
+        foreach (Flow::permanent()->with('version')->orderBy('name')->get() as $flow) {
+            $key = (string) $flow->pack_key;
+            $groups[$key] = $groups[$key] ?? ['key' => $key, 'name' => '', 'flows' => []];
+            // the name given by the pack (flows imported before 3.6.2: made from its key)
+            if ($key !== '' && $groups[$key]['name'] === '') {
+                $groups[$key]['name'] = (string) $flow->pack_name !== '' ? (string) $flow->pack_name : ucfirst(str_replace(['-', '_'], ' ', $key));
+            }
+            $groups[$key]['flows'][] = $flow;
+        }
+        ksort($groups);
+        if (isset($groups[''])) {
+            $groups[] = $groups[''];
+            unset($groups['']);
+        }
+
+        return array_values($groups);
+    }
+
     /** A valid key: the one given, else made from it (or from the name). */
     protected static function key($key, $name)
     {

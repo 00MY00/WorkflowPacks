@@ -18,7 +18,9 @@ class MobileNavigationTest extends TestCase
         $admin = $this->user([$a], true);
         \Option::set(Engine::OPTION, true);
 
-        $page = $this->actingAs($admin)->get(route('workflowpacks.index'))->assertStatus(200)->getContent();
+        // the home page opens the editor of the flows
+        $this->actingAs($admin)->get(route('workflowpacks.index'))->assertRedirect(route('workflowpacks.flows'));
+        $page = $this->actingAs($admin)->get(route('workflowpacks.flows'))->assertStatus(200)->getContent();
         $this->assertStringContainsString('data-wp-tabs', $page);
         $this->assertStringContainsString('aria-controls="wp-tabs"', $page);
         $this->assertStringContainsString(e(__('workflowpacks::messages.sections')), $page);

@@ -1,29 +1,34 @@
 # Flux du moteur interne
 
-Le moteur interne exécute des **flux** sans le module Workflows. Chaque bloc est un objet indépendant : un
+Workflow Packs exécute des **flux** avec son propre moteur (aucun autre module n'est nécessaire depuis la version
+4.0). Chaque bloc est un objet indépendant : un
 déclencheur, des conditions, des attentes et des actions, reliés entre eux. Ce que montre le schéma est exactement
 ce qui s'exécute. Conception complète : [moteur-autonome.md](moteur-autonome.md).
 
 ## Activer
 
-**Gérer › Paramètres › Workflow Packs › Moteur de flux interne** : interrupteur, **activé par défaut**
-depuis 3.3 (sans flux actif, il ne fait rien). Pour les administrateurs, l'onglet **Schéma** ouvre alors l'éditeur des flux (depuis 3.6.1 ; le schéma
-des règles Workflows reste accessible par un lien de l'éditeur quand Workflows est installé). Une installation
-qui l'avait désactivé explicitement le garde désactivé.
+**Gérer › Paramètres › Workflow Packs › Moteur de flux interne** : interrupteur, **activé par défaut** (sans flux
+actif, il ne fait rien). Éteint, aucun flux ne tourne et les pages des flux l'indiquent, avec le lien pour le
+rallumer. Le module est réservé aux **administrateurs**.
 
-**Sans le module Workflows** : activez ce moteur. Le module fonctionne alors entièrement (Flux, Assistant IA, agents
-connectés) ; seules les pages des packs de règles Workflows (import, export, schéma des règles) indiquent qu'elles ont
-besoin de Workflows. Pour les administrateurs, les onglets **Importer**, **Exporter** et **Schéma** mènent alors à
-l'import et à l'export des packs de flux et à l'éditeur des flux, sans message. Le diagnostic (et UpdateGuard) le
-note comme une simple remarque.
+**Depuis 4.0, le module Workflows n'est plus utilisé** : les packs de règles Workflows (import, export, schéma des
+règles) ont été retirés. Si des données de ces packs restent, une page **Séparation de Workflows** s'ouvre à
+l'accueil et un rappel s'affiche sur les pages du module, jusqu'à votre décision :
 
-Tant qu'il est désactivé, rien ne change : les règles Workflows fonctionnent comme avant, aucune tâche planifiée
-du moteur ne tourne, et les événements de FreeScout ne coûtent rien. Les deux peuvent fonctionner en même temps :
-un flux et une règle Workflows qui visent les mêmes tickets agissent **tous les deux**.
+- **Télécharger la sauvegarde** : un fichier JSON avec les packs tels qu'importés, leurs liens et les règles qu'ils
+  ont créées, telles qu'elles sont ;
+- **Confirmer la suppression** (case à cocher) : la sauvegarde est gardée par le module, puis **seules les règles
+  créées par les packs** sont supprimées de Workflows (jamais celles faites à la main), puis les anciennes tables ;
+- **Rester en version 3.20.2** : rien n'est supprimé tant que vous n'avez pas confirmé, la version 3.20.2 peut être
+  réinstallée (UpdateGuard, archive de la release, ou `sudo bash install.sh --version 3.20.2`) ;
+- **Plus tard** : le module fonctionne normalement en attendant.
+
+Une règle Workflows et un flux qui visent les mêmes tickets agissent **tous les deux** : si vous gardez le module
+Workflows pour d'autres règles, évitez les doublons.
 
 ## Créer un flux
 
-Le **Schéma** est une grande grille où l'on se déplace : **tous les flux** y sont dessinés, chacun dans son cadre
+L'éditeur (onglet **Flux**) est une grande grille où l'on se déplace : **tous les flux** y sont dessinés, chacun dans son cadre
 avec son nom, rangés en lignes. Le flux **ouvert** est en couleur et se modifie ; les autres sont estompés, un clic
 sur l'un d'eux l'ouvre (sans que la grille bouge). **Tout voir** montre tous les flux affichés.
 
@@ -159,11 +164,26 @@ Les réglages de WebPush sont repris (chacun seulement si la version installée 
 - Sortie **erreur** si le module WebPush est absent ou désactivé, ou s'il n'y a personne à notifier (ticket non
   assigné, utilisateur sans accès).
 - En simulation et en test à blanc, rien n'est envoyé : le parcours indique seulement qui serait notifié.
+- Le parcours du ticket dit ce qu'est devenue la notification : « envoyée sur 2 appareil(s) », agents en **heures
+  calmes**, agents **sans appareil abonné** (FreeScout pas installé comme application, notifications refusées),
+  appareils qui l'ont refusée. Si personne ne l'a reçue : « Notification push non reçue » avec la raison, aussi dans
+  l'**Historique**. Le flux continue dans tous les cas.
 - Exemple : *Nouvel e-mail › Si le sujet contient « urgent » › Notification push aux utilisateurs de la boîte*.
+
+## Étiquette e-mail (module RefreshGlobal)
+
+Le bloc **Étiquette e-mail** teste les étiquettes que RefreshGlobal donne à chaque e-mail relevé : `inbox`, `spam`,
+`classified_spam`, `trash`, `sent`, `drafts`, `archive`, `folder:<nom>` et celles de l'administrateur. Réglages :
+**a / n'a pas** et l'étiquette (l'éditeur propose celles déjà vues ; majuscules ignorées). Sorties **oui**, **non**
+et **erreur** (RefreshGlobal absent ou désactivé).
+
+RefreshGlobal étiquette l'e-mail pendant sa relève, parfois après le démarrage du flux : pour un **nouvel e-mail
+encore sans étiquette**, le bloc attend, une minute à la fois (10 minutes au plus), puis décide avec ce qui est là.
+Un ticket plus ancien (tickets existants, flux temporaire) est décidé tout de suite.
 
 ## Packs de flux (import, export)
 
-**Importer un pack** (onglet, sans Workflows ; avec Workflows : bouton **Importer un pack de flux** en haut du Schéma) : un pack fourni avec le module, un fichier `.json` (8 Mo au plus, sans limite de nombre de flux) ou le JSON
+**Importer** (onglet) : un pack fourni avec le module, un fichier `.json` (8 Mo au plus, sans limite de nombre de flux) ou le JSON
 collé. L'aperçu montre chaque flux, ses problèmes éventuels, les **paramètres** du pack à renseigner et les boîtes
 concernées (aucune cochée = toutes). Les nouveaux flux sont enregistrés **en brouillon, désactivés**, sauf choix
 contraire dans **Après l'import** :
@@ -181,10 +201,9 @@ sous un autre nom, flux créé ici puis exporté, même réponse de l'assistant 
   conservés (la version publiée tourne jusqu'à la prochaine publication) ;
 - absent (jamais importé, ou supprimé depuis) : **créé**. Recharger un pack complète donc les flux manquants.
 
-L'**accueil** liste les flux par pack d'origine (puis « Flux créés ici »), chacun s'ouvrant dans le Schéma, avec
-**Exporter ce pack**.
-
-**Exporter** (onglet sans Workflows, ou bouton **Exporter les flux** du Schéma) : choisissez les flux (tous cochés) et le nom du pack, puis **Télécharger** (blocs et liens, sans les boîtes).
+**Exporter** (onglet) : les flux par pack d'origine (puis « Flux créés ici »), chacun s'ouvrant dans l'éditeur,
+avec **Exporter ce pack** ; plus bas, choisissez les flux (tous cochés) et le nom du pack, puis **Télécharger**
+(blocs et liens, sans les boîtes). Les flux temporaires ne sont jamais exportés.
 
 Format :
 
@@ -204,13 +223,7 @@ Format :
 - Un flux seul (réponse de l'Assistant IA) est accepté comme pack d'un flux.
 - Positions des blocs facultatives : ils sont placés automatiquement.
 
-**Passer d'un pack de règles Workflows au pack de flux** (exemple : « Tri des e-mails (multilingue) ») :
-
-1. Packs › **Retirer le pack** (une sauvegarde est proposée).
-2. **Importer un pack** › *tri-emails-multilingue-flux.json* ; renseignez l'expéditeur de newsletter.
-3. Ouvrez chaque flux, vérifiez-le, **Publier**, puis activez-le.
-
-Le transfert par e-mail des alertes de sécurité n'existe pas encore comme bloc : la note ajoutée le rappelle.
+Les types de blocs, leurs champs et leurs sorties, pour écrire un pack à la main : **Diagnostic › Blocs des flux**.
 
 ## Simuler
 
@@ -242,5 +255,5 @@ l'heure de réveil d'une attente.
 ## Prévu ensuite
 
 Autres déclencheurs (réponse du client ou de l'équipe, statut, assignation), autres blocs (réponse automatique,
-notifications, similarité, analyse de sécurité…), alertes par e-mail, réapplication d'une nouvelle version, packs au
-format 2 et convertisseur depuis Workflows : voir le plan dans [moteur-autonome.md](moteur-autonome.md).
+priorité des tickets de FreeScout 1.8.252, analyse de sécurité…), alertes par e-mail : voir le plan dans
+[moteur-autonome.md](moteur-autonome.md).

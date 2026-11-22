@@ -5,14 +5,11 @@ namespace Modules\WorkflowPacks\Tests;
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Modules\WorkflowPacks\Services\Compat\Checker;
-use Modules\WorkflowPacks\Services\Pack\PackValidator;
-use Modules\WorkflowPacks\Services\Plan\Importer;
-use Modules\WorkflowPacks\Services\Plan\Planner;
 
 /**
- * Base of the module's tests. They run inside a FreeScout installation (Modules/WorkflowPacks) with a Workflows
- * module (the official one, or tests/stubs/Workflows on a test instance), each test inside a transaction that is
- * rolled back. See Tests/README.md.
+ * Base of the module's tests. They run inside a FreeScout installation (Modules/WorkflowPacks), each test inside a
+ * transaction that is rolled back. The Workflows test stub (tests/stubs/Workflows) is there only for the separation
+ * from Workflows (SeparationTest). See Tests/README.md.
  */
 abstract class TestCase extends \Illuminate\Foundation\Testing\TestCase
 {
@@ -36,8 +33,9 @@ abstract class TestCase extends \Illuminate\Foundation\Testing\TestCase
     protected function tearDown(): void
     {
         Checker::forget();
-        $class = \Modules\WorkflowPacks\Services\Workflows\Bridge::modelClass();
-        if (class_exists($class)) {
+        // the model of the Workflows test stub (separation tests): its listeners never leak into the next test
+        if (class_exists(\Modules\WorkflowPacks\Services\Separation::WORKFLOWS_MODEL)) {
+            $class = \Modules\WorkflowPacks\Services\Separation::WORKFLOWS_MODEL;
             $class::flushEventListeners();
         }
         parent::tearDown();
@@ -97,77 +95,10 @@ abstract class TestCase extends \Illuminate\Foundation\Testing\TestCase
         return $user->fresh();
     }
 
-    protected function pack(array $workflows, array $extra = [])
-    {
-        return $extra + [
-            'format'       => 'freescout-workflow-pack',
-            'version'      => 1,
-            'key'          => 'test-pack',
-            'name'         => 'Pack de test',
-            'pack_version' => '1.0.0',
-            'workflows'    => $workflows,
-        ];
-    }
-
-    protected function rule($key, array $over = [])
-    {
-        return $over + [
-            'key'        => $key,
-            'name'       => 'Règle '.$key,
-            'type'       => 'automatic',
-            'settings'   => ['apply_to_prev' => true, 'max_executions' => 1],
-            'conditions' => ['all' => [
-                ['type' => 'new_or_reply', 'operator' => 'new'],
-                ['any' => [
-                    ['type' => 'subject', 'operator' => 'contains', 'value' => 'facture'],
-                    ['type' => 'to', 'operator' => 'regex', 'value' => '/^{{mailbox.email}}$/i'],
-                ]],
-            ]],
-            'actions'    => [
-                ['type' => 'note', 'value' => ['body' => 'Boîte {{mailbox.name}}']],
-                ['type' => 'status', 'value' => '2'],
-            ],
-        ];
-    }
-
-    protected function validated(array $pack)
-    {
-        $result = (new PackValidator((array) config('workflowpacks.limits')))->validate($pack);
-        $this->assertSame([], $result['problems']->lines());
-
-        return $result['pack'];
-    }
-
-    protected function plan(array $pack, array $mailboxes, $user, array $params = [])
-    {
-        return (new Planner())->plan($this->validated($pack), array_map(function ($m) {
-            return $m->id;
-        }, $mailboxes), $params, $user);
-    }
-
-    protected function import(array $pack, array $mailboxes, $user, array $decisions = [], array $options = [], array $params = [])
-    {
-        $plan = $this->plan($pack, $mailboxes, $user, $params);
-        $result = (new Importer())->apply($plan, $decisions, $options, $user);
-
-        return [$plan, $result];
-    }
-
+    /** Rules of the Workflows test stub in a mailbox (only the separation from Workflows still deals with them). */
     protected function workflows($mailbox)
     {
         return \Modules\Workflows\Entities\Workflow::where('mailbox_id', $mailbox->id)->orderBy('id')->get();
-    }
-
-    protected function statuses(array $plan)
-    {
-        $out = [];
-        foreach ($plan['rules'] as $key => $rule) {
-            foreach ($rule['items'] as $mailboxId => $item) {
-                $out[$key][$mailboxId] = $item['status'];
-            }
-        }
-
-        return $out;
     }
 
     protected function seeIn($response, $text)

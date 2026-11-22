@@ -28,6 +28,20 @@ class FlowsController extends Controller
         $this->registry = new BlockRegistry();
     }
 
+    /**
+     * Home of the module: the editor of the flows; first the separation from Workflows while something of the packs of
+     * rules waits for a decision (unless "later" was chosen in this session).
+     */
+    public function home()
+    {
+        $this->guard();
+        if (\Modules\WorkflowPacks\Services\Separation::pending() && !session(SeparationController::LATER)) {
+            return redirect()->route('workflowpacks.separation');
+        }
+
+        return redirect()->route('workflowpacks.flows');
+    }
+
     public function show(Request $request)
     {
         $this->guardEngine();
@@ -62,6 +76,8 @@ class FlowsController extends Controller
                 // "file into a folder": the folders of the module carry this prefix (Manage › Settings › Workflow Packs)
                 'imap'      => ['enabled' => \Modules\WorkflowPacks\Services\Imap\ImapFolders::enabled(), 'prefix' => \Modules\WorkflowPacks\Services\Imap\ImapFolders::prefix(),
                     'settings' => route('settings', ['section' => 'workflowpacks'])],
+                // block "E-mail tag": the tags of RefreshGlobal offered while typing (any other one can be typed)
+                'mailTags'  => \Modules\WorkflowPacks\Services\MailTags::available() ? \Modules\WorkflowPacks\Services\MailTags::suggestions() : (object) [],
                 'users'     => \App\User::where('status', \App\User::STATUS_ACTIVE)->orderBy('first_name')->get()->map(function ($u) {
                     return ['id' => (int) $u->id, 'name' => $u->getFullName()];
                 })->values(),
@@ -426,12 +442,4 @@ class FlowsController extends Controller
         return $out;
     }
 
-    /** Administrators, and only when the engine is on (Manage › Settings › Workflow Packs). */
-    protected function guardEngine()
-    {
-        $this->guard();
-        if (!auth()->user()->isAdmin() || !Engine::enabled()) {
-            \Helper::denyAccess();
-        }
-    }
 }

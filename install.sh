@@ -2,11 +2,12 @@
 #
 # Workflow Packs — installation / update / uninstall on an existing FreeScout (Linux).
 #
-#   sudo bash install.sh                         install or update (latest version of the main branch)
+#   sudo bash install.sh                         install or update (latest published release)
+#   sudo bash install.sh --version 3.20.2        a given release (e.g. to go back to a previous version)
 #   sudo bash install.sh --path /var/www/html    FreeScout folder (otherwise detected, or asked)
 #   sudo bash install.sh --source ./WorkflowPacks.zip   local archive or folder instead of GitHub
 #   sudo bash install.sh --dry-run               show what would be done, change nothing
-#   sudo bash install.sh --uninstall             disable and remove the module (Workflows rules are kept)
+#   sudo bash install.sh --uninstall             disable and remove the module
 #   sudo bash install.sh --yes                   no question
 #   sudo bash install.sh --lang fr|en            language of the messages (default: from $LANG)
 #
@@ -15,7 +16,7 @@
 #
 set -Eeuo pipefail
 
-SCRIPT_VERSION="3.20.2"   # same as WorkflowPacks/module.json (checked by tools/build-release.sh)
+SCRIPT_VERSION="4.0.0"   # same as WorkflowPacks/module.json (checked by tools/build-release.sh)
 REPO_URL="${WP_REPO_URL:-https://github.com/00MY00/WorkflowPacks}"
 MODULE="WorkflowPacks"
 ALIAS="workflowpacks"
@@ -24,6 +25,7 @@ DEFAULT_PATHS="/var/www/html /var/www/freescout /var/www/html/freescout /srv/fre
 
 FS_PATH=""
 SOURCE=""
+VERSION=""
 DRY_RUN=0
 YES=0
 UNINSTALL=0
@@ -72,13 +74,15 @@ version_ge() { [ "$(printf '%s\n%s\n' "$2" "$1" | sort -V | head -n 1)" = "$2" ]
 
 json_version() { { sed -n 's/^[[:space:]]*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$1" 2>/dev/null | head -n 1; } || true; }
 
-usage() { sed -n '3,16p' "$0" | sed 's/^# \{0,1\}//'; exit 0; }
+usage() { sed -n '3,17p' "$0" | sed 's/^# \{0,1\}//'; exit 0; }
 
 parse_args() {
     while [ $# -gt 0 ]; do
         case "$1" in
             --path) FS_PATH="${2:-}"; shift 2 ;;
             --source) SOURCE="${2:-}"; shift 2 ;;
+            --version) VERSION="${2:-}"; shift 2
+                [[ "$VERSION" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]] || die "$(t "Version invalide : « $VERSION » (ex. 3.20.2)." "Invalid version: \"$VERSION\" (e.g. 3.20.2).")" ;;
             --lang) L="${2:-en}"; [ "$L" = "fr" ] || L="en"; shift 2 ;;
             --dry-run) DRY_RUN=1; shift ;;
             --uninstall) UNINSTALL=1; shift ;;
@@ -147,14 +151,12 @@ checks() {
         command -v unzip >/dev/null || die "$(t "unzip introuvable (apt install unzip)." "unzip not found (apt install unzip).")"
         [ -n "$SOURCE" ] || command -v curl >/dev/null || die "$(t "curl introuvable (apt install curl)." "curl not found (apt install curl).")"
     fi
-    if [ -d "$FS_PATH/Modules/Workflows" ]; then
-        ok "$(t "Module Workflows présent (version $(json_version "$FS_PATH/Modules/Workflows/module.json"))." "Workflows module found (version $(json_version "$FS_PATH/Modules/Workflows/module.json")).")"
-    else
-        warn "$(t "Module officiel Workflows absent : Workflow Packs s'installera mais restera bloqué (message explicite) jusqu'à son installation." "Official Workflows module missing: Workflow Packs will be installed but stays blocked (explicit message) until it is installed.")"
-        ask "$(t "Continuer quand même ?" "Continue anyway?")" || die "$(t "Installation annulée." "Installation cancelled.")"
+    # Workflows: no longer needed since 4.0 (a version before 4.0, given with --version, still uses it for its packs of rules)
+    if [ -n "$VERSION" ] && ! version_ge "$VERSION" "4.0.0" && [ ! -d "$FS_PATH/Modules/Workflows" ]; then
+        warn "$(t "Version $VERSION : ses packs de règles demandent le module Workflows, absent (les flux fonctionnent sans)." "Version $VERSION: its packs of rules need the Workflows module, which is missing (the flows work without it).")"
     fi
     if [ -d "$FS_PATH/Modules/Refresh" ]; then ok "$(t "Module Refresh présent : les pages utiliseront son style." "Refresh module found: the pages will use its look.")"; else info "$(t "Module Refresh absent : style FreeScout standard." "Refresh module missing: standard FreeScout look.")"; fi
-    if [ -d "$FS_PATH/Modules/Tags" ]; then ok "$(t "Module Tags présent." "Tags module found.")"; else info "$(t "Module Tags absent : les règles qui en dépendent seront bloquées." "Tags module missing: the rules that need it will be blocked.")"; fi
+    if [ -d "$FS_PATH/Modules/RefreshGlobal" ]; then ok "$(t "Module RefreshGlobal présent : bloc « Étiquette e-mail »." "RefreshGlobal module found: \"E-mail tag\" block.")"; else info "$(t "Module RefreshGlobal absent : le bloc « Étiquette e-mail » prend sa sortie « erreur »." "RefreshGlobal module missing: the \"E-mail tag\" block takes its \"error\" output.")"; fi
 }
 
 backup() {
@@ -173,7 +175,7 @@ backup() {
         require "vendor/autoload.php"; $app = require "bootstrap/app.php";
         $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
         $out = [];
-        foreach (["workflowpacks_packs", "workflowpacks_links", "workflowpacks_imports", "workflowpacks_resources", "workflowpacks_layouts", "workflowpacks_backups", "workflowpacks_retention", "workflowpacks_activity", "workflowpacks_ticket_folders"] as $t) {
+        foreach (["workflowpacks_packs", "workflowpacks_links", "workflowpacks_imports", "workflowpacks_resources", "workflowpacks_layouts", "workflowpacks_backups", "workflowpacks_retention", "workflowpacks_activity", "workflowpacks_ticket_folders", "workflowpacks_flows", "workflowpacks_flow_versions"] as $t) {
             $out[$t] = Schema::hasTable($t) ? DB::table($t)->get() : null;
         }
         echo json_encode($out);
@@ -189,11 +191,14 @@ fetch_module() {
     local src="$SOURCE"
     if [ -z "$src" ]; then
         if [ "$DRY_RUN" -eq 1 ]; then printf '  (dry-run) download\n'; return 0; fi
-        # latest published release, checked against its SHA256SUMS (same source as FreeScout's Modules page and UpdateGuard)
+        # latest published release (or the one given with --version), checked against its SHA256SUMS (same source as
+        # FreeScout's Modules page and UpdateGuard)
         src="$WORK/WorkflowPacks.zip"
-        if curl -fsSL "${REPO_URL}/releases/latest/download/WorkflowPacks.zip" -o "$src" 2>>"$LOG" \
-            && curl -fsSL "${REPO_URL}/releases/latest/download/SHA256SUMS" -o "$WORK/SHA256SUMS" 2>>"$LOG"; then
-            info "$(t "Dernière version publiée téléchargée depuis ${REPO_URL}/releases." "Latest published release downloaded from ${REPO_URL}/releases.")"
+        local base="${REPO_URL}/releases/latest/download"
+        [ -z "$VERSION" ] || base="${REPO_URL}/releases/download/v${VERSION}"
+        if curl -fsSL "${base}/WorkflowPacks.zip" -o "$src" 2>>"$LOG" \
+            && curl -fsSL "${base}/SHA256SUMS" -o "$WORK/SHA256SUMS" 2>>"$LOG"; then
+            info "$(t "Version ${VERSION:-la plus récente} téléchargée depuis ${REPO_URL}/releases." "Version ${VERSION:-latest} downloaded from ${REPO_URL}/releases.")"
             local expected actual
             expected="$(sed -n 's/^\([a-f0-9]\{64\}\)[[:space:]]\{1,\}\*\{0,1\}WorkflowPacks\.zip[[:space:]]*$/\1/p' "$WORK/SHA256SUMS" | head -n 1)"
             actual="$(sha256sum "$src" | cut -d' ' -f1)"
@@ -202,6 +207,8 @@ fetch_module() {
             fi
             ok "$(t "Empreinte SHA-256 vérifiée." "SHA-256 checked.")"
         else
+            # a version asked for that does not exist: nothing installed
+            [ -z "$VERSION" ] || die "$(t "Version $VERSION introuvable dans ${REPO_URL}/releases." "Version $VERSION not found in ${REPO_URL}/releases.")"
             # no release published yet: current version of the main branch
             src="$WORK/main.zip"
             warn "$(t "Aucune version publiée : téléchargement de la branche main (sans fichier SHA256SUMS)." "No published release: downloading the main branch (no SHA256SUMS file).")"

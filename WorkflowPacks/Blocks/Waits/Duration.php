@@ -5,7 +5,7 @@ namespace Modules\WorkflowPacks\Blocks\Waits;
 use Modules\WorkflowPacks\Blocks\AbstractBlock;
 use Modules\WorkflowPacks\Services\Engine\Context;
 use Modules\WorkflowPacks\Services\Engine\Result;
-use Modules\WorkflowPacks\Services\Pack\Timer;
+use Modules\WorkflowPacks\Services\Support\Timer;
 
 /** Wait a duration (15 minutes … 90 days or any): the ticket sleeps, the scheduler wakes it. */
 class Duration extends AbstractBlock

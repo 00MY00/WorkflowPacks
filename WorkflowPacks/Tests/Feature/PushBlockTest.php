@@ -17,6 +17,8 @@ class PushBlockTest extends TestCase
             $this->markTestSkipped('the test stub of WebPush is not installed (tests/stubs/WebPush)');
         }
         \Modules\WebPush\Services\WebPush::$sent = [];
+        \Modules\WebPush\Services\WebPush::$devices = [];
+        \Modules\WebPush\Services\WebPush::$refused = 0;
         \Modules\WebPush\Services\QuietHours::$silent = [];
         // WebPush 1.3.0: its settings and buttons (test stub)
         if (class_exists('\Modules\WebPush\Services\Settings')) {
@@ -147,5 +149,39 @@ class PushBlockTest extends TestCase
         $this->assertStringNotContainsString('Urgent', json_encode($payload, JSON_UNESCAPED_UNICODE));
         $this->assertNotSame('', $payload['body']);
         $this->assertStringNotContainsString('::', $payload['body'], 'a real text, not a key');
+    }
+
+    public function testTheBlockSaysWhatBecameOfTheNotification()
+    {
+        $a = $this->mailbox('A');
+        $one = $this->user([$a]);
+        $quiet = $this->user([$a]);
+        $noDevice = $this->user([$a]);
+        \Modules\WebPush\Services\WebPush::$devices = [(int) $one->id => 2, (int) $noDevice->id => 0];
+        \Modules\WebPush\Services\QuietHours::$silent = [(int) $quiet->id];
+        $c = $this->ticket($a);
+
+        // sent to the 2 devices of one agent; the others named with the reason
+        $r = (new Push())->run(Context::forConversation($c), ['to' => 'mailbox', 'title' => 'T', 'text' => 'x']);
+        $this->assertSame('next', $r->output);
+        $this->assertStringContainsString(__('workflowpacks::blocks.action.push.sent', ['count' => 2]), $r->summary);
+        $this->assertStringContainsString($quiet->getFullName(), $r->summary);
+        $this->assertStringContainsString($noDevice->getFullName(), $r->summary);
+        $this->assertSame([(int) $one->id], array_column(\Modules\WebPush\Services\WebPush::$sent, 0), 'nothing sent to an agent without device');
+
+        // received by nobody (quiet hours, no device): said, and written in History; the flow goes on
+        $before = \Modules\WorkflowPacks\Entities\Activity::where('kind', 'flow')->where('status', 'skipped')->count();
+        $c2 = $this->ticket($a, $quiet->id);
+        $r = (new Push())->run(Context::forConversation($c2), ['to' => 'assignee', 'title' => 'T', 'text' => 'x']);
+        $this->assertSame('next', $r->output);
+        $this->assertStringStartsWith(__('workflowpacks::blocks.action.push.not_received'), $r->summary);
+        $this->assertSame($before + 1, \Modules\WorkflowPacks\Entities\Activity::where('kind', 'flow')->where('status', 'skipped')->count());
+
+        // a device that refuses (push service error): counted
+        \Modules\WebPush\Services\QuietHours::$silent = [];
+        \Modules\WebPush\Services\WebPush::$refused = 1;
+        $r = (new Push())->run(Context::forConversation($c), ['to' => 'user', 'user' => $one->id, 'title' => 'T', 'text' => 'x']);
+        $this->assertStringContainsString(__('workflowpacks::blocks.action.push.sent', ['count' => 1]), $r->summary);
+        $this->assertStringContainsString(__('workflowpacks::blocks.action.push.refused', ['count' => 1]), $r->summary);
     }
 }

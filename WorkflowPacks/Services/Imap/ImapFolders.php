@@ -5,12 +5,8 @@ namespace Modules\WorkflowPacks\Services\Imap;
 use Modules\WorkflowPacks\Jobs\FileIntoImapFolder;
 
 /**
- * Optional action "File into an e-mail folder [WP]" (Manage › Settings › Workflow Packs › E-mail folders, off by default).
- *
- * Added to Workflows through its own extension filters (no change to Workflows):
- *   workflows.actions_config   the action appears in the catalog of every mailbox while the option is on
- *   workflow.validate_action   an invalid folder name (or the option off) makes the rule invalid
- *   workflow.perform_action    Workflows runs the action: the move is queued (FreeScout's queue), never done inline
+ * Option "File into an e-mail folder [WP]" (Manage › Settings › Workflow Packs › E-mail folders, off by default), used
+ * by the block "File into a folder" of the flows: the move is queued (FreeScout's queue), never done inline.
  *
  * On the mail server the e-mail is found by its Message-ID and moved into "<prefix> Folder/Sub-folder"; missing
  * folders are created. The ticket in FreeScout is not changed.
@@ -32,22 +28,8 @@ class ImapFolders
     public static function setEnabled($enabled)
     {
         \App\Option::set(self::OPTION_ENABLED, $enabled ? 1 : 0);
-        \Modules\WorkflowPacks\Services\Workflows\Bridge::forgetCatalogs();
     }
 
-    /** Does a (validated) pack use the action? Used by the import to offer turning the option on. */
-    public static function usedBy(array $pack)
-    {
-        foreach ((array) ($pack['workflows'] ?? []) as $rule) {
-            foreach ((array) ($rule['actions'] ?? []) as $action) {
-                if (($action['type'] ?? null) === FolderPath::ACTION) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
 
     public static function parentMode()
     {
@@ -91,49 +73,18 @@ class ImapFolders
         });
     }
 
-    public static function register()
-    {
-        \Eventy::addFilter('workflows.actions_config', function ($config, $mailboxId = null) {
-            if (self::enabled() && is_array($config)) {
-                $config['workflowpacks'] = [
-                    'title' => __('workflowpacks::messages.imap_group'),
-                    'items' => [FolderPath::ACTION => ['title' => __('workflowpacks::messages.imap_action', ['prefix' => self::prefix()])]],
-                ];
-            }
-
-            return $config;
-        }, 20, 2);
-
-        \Eventy::addFilter('workflow.validate_action', function ($hasError, $action = [], $workflow = null) {
-            if (($action['type'] ?? null) !== FolderPath::ACTION) {
-                return $hasError;
-            }
-
-            return !self::enabled() || FolderPath::parse($action['value'] ?? null)['error'] !== null;
-        }, 20, 3);
-
-        \Eventy::addFilter('workflow.perform_action', function ($performed, $type = '', $operator = '', $value = '', $conversation = null, $workflow = null) {
-            if ($type !== FolderPath::ACTION || !$conversation) {
-                return $performed;
-            }
-
-            return self::queue($conversation, $value, $workflow) || $performed;
-        }, 20, 6);
-    }
 
     /**
      * Queues the move of the last e-mail received in the conversation. False when there is nothing to move. Every call
      * is written in the history (Workflow Packs › History), with the reason when nothing is queued.
-     * $again: "File again" of the module (not Workflows): the e-mail is also looked for outside the inbox.
-     * $target: another mailbox (the "file into a folder" block of the flows): the e-mail is filed on its mail account.
+     * $target: another mailbox (the block can file it on another mail account); null: the mailbox of the ticket.
      */
-    public static function queue($conversation, $value, $workflow = null, $again = false, $target = null)
+    public static function queue($conversation, $value, $target = null)
     {
         $mailbox = $target ? \App\Mailbox::find((int) $target) : $conversation->mailbox;
         $entry = [
             'mailbox_id'      => $mailbox ? $mailbox->id : $conversation->mailbox_id,
             'conversation_id' => $conversation->id,
-            'workflow_id'     => $workflow && isset($workflow->id) ? $workflow->id : null,
             'subject'         => is_string($value) ? FolderPath::label($value, self::prefix()) : '',
         ];
         $skip = function ($reason) use ($entry) {
@@ -146,7 +97,7 @@ class ImapFolders
         }
         $parsed = FolderPath::parse($value);
         if ($parsed['error'] !== null) {
-            return $skip(\Modules\WorkflowPacks\Services\Pack\Problems::t($parsed['error']));
+            return $skip(\Modules\WorkflowPacks\Services\Support\Texts::t($parsed['error']));
         }
         // mailbox without IMAP fetching (e.g. e-mails received another way): nothing on a server to file
         if (!$mailbox || !$mailbox->in_server || !$mailbox->in_username) {
@@ -160,8 +111,8 @@ class ImapFolders
         if (!$thread) {
             return $skip(__('workflowpacks::messages.history_reason_no_email'));
         }
-        $activity = \Modules\WorkflowPacks\Services\History::add('imap_file', 'queued', $entry + ($again ? ['message' => __('workflowpacks::messages.history_reason_again')] : []));
-        FileIntoImapFolder::dispatch((int) $mailbox->id, (int) $thread->id, (string) $value, $activity, (bool) $again);
+        $activity = \Modules\WorkflowPacks\Services\History::add('imap_file', 'queued', $entry);
+        FileIntoImapFolder::dispatch((int) $mailbox->id, (int) $thread->id, (string) $value, $activity);
 
         return true;
     }

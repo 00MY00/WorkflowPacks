@@ -69,12 +69,12 @@ class TicketActions
         return true;
     }
 
-    /** E-mail folder on the mail server (queued, as the action of the rules). False: nothing to move (reason in History). */
+    /** E-mail folder on the mail server (queued). False: nothing to move (reason in History). */
     /** $mailboxId: the address where the e-mail is filed (null: the mailbox where it arrived). */
     public function imapFolder($path, $mailboxId = null)
     {
         $before = $this->ctx->ticket['folder'] ?? '';
-        if (!$this->ctx->dryRun && !ImapFolders::queue($this->ctx->conversation, $path, null, false, $mailboxId)) {
+        if (!$this->ctx->dryRun && !ImapFolders::queue($this->ctx->conversation, $path, $mailboxId)) {
             return false;
         }
         $this->ctx->ticket['folder'] = $path;
@@ -99,18 +99,22 @@ class TicketActions
         return true;
     }
 
-    /** Push notification through the WebPush module (Services/Notify/WebPush); a dry run only says to whom. */
+    /**
+     * Push notification through the WebPush module (Services/Notify/WebPush). @return array|null what became of it
+     * (WebPush::send()); null in a dry run, which only says to whom.
+     */
     public function push(array $users, $title, $text)
     {
-        if (!$this->ctx->dryRun) {
-            \Modules\WorkflowPacks\Services\Notify\WebPush::send($users, $title, $text, $this->ctx->conversation);
-        }
+        $report = $this->ctx->dryRun ? null
+            : \Modules\WorkflowPacks\Services\Notify\WebPush::send($users, $title, $text, $this->ctx->conversation);
         $names = array_map(function ($u) {
             return $u->getFullName();
         }, array_slice($users, 0, 5));
-        $this->ctx->change('push', '', implode(', ', $names).(count($users) > 5 ? ' (+'.(count($users) - 5).')' : '').' : '.mb_substr($title, 0, 60), [null, count($users)]);
+        // for the other modules: the agents it was really sent to
+        $this->ctx->change('push', '', implode(', ', $names).(count($users) > 5 ? ' (+'.(count($users) - 5).')' : '').' : '.mb_substr($title, 0, 60),
+            [null, $report === null ? count($users) : $report['reached']]);
 
-        return true;
+        return $report;
     }
 
     protected static function userName($id)

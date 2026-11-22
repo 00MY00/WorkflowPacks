@@ -80,15 +80,6 @@
                     <button type="button" class="btn btn-default btn-sm" data-act="reapply" title="{{ __('workflowpacks::reapply.intro') }}">{{ __('workflowpacks::flows.reapply_button') }}</button>
                     <button type="button" class="btn btn-link btn-sm text-danger" data-act="delete-flow">{{ __('workflowpacks::flows.delete_flow') }}</button>
                 </div>
-                {{-- Workflows there: the Import / Export tabs are for its rules, so the packs of flows and the diagram of
-                     the rules (to be removed later) are reached from here; without it, the tabs lead to the packs of flows --}}
-                @if (\Modules\WorkflowPacks\Services\Compat\Checker::workflowsReady())
-                    <div class="wpf-inline">
-                        <a class="btn btn-default btn-sm" href="{{ route('workflowpacks.flowpack') }}">{{ __('workflowpacks::flowpack.button_import') }}</a>
-                        <a class="btn btn-default btn-sm" href="{{ route('workflowpacks.flowpack.export') }}">{{ __('workflowpacks::flowpack.button_export') }}</a>
-                        <a class="btn btn-link btn-sm" href="{{ route('workflowpacks.graph') }}">{{ __('workflowpacks::flows.rules_graph') }}</a>
-                    </div>
-                @endif
             </details>
             <div class="wpf-panel" aria-live="polite"></div>
         </aside>
@@ -98,7 +89,7 @@
 
 @section('javascripts')
     @parent
-    <script src="{{ asset(\Module::getPublicPath('workflowpacks').'/js/graph/icons.js') }}?v={{ \Modules\WorkflowPacks\Services\ModuleInfo::version() }}" {!! \Helper::cspNonceAttr() !!}></script>
+    <script src="{{ asset(\Module::getPublicPath('workflowpacks').'/js/flows/icons.js') }}?v={{ \Modules\WorkflowPacks\Services\ModuleInfo::version() }}" {!! \Helper::cspNonceAttr() !!}></script>
     <script src="{{ asset(\Module::getPublicPath('workflowpacks').'/js/flows/editor.js') }}?v={{ \Modules\WorkflowPacks\Services\ModuleInfo::version() }}" {!! \Helper::cspNonceAttr() !!}></script>
     <script {!! \Helper::cspNonceAttr() !!}>WPFlows.start(document.getElementById('wpf-app'), {!! json_encode($config + ['token' => csrf_token()], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!});</script>
 @endsection

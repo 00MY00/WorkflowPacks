@@ -72,7 +72,8 @@ class SettingsTest extends TestCase
         foreach (['files', 'classes', 'views', 'routes', 'assets', 'database'] as $check) {
             $this->assertSame('ok', $out['checks'][$check], $check);
         }
-        $this->assertArrayHasKey('workflows', $out['checks'], 'Workflows reported');
+        $this->assertArrayHasKey('instance', $out['checks'], 'state of the instance reported');
+        $this->assertArrayNotHasKey('workflows', $out['checks'], 'the Workflows module is no longer looked at');
 
         // a migration of the module not applied: unhealthy, and said
         $last = basename(collect(glob(base_path('Modules/WorkflowPacks/Database/Migrations/*.php')))->sort()->last(), '.php');

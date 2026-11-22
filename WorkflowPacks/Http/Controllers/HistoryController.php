@@ -6,30 +6,22 @@ use Illuminate\Http\Request;
 use Modules\WorkflowPacks\Entities\Activity;
 use Modules\WorkflowPacks\Services\Imap\ImapFolders;
 use Modules\WorkflowPacks\Services\Imap\ImapInspector;
-use Modules\WorkflowPacks\Services\Workflows\Bridge;
 
 /**
- * Workflow Packs › History: what the module did (e-mails filed, folders cleaned, packs imported or removed, rules
- * changed), newest first, with filters. Users see the entries of the mailboxes they manage and their own actions;
- * administrators see everything, plus a diagnostic of the e-mail filing (option, FreeScout's queue, mail server).
+ * Workflow Packs › History: what the module did (flows, connected agents, e-mails filed, folders cleaned), newest first,
+ * with filters, and a diagnostic of the e-mail filing (option, FreeScout's queue, mail server). Administrators. The
+ * entries written before 4.0 (packs of Workflows rules) stay readable.
  */
 class HistoryController extends Controller
 {
     const PAGE = 100;
-    const KINDS = ['imap_file', 'imap_clean', 'import', 'remove', 'group', 'simulate', 'rules'];
+    /** kinds offered in the filter; older entries (import, remove, group, simulate, rules) are still shown */
+    const KINDS = ['flow', 'agent', 'imap_file', 'imap_clean', 'separation'];
 
     public function index(Request $request)
     {
         $this->guard();
-        $user = auth()->user();
-        $mailboxes = Bridge::editableMailboxes($user);
         $query = Activity::orderBy('id', 'desc');
-        if (!$user->isAdmin()) {
-            $ids = $mailboxes->pluck('id')->all() ?: [0];
-            $query->where(function ($q) use ($ids, $user) {
-                $q->whereIn('mailbox_id', $ids)->orWhere('user_id', $user->id);
-            });
-        }
         $filters = [
             'kind'       => in_array($request->input('kind'), self::KINDS, true) ? $request->input('kind') : '',
             'status'     => preg_match('/^[a-z_]{1,20}$/', (string) $request->input('status')) ? (string) $request->input('status') : '',
@@ -58,10 +50,10 @@ class HistoryController extends Controller
             'entries'   => $entries,
             'more'      => $more,
             'filters'   => $filters,
-            'mailboxes' => $mailboxes,
+            'mailboxes' => \App\Mailbox::orderBy('name')->get(),
             'names'     => $names,
             'users'     => $users,
-            'diagnostic' => $user->isAdmin() ? $this->diagnostic() : null,
+            'diagnostic' => $this->diagnostic(),
             'inspection' => null,
             'trace'      => null,
         ]);
@@ -71,7 +63,6 @@ class HistoryController extends Controller
     public function inspect(Request $request)
     {
         $this->guard();
-        abort_if(!auth()->user()->isAdmin(), 403);
         // its own parameter: "mailbox_id" filters the history
         $mailbox = \App\Mailbox::find((int) $request->input('imap_mailbox'));
         abort_if(!$mailbox, 404);
@@ -84,7 +75,6 @@ class HistoryController extends Controller
     public function trace(Request $request)
     {
         $this->guard();
-        abort_if(!auth()->user()->isAdmin(), 403);
         // "conversation" (id, links of the history) or "number" (shown in FreeScout: the id, or its own number when
         // custom numbering is on)
         $conversation = $request->input('conversation')
@@ -104,7 +94,7 @@ class HistoryController extends Controller
         return method_exists(\App\Conversation::class, 'numberFieldName') ? \App\Conversation::numberFieldName() : 'number';
     }
 
-    /** Option, FreeScout's queue (the moves are done there), last calls of Workflows. */
+    /** Option, FreeScout's queue (the moves are done there), last filings. */
     protected function diagnostic()
     {
         $out = [

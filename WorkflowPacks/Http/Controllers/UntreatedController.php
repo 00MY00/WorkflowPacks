@@ -85,11 +85,4 @@ class UntreatedController extends Controller
         return ['sent' => 1, 'mailboxes' => $f['mailboxes'], 'statuses' => $f['statuses'], 'period' => $f['period']];
     }
 
-    protected function guardEngine()
-    {
-        $this->guard();
-        if (!auth()->user()->isAdmin() || !Engine::enabled()) {
-            \Helper::denyAccess();
-        }
-    }
 }

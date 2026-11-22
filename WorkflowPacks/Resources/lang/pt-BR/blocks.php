@@ -37,6 +37,14 @@ return [
             'decision' => 'Semelhança :score % (assunto :subject %, texto :body %), limiar :threshold % → :output',
             'help'     => 'Compara o ticket com tickets de exemplo (seus ids), localmente.',
         ],
+        'mail_tag' => [
+            'name'     => 'Etiqueta de e-mail',
+            'title'    => 'Se o e-mail :has a etiqueta “:tag”',
+            'decision' => 'Etiquetas: :tags → :output',
+            'help'     => 'Testa as etiquetas que o RefreshGlobal deu ao e-mail (caixa de entrada, spam, pasta…).',
+            'missing'  => 'Módulo RefreshGlobal ausente ou desativado: sem etiquetas.',
+            'waiting'  => 'Aguardando as etiquetas do RefreshGlobal (novo e-mail).',
+        ],
     ],
     'wait'      => [
         'duration' => [
@@ -70,6 +78,11 @@ return [
             'name'  => 'Notificação push',
             'title' => 'Notificação push: :to',
             'help'  => 'Envia uma notificação ao celular ou computador dos agentes (módulo WebPush), respeitando seus horários de silêncio.',
+            'sent'          => 'enviada para :count dispositivo(s)',
+            'silenced'      => 'horário silencioso: :names',
+            'no_device'     => 'nenhum dispositivo inscrito: :names',
+            'refused'       => ':count dispositivo(s) não a aceitaram (log do FreeScout, linhas [WebPush])',
+            'not_received'  => 'Notificação push não recebida',
         ],
         'delete'      => [
             'name'  => 'Excluir o ticket',
@@ -112,6 +125,10 @@ return [
             'pending' => 'Pendente',
             'closed'  => 'Fechado',
             'spam'    => 'Spam',
+        ],
+        'has'    => [
+            'has'     => 'tem',
+            'has_not' => 'não tem',
         ],
         'nobody' => 'ninguém',
         'to'     => [

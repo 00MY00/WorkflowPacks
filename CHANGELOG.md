@@ -4,6 +4,43 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [4.0.0] - 2026-11-21
+
+Workflow Packs ne dépend plus du module Workflows : le module, ce sont les flux de son propre moteur.
+
+### Retiré
+- **Packs de règles Workflows** : import, export, regroupement, mise à jour, retrait, activation des règles, schéma
+  des règles et vue flux des règles, ressources et sélecteurs de boîtes des packs, « Ranger à nouveau » des règles,
+  conditions et action ajoutées à Workflows (« Assigné », « Réponse envoyée », « Étiquette e-mail », « Ranger dans un
+  dossier e-mail »), format `freescout-workflow-pack` et son schéma JSON.
+- Accès des utilisateurs non administrateurs par la permission Workflows : le module est réservé aux administrateurs.
+
+### Ajouté
+- **Séparation de Workflows** : rien n'est supprimé par la mise à jour. Si des données des packs de règles restent,
+  une page (et un rappel sur les pages du module) propose de télécharger la sauvegarde, puis de **confirmer la
+  suppression** (seules les règles créées par les packs, dans leur boîte, puis les anciennes tables ; sauvegarde
+  gardée par le module), de **rester en version 3.20.2** (réinstallable tant que rien n'est confirmé) ou de décider
+  plus tard.
+- **Bloc « Étiquette e-mail »** des flux (étiquettes de RefreshGlobal : spam, boîte de réception, dossier…), qui
+  attend les étiquettes d'un nouvel e-mail jusqu'à 10 minutes ; étiquettes connues proposées dans l'éditeur.
+- `install.sh --version X` : installe une release précise (retour à une version précédente).
+- **Nettoyage automatique des dossiers e-mail** ajouté depuis Gérer › Paramètres › Workflow Packs (il se réglait
+  dans le schéma des règles).
+- Diagnostic : les blocs des flux de l'instance (types, champs, sorties) pour écrire un pack à la main.
+- **Bloc Notification push : ce qu'elle est devenue**, dans le parcours du ticket : envoyée sur N appareil(s), agents
+  en **heures calmes**, agents **sans appareil abonné**, appareils qui l'ont refusée. Reçue par personne : « Notification
+  push non reçue » avec la raison, aussi notée dans l'Historique (avant, le flux affichait la notification comme
+  envoyée). Vérifié avec le vrai module WebPush 1.7.0 (heures calmes par agent).
+
+### Modifié
+- Onglets : Flux, Importer, Exporter (flux par pack d'origine, chacun réexporté en un clic), Assistant IA,
+  Historique, Diagnostic, Paramètres ; l'accueil ouvre l'éditeur des flux.
+- Moteur éteint : une page le dit, avec le lien pour le rallumer, au lieu d'un refus d'accès.
+- `workflowpacks:check` et le Diagnostic : FreeScout, PHP, tables, modules facultatifs (RefreshGlobal, WebPush, Tags,
+  Refresh) ; `--pack` lit un pack de flux. `workflowpacks:health` rapporte l'état de l'instance (`instance`).
+- Textes : 270 textes des packs de règles retirés des 7 langues ; test des traductions étendu à tous les fichiers.
+- Vérifié avec FreeScout 1.8.252.
+
 ## [3.20.2] - 2026-11-19
 
 ### Corrigé
