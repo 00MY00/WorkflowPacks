@@ -23,7 +23,7 @@ class Engine
     /** @var BlockRegistry */
     protected $registry;
 
-    public function __construct(BlockRegistry $registry = null)
+    public function __construct(?BlockRegistry $registry = null)
     {
         $this->registry = $registry ?: new BlockRegistry();
     }
@@ -184,7 +184,7 @@ class Engine
      *
      * @return array ['events' => [[at (seconds), block, output, summary, changes, level, ticket]], 'end' => state]
      */
-    public function simulate(Definition $def, array $ticket, $maxSeconds = 31536000, Context $ctx = null)
+    public function simulate(Definition $def, array $ticket, $maxSeconds = 31536000, ?Context $ctx = null)
     {
         $start = \Carbon\Carbon::now();
         // a real ticket can be given (its own Context), always in a dry run: nothing written

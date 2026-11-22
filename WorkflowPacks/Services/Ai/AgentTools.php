@@ -67,7 +67,7 @@ class AgentTools
         $q = $all && $this->agent->may('others.see') ? Flow::permanent()->orderBy('id') : Flow::permanent()->where('agent_id', $this->agent->id)->orderBy('id');
 
         return ['flows' => $q->get()->map(function (Flow $f) use ($numbers) {
-            return ['id' => (int) $f->id, 'name' => $f->name, 'active' => $f->active, 'version' => $numbers[$f->version_id] ?? null,
+            return ['id' => (int) $f->id, 'name' => $f->name, 'active' => $f->active, 'version' => $f->version_id ? ($numbers[$f->version_id] ?? null) : null,
                 'mailbox_ids' => array_map('intval', (array) $f->mailbox_ids), 'mine' => (int) $f->agent_id === (int) $this->agent->id,
                 'draft' => $f->draft];
         })->values()->all()];

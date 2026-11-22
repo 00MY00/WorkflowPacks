@@ -1,4 +1,4 @@
-# Résultats des tests — Workflow Packs 4.0.1
+# Résultats des tests — Workflow Packs 4.0.2
 
 Date : 2026-11-22. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
@@ -7,11 +7,19 @@ Date : 2026-11-22. Environnements Docker jetables, données de test uniquement (
 | Composant | Version |
 |---|---|
 | FreeScout | **1.8.252** (tag officiel), Laravel 5.5.40 |
-| PHP | **8.2.34** (intégration) · **7.1.33** et **8.4.26** (analyse syntaxique et tests unitaires) |
+| PHP | **8.2.34** et **8.5.13** (intégration) · **7.1.33**, **8.4.26** et **8.5.13** (analyse syntaxique sans aucun avertissement, tests unitaires) |
 | Base de données | MariaDB **10.11.19** |
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
 | Workflows | plus utilisé depuis 4.0 ; **bouchon de test** `tests/stubs/Workflows` seulement pour la séparation (règles laissées par les packs de règles). Le module officiel, payant, n'a jamais été testé. |
+
+## 4.0.2 — PHP 8.4 et 8.5
+
+| Série | Résultat |
+|---|---|
+| Analyse syntaxique, tous avertissements affichés | PHP 7.1, 8.4 et 8.5 : aucun avertissement (avant : 12 « Implicitly marking parameter … as nullable is deprecated » sous 8.4 et 8.5) |
+| Intégration sous PHP 8.5.13 (FreeScout 1.8.252) | installation du module (`freescout:module-install`) et **108 tests verts**, journal de Laravel sans aucune dépréciation (avant : liste des flux et `list_flows` en erreur pour un flux jamais publié) |
+| Intégration sous PHP 8.2.34 | 108 tests verts |
 
 ## 4.0.1 — route `workflowpacks.graph` gardée
 

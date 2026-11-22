@@ -18,7 +18,8 @@ if (cd "$ROOT" && pwd -W) >/dev/null 2>&1; then
     export MSYS_NO_PATHCONV=1
     ROOT="$(cd "$ROOT" && pwd -W)"
 fi
-IMAGE="wp-freescout-test"
+PHP_VERSION="${PHP_VERSION:-8.2}"   # PHP of the FreeScout container (PHP_VERSION=8.5 bash tests/integration/run.sh)
+IMAGE="wp-freescout-test:php${PHP_VERSION}"
 NET="wptest"
 DB="wp-test-db"
 APP="wp-test-app"
@@ -47,7 +48,7 @@ trap debug ERR
 FREESCOUT_REF="${FREESCOUT_REF:-dist}"
 
 log "Image and containers"
-docker image inspect "$IMAGE" >/dev/null 2>&1 || docker build -q -t "$IMAGE" "$ROOT/tests/integration" >/dev/null
+docker image inspect "$IMAGE" >/dev/null 2>&1 || docker build -q --build-arg PHP_VERSION="$PHP_VERSION" -t "$IMAGE" "$ROOT/tests/integration" >/dev/null
 cleanup
 docker network create "$NET" >/dev/null
 docker run -d --name "$DB" --network "$NET" \

@@ -29,7 +29,7 @@ class BlockRegistry
     /** @var array type => class */
     protected $types;
 
-    public function __construct(array $classes = null)
+    public function __construct(?array $classes = null)
     {
         $classes = $classes ?? (array) \Eventy::filter('workflowpacks.blocks', self::BUILT_IN);
         $this->types = [];

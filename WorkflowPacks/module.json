@@ -2,7 +2,7 @@
     "name": "WorkflowPacks",
     "alias": "workflowpacks",
     "description": "Flows for FreeScout with their own engine: visual editor, triggers, conditions, waits and actions, packs of flows, connected AI agents, e-mail folders. No other module required.",
-    "version": "4.0.1",
+    "version": "4.0.2",
     "detailsUrl": "https://github.com/00MY00/WorkflowPacks",
     "latestVersionUrl": "https://github.com/00MY00/WorkflowPacks/releases/latest/download/version.txt",
     "latestVersionZipUrl": "https://github.com/00MY00/WorkflowPacks/releases/latest/download/WorkflowPacks.zip",

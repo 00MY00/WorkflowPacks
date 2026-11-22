@@ -30,7 +30,7 @@ class Reapply
     /** @var Engine */
     protected $engine;
 
-    public function __construct(Engine $engine = null)
+    public function __construct(?Engine $engine = null)
     {
         $this->engine = $engine ?: new Engine();
     }

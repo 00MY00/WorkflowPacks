@@ -4,13 +4,14 @@ namespace Modules\WebPush\Services;
 
 /**
  * Test stub of the WebPush module (github.com/altmenorg/freescout-webpush): its public sending method and the list of
- * the devices of an agent. $devices: [user id => number of devices] (1 when not given); $refused: devices that do not
- * accept (the push service answers an error).
+ * the devices of an agent. $devices: [user id => number of devices] ($otherDevices for the others, 1 by default);
+ * $refused: devices that do not accept (the push service answers an error).
  */
 class WebPush
 {
     public static $sent = [];
     public static $devices = [];
+    public static $otherDevices = 1;
     public static $refused = 0;
 
     /** @param array $items [[user_id, ['title', 'body', 'url', 'tag']], ...] @return int devices that accepted */
@@ -27,7 +28,7 @@ class WebPush
 
     public static function devices($userId)
     {
-        $count = self::$devices[(int) $userId] ?? 1;
+        $count = self::$devices[(int) $userId] ?? self::$otherDevices;
         $out = [];
         for ($i = 0; $i < $count; $i++) {
             $out[] = ['id' => 'd'.$userId.'-'.$i, 'label' => 'Test', 'created' => null, 'endpoint' => 'https://push.invalid/'.$userId.'/'.$i];
