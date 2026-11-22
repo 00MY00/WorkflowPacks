@@ -109,7 +109,8 @@ class FlowsController extends Controller
         $waiting = FlowRun::where('state', FlowRun::WAITING)->groupBy('flow_id')->selectRaw('flow_id, count(*) as n')->pluck('n', 'flow_id');
 
         return response()->json(['flows' => $flows->map(function (Flow $flow) use ($numbers, $waiting) {
-            return $this->describe($flow, $numbers[$flow->version_id] ?? null, (int) ($waiting[$flow->id] ?? 0));
+            // never published: no version (never null as a key, PHP 8.5)
+            return $this->describe($flow, $flow->version_id ? ($numbers[$flow->version_id] ?? null) : null, (int) ($waiting[$flow->id] ?? 0));
         })->values()]);
     }
 

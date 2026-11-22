@@ -93,7 +93,7 @@ class Context
      * A change, as shown (texts: names, labels); $raw: the values for the other modules when they differ from what is
      * shown ([before, after]: user ids, a number), kept after them (Services\Engine\FlowReport).
      */
-    public function change($field, $before, $after, array $raw = null)
+    public function change($field, $before, $after, ?array $raw = null)
     {
         $this->changes[] = $raw ? [$field, $before, $after, $raw[0] ?? null, $raw[1] ?? null] : [$field, $before, $after];
     }

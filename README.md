@@ -40,7 +40,7 @@ Les versions 1 à 3 importaient des **packs de règles** dans le module Workflow
 
 ## Installation
 
-Prérequis : FreeScout ≥ 1.8.0 (testé avec 1.8.252), PHP ≥ 7.1. Modules facultatifs : **RefreshGlobal** (bloc
+Prérequis : FreeScout ≥ 1.8.0 (testé avec 1.8.252), PHP ≥ 7.1 (testé jusqu'à 8.5). Modules facultatifs : **RefreshGlobal** (bloc
 Étiquette e-mail), **WebPush** (notifications push), **Refresh** (style).
 
 ### Script (recommandé)

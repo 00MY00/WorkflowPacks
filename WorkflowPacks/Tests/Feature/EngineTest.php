@@ -168,7 +168,13 @@ class EngineTest extends TestCase
     {
         $registry = new BlockRegistry();
         $problems = function (array $data) use ($registry) {
-            return array_column(Definition::from($data)->validate($registry), 'field', 'block');
+            // [block => field] of the problems ('' for those of the whole flow, which have no block: never null as a key)
+            $out = [];
+            foreach (Definition::from($data)->validate($registry) as $p) {
+                $out[(string) $p['block']] = $p['field'];
+            }
+
+            return $out;
         };
         // missing value, unknown type, unreached block, variable not given before, no trigger
         $bad = ['blocks' => [

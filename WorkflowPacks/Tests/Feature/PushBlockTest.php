@@ -18,6 +18,7 @@ class PushBlockTest extends TestCase
         }
         \Modules\WebPush\Services\WebPush::$sent = [];
         \Modules\WebPush\Services\WebPush::$devices = [];
+        \Modules\WebPush\Services\WebPush::$otherDevices = 1;
         \Modules\WebPush\Services\WebPush::$refused = 0;
         \Modules\WebPush\Services\QuietHours::$silent = [];
         // WebPush 1.3.0: its settings and buttons (test stub)
@@ -157,6 +158,8 @@ class PushBlockTest extends TestCase
         $one = $this->user([$a]);
         $quiet = $this->user([$a]);
         $noDevice = $this->user([$a]);
+        // only the agents of this test have devices (the administrators of the instance see every mailbox too)
+        \Modules\WebPush\Services\WebPush::$otherDevices = 0;
         \Modules\WebPush\Services\WebPush::$devices = [(int) $one->id => 2, (int) $noDevice->id => 0];
         \Modules\WebPush\Services\QuietHours::$silent = [(int) $quiet->id];
         $c = $this->ticket($a);

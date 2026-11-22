@@ -26,7 +26,7 @@ class Listener
     }
 
     /** The flows listening to $event in the ticket's mailbox, each one started for this ticket. */
-    public static function fire($event, $conversation, Engine $engine = null)
+    public static function fire($event, $conversation, ?Engine $engine = null)
     {
         try {
             $ids = self::index()[$event] ?? [];

@@ -20,7 +20,7 @@ class Answer
     /** @var BlockRegistry */
     protected $registry;
 
-    public function __construct(BlockRegistry $registry = null)
+    public function __construct(?BlockRegistry $registry = null)
     {
         $this->registry = $registry ?: new BlockRegistry();
     }

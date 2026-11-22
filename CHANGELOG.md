@@ -4,6 +4,21 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 La version du module est celle de `WorkflowPacks/module.json` ; la version du **schéma** des fichiers de pack est
 indépendante (champ `version`, actuellement 1).
 
+## [4.0.2] - 2026-11-23
+
+### Corrigé
+- **PHP 8.4 et 8.5** : l'installation ou la mise à jour s'arrêtait sur les instances qui transforment les avertissements
+  PHP en erreurs (« Implicitly marking parameter … as nullable is deprecated ») : les 12 paramètres typés avec `null`
+  par défaut sont écrits `?Type` (accepté depuis PHP 7.1, aucun changement de comportement). Signalé par un
+  utilisateur sous PHP 8.5.
+- **PHP 8.5** : la liste des flux de l'éditeur et l'outil `list_flows` des agents ne s'affichaient plus quand un flux
+  n'avait jamais été publié (« Using null as an array offset is deprecated »).
+
+### Modifié
+- Intégration continue : les tests d'intégration tournent aussi sous PHP 8.5 (FreeScout 1.8.252), et la vérification
+  de syntaxe échoue à tout avertissement (dépréciation comprise) sous PHP 7.1, 8.2, 8.4 et 8.5.
+- `tests/integration/run.sh` et `tests/update/run.sh` : `PHP_VERSION=8.5` pour choisir la version de PHP.
+
 ## [4.0.1] - 2026-11-22
 
 ### Corrigé

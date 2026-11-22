@@ -25,7 +25,8 @@ if (cd "$ROOT" && pwd -W) >/dev/null 2>&1; then
     export MSYS_NO_PATHCONV=1
     ROOT="$(cd "$ROOT" && pwd -W)"
 fi
-IMAGE="wp-freescout-test"
+PHP_VERSION="${PHP_VERSION:-8.2}"   # PHP of the FreeScout container (PHP_VERSION=8.5 bash tests/update/run.sh)
+IMAGE="wp-freescout-test:php${PHP_VERSION}"
 NET="wpupd"
 DB="wp-upd-db"
 APP="wp-upd-app"
@@ -58,7 +59,7 @@ php_eval() {
 
 latest="$(curl -fsSL "$LATEST_URL/module.json" | sed -n 's/^[[:space:]]*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -n 1)"
 [ -n "$latest" ] || { echo "cannot read the latest release" >&2; exit 1; }
-docker image inspect "$IMAGE" >/dev/null 2>&1 || docker build -q -t "$IMAGE" "$ROOT/tests/integration" >/dev/null
+docker image inspect "$IMAGE" >/dev/null 2>&1 || docker build -q --build-arg PHP_VERSION="$PHP_VERSION" -t "$IMAGE" "$ROOT/tests/integration" >/dev/null
 
 {
     echo "# Mise à jour vers la dernière version publiée — $(date '+%Y-%m-%d %H:%M')"

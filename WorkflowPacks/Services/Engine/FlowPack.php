@@ -27,7 +27,7 @@ class FlowPack
     /** @var int[] ids of the flows of the last import (created, updated or already there) */
     protected $imported = [];
 
-    public function __construct(BlockRegistry $registry = null)
+    public function __construct(?BlockRegistry $registry = null)
     {
         $this->registry = $registry ?: new BlockRegistry();
     }
