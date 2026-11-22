@@ -1147,7 +1147,14 @@
                 }
                 return h('input', { type: varDef.type === 'number' ? 'number' : 'text', class: 'form-control input-sm', value: v || '', on: { input: function () { set(this.value); } } });
             default:
-                return h('input', { type: 'text', class: 'form-control input-sm', value: v || '', on: { input: function () { set(this.value); } } });
+                var input = h('input', { type: 'text', class: 'form-control input-sm', value: v || '', on: { input: function () { set(this.value); } } });
+                // the tags of RefreshGlobal offered while typing (block "E-mail tag"); any other one can be typed
+                var tagNames = this.cfg.mailTags || {}, tags = key === 'tag' ? Object.keys(tagNames) : [];
+                if (!tags.length) { return input; }
+                input.setAttribute('list', 'wpf-tags-' + b.id);
+                return h('span', {}, [input, h('datalist', { id: 'wpf-tags-' + b.id }, tags.map(function (tag) {
+                    return h('option', { value: tag, text: tagNames[tag] });
+                }))]);
         }
     };
 

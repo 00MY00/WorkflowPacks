@@ -2,13 +2,18 @@
 
 namespace Modules\WorkflowPacks\Tests\Feature;
 
-use Modules\WorkflowPacks\Services\MailTags;
-use Modules\WorkflowPacks\Services\Workflows\Bridge;
+use Modules\WorkflowPacks\Blocks\Conditions\MailTag;
+use Modules\WorkflowPacks\Entities\Flow;
+use Modules\WorkflowPacks\Entities\FlowRun;
+use Modules\WorkflowPacks\Services\Engine\Engine;
+use Modules\WorkflowPacks\Services\Engine\Listener;
+use Modules\WorkflowPacks\Services\Engine\Publisher;
+use Modules\WorkflowPacks\Services\Engine\Scheduler;
 use Modules\WorkflowPacks\Tests\TestCase;
 
 /**
- * Condition "E-mail tag" (origin tags of RefreshGlobal). RefreshGlobal is not installed in the tests: it is marked
- * active and its read filter "refreshglobal.mail_tags" is played by the test (RefreshGlobal docs/api-tags.md).
+ * Block "E-mail tag" of the flows (origin tags of RefreshGlobal). RefreshGlobal is not installed in the tests: it is
+ * marked active and its read filter "refreshglobal.mail_tags" is played by the test (RefreshGlobal docs/api-tags.md).
  */
 class MailTagsTest extends TestCase
 {
@@ -19,6 +24,9 @@ class MailTagsTest extends TestCase
     {
         parent::setUp();
         self::$tags = [];
+        \Option::set(Engine::OPTION, true);
+        Flow::query()->update(['active' => false]);
+        Listener::forget();
         // a new application (and Eventy) for every test
         \Eventy::addFilter('refreshglobal.mail_tags', function ($default, $ids = []) {
             $out = (array) $default;
@@ -32,149 +40,137 @@ class MailTagsTest extends TestCase
         }, 20, 2);
         \App\Module::setActive('refreshglobal', true);
         \App\Module::clearModulesCache();
-        Bridge::forgetCatalogs();
     }
 
     protected function tearDown(): void
     {
         \App\Module::setActive('refreshglobal', false);
         \App\Module::clearModulesCache();
-        Bridge::forgetCatalogs();
         parent::tearDown();
     }
 
-    protected function ticket($mailbox, $subject = 'Promo')
+    protected function ticket($mailbox, $minutesAgo = 0)
     {
         $c = new \App\Conversation();
         $c->type = \App\Conversation::TYPE_EMAIL;
+        $c->number = random_int(100000, 999999);
         $c->folder_id = (int) optional($mailbox->folders()->first())->id;
         $c->mailbox_id = $mailbox->id;
-        $c->subject = $subject;
+        $c->subject = 'Promo';
+        $c->customer_email = 'client@example.test';
         $c->source_via = \App\Conversation::PERSON_CUSTOMER;
         $c->source_type = \App\Conversation::SOURCE_TYPE_EMAIL;
         $c->status = \App\Conversation::STATUS_ACTIVE;
         $c->state = \App\Conversation::STATE_PUBLISHED;
         $c->save();
-        $t = new \App\Thread();
-        $t->conversation_id = $c->id;
-        $t->type = \App\Thread::TYPE_CUSTOMER;
-        $t->source_via = \App\Thread::PERSON_CUSTOMER;
-        $t->source_type = \App\Thread::SOURCE_TYPE_EMAIL;
-        $t->status = \App\Thread::STATUS_ACTIVE;
-        $t->state = \App\Thread::STATE_PUBLISHED;
-        $t->body = 'Bonjour.';
-        $t->message_id = 'tag-'.self::uid().'@example.test';
-        $t->save();
+        if ($minutesAgo) {
+            \DB::table('conversations')->where('id', $c->id)->update(['created_at' => \Carbon\Carbon::now()->subMinutes($minutesAgo)]);
+        }
 
-        return [$c, $t];
+        return $c->fresh();
     }
 
-    protected function spamRule($mailbox, $operator = 'has', $previous = false)
+    /** New e-mail -> "E-mail tag" -> yes: closed / no: pending. */
+    protected function flow($admin, array $params = ['has' => 'has', 'tag' => 'classified_spam'])
     {
-        $wf = Bridge::newModel();
-        $wf->mailbox_id = $mailbox->id;
-        $wf->name = 'Spam '.self::uid();
-        $wf->type = 1;
-        $wf->apply_to_prev = $previous;
-        $wf->max_executions = 1;
-        $wf->conditions = [[['type' => MailTags::TYPE, 'operator' => $operator, 'value' => 'classified_spam']]];
-        $wf->actions = [[['type' => 'status', 'value' => '4']]];
-        $wf->active = true;
-        $wf->save();
+        $flow = Flow::create(['name' => 'Spam', 'mailbox_ids' => [], 'active' => false, 'once' => true, 'created_by' => $admin->id, 'draft' => [
+            'blocks' => [['id' => 'b1', 'type' => 'trigger.new_mail', 'params' => []], ['id' => 'b2', 'type' => 'condition.mail_tag', 'params' => $params],
+                ['id' => 'b3', 'type' => 'action.status', 'params' => ['status' => 'closed']], ['id' => 'b4', 'type' => 'action.status', 'params' => ['status' => 'pending']]],
+            'links' => [['from' => 'b1', 'port' => 'next', 'to' => 'b2'], ['from' => 'b2', 'port' => 'yes', 'to' => 'b3'], ['from' => 'b2', 'port' => 'no', 'to' => 'b4']]]]);
+        $this->assertTrue((new Publisher())->publish($flow, $admin)['ok']);
 
-        return $wf;
+        return $flow->fresh(['version']);
     }
 
-    public function testTheConditionIsOfferedWithTheKnownTagsOnlyWithRefreshGlobal()
+    public function testTheBlockDecidesWithTheTagsOfRefreshGlobal()
     {
         $a = $this->mailbox('A');
-        $item = Bridge::catalog($a->id)['conditions'][MailTags::TYPE] ?? null;
-        $this->assertNotNull($item, 'in the catalog of Workflows');
-        $this->assertSame(['has', 'has_not'], $item['operators']);
-        $this->assertNull($item['values'], 'free text: any tag can be typed');
-        foreach (MailTags::STANDARD as $tag) {
-            $this->assertArrayHasKey($tag, $item['suggest']);
-        }
-        $this->assertSame(__('workflowpacks::messages.mail_tag_classified_spam'), $item['suggest']['classified_spam']);
+        $admin = $this->user([$a], true);
+        $flow = $this->flow($admin);
+        $spam = $this->ticket($a);
+        $inbox = $this->ticket($a);
+        self::$tags = [$spam->id => ['Classified_Spam', 'folder:Promos'], $inbox->id => ['inbox']];
 
+        (new Engine())->start($flow, $spam);
+        (new Engine())->start($flow, $inbox);
+        $this->assertSame(\App\Conversation::STATUS_CLOSED, (int) $spam->fresh()->status, 'has the tag (case ignored): yes');
+        $this->assertSame(\App\Conversation::STATUS_PENDING, (int) $inbox->fresh()->status, 'other tag: no');
+
+        // "has not"
+        $flow2 = $this->flow($admin, ['has' => 'has_not', 'tag' => 'classified_spam']);
+        $other = $this->ticket($a);
+        self::$tags[$other->id] = ['inbox'];
+        (new Engine())->start($flow2, $other);
+        $this->assertSame(\App\Conversation::STATUS_CLOSED, (int) $other->fresh()->status);
+
+        // an older ticket without tags: no wait, decided at once
+        $old = $this->ticket($a, 120);
+        $run = (new Engine())->start($flow, $old);
+        $this->assertSame(FlowRun::DONE, $run->fresh()->state);
+        $this->assertSame(\App\Conversation::STATUS_PENDING, (int) $old->fresh()->status);
+    }
+
+    public function testANewEmailWithoutTagsWaitsForThemThenGoesOn()
+    {
+        $a = $this->mailbox('A');
+        $admin = $this->user([$a], true);
+        $flow = $this->flow($admin);
+        $ticket = $this->ticket($a);
+
+        // no tags yet: the block waits a minute (the flow does not decide "no" too early)
+        $run = (new Engine())->start($flow, $ticket)->fresh();
+        $this->assertSame([FlowRun::WAITING, 'b2', null], [$run->state, $run->block, $run->resume]);
+        $this->assertTrue($run->wake_at->lte(\Carbon\Carbon::now()->addMinutes(2)));
+        $this->assertSame(\App\Conversation::STATUS_ACTIVE, (int) $ticket->fresh()->status);
+
+        // RefreshGlobal tags it: next minute, the block runs again and decides
+        self::$tags[$ticket->id] = ['classified_spam'];
+        FlowRun::where('id', $run->id)->update(['wake_at' => \Carbon\Carbon::now()->subSecond()]);
+        (new Scheduler())->tick();
+        $this->assertSame(FlowRun::DONE, $run->fresh()->state);
+        $this->assertSame(\App\Conversation::STATUS_CLOSED, (int) $ticket->fresh()->status);
+
+        // never tagged: decided with what is there after WAIT_TIMES minutes
+        $never = $this->ticket($a);
+        $run = (new Engine())->start($flow, $never)->fresh();
+        for ($i = 0; $i < MailTag::WAIT_TIMES + 2 && $run->fresh()->state === FlowRun::WAITING; $i++) {
+            FlowRun::where('id', $run->id)->update(['wake_at' => \Carbon\Carbon::now()->subSecond()]);
+            (new Scheduler())->tick();
+        }
+        $this->assertSame(FlowRun::DONE, $run->fresh()->state);
+        $this->assertSame(MailTag::WAIT_TIMES, $i, 'one minute at a time, WAIT_TIMES times');
+        $this->assertSame(\App\Conversation::STATUS_PENDING, (int) $never->fresh()->status);
+        $this->assertArrayNotHasKey(MailTag::VAR_WAITS, (array) $run->fresh()->vars, 'its counter is not left in the variables');
+    }
+
+    public function testWithoutRefreshGlobalTheErrorOutputAndTheEditor()
+    {
+        $a = $this->mailbox('A');
+        $admin = $this->user([$a], true);
+
+        // checks of the block
+        $this->assertSame([], MailTag::validate(['has' => 'has_not', 'tag' => 'spam']));
+        $this->assertArrayHasKey('tag', MailTag::validate(['has' => 'has', 'tag' => '']));
+        $this->assertArrayHasKey('has', MailTag::validate(['has' => 'maybe', 'tag' => 'spam']));
+        $this->assertArrayHasKey('tag', MailTag::validate(['has' => 'has', 'tag' => str_repeat('x', 61)]));
+        $this->assertStringContainsString('spam', MailTag::title(['has' => 'has', 'tag' => 'spam']));
+
+        // the editor offers the block and the tags of RefreshGlobal
+        $page = $this->actingAs($admin)->get(route('workflowpacks.flows'))->assertStatus(200)->getContent();
+        $this->assertStringContainsString('condition.mail_tag', $page);
+        $this->assertStringContainsString('classified_spam', $page);
+
+        // RefreshGlobal off: the "error" output, nothing else done
+        $flow = $this->flow($admin);
         \App\Module::setActive('refreshglobal', false);
         \App\Module::clearModulesCache();
-        Bridge::forgetCatalogs();
-        $this->assertArrayNotHasKey(MailTags::TYPE, Bridge::catalog($a->id)['conditions'], 'not offered without RefreshGlobal');
-    }
+        $ticket = $this->ticket($a);
+        $run = (new Engine())->start($flow, $ticket);
+        $this->assertSame(FlowRun::FAILED, $run->fresh()->state, 'no "error" link: the run fails, written in History');
+        $this->assertSame(\App\Conversation::STATUS_ACTIVE, (int) $ticket->fresh()->status);
 
-    public function testWorkflowsEvaluatesTheTagsOfTheTicket()
-    {
-        $a = $this->mailbox('A');
-        list($spam) = $this->ticket($a);
-        list($clean) = $this->ticket($a, 'Facture');
-        self::$tags = [$spam->id => ['classified_spam', 'inbox'], $clean->id => ['inbox']];
-
-        $check = function ($operator, $value, $c) {
-            return \Eventy::filter('workflow.check_condition', false, MailTags::TYPE, $operator, $value, $c, null);
-        };
-        $this->assertTrue($check('has', 'classified_spam', $spam));
-        $this->assertTrue($check('has', ' Classified_Spam ', $spam), 'case and spaces ignored');
-        $this->assertFalse($check('has', 'classified_spam', $clean));
-        $this->assertTrue($check('has_not', 'classified_spam', $clean));
-        $this->assertFalse($check('has', '', $spam), 'no tag written: never true');
-        $this->assertFalse(\Eventy::filter('workflow.check_condition', false, 'subject', 'contains', 'x', $spam, null), 'other conditions untouched');
-    }
-
-    public function testTheRuleRunsWhenRefreshGlobalTagsTheEmailOnceNeverOnOlderTickets()
-    {
-        $a = $this->mailbox('A');
-        // ticket created before the rule (a recalculation of the tags must not touch it)
-        list($old) = $this->ticket($a);
-        $old->created_at = date('Y-m-d H:i:s', time() - 7200);
-        $old->save();
-        $rule = $this->spamRule($a);
-        // the rule exists since an hour (Workflows: a ticket is "new" for a rule when created strictly after it)
-        $rule->created_at = date('Y-m-d H:i:s', time() - 3600);
-        $rule->save();
-        list($new, $thread) = $this->ticket($a);
-        self::$tags = [$old->id => ['classified_spam'], $new->id => ['classified_spam']];
-
-        // FreeScout fetched the e-mail, RefreshGlobal tagged it: the rule runs (here: status spam)
-        \Eventy::action('refreshglobal.mail_tagged', $new->id, $thread->id, ['classified_spam']);
-        $this->assertSame(\App\Conversation::STATUS_SPAM, (int) $new->fresh()->status);
-        $this->assertSame(1, \DB::table('conversation_workflow')->where('conversation_id', $new->id)->where('workflow_id', $rule->id)->count());
-
-        // tagged again (another e-mail of the ticket, recalculation): not run twice
-        // (the rule saved another instance: this one still says "active", so it is reloaded before the change)
-        $new = $new->fresh();
-        $new->status = \App\Conversation::STATUS_ACTIVE;
-        $new->save();
-        \Eventy::action('refreshglobal.mail_tagged', $new->id, $thread->id, ['inbox']);
-        $this->assertSame(\App\Conversation::STATUS_ACTIVE, (int) $new->fresh()->status);
-
-        // older ticket: only with "existing tickets" on the rule
-        \Eventy::action('refreshglobal.mail_tagged', $old->id, null, ['classified_spam']);
-        $this->assertSame(\App\Conversation::STATUS_ACTIVE, (int) $old->fresh()->status);
-        $rule->apply_to_prev = true;
-        $rule->save();
-        \Eventy::action('refreshglobal.mail_tagged', $old->id, null, ['classified_spam']);
-        $this->assertSame(\App\Conversation::STATUS_SPAM, (int) $old->fresh()->status);
-
-        // inactive rule, or a rule without this condition: never run from here
-        list($third, $t3) = $this->ticket($a);
-        self::$tags[$third->id] = ['classified_spam'];
-        $rule->active = false;
-        $rule->save();
-        \Eventy::action('refreshglobal.mail_tagged', $third->id, $t3->id, ['classified_spam']);
-        $this->assertSame(\App\Conversation::STATUS_ACTIVE, (int) $third->fresh()->status);
-    }
-
-    public function testAPackRuleUsingTheConditionIsImported()
-    {
-        $a = $this->mailbox('A');
-        $admin = $this->user([], true);
-        $rule = $this->rule('spam', ['conditions' => ['all' => [['type' => MailTags::TYPE, 'operator' => 'has', 'value' => 'classified_spam']]],
-            'actions' => [['type' => 'status', 'value' => '4']]]);
-        list(, $result) = $this->import($this->pack([$rule]), [$a], $admin);
-        $this->assertTrue($result['ok'], json_encode($result));
-        $wf = $this->workflows($a)->first();
-        $this->assertSame(MailTags::TYPE, $wf->conditions[0][0]['type']);
-        $this->assertSame('classified_spam', $wf->conditions[0][0]['value']);
+        // nothing is added to Workflows any more
+        $this->assertSame([], \Eventy::filter('workflows.conditions_config', [], $a->id));
+        $this->assertFalse(\Eventy::filter('workflow.check_condition', false, 'wp_mail_tag', 'has', 'spam', $ticket, null));
     }
 }

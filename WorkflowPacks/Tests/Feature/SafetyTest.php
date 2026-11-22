@@ -2,253 +2,94 @@
 
 namespace Modules\WorkflowPacks\Tests\Feature;
 
-use Modules\WorkflowPacks\Entities\ImportLog;
-use Modules\WorkflowPacks\Entities\Link;
 use Modules\WorkflowPacks\Services\Compat\Checker;
+use Modules\WorkflowPacks\Services\Engine\Engine;
 use Modules\WorkflowPacks\Tests\TestCase;
-use Modules\Workflows\Entities\Workflow;
 
-/** Permissions, dependencies (Tags), Workflows missing, transactional rollback. */
+/**
+ * Access to the module: administrators only (every page and every action checked on the server), CSRF on every form,
+ * the engine switched off said plainly, and the module working without the Workflows module.
+ */
 class SafetyTest extends TestCase
 {
-    public function testPermissionsAreCheckedForEveryMailboxOnTheServer()
+    /** Pages of the module (GET), opened by an administrator. */
+    const PAGES = ['workflowpacks.flows', 'workflowpacks.flowpack', 'workflowpacks.flowpack.export', 'workflowpacks.untreated', 'workflowpacks.ai',
+        'workflowpacks.history', 'workflowpacks.diagnostic'];
+
+    protected function setUp(): void
     {
-        $a = $this->mailbox('A');
-        $b = $this->mailbox('B');
-        $agent = $this->user([$a, $b], false, true);   // may manage workflows…
-        \DB::table('mailbox_user')->where('user_id', $agent->id)->where('mailbox_id', $b->id)->delete(); // …but only in A now
-        $agent = $agent->fresh();
-
-        $plan = $this->plan($this->pack([$this->rule('r1')]), [$a, $b], $agent);
-        $this->assertSame(['r1' => [$a->id => 'create', $b->id => 'denied']], $this->statuses($plan));
-
-        // forged decision for the forbidden mailbox: refused, nothing written
-        list(, $result) = $this->import($this->pack([$this->rule('r1')]), [$a, $b], $agent, ['r1' => [$b->id => 'create']], ['ack_blocked' => true]);
-        $this->assertFalse($result['ok']);
-        $this->assertCount(0, $this->workflows($a));
-        $this->assertCount(0, $this->workflows($b));
-
-        list(, $result) = $this->import($this->pack([$this->rule('r1')]), [$a, $b], $agent, [], ['ack_blocked' => true]);
-        $this->assertTrue($result['ok']);
-        $this->assertCount(1, $this->workflows($a));
-        $this->assertCount(0, $this->workflows($b));
+        parent::setUp();
+        \Option::set(Engine::OPTION, true);
     }
 
-    public function testUsersWithoutTheWorkflowsPermissionCannotOpenTheModule()
-    {
-        $a = $this->mailbox('A');
-        $plain = $this->user([$a]);
-        $this->actingAs($plain)->get(route('workflowpacks.index'))->assertStatus(403);
-        $this->actingAs($plain)->post(route('workflowpacks.import.preview'), ['pack_json' => '{}'])->assertStatus(403);
-        $this->actingAs($this->user([$a], false, true))->get(route('workflowpacks.index'))->assertStatus(200);
-        $this->actingAs($this->user([$a], false, true))->get(route('workflowpacks.diagnostic'))->assertStatus(403);
-        auth()->logout();
-        $this->get(route('workflowpacks.index'))->assertStatus(302);
-    }
-
-    public function testCsrfIsRequired()
-    {
-        $admin = $this->user([], true);
-        // FreeScout's VerifyCsrfToken is skipped by Laravel when running unit tests: check the route is in the "web" group
-        $route = \Route::getRoutes()->getByName('workflowpacks.import.confirm');
-        $this->assertContains('web', $route->gatherMiddleware());
-        $this->assertNotNull($admin);
-    }
-
-    public function testMissingTagsBlocksTheRuleUnlessExplicitlySkipped()
-    {
-        $a = $this->mailbox('A');
-        $admin = $this->user([], true);
-        \App\Module::setActive('tags', false);
-        \App\Module::clearModulesCache();
-        $pack = $this->pack([
-            $this->rule('r1'),
-            $this->rule('tagged', ['requires' => ['tags'], 'actions' => [['type' => 'status', 'value' => '2']]]),
-        ]);
-
-        $plan = $this->plan($pack, [$a], $admin);
-        $this->assertSame('blocked', $plan['rules']['tagged']['items'][$a->id]['status']);
-        $this->assertStringContainsString('tags', implode(' ', $plan['rules']['tagged']['items'][$a->id]['reasons']));
-
-        list(, $result) = $this->import($pack, [$a], $admin);
-        $this->assertFalse($result['ok'], 'blocked rules must be skipped explicitly');
-        $this->assertCount(0, $this->workflows($a));
-
-        list(, $result) = $this->import($pack, [$a], $admin, [], ['ack_blocked' => true]);
-        $this->assertTrue($result['ok']);
-        $this->assertSame(['Règle r1'], $this->workflows($a)->pluck('name')->all(), 'the Tags rule is not imported without its actions');
-    }
-
-    public function testTypesAddedByAnActiveModuleAreAccepted()
-    {
-        $a = $this->mailbox('A');
-        $admin = $this->user([], true);
-        \App\Module::setActive('tags', true);
-        \App\Module::clearModulesCache();
-        // what a module does to extend Workflows: filter on the catalog
-        \Eventy::addFilter('workflows.actions_config', function ($config) {
-            $config['tags_test'] = ['title' => 'Tags', 'items' => ['tags_test_add' => ['title' => 'Add tag']]];
-
-            return $config;
-        });
-        \Modules\WorkflowPacks\Services\Workflows\Bridge::forgetCatalogs();
-        $pack = $this->pack([$this->rule('tagged', ['requires' => ['tags'], 'actions' => [['type' => 'tags_test_add', 'value' => ['facture']]]])]);
-        list($plan, $result) = $this->import($pack, [$a], $admin);
-        $this->assertSame('create', $plan['rules']['tagged']['items'][$a->id]['status']);
-        $this->assertTrue($result['ok']);
-        $this->assertSame([[['type' => 'tags_test_add', 'value' => ['facture']]]], $this->workflows($a)->first()->actions);
-    }
-
-    public function testWorkflowsMissingBlocksWithAnExplicitMessage()
-    {
-        $admin = $this->user([], true);
-        \Option::set(\Modules\WorkflowPacks\Services\Engine\Engine::OPTION, false);
-        \App\Module::setActive('workflows', false);
-        \App\Module::clearModulesCache();
-        Checker::forget();
-        $this->assertTrue(Checker::blocking());
-        $this->assertStringContainsString('WP-WF-01', implode(' ', Checker::blockingReasons()));
-        $response = $this->actingAs($admin)->get(route('workflowpacks.import'));
-        $response->assertStatus(200);
-        $this->seeIn($response, 'WP-WF-01');
-        // engine off: not a dead end, the way to work without Workflows is given
-        $this->seeIn($response, e(__('workflowpacks::messages.wf_missing_engine_off')));
-        $this->assertStringNotContainsString(e(__('workflowpacks::messages.blocked_title')), $response->getContent());
-        \App\Module::setActive('workflows', true);
-        \App\Module::clearModulesCache();
-    }
-
-    public function testWithoutWorkflowsTheInternalEngineKeepsTheModuleWorking()
-    {
-        $admin = $this->user([], true);
-        \Option::set(\Modules\WorkflowPacks\Services\Engine\Engine::OPTION, true);
-        \App\Module::setActive('workflows', false);
-        \App\Module::clearModulesCache();
-        Checker::forget();
-        try {
-            $this->assertFalse(Checker::blocking(), 'not a blocking state any more');
-            $this->assertFalse(Checker::workflowsReady());
-            $this->assertTrue(Checker::packsBlocked(), 'the packs of Workflows rules still need it');
-            // administrators: the tabs of the packs lead to their equivalent for the flows, no notice
-            $this->actingAs($admin)->get(route('workflowpacks.import'))->assertRedirect(route('workflowpacks.flowpack'));
-            $this->actingAs($admin)->get(route('workflowpacks.export'))->assertRedirect(route('workflowpacks.flowpack.export'));
-            $this->actingAs($admin)->get(route('workflowpacks.graph'))->assertRedirect(route('workflowpacks.flows'));
-            $index = $this->actingAs($admin)->get(route('workflowpacks.index'))->assertStatus(200);
-            $this->assertStringNotContainsString(e(__('workflowpacks::messages.wf_missing_title')), $index->getContent());
-            // the menu leads straight to the right pages: one "Diagram" tab (the editor of the flows), no "Flows" tab,
-            // import and export of the packs of flows; no link to the diagram of the rules without Workflows
-            $html = $this->actingAs($admin)->get(route('workflowpacks.flows'))->getContent();
-            $this->assertStringContainsString('href="'.route('workflowpacks.flows').'">'.e(__('workflowpacks::graph.title')).'</a>', $html);
-            $this->assertStringNotContainsString('>'.e(__('workflowpacks::flows.tab')).'</a>', $html);
-            $this->assertStringContainsString('href="'.route('workflowpacks.flowpack').'">'.e(__('workflowpacks::messages.import')).'</a>', $html);
-            $this->assertStringContainsString('href="'.route('workflowpacks.flowpack.export').'">'.e(__('workflowpacks::messages.export')).'</a>', $html);
-            $this->assertStringNotContainsString('href="'.route('workflowpacks.graph').'"', $html);
-            // the Workflows remarks are hidden: no empty yellow box left in their place
-            foreach (['workflowpacks.index', 'workflowpacks.flows', 'workflowpacks.history'] as $page) {
-                $html = $this->actingAs($admin)->get(route($page))->getContent();
-                $this->assertSame(0, preg_match('#class="alert alert-warning">\s*</div>#', $html), $page);
-            }
-            // the others (no access to the flows): the notice explains why
-            $import = $this->actingAs($this->user([$this->mailbox('A')], false, true))->get(route('workflowpacks.import'))->assertStatus(200);
-            $this->seeIn($import, e(__('workflowpacks::messages.wf_missing_title')));
-            $this->seeIn($import, e(__('workflowpacks::messages.wf_missing_engine_on')));
-            $this->actingAs($admin)->get(route('workflowpacks.flows'))->assertStatus(200);
-            $this->actingAs($admin)->get(route('workflowpacks.ai'))->assertStatus(200);
-        } finally {
-            \App\Module::setActive('workflows', true);
-            \App\Module::clearModulesCache();
-            Checker::forget();
-        }
-    }
-
-    public function testWithWorkflowsTheDiagramTabOpensTheFlowsAndTheRulesStayReachable()
-    {
-        $admin = $this->user([], true);
-        \Option::set(\Modules\WorkflowPacks\Services\Engine\Engine::OPTION, true);
-        Checker::forget();
-        $html = $this->actingAs($admin)->get(route('workflowpacks.flows'))->assertStatus(200)->getContent();
-        $this->assertStringContainsString('href="'.route('workflowpacks.flows').'">'.e(__('workflowpacks::graph.title')).'</a>', $html);
-        $this->assertStringContainsString('href="'.route('workflowpacks.import').'">'.e(__('workflowpacks::messages.import')).'</a>', $html);
-        $this->assertStringContainsString('href="'.route('workflowpacks.graph').'">'.e(__('workflowpacks::flows.rules_graph')).'</a>', $html);
-        $this->actingAs($admin)->get(route('workflowpacks.graph'))->assertStatus(200);
-        // not an administrator: the diagram of the rules, as before
-        $agent = $this->user([$this->mailbox('A')], false, true);
-        $this->seeIn($this->actingAs($agent)->get(route('workflowpacks.index')), 'href="'.route('workflowpacks.graph').'">'.e(__('workflowpacks::graph.title')).'</a>');
-    }
-
-    public function testWithoutWorkflowsAPackIsRemovedFromWorkflowPacksAfterABackup()
+    public function testOnlyAdministratorsOpenTheModuleEvenWithTheWorkflowsPermission()
     {
         $a = $this->mailbox('A');
         $admin = $this->user([$a], true);
-        $this->import($this->pack([$this->rule('r1')]), [$a], $admin);
-        $key = \Modules\WorkflowPacks\Entities\Pack::first()->pack_key;
-        // Workflows there: the normal removal (preview, rules deleted), not this one
-        $this->actingAs($admin)->post(route('workflowpacks.forget', ['key' => $key]))->assertStatus(403);
+        foreach ([$this->user([$a]), $this->user([$a], false, true)] as $user) {
+            foreach (array_merge(self::PAGES, ['workflowpacks.index', 'workflowpacks.separation', 'workflowpacks.separation.backup']) as $page) {
+                $this->actingAs($user)->get(route($page))->assertStatus(403);
+            }
+            $this->actingAs($user)->post(route('workflowpacks.separation.confirm'), ['choice' => 'confirm', 'understood' => 1])->assertStatus(403);
+            $this->actingAs($user)->postJson(route('workflowpacks.flows.store'), ['name' => 'x'])->assertStatus(403);
+            $this->actingAs($user)->get(route('workflowpacks.backup', ['id' => 1]))->assertStatus(403);
+        }
+        foreach (self::PAGES as $page) {
+            $html = $this->actingAs($admin)->get(route($page))->assertStatus(200)->getContent();
+            $this->assertStringNotContainsString('workflowpacks::', strip_tags($html), $page.': every text exists');
+        }
+        // not logged in: the login page
+        \Auth::logout();
+        $this->get(route('workflowpacks.index'))->assertStatus(302);
+    }
 
+    public function testEveryFormNeedsTheCsrfToken()
+    {
+        foreach (\Route::getRoutes() as $route) {
+            $name = (string) $route->getName();
+            if (strpos($name, 'workflowpacks.') !== 0 || strpos($name, 'workflowpacks.api.') === 0 || $name === 'workflowpacks.mcp') {
+                continue;
+            }
+            if (array_intersect(['POST', 'PUT', 'DELETE'], $route->methods())) {
+                $this->assertContains('web', $route->gatherMiddleware(), $name.': CSRF of the "web" group');
+                $this->assertContains('auth', $route->gatherMiddleware(), $name.': logged in');
+            }
+        }
+    }
+
+    public function testEngineOffAPageSaysSoInsteadOfAnError()
+    {
+        $admin = $this->user([], true);
+        \Option::set(Engine::OPTION, false);
+        $page = $this->actingAs($admin)->get(route('workflowpacks.flows'))->assertStatus(200)->getContent();
+        $this->assertStringContainsString(e(__('workflowpacks::messages.engine_off')), $page);
+        $this->assertStringContainsString(route('settings', ['section' => 'workflowpacks']), $page);
+        $this->actingAs($admin)->postJson(route('workflowpacks.flows.store'), ['name' => 'x'])->assertStatus(409);
+        // history and diagnostic stay open
+        $this->actingAs($admin)->get(route('workflowpacks.history'))->assertStatus(200);
+        $this->actingAs($admin)->get(route('workflowpacks.diagnostic'))->assertStatus(200);
+    }
+
+    public function testTheModuleWorksWithoutTheWorkflowsModule()
+    {
+        $admin = $this->user([], true);
         \App\Module::setActive('workflows', false);
         \App\Module::clearModulesCache();
         Checker::forget();
         try {
-            $this->seeIn($this->actingAs($admin)->get(route('workflowpacks.index')), route('workflowpacks.forget', ['key' => $key]));
-            $this->actingAs($this->user([$a]))->post(route('workflowpacks.forget', ['key' => $key]))->assertStatus(403);
-            $this->actingAs($admin)->post(route('workflowpacks.forget', ['key' => $key]))->assertRedirect(route('workflowpacks.index'));
-            $this->assertNull(\Modules\WorkflowPacks\Entities\Pack::where('pack_key', $key)->first());
-            $this->assertSame(0, Link::where('pack_key', $key)->count());
-            $backup = \Modules\WorkflowPacks\Entities\Backup::where('pack_key', $key)->latest('id')->first();
-            $this->assertSame($key, json_decode($backup->content, true)['pack']['key']);
+            $state = Checker::run(true);
+            $this->assertSame('ok', $state['state']);
+            $this->assertSame([], array_filter(array_column($state['checks'], 'code'), function ($code) {
+                return strpos($code, 'WP-WF-') === 0;
+            }), 'no check of Workflows any more');
+            foreach (self::PAGES as $page) {
+                $this->actingAs($admin)->get(route($page))->assertStatus(200);
+            }
+            $this->assertSame(0, \Artisan::call('workflowpacks:health'));
         } finally {
             \App\Module::setActive('workflows', true);
             \App\Module::clearModulesCache();
             Checker::forget();
         }
-    }
-
-    public function testAnErrorCancelsTheWholeImport()
-    {
-        $a = $this->mailbox('A');
-        $b = $this->mailbox('B');
-        $admin = $this->user([], true);
-        $this->import($this->pack([$this->rule('r1')]), [$a], $admin);
-        $existing = $this->workflows($a)->first()->toArray();
-        $links = Link::count();
-        $logs = ImportLog::count();
-        $total = Workflow::count();
-
-        $saved = 0;
-        Workflow::saving(function () use (&$saved) {
-            if (++$saved === 3) {
-                throw new \RuntimeException('panne simulée');
-            }
-        });
-        $pack = $this->pack([$this->rule('r1', ['name' => 'Renommée']), $this->rule('r2'), $this->rule('r3')]);
-        list(, $result) = $this->import($pack, [$a, $b], $admin);
-        Workflow::flushEventListeners();
-
-        $this->assertFalse($result['ok']);
-        $this->assertStringContainsString('panne simulée', $result['error']);
-        $this->assertSame($total, Workflow::count(), 'no workflow created');
-        $this->assertSame($existing, $this->workflows($a)->first()->toArray(), 'updated rule restored');
-        $this->assertSame($links, Link::count());
-        $this->assertSame($logs, ImportLog::count());
-    }
-
-    public function testThePreviewTokenDetectsAChangeBeforeConfirmation()
-    {
-        $a = $this->mailbox('A');
-        $admin = $this->user([], true);
-        $this->import($this->pack([$this->rule('r1')]), [$a], $admin);
-        $json = json_encode($this->pack([$this->rule('r1', ['name' => 'Nouveau nom'])]));
-        $plan = $this->plan(json_decode($json, true), [$a], $admin);
-
-        $wf = $this->workflows($a)->first();
-        $wf->conditions = [[['type' => 'subject', 'operator' => 'contains', 'value' => 'changé entre-temps']]];
-        $wf->save();
-
-        $response = $this->actingAs($admin)->post(route('workflowpacks.import.confirm'), [
-            'pack_carry' => $json, 'mailboxes' => [$a->id], 'token' => $plan['token'],
-        ]);
-        $response->assertStatus(200);
-        $this->seeIn($response, e(__('workflowpacks::messages.plan_changed')));
-        $this->assertSame('Règle r1', $wf->fresh()->name);
     }
 }

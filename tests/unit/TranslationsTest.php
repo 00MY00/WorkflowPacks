@@ -1,6 +1,6 @@
 <?php
 
-use Modules\WorkflowPacks\Services\Pack\Problems;
+use Modules\WorkflowPacks\Services\Support\Texts;
 
 /*
  * Every language has the same keys and the same :placeholders as the French reference (texts.php) and as English
@@ -25,9 +25,27 @@ function wp_placeholders($text)
     return $names;
 }
 
-foreach (['texts.php' => 'fr', 'messages.php' => 'en', 'graph.php' => 'en'] as $file => $reference) {
+/** A file of texts flattened: "condition.ticket.title" => text. */
+function wp_flat(array $texts, $prefix = '')
+{
+    $out = [];
+    foreach ($texts as $key => $value) {
+        if (is_array($value)) {
+            $out += wp_flat($value, $prefix.$key.'.');
+        } else {
+            $out[$prefix.$key] = $value;
+        }
+    }
+
+    return $out;
+}
+
+// every file of texts (the reference: French for texts.php, written first; English elsewhere)
+$wp_files = array_map('basename', glob(__DIR__.'/../../WorkflowPacks/Resources/lang/en/*.php'));
+foreach ($wp_files as $file) {
+    $reference = $file === 'texts.php' ? 'fr' : 'en';
     test('Traductions : '.$file.' complet dans les 7 langues (mêmes clés, mêmes paramètres)', function () use ($file, $reference) {
-        $all = wp_lang_files($file);
+        $all = array_map('wp_flat', wp_lang_files($file));
         same(['de', 'en', 'es', 'fr', 'it', 'nl', 'pt-BR'], array_keys($all), 'langues');
         $ref = $all[$reference];
         foreach ($all as $locale => $strings) {
@@ -41,12 +59,11 @@ foreach (['texts.php' => 'fr', 'messages.php' => 'en', 'graph.php' => 'en'] as $
 }
 
 test('Traductions : remplacement des paramètres et traducteur branché', function () {
-    same('trop de règles (3, maximum 2).', Problems::t('pack_rules_too_many', ['count' => 3, 'max' => 2]));
-    same('variable inconnue {{param.x}}.', Problems::t('var_unknown', ['var' => 'param.x']));
+    same('manquantes : a, b — lancez php artisan migrate', Texts::t('chk_db_missing', ['tables' => 'a, b']));
     $en = require __DIR__.'/../../WorkflowPacks/Resources/lang/en/texts.php';
-    Problems::$translator = function ($key, array $params) use ($en) {
-        return isset($en[$key]) ? Problems::replace($en[$key], $params) : null;
+    Texts::$translator = function ($key, array $params) use ($en) {
+        return isset($en[$key]) ? Texts::replace($en[$key], $params) : null;
     };
-    same('too many rules (3, maximum 2).', Problems::t('pack_rules_too_many', ['count' => 3, 'max' => 2]));
-    Problems::$translator = null;
+    same(str_replace(':tables', 'a, b', $en['chk_db_missing']), Texts::t('chk_db_missing', ['tables' => 'a, b']));
+    Texts::$translator = null;
 });

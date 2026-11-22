@@ -10,7 +10,7 @@ dossier ou filtrer la liste.
 - **Mise à jour :**
   - à chaque rangement, quand l'e-mail est déplacé ou trouvé déjà en place ;
   - lors du nettoyage automatique du dossier.
-- **Lecture seule** pour les autres modules : seul Workflows Packs écrit dans la table.
+- **Lecture seule** pour les autres modules : seul Workflow Packs écrit dans la table.
 - **Disponibilité :** l'API n'existe que si la table `workflowpacks_ticket_folders` existe, c'est-à-dire si
   Workflow Packs 1.14.0 ou plus récent est installé et migré.
 

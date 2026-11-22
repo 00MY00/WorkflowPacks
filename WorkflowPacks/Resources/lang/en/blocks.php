@@ -37,6 +37,14 @@ return [
             'decision' => 'Similarity :score % (subject :subject %, text :body %), threshold :threshold % → :output',
             'help'     => 'Compares the ticket with example tickets (their ids), locally.',
         ],
+        'mail_tag' => [
+            'name'     => 'E-mail tag',
+            'title'    => 'If the e-mail :has the tag “:tag”',
+            'decision' => 'Tags: :tags → :output',
+            'help'     => 'Tests the tags RefreshGlobal gave the e-mail (inbox, spam, folder…).',
+            'missing'  => 'RefreshGlobal module missing or switched off: no tags.',
+            'waiting'  => 'Waiting for the tags of RefreshGlobal (new e-mail).',
+        ],
     ],
     'wait'      => [
         'duration' => [
@@ -70,6 +78,11 @@ return [
             'name'  => 'Push notification',
             'title' => 'Push notification: :to',
             'help'  => 'Sends a notification to the agents’ phones or computers (WebPush module), respecting their quiet hours.',
+            'sent'          => 'sent to :count device(s)',
+            'silenced'      => 'quiet hours: :names',
+            'no_device'     => 'no device subscribed: :names',
+            'refused'       => ':count device(s) did not accept it (FreeScout\'s log, lines [WebPush])',
+            'not_received'  => 'Push notification not received',
         ],
         'delete'      => [
             'name'  => 'Delete the ticket',
@@ -112,6 +125,10 @@ return [
             'pending' => 'Pending',
             'closed'  => 'Closed',
             'spam'    => 'Spam',
+        ],
+        'has'    => [
+            'has'     => 'has',
+            'has_not' => 'has not',
         ],
         'nobody' => 'nobody',
         'to'     => [

@@ -12,10 +12,7 @@ use Modules\WorkflowPacks\Services\ModuleInfo;
  * Health of the installed module, for UpdateGuard (run after an update, after a restore and at the end of its
  * observation; "healthCommand" of module.json) and for the administrator. Read only, quick, no network.
  * Exit code 0 = healthy, 1 = something of the module itself is broken (files, classes, views, routes, assets,
- * tables, migrations).
- *
- * The Workflows module is reported but never makes it fail: its absence or its version is not caused by an update of
- * this module, and rolling this module back would not change it (workflowpacks:check tells what to do).
+ * tables, migrations). The state of the instance (workflowpacks:check) is reported, never makes it fail.
  */
 class HealthCommand extends Command
 {
@@ -23,14 +20,15 @@ class HealthCommand extends Command
 
     protected $description = 'WorkflowPacks: health of the installed module (files, classes, views, routes, assets, database)';
 
-    const FILES = ['module.json', 'Providers/WorkflowPacksServiceProvider.php', 'Http/routes.php', 'Config/config.php',
-        'Resources/views/layout.blade.php', 'Resources/views/graph.blade.php', 'Public/js/graph/app.js', 'Public/js/graph/flow.js', 'Public/js/graph/sim.js', 'Public/css/graph.css'];
-    const CLASSES = ['Services\Compat\Checker', 'Services\Pack\PackValidator', 'Services\Plan\Planner', 'Services\Plan\Importer',
-        'Services\Graph\GraphBuilder', 'Services\Imap\ImapFolders', 'Services\Imap\TicketFolders', 'Services\History', 'Jobs\FileIntoImapFolder',
-        'Services\Flow\FlowBuilder', 'Services\Flow\Simulator'];
-    const VIEWS = ['index', 'graph', 'history', 'diagnostic', 'settings', 'layout'];
-    const ROUTES = ['workflowpacks.index', 'workflowpacks.graph', 'workflowpacks.graph.data', 'workflowpacks.history', 'workflowpacks.diagnostic',
-        'workflowpacks.import'];
+    const FILES = ['module.json', 'Providers/WorkflowPacksServiceProvider.php', 'Http/routes.php', 'Resources/views/layout.blade.php',
+        'Resources/views/flows.blade.php', 'Public/js/flows/editor.js', 'Public/js/flows/icons.js', 'Public/css/flows.css'];
+    const CLASSES = ['Services\Compat\Checker', 'Services\Engine\Engine', 'Services\Engine\Listener', 'Services\Engine\Scheduler',
+        'Services\Engine\Reapply', 'Services\Engine\FlowPack', 'Services\Engine\TempFlows', 'Services\Engine\FlowReport',
+        'Services\Ai\AgentTools', 'Services\Imap\ImapFolders', 'Services\Imap\TicketFolders', 'Services\History', 'Services\Separation',
+        'Jobs\FileIntoImapFolder'];
+    const VIEWS = ['flows', 'reapply', 'untreated', 'ai', 'history', 'diagnostic', 'settings', 'separation', 'layout'];
+    const ROUTES = ['workflowpacks.index', 'workflowpacks.flows', 'workflowpacks.flows.data', 'workflowpacks.history', 'workflowpacks.diagnostic',
+        'workflowpacks.flowpack', 'workflowpacks.ai', 'workflowpacks.api.me', 'workflowpacks.mcp'];
 
     public function handle()
     {
@@ -55,7 +53,7 @@ class HealthCommand extends Command
         $details['routes'] = $missing;
 
         // public/modules/workflowpacks: link made by FreeScout to Public/ (scripts and styles of the pages)
-        $checks['assets'] = is_file(public_path('modules/'.ModuleInfo::ALIAS.'/js/graph/app.js')) ? 'ok' : 'fail';
+        $checks['assets'] = is_file(public_path('modules/'.ModuleInfo::ALIAS.'/js/flows/editor.js')) ? 'ok' : 'fail';
 
         try {
             $missing = array_values(array_filter(ModuleInfo::TABLES, function ($t) { return !\Schema::hasTable($t); }));
@@ -71,12 +69,12 @@ class HealthCommand extends Command
 
         // reported only (see above)
         try {
-            $checks['workflows'] = Checker::run(true)['state'];
+            $checks['instance'] = Checker::run(true)['state'];
         } catch (\Throwable $e) {
-            $checks['workflows'] = 'unknown';
+            $checks['instance'] = 'unknown';
         }
 
-        $failed = array_keys(array_filter($checks, function ($state, $key) { return $key !== 'workflows' && $state === 'fail'; }, ARRAY_FILTER_USE_BOTH));
+        $failed = array_keys(array_filter($checks, function ($state, $key) { return $key !== 'instance' && $state === 'fail'; }, ARRAY_FILTER_USE_BOTH));
         $status = $failed ? 'fail' : 'ok';
         if ($this->option('json')) {
             $this->line(json_encode(['status' => $status, 'module' => ModuleInfo::MODULE, 'version' => ModuleInfo::version(),

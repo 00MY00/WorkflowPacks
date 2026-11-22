@@ -3,7 +3,7 @@
 namespace Modules\WorkflowPacks\Services\Imap;
 
 use Modules\WorkflowPacks\Entities\Retention as RetentionRow;
-use Modules\WorkflowPacks\Services\Pack\Timer;
+use Modules\WorkflowPacks\Services\Support\Timer;
 
 /**
  * Automatic clean-up of the managed e-mail folders: "the e-mails of [WP] Newsletters are deleted after 7 days".

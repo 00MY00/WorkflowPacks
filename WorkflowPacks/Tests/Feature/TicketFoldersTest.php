@@ -67,20 +67,14 @@ class TicketFoldersTest extends TestCase
         $this->assertSame(0, TicketFolders::prune(), 'at most once a day');
         $this->assertNotNull(TicketFolders::get($conversation->id));
 
-        // filings of the history (before the table): the folder of the rule when it exists, else from the path
+        // filings of the history (before the table): the folder from the path on the server
         list($old) = $this->ticket($a);
         list($older) = $this->ticket($a);
-        $wf = \Modules\WorkflowPacks\Services\Workflows\Bridge::newModel();
-        $wf->mailbox_id = $a->id;
-        $wf->name = 'Rangement '.self::uid();
-        $wf->conditions = [[['type' => 'subject', 'operator' => 'contains', 'value' => 'x']]];
-        $wf->actions = [[['type' => 'wp_imap_folder', 'value' => 'Voyages/Réservations']]];
-        $wf->save();
-        \Modules\WorkflowPacks\Services\History::add('imap_file', 'moved', ['mailbox_id' => $a->id, 'conversation_id' => $old->id, 'workflow_id' => $wf->id, 'subject' => '[WP] Voyages.Réservations']);
+        \Modules\WorkflowPacks\Services\History::add('imap_file', 'moved', ['mailbox_id' => $a->id, 'conversation_id' => $old->id, 'subject' => '[WP] Voyages/Réservations']);
         \Modules\WorkflowPacks\Services\History::add('imap_file', 'already', ['mailbox_id' => $a->id, 'conversation_id' => $older->id, 'subject' => 'INBOX.[WP] Voyages.Notes']);
         \Modules\WorkflowPacks\Services\History::add('imap_file', 'not_found', ['mailbox_id' => $a->id, 'conversation_id' => $conversation->id, 'subject' => '[WP] Autre']);
         $this->assertSame(2, TicketFolders::backfill());
-        $this->assertSame('Voyages/Réservations', TicketFolders::get($old->id)['folder'], 'from the rule');
+        $this->assertSame('Voyages/Réservations', TicketFolders::get($old->id)['folder'], 'from the path');
         $this->assertSame('[WP] Voyages › Réservations', TicketFolders::get($old->id)['label']);
         $this->assertSame('Voyages/Notes', TicketFolders::get($older->id)['folder'], 'from the path, delimiter before the prefix');
         $this->assertSame('Factures', TicketFolders::get($conversation->id)['folder'], 'a ticket already known is kept');

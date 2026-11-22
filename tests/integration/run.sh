@@ -5,8 +5,9 @@
 #   bash tests/integration/run.sh                 # downloads FreeScout (branch dist) from GitHub
 #   FREESCOUT_SRC=/path/to/freescout bash tests/integration/run.sh   # or FREESCOUT_REF=<tag or branch>
 #
-# The official Workflows module is paid and is NOT used here: tests/stubs/Workflows (test stub reproducing its public
-# interface) is installed instead. A GreenMail container is the IMAP server of the "file into an e-mail folder" tests.
+# Workflow Packs no longer uses the Workflows module (4.0); tests/stubs/Workflows (a test stub of its public interface,
+# never the paid module) is installed only for the separation tests (SeparationTest: rules left by the packs of rules).
+# A GreenMail container is the IMAP server of the "file into an e-mail folder" tests.
 # Only test data is created (addresses in .test); the containers are removed at the end.
 #
 set -Eeuo pipefail
@@ -60,7 +61,9 @@ if [ -n "${FREESCOUT_SRC:-}" ]; then
     docker cp "$FREESCOUT_SRC/." "$APP:/var/www/html/"
 else
     # downloaded inside the (Linux) container: a checkout on Windows can lose files of vendor/ (path length)
-    docker exec "$APP" sh -c "curl -fsSL https://codeload.github.com/freescout-helpdesk/freescout/tar.gz/refs/heads/$FREESCOUT_REF | tar xz --strip-components=1 -C /var/www/html"
+    # a branch (dist by default) or a tag (e.g. 1.8.252)
+    docker exec "$APP" sh -c "{ curl -fsSL https://codeload.github.com/freescout-helpdesk/freescout/tar.gz/refs/heads/$FREESCOUT_REF 2>/dev/null \
+        || curl -fsSL https://codeload.github.com/freescout-helpdesk/freescout/tar.gz/refs/tags/$FREESCOUT_REF; } | tar xz --strip-components=1 -C /var/www/html"
 fi
 docker cp "$ROOT/WorkflowPacks" "$APP:/var/www/html/Modules/WorkflowPacks"
 docker cp "$ROOT/tests/stubs/Workflows" "$APP:/var/www/html/Modules/Workflows"
@@ -98,7 +101,7 @@ php artisan config:clear
 
 log "workflowpacks:check"
 docker exec -u www-data -w /var/www/html "$APP" php artisan workflowpacks:check || true
-docker exec -u www-data -w /var/www/html "$APP" php artisan workflowpacks:check --pack=Modules/WorkflowPacks/Resources/packs/tri-emails-multilingue.json | tail -n 2
+docker exec -u www-data -w /var/www/html "$APP" php artisan workflowpacks:check --pack=Modules/WorkflowPacks/Resources/flows/tri-emails-multilingue-flux.json | tail -n 2
 log "workflowpacks:health"
 docker exec -u www-data -w /var/www/html "$APP" php artisan workflowpacks:health
 

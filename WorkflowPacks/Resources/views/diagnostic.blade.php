@@ -23,36 +23,22 @@
     <h4>{{ __('workflowpacks::messages.update') }}</h4>
     @include('workflowpacks::partials.updates')
 
-    @if ($catalog)
-        <details class="wp-fold wp-section" @if (request()->has('mailbox_id')) open @endif>
-        <summary>{{ __('workflowpacks::messages.catalog') }}</summary>
-        <p class="wp-muted">{{ __('workflowpacks::messages.catalog_help') }}</p>
-        <form method="GET" action="{{ route('workflowpacks.diagnostic') }}" class="form-inline wp-inline">
-            <select name="mailbox_id" class="form-control input-sm wp-autosubmit">
-                @foreach ($mailboxes as $mb)
-                    <option value="{{ $mb->id }}" @if ($mailbox && $mailbox->id == $mb->id) selected @endif>{{ $mb->name }}</option>
-                @endforeach
-            </select>
-        </form>
-        @foreach (['conditions', 'actions'] as $kind)
-            <h5>{{ __('workflowpacks::messages.'.$kind) }}</h5>
+    {{-- the blocks of the flows here: the types (and fields) to use in a pack of flows written by hand --}}
+    <details class="wp-fold wp-section">
+        <summary>{{ __('workflowpacks::messages.blocks_catalog', ['count' => count($blocks)]) }}</summary>
+        <p class="wp-muted">{{ __('workflowpacks::messages.blocks_catalog_help') }}</p>
+        <div class="table-responsive">
             <table class="table table-condensed table-striped wp-catalog">
-                <tr><th>type</th><th></th><th>{{ __('workflowpacks::messages.operators') }}</th><th>{{ __('workflowpacks::messages.values') }}</th></tr>
-                @foreach ($catalog[$kind] as $type => $item)
+                <tr><th>type</th><th></th><th>{{ __('workflowpacks::messages.blocks_fields') }}</th><th>{{ __('workflowpacks::messages.blocks_outputs') }}</th></tr>
+                @foreach ($blocks as $b)
                     <tr>
-                        <td><code>{{ $type }}</code></td>
-                        <td>{{ $item['title'] }} <span class="wp-muted">({{ $item['group'] }})</span></td>
-                        <td>@if ($item['operators'])@foreach ($item['operators'] as $op)<code>{{ $op }}</code> @endforeach @endif</td>
-                        <td>
-                            @if ($item['values'] === null){{ __('workflowpacks::messages.free_value') }}
-                            @elseif ($item['values'] === []){{ __('workflowpacks::messages.no_value') }}
-                            @else @foreach (array_slice($item['values'], 0, 12) as $v)<code>{{ $v }}</code> @endforeach @if (count($item['values']) > 12)…@endif
-                            @endif
-                        </td>
+                        <td><code>{{ $b['type'] }}</code></td>
+                        <td>{{ $b['name'] }} <span class="wp-muted">({{ __('workflowpacks::blocks.families.'.$b['family']) }})</span></td>
+                        <td>@foreach ($b['fields'] as $key => $field)<code>{{ $key }}</code>@if (!empty($field['values'])) <span class="wp-muted">({{ implode(' | ', array_slice(array_map('strval', $field['values']), 0, 8)) }})</span>@endif @endforeach</td>
+                        <td>@foreach ($b['outputs'] as $o)<code>{{ $o['key'] }}</code> @endforeach</td>
                     </tr>
                 @endforeach
             </table>
-        @endforeach
-        </details>
-    @endif
+        </div>
+    </details>
 @endsection

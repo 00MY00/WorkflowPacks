@@ -158,13 +158,13 @@
     <form method="GET" action="{{ route('workflowpacks.history') }}" class="form-inline wp-toolbar">
         <select name="kind" class="form-control input-sm wp-autosubmit">
             <option value="">{{ $wp_t('history_all_kinds') }}</option>
-            @foreach (['imap_file', 'imap_clean', 'import', 'remove', 'group', 'simulate', 'rules', 'flow', 'agent'] as $k)
+            @foreach (\Modules\WorkflowPacks\Http\Controllers\HistoryController::KINDS as $k)
                 <option value="{{ $k }}" @if ($filters['kind'] === $k) selected @endif>{{ $wp_t('history_kind_'.$k) }}</option>
             @endforeach
         </select>
         <select name="status" class="form-control input-sm wp-autosubmit">
             <option value="">{{ $wp_t('history_all_states') }}</option>
-            @foreach (['queued', 'moved', 'already', 'not_found', 'skipped', 'failed', 'ok', 'enabled', 'disabled', 'previous_on', 'previous_off', 'refile', 'created', 'modified'] as $s)
+            @foreach (['ok', 'failed', 'queued', 'moved', 'already', 'not_found', 'skipped'] as $s)
                 <option value="{{ $s }}" @if ($filters['status'] === $s) selected @endif>{{ $wp_label($s) }}</option>
             @endforeach
         </select>

@@ -1,12 +1,12 @@
 # Ranger les e-mails dans des dossiers de la boîte e-mail
 
-Option de Workflow Packs (1.4.0), **désactivée par défaut**. Elle ajoute aux règles Workflows l'action **« Ranger dans
-un dossier e-mail [WP] »**.
+Option de Workflow Packs, **désactivée par défaut**. Elle permet au bloc **« Classer dans un dossier »** des flux de
+ranger l'e-mail reçu dans un dossier de la boîte e-mail.
 
-Quand une règle s'applique, l'e-mail reçu est **déplacé sur le serveur de messagerie (IMAP)**, par exemple de la
-boîte de réception vers `[WP] Factures/Fournisseurs`. Le dossier est créé s'il n'existe pas. La boîte e-mail reste
-ainsi rangée quand on l'ouvre dans Outlook, Thunderbird ou un webmail. **Le ticket dans FreeScout ne change pas** :
-pour lui changer de statut, l'assigner ou l'étiqueter, ajoute les actions habituelles à la même règle.
+Quand le flux arrive à ce bloc, l'e-mail est **déplacé sur le serveur de messagerie (IMAP)**, par exemple de la boîte
+de réception vers `[WP] Factures/Fournisseurs`. Le dossier est créé s'il n'existe pas. La boîte e-mail reste ainsi
+rangée quand on l'ouvre dans Outlook, Thunderbird ou un webmail. **Le ticket dans FreeScout ne change pas** : pour
+changer son statut ou l'assigner, ajoutez les blocs habituels au flux.
 
 ## Activer
 
@@ -14,47 +14,27 @@ pour lui changer de statut, l'assigner ou l'étiqueter, ajoute les actions habit
 
 | Réglage | Effet |
 |---|---|
-| Action « Ranger dans un dossier e-mail » | ajoute l'action au catalogue Workflows de toutes les boîtes. Si l'option est désactivée, l'action disparaît, les règles qui l'utilisent deviennent invalides pour Workflows et les déplacements en attente ne sont pas faits |
+| Option « Ranger dans un dossier e-mail » | permet au bloc de ranger. Désactivée, le bloc prend sa sortie « erreur » (raison dans l'Historique) et les déplacements en attente ne sont pas faits |
 | Préfixe des dossiers (`[WP]` par défaut) | ajouté devant chaque dossier créé, pour montrer qu'il est géré par le module. Lettres, chiffres, espaces, crochets, parenthèses, `-` et `_`, 20 caractères au plus |
 
-## Écrire le dossier dans une règle
+## Écrire le dossier dans le bloc
 
-La valeur de l'action est un chemin avec `/` entre les niveaux :
+Le dossier est un chemin avec `/` entre les niveaux. L'éditeur propose les dossiers du module déjà présents sur le
+serveur de l'adresse choisie.
 
-| Valeur dans la règle | Dossier sur le serveur |
+| Dossier dans le bloc | Dossier sur le serveur |
 |---|---|
 | `Factures` | `[WP] Factures` |
 | `Factures/Fournisseurs` | `[WP] Factures` › `Fournisseurs` |
-| `Clients/{{mailbox.name}}` (dans un pack) | `[WP] Clients` › `Support` pour la boîte « Support » |
 
 - Au plus 4 niveaux et 60 caractères par niveau. Accents, espaces, `&` et points sont acceptés.
 - Sont refusés : `*`, `%`, `"`, `\`, les caractères de contrôle et les noms commençant par un point.
 - Le préfixe ne concerne que le dossier du haut. Les sous-dossiers sont créés dedans.
-
-Exemple de règle dans un pack :
-
-```json
-{
-  "key": "factures-fournisseurs",
-  "name": "Factures fournisseurs",
-  "type": "automatic",
-  "conditions": { "all": [ { "type": "subject", "operator": "contains", "value": "facture" } ] },
-  "actions": [
-    { "type": "wp_imap_folder", "value": "Factures/Fournisseurs" },
-    { "type": "status", "value": "3" }
-  ]
-}
-```
-
-Si l'option est désactivée sur l'instance qui importe le pack, l'import l'indique sous le bouton de l'étape. Un
-administrateur peut cliquer sur **« Activer l'option et actualiser »** : l'option est activée et la prévisualisation
-recalculée, sans rien perdre de ce qui a été saisi. Sinon, les règles concernées restent bloquées avec le message
-« l'action … est désactivée ».
+- **Adresse** : par défaut la boîte où l'e-mail est arrivé ; une autre boîte peut être choisie (son compte e-mail).
 
 ## Comment ça marche
 
-1. Workflows applique la règle et appelle l'action par son filtre d'extension `workflow.perform_action`. Le module
-   Workflows n'est pas modifié.
+1. Le flux arrive au bloc « Classer dans un dossier ».
 2. Workflow Packs met le déplacement dans la **file d'attente de FreeScout**, ce qui ne ralentit jamais la réception
    des e-mails.
 3. Le travail en file se connecte au serveur avec les réglages IMAP de la boîte, avec le même client que FreeScout,
@@ -79,7 +59,7 @@ Le délimiteur du serveur (`/` ou `.`) est détecté automatiquement. Les serveu
 - Le module n'utilise que des commandes IMAP standard : `LIST`, `CREATE`, `SUBSCRIBE`, `SEARCH`, `MOVE`, ou à défaut
   `COPY` puis marquage de l'original comme supprimé.
 - Avant d'écrire quoi que ce soit, il vérifie que le dossier cible porte bien le préfixe.
-- Si l'e-mail est **déjà** dans le dossier, rien n'est fait. Appliquer la règle deux fois ne crée jamais de doublon.
+- Si l'e-mail est **déjà** dans le dossier, rien n'est fait. Ranger deux fois le même e-mail ne crée jamais de doublon.
 - Un dossier créé entre-temps (par un autre rangement ou à la main) est réutilisé.
 - Les nouveaux dossiers sont **abonnés**, pour apparaître dans Outlook ou Thunderbird, qui n'affichent souvent que les
   dossiers abonnés.
@@ -95,48 +75,38 @@ Le délimiteur du serveur (`/` ou `.`) est détecté automatiquement. Les serveu
 
 ## À savoir
 
-- Avec « Appliquer aux conversations précédentes » (désactivé par défaut dans les imports), Workflows applique la
-  règle aux anciennes conversations, et leurs e-mails sont alors rangés aussi.
 - Si un dossier `[WP] …` fait partie des dossiers que FreeScout relève, les e-mails déplacés ne sont pas importés une
   deuxième fois : ils sont déjà lus et FreeScout reconnaît leur Message-ID.
-- Testé avec un vrai serveur IMAP (GreenMail, délimiteur `.`) dans les tests d'intégration. Le comportement du module
-  Workflows officiel, payant, avec une action ajoutée par filtre suit sa copie publique analysée
-  ([analyse.md](analyse.md)) : à vérifier sur ton instance avec une règle de test.
+- Testé avec un vrai serveur IMAP (GreenMail, délimiteur `.`) dans les tests d'intégration.
 
 ## Ranger les e-mails des tickets existants
 
-Une règle ne range que les tickets sur lesquels Workflows l'a exécutée. Les e-mails arrivés **avant** la règle, ou
-pendant qu'elle était **inactive**, restent donc où ils sont. Il en va de même pour ceux **déplacés après coup** (à
-la main, par un client e-mail, par un filtre du serveur). Workflows ne relance pas non plus une règle sur un ticket
-déjà traité, et la condition « Nouveau » n'est jamais vraie pour un ticket qui existe déjà, même avec « tickets
-existants ».
+Un flux ne range que les tickets qui y passent. Pour ranger les e-mails arrivés **avant** le flux : bouton **Tickets
+existants** de l'éditeur (estimation, essai à blanc, puis traitement par lots), ou un **flux temporaire** pour une
+liste de tickets (lien « Tickets sans action d'un flux… »). Voir [flux-internes.md](flux-internes.md).
 
-Pour ranger ces e-mails :
-- dans la liste **Workflow Packs**, cocher les règles, puis **« Ranger à nouveau dans les dossiers e-mail »** ;
-- ou, dans le **schéma**, sélectionner les règles, puis clic droit › **« Ranger à nouveau dans les dossiers »** (aussi
-  dans le panneau de la sélection).
+## Nettoyage automatique des dossiers e-mail
 
-« Tout sélectionner » est possible : les règles sans action « Ranger dans un dossier e-mail » sont simplement
-comptées et ignorées.
+**Régler (administrateurs) :** Gérer › Paramètres › Workflow Packs › **Nettoyage automatique des dossiers e-mail** :
+le dossier (tel qu'écrit dans les flux, par exemple `Newsletters/Promos`), le délai (« Après 7 jour(s) ») et l'action
+(« Mettre à la corbeille » ou « Supprimer définitivement »), puis **Ajouter**. La liste des nettoyages, avec un bouton
+« Retirer », est juste au-dessus.
 
-Ce qui se passe, en arrière-plan, boîte par boîte (100 tickets à la fois) :
-- **Tickets pris :**
-  - ceux qui **remplissent les conditions** d'une règle, vérifiées par Workflows lui-même. La condition « Nouveau »
-    compte comme remplie, puisque chaque ticket a été nouveau un jour ; « Réponse » reste un événement ;
-  - ceux que la règle **a déjà traités** (exécutions gardées par Workflows, historique du module), même si ses
-    conditions ne correspondent plus, par exemple parce que la règle a fermé le ticket.
-- **Plusieurs règles pour un ticket :** la dernière dans l'ordre de Workflows l'emporte, comme quand elles
-  s'exécutent l'une après l'autre.
-- **Seul le rangement est fait.** Les autres actions des règles (statut, assignation, transfert…) ne sont pas
-  exécutées, et les compteurs de Workflows ne changent pas.
-- **Recherche de l'e-mail :**
-  - déjà dans son dossier : « déjà rangé », rien ne bouge ;
-  - sinon, il est cherché dans la boîte de réception, puis **dans les autres dossiers** du compte ;
-  - **jamais dans la corbeille** : un e-mail supprimé reste supprimé (« introuvable »).
-- **Suivi dans l'onglet Historique :**
-  - une ligne par boîte montre l'avancement, puis le résultat (tickets examinés, e-mails envoyés au rangement,
-    ignorés) ;
-  - chaque e-mail a sa ligne « rangement relancé » et, s'il a été retrouvé ailleurs, le dossier où il était.
+**Fonctionnement :**
+- Toutes les **15 minutes**, la tâche planifiée de FreeScout (`php artisan workflowpacks:clean-folders`) passe par
+  chaque boîte reçue par IMAP où le dossier existe, tant que l'option « Ranger dans un dossier e-mail » est activée.
+- Les e-mails dont la date dépasse le délai sont **déplacés dans la corbeille** du compte e-mail, reconnue par son
+  nom (Trash, Corbeille, Deleted Items…). Si le compte n'a pas de corbeille, ou en mode « Supprimer définitivement »,
+  ils sont marqués supprimés puis purgés, **dans ce dossier seulement**.
+- Au plus 500 e-mails par dossier et par passage : un gros dossier se vide en plusieurs passages.
+- Chaque passage est noté dans Gérer › Journaux, sur les lignes `[WorkflowPacks] [clean-up]`.
+
+**Garde-fous :**
+- Seuls les dossiers qui portent le préfixe (`[WP] …`) sont nettoyés. Un dossier perso du même nom, ou la corbeille,
+  ne sont jamais touchés.
+- Un dossier qui n'existe pas encore dans une boîte n'est pas créé.
+- Un e-mail sans date lisible est conservé.
+- Seuls les administrateurs règlent le nettoyage, car il agit sur le serveur e-mail de toutes les boîtes.
 
 ## Dossier actuel des tickets
 
@@ -154,19 +124,19 @@ Cette information est gardée tant que le ticket existe et effacée avec lui.
 ## Suivre ce qui se passe : l'onglet Historique
 
 **Workflow Packs › Historique** liste chaque rangement :
-- « demandé » quand Workflows appelle l'action ;
+- « demandé » quand un flux arrive au bloc ;
 - puis « rangé », « déjà rangé », « introuvable » ou « échec », avec la raison ;
 - ou « ignoré » avec la raison : option désactivée, boîte sans réception IMAP, aucun e-mail du client…
 
 En haut de la page, un **diagnostic** réservé aux administrateurs montre :
 - l'état de l'option ;
-- le dernier appel de Workflows ;
+- le dernier rangement demandé par un flux ;
 - les rangements en attente ou en échec dans la file de FreeScout ;
 - avec **« Voir les dossiers »**, les dossiers présents sur le serveur e-mail d'une boîte (lecture seule).
 
 | Ce que montre l'historique | Que vérifier |
 |---|---|
-| aucune ligne « Rangement d'un e-mail » | la règle est-elle activée, ses conditions correspondent-elles, contient-elle l'action ? |
+| aucune ligne « Rangement d'un e-mail » | le flux est-il publié et activé, les e-mails reçus arrivent-ils au bloc (parcours d'un ticket dans l'éditeur) ? |
 | « ignoré » | la raison affichée (option, boîte sans IMAP…) |
 | « demandé » qui ne change jamais | la tâche planifiée (cron) de FreeScout, qui traite la file d'attente |
 | « échec » | la raison du serveur ; un nouvel essai est fait automatiquement |

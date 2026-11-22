@@ -12,8 +12,8 @@ use Modules\WorkflowPacks\Services\Imap\ImapMover;
 use Modules\WorkflowPacks\Services\History;
 
 /**
- * "File into an e-mail folder [WP]": moves the e-mail of a thread on the mail server (queued by ImapFolders when
- * Workflows runs the action). Tried again 5 minutes later when the server does not answer, 3 attempts in all.
+ * "File into an e-mail folder [WP]": moves the e-mail of a thread on the mail server (queued by ImapFolders for the
+ * block of a flow). Tried again 5 minutes later when the server does not answer, 3 attempts in all.
  * Every outcome is written in FreeScout's log ("[WorkflowPacks] [imap]").
  */
 class FileIntoImapFolder implements ShouldQueue
@@ -31,7 +31,7 @@ class FileIntoImapFolder implements ShouldQueue
     public $folder;
     /** entry of the history to complete with the result */
     public $activityId;
-    /** "File again": the e-mail is also looked for outside the inbox (not set in jobs queued by older versions) */
+    /** the e-mail also looked for outside the inbox ("File again" of the versions before 4.0, still in their queued jobs) */
     public $anywhere = false;
 
     public function __construct($mailboxId, $threadId, $folder, $activityId = null, $anywhere = false)

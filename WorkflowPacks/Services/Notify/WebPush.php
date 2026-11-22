@@ -8,7 +8,8 @@ namespace Modules\WorkflowPacks\Services\Notify;
  * Without the module (or not active), nothing is sent.
  *
  * Its public parts used, each one only when that version of the module has it (older and newer versions both work):
- *   Services\WebPush::sendToUsers([[user id, payload], …])   sending (required)
+ *   Services\WebPush::sendToUsers([[user id, payload], …])   sending (required); the number of devices that accepted
+ *   Services\WebPush::devices($userId)                       the devices of an agent (to say when it has none)
  *   Services\Settings::hideContent()                         "Hide the content": only the ticket number (locked screens)
  *   Services\Settings::notificationIcon() / notificationBadge()   icon and status bar badge chosen in its settings
  *   Providers\WebPushServiceProvider::buttons($conversation, $user)   "Reply" / "Assign to me" buttons
@@ -30,31 +31,50 @@ class WebPush
     }
 
     /**
+     * The notification handed to WebPush for these agents, and what became of it, so that the flow can say it (a
+     * notification nobody receives is never shown as sent):
+     *   sent       devices that accepted it (the push services answered 2xx)
+     *   devices    devices it was sent to
+     *   reached    agents it was sent to (not silenced, with at least one device)
+     *   silenced   agents in their quiet hours: nothing sent to them
+     *   no_device  agents without any device subscribed (FreeScout not installed as an app, notifications refused)
+     *
      * @param \App\User[]       $users
      * @param \App\Conversation $conversation
-     * @return int number of agents the notification was handed over for (quiet hours excluded)
+     * @return array ['sent' => int, 'devices' => int, 'reached' => int, 'silenced' => [names], 'no_device' => [names]]
      */
     public static function send($users, $title, $text, $conversation)
     {
+        $report = ['sent' => 0, 'devices' => 0, 'reached' => 0, 'silenced' => [], 'no_device' => []];
         if (!self::available()) {
-            return 0;
+            return $report;
         }
+        $service = self::SERVICE;
         $payload = self::payload($title, $text, $conversation);
         $quiet = self::has(self::QUIET, 'silences') ? self::QUIET : null;
         $buttons = self::has(self::PROVIDER, 'buttons') ? self::PROVIDER : null;
+        $countDevices = self::has(self::SERVICE, 'devices');
         $items = [];
         foreach ($users as $user) {
             if ($quiet && $quiet::silences($user, $conversation)) {
+                $report['silenced'][] = $user->getFullName();
                 continue;
             }
+            // a version without devices(): sent, the answer of sendToUsers() tells whether a device took it
+            $devices = $countDevices ? count((array) $service::devices($user->id)) : 1;
+            if (!$devices) {
+                $report['no_device'][] = $user->getFullName();
+                continue;
+            }
+            $report['devices'] += $devices;
+            $report['reached']++;
             $items[] = [(int) $user->id, $payload + ($buttons ? self::buttons($buttons, $conversation, $user) : [])];
         }
         if ($items) {
-            $service = self::SERVICE;
-            $service::sendToUsers($items);
+            $report['sent'] = (int) $service::sendToUsers($items);
         }
 
-        return count($items);
+        return $report;
     }
 
     /**

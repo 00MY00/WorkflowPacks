@@ -11,8 +11,6 @@ namespace Modules\WorkflowPacks\Services\Imap;
  */
 class FolderPath
 {
-    /** Type of the action added to the Workflows catalog. */
-    const ACTION = 'wp_imap_folder';
     const DEFAULT_PREFIX = '[WP]';
     const MAX_LEVELS = 4;
     const MAX_SEGMENT = 60;

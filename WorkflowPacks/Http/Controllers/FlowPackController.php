@@ -106,9 +106,9 @@ class FlowPackController extends Controller
     {
         $this->guardEngine();
         if (!$request->input('download')) {
-            // ids given (the "Export this pack" of the home page): only those ticked at first
+            // the flows by pack (each one exported again in one click); ids given: only those ticked at first
             return $this->page('flowpack.export', ['flows' => Flow::permanent()->orderBy('name')->get(['id', 'name', 'active', 'version_id']),
-                'chosen' => array_map('intval', (array) $request->input('ids', []))]);
+                'groups' => FlowPack::groups(), 'chosen' => array_map('intval', (array) $request->input('ids', []))]);
         }
         $ids = array_map('intval', (array) $request->input('ids', []));
         // a temporary flow is never exported (its list of tickets belongs to this help desk only)
@@ -150,11 +150,4 @@ class FlowPackController extends Controller
         return (string) ($request->input('pack_carry') ?: $request->input('pack_json'));
     }
 
-    protected function guardEngine()
-    {
-        $this->guard();
-        if (!auth()->user()->isAdmin() || !Engine::enabled()) {
-            \Helper::denyAccess();
-        }
-    }
 }

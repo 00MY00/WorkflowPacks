@@ -214,7 +214,7 @@ class TicketFolders
         }
         $prefix = ImapFolders::prefix();
         $entries = \DB::table('workflowpacks_activity')->where('kind', 'imap_file')->whereIn('status', ['moved', 'already'])
-            ->whereNotNull('conversation_id')->orderBy('id', 'desc')->get(['conversation_id', 'mailbox_id', 'workflow_id', 'subject', 'updated_at']);
+            ->whereNotNull('conversation_id')->orderBy('id', 'desc')->get(['conversation_id', 'mailbox_id', 'subject', 'updated_at']);
         $seen = [];
         $count = 0;
         foreach ($entries as $entry) {
@@ -226,15 +226,7 @@ class TicketFolders
             if (!$conversation || \DB::table(self::TABLE)->where('conversation_id', $entry->conversation_id)->exists()) {
                 continue;
             }
-            $workflow = null;
-            try {
-                $workflow = $entry->workflow_id ? \Modules\WorkflowPacks\Services\Workflows\Bridge::query()->find($entry->workflow_id) : null;
-            } catch (\Throwable $e) {
-            }
-            $value = $workflow ? Refiler::folderOf($workflow) : null;
-            if ($value === null) {
-                $value = self::valueFromPath((string) $entry->subject, $prefix);
-            }
+            $value = self::valueFromPath((string) $entry->subject, $prefix);
             if ($value === null) {
                 continue;
             }

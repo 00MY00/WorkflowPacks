@@ -250,9 +250,6 @@ class AiController extends Controller
 
     protected function guardAi()
     {
-        $this->guard();
-        if (!auth()->user()->isAdmin() || !Engine::enabled()) {
-            \Helper::denyAccess();
-        }
+        $this->guardEngine();
     }
 }

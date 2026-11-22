@@ -1,17 +1,28 @@
-# Résultats des tests — Workflow Packs 3.20.2
+# Résultats des tests — Workflow Packs 4.0.0
 
-Date : 2026-11-04. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
+Date : 2026-11-22. Environnements Docker jetables, données de test uniquement (adresses en `.test`).
 
 ## Versions effectivement vérifiées
 
 | Composant | Version |
 |---|---|
-| FreeScout | **1.8.245** (branche `dist` officielle), Laravel 5.5.40 |
+| FreeScout | **1.8.252** (tag officiel), Laravel 5.5.40 |
 | PHP | **8.2.34** (intégration) · **7.1.33** et **8.4.26** (analyse syntaxique et tests unitaires) |
 | Base de données | MariaDB **10.11.19** |
 | PHPUnit | 11.5.57 |
 | Refresh | 1.4.3 (dépôt officiel), pour la vérification visuelle du style |
-| Workflows | **bouchon de test** `tests/stubs/Workflows` (0.0.0-stub), reproduisant l'interface publique analysée. Le module officiel, payant, **n'a pas été testé**. |
+| Workflows | plus utilisé depuis 4.0 ; **bouchon de test** `tests/stubs/Workflows` seulement pour la séparation (règles laissées par les packs de règles). Le module officiel, payant, n'a jamais été testé. |
+
+## 4.0.0 — séparation de Workflows
+
+| Série | Résultat |
+|---|---|
+| Version 3.20.2 sur FreeScout 1.8.252 (avant la séparation) | 184 tests verts ; menu, pages du module, téléphone et PC sans erreur JavaScript |
+| Unitaires (PHP, sans FreeScout) | 15 tests : délais, noms de dossiers e-mail, **toutes** les traductions des 7 langues (mêmes clés, mêmes paramètres, fichiers imbriqués compris) |
+| Intégration (instance neuve, FreeScout 1.8.252) | **108 tests, tous verts (dont la séparation, le bloc Étiquette e-mail et le compte rendu du bloc Notification push)**. `SeparationTest` : anciennes tables vides, rien à décider ; avec des données, accueil vers la page, rappel sur les autres pages, règle du pack listée (ni celle faite à la main, ni celle d'une autre boîte), sauvegarde téléchargeable sans rien changer ; sans la case cochée : refusé ; « plus tard » : flux ouverts, rien supprimé ; confirmé : sauvegarde d'abord (gardée, téléchargeable), seule la règle du pack supprimée (et ses passages), tables supprimées, anciennes sauvegardes de packs remplacées, sauvegardes de flux gardées, Historique, plus rien à décider. `MailTagsTest` : bloc Étiquette e-mail (a / n'a pas, majuscules ignorées), attente des étiquettes d'un nouvel e-mail une minute à la fois puis décision après 10 minutes, ticket ancien décidé tout de suite, sans RefreshGlobal sortie erreur, étiquettes proposées dans l'éditeur, plus rien ajouté à Workflows. `SafetyTest` : non-administrateurs refusés partout (même avec la permission Workflows), CSRF sur tous les formulaires, moteur éteint dit clairement, module complet sans le module Workflows |
+| Navigateur téléphone 390 px et PC 1440 px | page de séparation (3 choix, sauvegarde, `install.sh --version 3.20.2`), rappel sur les pages, onglets, bloc Étiquette e-mail dans l'éditeur, onglet Exporter par pack, nettoyage ajouté depuis les paramètres ; confirmation réelle : règles supprimées, message avec la sauvegarde, accueil vers les flux ; pas de défilement horizontal, aucun texte manquant, aucune erreur JavaScript |
+| Vrai module WebPush 1.7.0 (instance de test) | auto-test de WebPush ; appareil fictif abonné, faux service push : notification déchiffrée comme un téléphone (texte, lien, icône, bouton « Répondre ») et le flux dit « envoyée sur 1 appareil(s) » ; heures calmes de l'agent : rien envoyé, « non reçue — heures calmes », noté dans l'Historique ; agent sans appareil : rien envoyé, « non reçue — aucun appareil abonné » |
+| `install.sh`, `tests/integration/run.sh` | shellcheck sans remarque ; `--version` contrôlé (format, release introuvable : rien installé) |
 
 ## 3.20.2 — bloc Notification push et WebPush 1.3.0
 

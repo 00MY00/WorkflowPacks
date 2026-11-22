@@ -4,7 +4,7 @@ namespace Modules\WorkflowPacks\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Modules\WorkflowPacks\Services\Imap\Retention;
-use Modules\WorkflowPacks\Services\Pack\Problems;
+use Modules\WorkflowPacks\Services\Support\Texts;
 
 /**
  * Automatic clean-up of a managed e-mail folder (administrators: it acts on the mail server of every mailbox).
@@ -19,7 +19,7 @@ class RetentionController extends Controller
         $error = Retention::save($request->input('folder'), ['number' => $request->input('number'), 'metric' => $request->input('metric')],
             (string) $request->input('mode', 'trash'), auth()->user());
         if ($error !== null) {
-            return $this->answer($request, false, Problems::t($error, ['type' => '']));
+            return $this->answer($request, false, Texts::t($error, ['type' => '']));
         }
 
         return $this->answer($request, true, __('workflowpacks::messages.retention_saved'));

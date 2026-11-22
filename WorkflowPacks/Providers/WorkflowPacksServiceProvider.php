@@ -3,17 +3,16 @@
 namespace Modules\WorkflowPacks\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use Modules\WorkflowPacks\Services\Workflows\Bridge;
 
 /**
- * Workflow Packs: import / export / update of sets of rules of the official Workflows module.
+ * Workflow Packs: flows for FreeScout (its own engine: triggers, conditions, waits, actions), packs of flows, connected
+ * AI agents. It needs no other module (since 4.0 it no longer uses the Workflows module).
  *
- * Nothing of FreeScout or of the Workflows module is modified. The module only adds its own routes, views,
- * translations, tables and commands, and listens to FreeScout hooks:
+ * Nothing of FreeScout is modified. The module only adds its own routes, views, translations, tables and commands, and
+ * listens to FreeScout hooks:
  *   menu.manage.after_mailboxes (resources/views/layouts/app.blade.php)       -> "Workflow Packs" in Manage
- *   mailboxes.settings.menu     (resources/views/mailboxes/settings_menu.blade.php) -> entry in the mailbox menu
  *   refresh.rail_items          (Refresh module, when installed)               -> entry in Refresh's left bar
- *   schedule                    (app/Console/Kernel.php)                       -> clean-up of the e-mail folders
+ *   schedule                    (app/Console/Kernel.php)                       -> flows, clean-up of the e-mail folders
  *
  * Updates: module.json declares latestVersionUrl / latestVersionZipUrl (FreeScout's Manage › Modules page, and the
  * UpdateGuard module for safe updates; workflowpacks:health is its health check).
@@ -26,7 +25,6 @@ class WorkflowPacksServiceProvider extends ServiceProvider
 
     public function register()
     {
-        $this->mergeConfigFrom(__DIR__.'/../Config/config.php', self::ALIAS);
         $this->commands([
             \Modules\WorkflowPacks\Console\CheckCommand::class,
             \Modules\WorkflowPacks\Console\HealthCommand::class,
@@ -43,7 +41,7 @@ class WorkflowPacksServiceProvider extends ServiceProvider
         $this->loadRoutesFrom(__DIR__.'/../Http/routes.php');
 
         // messages of the services in the user's language (fallback: English, then the French reference catalogue)
-        \Modules\WorkflowPacks\Services\Pack\Problems::$translator = function ($key, array $params) {
+        \Modules\WorkflowPacks\Services\Support\Texts::$translator = function ($key, array $params) {
             $id = 'workflowpacks::texts.'.$key;
             $text = __($id, $params);
 
@@ -54,18 +52,12 @@ class WorkflowPacksServiceProvider extends ServiceProvider
         $this->registerPhoneMenu();
         $this->registerSchedule();
         $this->registerSettings();
-        // optional action "file into an e-mail folder [WP]" (off by default, Manage › Settings › Workflow Packs)
-        \Modules\WorkflowPacks\Services\Imap\ImapFolders::register();
         // current e-mail folder of each ticket: read API for the other modules, shown in the ticket, removed with it
         \Modules\WorkflowPacks\Services\Imap\TicketFolders::register();
         // internal flow engine (on by default since 3.3): FreeScout's events start the flows
         \Modules\WorkflowPacks\Services\Engine\Listener::register();
         // what the flows do, for the other modules (RefreshGlobal), and the temporary flows they may ask for
         \Modules\WorkflowPacks\Services\Engine\FlowReport::register();
-        // condition "E-mail tag" of the rules: origin tags of RefreshGlobal (spam, inbox, folder:…), when it is installed
-        \Modules\WorkflowPacks\Services\MailTags::register();
-        // conditions "Assigned" and "A reply was sent" (branch blocks of the flow view)
-        \Modules\WorkflowPacks\Services\Flow\TicketConditions::register();
     }
 
     /**
@@ -129,21 +121,12 @@ class WorkflowPacksServiceProvider extends ServiceProvider
         });
     }
 
-    /** The user may manage the workflows of at least one mailbox (Workflows' own permission rule). */
+    /** Administrators only: the flows act on every mailbox. */
     public static function userCanUse($user = null)
     {
         $user = $user ?: auth()->user();
-        if (!$user) {
-            return false;
-        }
-        if ($user->isAdmin()) {
-            return true;
-        }
-        try {
-            return Bridge::classAvailable() && Bridge::editableMailboxes($user)->isNotEmpty();
-        } catch (\Throwable $e) {
-            return false;
-        }
+
+        return (bool) ($user && $user->isAdmin());
     }
 
     public static function isModulePage()
@@ -168,17 +151,6 @@ class WorkflowPacksServiceProvider extends ServiceProvider
             }
         });
 
-        \Eventy::addAction('mailboxes.settings.menu', function ($mailbox) {
-            try {
-                $user = auth()->user();
-                if ($user && $mailbox && Bridge::classAvailable() && Bridge::canEdit($user, $mailbox->id)) {
-                    echo '<li class="'.(self::isModulePage() ? 'active' : '').'"><a href="'.e(route('workflowpacks.index', ['mailbox_id' => $mailbox->id])).'">'
-                        .'<i class="glyphicon glyphicon-transfer"></i> '.e(__('workflowpacks::messages.menu')).'</a></li>';
-                }
-            } catch (\Throwable $e) {
-                // optional entry
-            }
-        }, 30);
 
         // Refresh's left bar (documented extension point of the Refresh module)
         \Eventy::addFilter('refresh.rail_items', function ($items) {

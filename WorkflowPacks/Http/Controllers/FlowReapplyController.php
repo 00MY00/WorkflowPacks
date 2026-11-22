@@ -121,10 +121,7 @@ class FlowReapplyController extends Controller
 
     protected function flow($id)
     {
-        $this->guard();
-        if (!auth()->user()->isAdmin() || !Engine::enabled()) {
-            \Helper::denyAccess();
-        }
+        $this->guardEngine();
 
         return Flow::with('version')->findOrFail((int) $id);
     }

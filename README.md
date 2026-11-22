@@ -1,90 +1,47 @@
 # Workflow Packs pour FreeScout
 
-Module complémentaire de [FreeScout](https://freescout.net) qui **importe, exporte et met à jour des ensembles de règles**
-du module officiel **Workflows**. Il permet d'appliquer le même tri des e-mails à plusieurs boîtes, avec des variables
-remplacées pour chacune (`{{mailbox.email}}`, `{{mailbox.name}}`, `{{mailbox.id}}`, paramètres du pack).
+Module complémentaire de [FreeScout](https://freescout.net) qui automatise le help desk avec des **flux** : des
+blocs reliés (déclencheur, conditions, attentes, actions) dessinés dans un éditeur visuel et exécutés par le propre
+moteur du module. **Aucun autre module n'est nécessaire** : depuis la version 4.0, Workflow Packs n'utilise plus le
+module Workflows.
 
-- Le module officiel Workflows reste seul responsable de l'exécution des règles. Workflow Packs ne modifie ni le cœur
-  de FreeScout ni le module Workflows.
-- Un second import identique ne crée **aucun doublon** : chaque règle est identifiée par `pack.key + workflow.key + boîte`.
-- Les nouvelles règles sont **désactivées** et l'application aux conversations précédentes est **désactivée** par défaut.
-  L'import n'envoie aucun e-mail et ne traite aucune conversation.
-- Les modifications manuelles faites depuis le dernier import sont détectées. Pour chacune, trois choix : conserver la
-  version locale, la remplacer ou ignorer la règle.
-- Une vue schématique (SI … ET/OU … ALORS …) présente les règles. Une matrice règles × boîtes permet de choisir, pour
-  chaque boîte, ce qui sera appliqué.
-- **Schéma réseau** (onglet Schéma, inspiré de draw.io) : boîtes → règles → destinations (dossiers Fermées, En
-  attente, Spam, Supprimées, personnes, étiquettes, autres boîtes), avec :
-  - plusieurs dispositions (colonnes, cercle, grille, libre), les déplacements étant **enregistrés en direct** ;
-  - zoom sémantique et raccourcis « Aller à… » vers une partie du schéma ;
-  - création et modification simples des règles (SI / ET / OU / ALORS) ;
-  - application d'une règle à une autre boîte en tirant un lien.
+- **Éditeur de flux** (onglet Flux) : tous les flux sur une grande grille, au doigt sur téléphone et tablette ;
+  « Si… » qui propose les variables possibles ; publication par versions ; simulation animée d'un e-mail de test ;
+  parcours réel d'un ticket. Voir [docs/flux-internes.md](docs/flux-internes.md).
+- **Blocs** : nouvel e-mail ; Si… (sujet, texte, expéditeur, statut, assigné, réponse de l'équipe), Ressemble à…
+  (comparaison locale avec des tickets d'exemple), Étiquette e-mail (module RefreshGlobal) ; attendre ; statut,
+  assigner, note interne, classer dans un dossier e-mail, notification push (module WebPush), supprimer.
+- **Tickets existants** : appliquer un flux aux tickets déjà là (période en jours, statuts), par lots, avec
+  estimation et essai à blanc. **Tickets sans action d'un flux** et **flux temporaires** qui traitent une liste
+  puis se suppriment.
+- **Packs de flux** : importer (avec paramètres) et exporter des ensembles de flux, sans doublon.
+- **IA** : un **assistant sans connexion** (dossier de tickets anonymisés pour une IA, sa réponse testée puis
+  enregistrée en brouillon, [docs/assistant-ia.md](docs/assistant-ia.md)) et des **agents connectés** (API à jeton
+  et connecteur Claude, droits détaillés par agent, [docs/agent-api.md](docs/agent-api.md)).
+- **Dossiers e-mail** (option) : ranger l'e-mail reçu dans un dossier `[WP] …` du serveur IMAP, nettoyage
+  automatique des dossiers, dossier actuel affiché dans le ticket ([docs/dossiers-email.md](docs/dossiers-email.md)).
+- **Pour les autres modules** : ce que font les flux (statistiques de RefreshGlobal) et les dossiers des tickets,
+  par Eventy ([docs/api-flux.md](docs/api-flux.md), [docs/api-dossiers.md](docs/api-dossiers.md)).
+- **Historique** de ce que fait le module, **Diagnostic** (état, blocs disponibles), **7 langues** (fr, en, de, es,
+  it, nl, pt-BR), téléphone et tablette, style du module Refresh quand il est installé.
+- **Réservé aux administrateurs** : les flux agissent sur toutes les boîtes.
 
-  Voir [docs/schema.md](docs/schema.md).
-- **Moteur de flux interne** (3.0, activé par défaut depuis 3.3) : des flux où **chaque bloc est un objet**
-  (déclencheur, « Si… », attente, statut, assignation, note, dossier, suppression vers « Supprimés », notification push via WebPush), sans le module Workflows ; éditeur visuel (clic gauche pour se déplacer, clic droit pour choisir un ou plusieurs blocs, plein écran, au doigt sur téléphone et tablette), « Si »
-  qui propose les variables possibles, publication par versions, simulation animée et parcours d'un ticket. Voir
-  [docs/flux-internes.md](docs/flux-internes.md). **Packs de flux** à importer ou exporter (3.3). **Application aux tickets existants** ou en cours, par lots (3.5). **Connecteur Claude** (chat, protocole MCP) avec droits par agent, https obligatoire (3.12, [docs/agent-api.md](docs/agent-api.md)). **Assistant IA** sans connexion : un dossier de tickets anonymisés
-  pour une IA, sa réponse testée sur ces tickets, puis enregistrée en brouillon
-  ([docs/assistant-ia.md](docs/assistant-ia.md)). **Agents IA connectés** par une API à jeton (usage unique ou
-  continu, déconnexion d'un clic, publication seulement si autorisée) : [docs/agent-api.md](docs/agent-api.md).
-- **Rangement dans les dossiers e-mail** (option, désactivée par défaut) : action « Ranger dans un dossier e-mail
-  [WP] » qui déplace l'e-mail reçu dans un dossier de la boîte e-mail (serveur IMAP), créé s'il manque, toujours sous
-  le préfixe `[WP]`. Voir [docs/dossiers-email.md](docs/dossiers-email.md). Le dossier actuel de chaque ticket
-  est gardé, affiché dans le ticket et lisible par les autres modules ([docs/api-dossiers.md](docs/api-dossiers.md)).
-  **Tickets sans action d'un flux** et **flux temporaires** qui traitent une liste puis se suppriment ; ce que font les
-  flux est lisible par les autres modules, par exemple pour des statistiques ([docs/api-flux.md](docs/api-flux.md), 3.20).
-- **Règles minuteur et nettoyage automatique** : « supprimer les tickets fermés après 30 jours » (conditions de délai
-  de Workflows, en minutes, heures ou jours, avec « Ajouter un délai » dans l'éditeur), et « les e-mails de
-  `[WP] Newsletters` vont à la corbeille après 7 jours » (réglé dans le Schéma, appliqué toutes les 15 minutes). Voir
-  [docs/minuteurs.md](docs/minuteurs.md).
-- **Historique** : chaque rangement d'e-mail (demandé, rangé, ignoré ou en échec, avec la raison), les nettoyages,
-  les imports et les changements de règles, plus un diagnostic (file d'attente, dossiers réellement présents sur le
-  serveur e-mail).
-- **Packs portables (format 2)** :
-  - **sélecteurs de boîtes** (« toutes les boîtes », « adresse contient @example.com »…) évalués sur chaque
-    installation ;
-  - **ressources logiques** (`{{resource.billing-user}}`) associées par leur clé à un élément local, jamais par
-    leur nom.
+## Séparation de Workflows (4.0)
 
-  Voir [docs/format.md](docs/format.md) et [docs/resources.md](docs/resources.md). Pour faire écrire un pack
-  par une IA : [docs/guide-ia.md](docs/guide-ia.md).
-- L'interface suit le guide de style « G » ([docs/style.md](docs/style.md)) : chaque information a une forme
-  (pastille, tuile, icône, interrupteur), sans rien retirer.
-- **Téléphone** : la matrice devient une carte par règle. Avec Refresh, l'entrée du module est placée dans le
-  panneau **Profil**, qui sert de menu burger, car la barre d'onglets du bas n'a pas de place libre. Sans Refresh,
-  l'entrée se trouve dans le menu burger de FreeScout (Gérer).
-- **7 langues**, interface et messages (validation, diagnostic, erreurs) : français, anglais, allemand, espagnol,
-  italien, néerlandais, portugais (Brésil). La langue suit le profil FreeScout de l'utilisateur.
-- **Vue flux** : un bloc par instruction (conditions, tests « assigné ? » / « réponse envoyée ? », minuteurs, statut,
-  dossier…), sans chevauchement, et **simulation** d'un faux e-mail dont le parcours s'allume bloc après bloc, avec
-  ce que chaque règle a changé. Rien n'est enregistré ni envoyé. Voir [docs/flux.md](docs/flux.md).
-- **Regrouper dans un pack** des règles existantes (nouveau pack ou pack existant), puis l'exporter : voir
-  [Exporter ou regrouper dans un pack](#exporter-ou-regrouper-dans-un-pack).
-- **Tags d'e-mail de RefreshGlobal** (spam, boîte de réception, dossier du serveur…) : condition « Tag d'e-mail » des
-  règles, avec les tags connus proposés dans l'éditeur. Voir [docs/schema.md](docs/schema.md).
-- **Mises à jour** : par la page **Gérer › Modules** de FreeScout, ou par le module
-  [UpdateGuard](https://github.com/00MY00/UpdateGuard), recommandé, pour des mises à jour sécurisées.
+Les versions 1 à 3 importaient des **packs de règles** dans le module Workflows. Ces fonctions ont été retirées en
+4.0. Si des données de ces packs restent, la page **Séparation de Workflows** s'ouvre à l'accueil du module :
 
-| Schéma : flux boîtes → règles → destinations | Schéma : éditeur de règle |
-|---|---|
-| ![Schéma](docs/screenshots/schema-colonnes.png) | ![Éditeur](docs/screenshots/schema-editeur.png) |
-| Liste des packs (vue schématique) | Prévisualisation (matrice règles × boîtes) |
-| ![Liste](docs/screenshots/liste-packs.png) | ![Prévisualisation](docs/screenshots/import-previsualisation.png) |
-| Avec le module Refresh | Diagnostic et catalogue Workflows |
-| ![Refresh](docs/screenshots/liste-packs-refresh.png) | ![Diagnostic](docs/screenshots/diagnostic.png) |
-
-> **État des vérifications.** Le module Workflows est payant et son code n'a pas pu être testé ici. Son format a été
-> établi à partir de sa documentation publique et d'une copie publique partielle de son code (détails et limites dans
-> [docs/analyse.md](docs/analyse.md)). Avant tout import, la commande `workflowpacks:check` vérifie sur **votre**
-> instance la classe, la table, les colonnes, le catalogue et le format des règles existantes. Si un point ne
-> correspond pas, l'import est bloqué avec un message clair. Ce qui est testé et ce qui reste à vérifier est détaillé
-> plus bas.
+- **télécharger la sauvegarde** (packs, liens, règles créées par les packs, telles qu'elles sont) ;
+- **confirmer la suppression** : seules les règles créées par les packs sont supprimées de Workflows, jamais celles
+  faites à la main, puis les anciennes tables ; une copie de la sauvegarde est gardée par le module ;
+- ou **rester en version 3.20.2** : rien n'est supprimé avant votre confirmation, l'ancienne version peut être
+  réinstallée (UpdateGuard, archive de la release, ou `sudo bash install.sh --version 3.20.2`) ;
+- ou **décider plus tard** : le module fonctionne normalement en attendant.
 
 ## Installation
 
-Prérequis : FreeScout ≥ 1.8.0 (testé avec 1.8.245), PHP ≥ 7.1, module officiel **Workflows** installé et activé.
-Modules facultatifs : **Tags** (règles qui en dépendent) et **Refresh** (style).
+Prérequis : FreeScout ≥ 1.8.0 (testé avec 1.8.252), PHP ≥ 7.1. Modules facultatifs : **RefreshGlobal** (bloc
+Étiquette e-mail), **WebPush** (notifications push), **Refresh** (style).
 
 ### Script (recommandé)
 
@@ -93,27 +50,15 @@ curl -fsSLO https://raw.githubusercontent.com/00MY00/WorkflowPacks/main/install.
 sudo bash install.sh                    # cherche FreeScout dans les dossiers par défaut, sinon demande le chemin
 ```
 
-Le script enchaîne 7 étapes numérotées :
+Étapes : vérifications, sauvegarde du dossier du module et de ses tables, téléchargement de la dernière release
+(empreinte SHA-256 vérifiée), copie, activation, migrations, contrôle avec `php artisan workflowpacks:check`. En cas
+d'erreur, la version précédente est remise en place. Options :
 
-1. Vérifications : PHP, FreeScout, présence de Workflows, Refresh et Tags.
-2. Sauvegarde du dossier du module et des tables `workflowpacks_*`.
-3. Téléchargement du module.
-4. Copie des fichiers.
-5. Activation : `module:enable` et `freescout:module-install`, qui crée le lien `public/modules/workflowpacks`.
-6. Migrations.
-7. Contrôle avec `php artisan workflowpacks:check`.
-
-En cas d'erreur, la version précédente du module est remise en place. Options :
-
+- `--version 3.20.2` : installe une release précise (par exemple pour revenir à une version précédente) ;
 - `--source fichier.zip|dossier` : installe une archive ou un dossier local ;
-- `--dry-run` : affiche ce qui serait fait ;
-- `--uninstall` : retire le module (les règles de Workflows restent) ;
-- `--yes` : aucune question.
+- `--path /chemin/vers/freescout`, `--dry-run`, `--yes`, `--lang fr|en`, `--uninstall`.
 
-Si FreeScout n'est pas trouvé dans un dossier par défaut (`/var/www/html`, `/var/www/freescout`…), le script
-**demande son chemin** ; avec `--yes` (sans question), il faut donner `--path`. Messages en français ou en anglais
-selon `$LANG`, ou `--lang fr|en`. Le journal est écrit dans `/tmp/workflowpacks-install-*.log` et ne contient
-aucun mot de passe.
+Le journal est écrit dans `/tmp/workflowpacks-install-*.log` et ne contient aucun mot de passe.
 
 ### Manuelle
 
@@ -121,271 +66,37 @@ aucun mot de passe.
 cd /var/www/html
 sudo -u www-data git clone https://github.com/00MY00/WorkflowPacks.git /tmp/WorkflowPacks
 sudo -u www-data cp -R /tmp/WorkflowPacks/WorkflowPacks Modules/WorkflowPacks
-sudo -u www-data php artisan cache:clear
 sudo -u www-data php artisan module:enable WorkflowPacks
 sudo -u www-data php artisan freescout:module-install workflowpacks
 sudo -u www-data php artisan workflowpacks:check
 ```
 
-Le module apparaît dans **Gérer › Workflow Packs**, dans le menu de chaque boîte (paramètres) et dans la barre de
-Refresh. Il est accessible aux administrateurs et aux utilisateurs qui ont la permission Workflows « gérer les
-workflows » sur au moins une boîte.
-
-## Importer un pack
-
-1. **Fichier** : envoyez un `.json`, collez son contenu ou choisissez un pack fourni (`Resources/packs/`).
-2. **Validation** : format, version du schéma, structure ET/OU, regex, variables, taille et dépendances.
-3. **Boîtes** : seules celles dont vous pouvez gérer les workflows sont proposées.
-4. **Paramètres** du pack, par exemple une adresse de notification.
-5. **Prévisualisation** : règles résolues pour chaque boîte, matrice règles × boîtes avec un choix par case, et statut
-   de chaque case : création, mise à jour, inchangée, conflit, conflit de nom, supprimée, bloquée ou non autorisée.
-   Les différences sont affichées avant/après. Les actions sensibles sont signalées : envoi, transfert, suppression,
-   changement de boîte.
-6. **Options** :
-   - activer les nouvelles règles (non par défaut) ;
-   - respecter le réglage « conversations précédentes » du pack (non par défaut) ;
-   - état actif des règles mises à jour (conservé par défaut).
-7. **Confirmation** : le plan est recalculé et comparé à la prévisualisation. S'il a changé entre-temps, rien n'est
-   écrit et une nouvelle prévisualisation est affichée.
-
-**Atomicité** : tout l'import, toutes boîtes confondues, s'exécute dans **une seule transaction**. En cas d'erreur,
-rien n'est enregistré : ni règle, ni lien de suivi, ni historique.
-
-Les règles bloquées ne sont jamais importées partiellement. C'est le cas, par exemple, quand le module Tags est absent,
-qu'un type est inconnu, qu'un utilisateur n'existe pas ou que la validation officielle de Workflows refuse la règle.
-Aucune action n'est retirée en silence. Pour importer le reste, il faut cocher explicitement « ignorer les règles
-bloquées ».
-
-## Mettre à jour un pack
-
-Importez la nouvelle version du fichier, ou utilisez « Mettre à jour / appliquer à d'autres boîtes » depuis la liste.
-Les boîtes et les paramètres du dernier import sont repris. Les paramètres « sensibles » ne sont jamais conservés.
-
-| Situation | Statut | Choix (défaut en premier) |
-|---|---|---|
-| Règle absente de la boîte, nom libre | création | créer · ignorer |
-| Une règle étrangère au pack porte ce nom | conflit de nom | ignorer · créer sous un autre nom (la règle étrangère n'est jamais modifiée) |
-| Identique au pack | inchangée | — |
-| Non modifiée depuis le dernier import, le pack a changé | mise à jour | mettre à jour · ignorer |
-| Modifiée dans Workflows depuis le dernier import | conflit | conserver la version locale · remplacer · ignorer |
-| Supprimée de Workflows depuis le dernier import | supprimée | ignorer · recréer |
-
-- Une règle absente du nouveau fichier n'est **jamais supprimée**.
-- « Conserver la version locale » fait de la version locale la nouvelle référence : le prochain import la compare au
-  pack. « Ignorer » ne change rien, et la question reviendra au prochain import.
-- La détection compare une empreinte du nom, du type, du nombre maximal d'exécutions, des conditions et des actions.
-  L'état actif, « conversations précédentes » et l'ordre restent sous votre contrôle.
-
-## Activer ou désactiver des règles
-
-Dans la liste des packs, chaque règle affiche son état dans chaque boîte, avec un lien **Activer / Désactiver**. Pour
-en changer plusieurs, cochez-les (une case par règle et par boîte, une par pack, ou « Tout sélectionner »), puis
-cliquez sur **Activer la sélection** ou **Désactiver la sélection**.
-
-**Tickets existants** : « Tickets existants : oui / non » sur chaque règle, et « Appliquer aux tickets existants » pour
-la sélection. La règle traite alors aussi les tickets créés avant elle, seulement ceux qu'elle n'a pas encore traités.
-Workflows les reprend lors de ses passages réguliers. Le Schéma permet tout cela sur une sélection de blocs,
-rectangle au clic gauche puis menu d'actions rapides.
-
-![Activer ou désactiver](docs/screenshots/liste-activer.png)
-
-## Retirer un pack
-
-**Retirer le pack**, dans la liste des packs, supprime de Workflows les règles créées par ce pack.
-
-- Une prévisualisation montre ce qui sera supprimé, boîte par boîte, et on peut choisir les boîtes.
-- Les règles faites à la main et les boîtes que vous ne gérez pas ne sont jamais touchées.
-- Les règles modifiées depuis l'import sont conservées, sauf si vous cochez la case prévue.
-- Une **sauvegarde** est faite avant la suppression : le pack d'origine, réimportable tel quel, et chaque règle
-  supprimée telle qu'elle était. Les deux se téléchargent à la fin.
-
-![Retirer un pack](docs/screenshots/retirer-pack.png)
-
-## Exporter ou regrouper dans un pack
-
-**Le cas le plus courant** : vous avez importé un pack, puis ajouté ou modifié des règles. La page **Export** montre
-chaque pack avec ses règles **nouvelles** et **modifiées** (cochées) : **« Mettre à jour le pack »** les y ajoute et
-augmente sa version, puis **« Télécharger »** donne le fichier à jour. L'adresse de la boîte devient
-`{{mailbox.email}}` : le pack reste utilisable dans une autre boîte.
-
-Pour un nouveau pack, ou pour choisir les règles une par une, ouvrez « Créer un nouveau pack ou choisir les règles
-une par une » :
-
-Page **Export** : cochez des règles (d'une boîte ou de **toutes les boîtes**, avec « Tout sélectionner »), choisissez
-le pack de destination, puis l'aperçu propose deux actions :
-- **Télécharger** le fichier `.json` du pack ;
-- **Regrouper dans le pack** : le pack est enregistré et les règles y sont **reliées sur place**, sans être recréées
-  ni modifiées. Il apparaît ensuite comme un pack importé : vous pouvez le télécharger à tout moment, et le
-  ré-importer ici ne crée aucun doublon (« inchangée »).
-
-Pack de destination :
-- **Nouveau pack** : un nom suffit (la clé est créée à partir du nom).
-- **Ajouter à un pack existant** : ses autres règles, paramètres et ressources sont gardés ; une de ses règles
-  choisie ici est remplacée par sa version actuelle ; sa version augmente (1.4.2 → 1.4.3) si vous n'en donnez pas une.
-
-Lors d'un regroupement :
-- la **même règle dans plusieurs boîtes** devient une seule règle du pack, reliée dans chaque boîte ;
-- une règle reliée à **un autre pack** passe dans celui-ci (une règle n'appartient qu'à un pack) ; un pack resté sans
-  règle disparaît, comme après un retrait ;
-- chaque règle est vérifiée avec le moteur d'import : le pack, recompilé pour sa boîte, doit redonner la règle
-  telle quelle. Sinon (un remplacement par une variable qui ne vaut pas pour elle…), l'aperçu le signale et la
-  règle apparaîtra « modifiée localement » : un import suivant proposera de la conserver, jamais de l'écraser sans
-  le demander.
-
-Le schéma a aussi un bouton **« Regrouper dans un pack »** (plusieurs blocs sélectionnés) et **« Regrouper les règles
-de cette boîte »** (panneau d'une boîte), qui ouvrent la page Export avec ces règles cochées.
-
-Ce qui est exporté :
-- **Un pack enregistré** : tel quel, avec ses variables.
-- **Une sélection de règles** :
-  - une règle issue d'un pack est exportée avec son modèle d'origine, ou dans sa **version actuelle** si elle a été
-    modifiée depuis l'import (vos modifications ne sont jamais perdues) ;
-  - pour les autres, vous indiquez explicitement les textes à remplacer par une variable ou par un nouveau paramètre.
-    Rien n'est deviné : une adresse identique à celle de la boîte reste telle quelle si vous ne la listez pas. Dans
-    une regex, la forme échappée (`support@exemple\.test`) est aussi remplacée.
-- **Rapport d'export** :
-  - références locales à résoudre à l'import : utilisateurs (assigner, notifier, condition « assigné à ») et boîtes
-    (déplacer) ;
-  - types fournis par d'autres modules (Tags, champs personnalisés…), à déclarer dans `requires` ;
-  - secrets retirés : mot de passe, jeton, clé, URL signée et chaînes aléatoires longues sont remplacés par un
-    paramètre `sensible` à renseigner à l'import.
-- Le fichier produit est validé comme un import avant d'être proposé au téléchargement.
-
-## Format et variables
-
-Deux versions de schéma : **1** (inchangée) et **2**. La v2 ajoute `mailboxes`, `resources` et les extensions
-`x-…` dans les règles. Les packs v1 restent importés tels quels, et l'export reste en v1 tant qu'aucune fonction v2
-n'est utilisée.
-
-Le format est décrit dans [docs/format.md](docs/format.md) et le schéma JSON dans
-[schema/freescout-workflow-pack.schema.json](schema/freescout-workflow-pack.schema.json). En résumé :
-
-```json
-{
-  "format": "freescout-workflow-pack", "version": 1, "key": "mon-pack", "name": "Mon pack",
-  "params": [{ "key": "notify", "type": "email", "required": true, "label": "Adresse de notification" }],
-  "workflows": [{
-    "key": "factures", "name": "[Tri] Factures", "type": "automatic",
-    "settings": { "apply_to_prev": false, "max_executions": 1 },
-    "requires": [],
-    "conditions": { "all": [
-      { "type": "new_or_reply", "operator": "new" },
-      { "any": [
-        { "type": "subject", "operator": "regex", "value": "/(facture|invoice)/iu" },
-        { "type": "to", "operator": "regex", "value": "/^{{mailbox.email}}$/i" }
-      ] }
-    ] },
-    "actions": [
-      { "type": "note", "value": { "body": "Facture reçue sur {{mailbox.name}}" } },
-      { "type": "forward", "value": { "to": "{{param.notify}}", "body": "" } }
-    ]
-  }]
-}
-```
-
-- `all` = ET, `any` = OU. Seule la forme « ET de groupes OU » est acceptée, car c'est la seule que Workflows sait
-  évaluer. Un ET placé dans un OU est refusé avec une explication.
-- Les variables sont des noms simples : aucune expression n'est évaluée (ni PHP, ni JavaScript). Une variable
-  inconnue, ou un paramètre obligatoire vide, bloque l'import. `{{mailbox.id}}` seul garde le type entier.
-- Dans une regex, la valeur est insérée comme texte littéral (`preg_quote`). Dans les corps HTML (note, réponse,
-  transfert), elle est échappée.
-- Les identifiants de types et d'opérateurs disponibles sur votre instance, y compris ceux ajoutés par Tags ou
-  d'autres modules, sont listés dans **Diagnostic › Catalogue Workflows**.
-
-## Pack d'exemple : tri multilingue
-
-[`WorkflowPacks/Resources/packs/tri-emails-multilingue.json`](WorkflowPacks/Resources/packs/tri-emails-multilingue.json)
-contient 8 règles :
-
-- alertes de sécurité ;
-- codes de connexion ;
-- factures et reçus ;
-- échecs de paiement ;
-- demandes d'action ;
-- alertes techniques ;
-- newsletters d'un expéditeur explicitement renseigné ;
-- tests FreeScout.
-
-Chaque règle ajoute une note interne « [Tri] … ». Les alertes de sécurité sont aussi transférées à l'adresse
-renseignée à l'import (action signalée comme sensible). Seuls les tests FreeScout et l'expéditeur de newsletter choisi
-sont fermés. Aucune règle ne supprime de message, et toutes sont importées désactivées.
-
-Sujets reconnus (tests unitaires) :
-
-- `Security alert` et `2-Step Verification turned on` → alertes de sécurité ;
-- `Google Verification Code` → codes de connexion ;
-- `Чек + (1) подарок. 1 384,61 ₽` → document comptable, malgré la promotion, et jamais fermé ;
-- `[Action Advised] Review Google Calendar events…` → action demandée ;
-- `FreeScout Email de test` → tests FreeScout.
-
-« noreply », « cadeau » ou un lien de désabonnement ne suffisent jamais à fermer un message.
-
-Le pack n'utilise que des actions natives de Workflows. Le module Tags ajoute ses propres identifiants, que la copie
-publique analysée ne contient pas : pour classer par étiquettes, consultez le catalogue de votre instance
-(Diagnostic), puis ajoutez les actions Tags et `"requires": ["tags"]`.
+Le module apparaît dans **Gérer › Workflow Packs** et dans la barre de Refresh.
 
 ## Mise à jour du module
 
-Depuis la version 2.0.0, Workflow Packs ne se met plus à jour lui-même. Son `module.json` déclare la dernière version
-publiée (`latestVersionUrl` → `version.txt`, `latestVersionZipUrl` → `WorkflowPacks.zip` de la dernière release
-GitHub), la convention de FreeScout pour les modules communautaires :
+`module.json` déclare la dernière version publiée (`latestVersionUrl`, `latestVersionZipUrl`) :
 
-- **Sans UpdateGuard** : **Gérer › Modules** de FreeScout signale la nouvelle version et la propose avec son bouton
-  « Mettre à jour ». Cette mise à jour ne vérifie pas l'archive, ne fait pas de sauvegarde et ne revient pas en
-  arrière en cas de problème.
-- **Avec [UpdateGuard](https://github.com/00MY00/UpdateGuard)** (recommandé) : la mise à jour est **sécurisée**,
-  niveau « Full Safe Update ». Elle suit ces étapes :
-  - vérification SHA-256 de l'archive avec le `SHA256SUMS` publié ;
-  - préparation à part, puis sauvegarde ;
-  - installation ;
-  - contrôle de santé avec `php artisan workflowpacks:health` ;
-  - période d'observation ;
-  - **retour arrière automatique** en cas de problème.
+- **Gérer › Modules** de FreeScout propose la mise à jour (sans vérification de l'archive ni retour arrière) ;
+- avec **[UpdateGuard](https://github.com/00MY00/UpdateGuard)** (recommandé) : vérification SHA-256, sauvegarde,
+  contrôle de santé (`php artisan workflowpacks:health`), observation et **retour arrière automatique**.
 
-  Les migrations de Workflow Packs ne font qu'ajouter des tables ou des colonnes. Elles sont donc déclarées
-  compatibles avec la version précédente (`"updateGuard": {"migrations": "backward-compatible"}`).
-
-**Gérer › Paramètres › Workflow Packs** et **Diagnostic** indiquent qui met le module à jour, avec un lien vers
-UpdateGuard ou vers la page des modules.
-
-`php artisan workflowpacks:health [--json]` vérifie le module installé, en lecture seule et sans réseau : fichiers,
-classes, vues, routes, fichiers publics, tables et migrations. Il répond avec le code 0 s'il est sain, 1 sinon.
-L'absence du module Workflows est signalée, mais ne fait pas échouer ce contrôle.
-
-`install.sh` reste disponible pour une première installation, ou pour réinstaller la dernière version publiée avec
-vérification SHA-256 et sauvegarde.
-
-Après chaque release, la mise à jour vers la version publiée est testée automatiquement depuis des versions plus
-anciennes, par la page Modules de FreeScout et par `install.sh` ; voir `tests/update/last-run.md`.
+`php artisan workflowpacks:health [--json]` vérifie le module installé (fichiers, classes, vues, routes, fichiers
+publics, tables, migrations), en lecture seule et sans réseau. `php artisan workflowpacks:check [--json]
+[--pack=fichier.json]` donne l'état du module et lit un pack de flux sans l'importer.
 
 Les numéros de version suivent `module.json` ; voir [CHANGELOG.md](CHANGELOG.md).
 
-## Limites
-
-- **Module Workflows réel non testé** : le format a été établi à partir d'une copie publique partielle datée de
-  janvier 2024 (version du module inconnue, la dernière publiée étant 1.0.96). `workflowpacks:check` vérifie la
-  structure sur votre instance, mais pas la sémantique de chaque condition.
-- **Tags** : identifiants non connus à l'avance (voir le catalogue de l'instance).
-- **Comportement de Workflows** : Workflows supprime les espaces en début et en fin des valeurs saisies dans son
-  formulaire, pas Workflow Packs. Ses regex sont sensibles à la casse sans le modificateur `i`.
-- **Noms** : 75 caractères au plus, uniques par boîte (règle de Workflows).
-- **Ordre des règles** : les nouvelles règles sont placées en dernier (`setSortOrderLast()` de Workflows).
-- **Langues** : 7 langues (fr, en, de, es, it, nl, pt-BR) ; une langue absente utilise l'anglais. Le script
-  d'installation parle français ou anglais.
-- **Désinstallation** : `--uninstall` supprime les tables de suivi. Les règles créées restent dans Workflows mais ne
-  sont plus reconnues comme issues d'un pack ; un nouvel import les signalera en « conflit de nom ».
-
 ## Tests
 
-| Série | Commande | Résultat |
-|---|---|---|
-| Unitaires (sans FreeScout) | `php tests/unit/run.php` | 37 tests, 3 909 assertions (dont les 7 langues), PHP 7.1, 8.2 et 8.4 en CI |
-| Intégration (FreeScout réel + bouchon Workflows) | `bash tests/integration/run.sh` | 44 tests, 337 assertions (dont 7 pour le schéma réseau) |
-| Schéma JSON (Ajv) | `node tests/schema/validate.js` | packs v1 et v2 valides, 11 variantes |
-| Dispositions du schéma réseau | `node tests/js/layout.test.js` | 7 tests (ordre, alignement, aucun chevauchement) |
-| Script d'installation | voir [tests/RESULTS.md](tests/RESULTS.md) | installation, mise à jour, retour arrière, désinstallation |
+| Série | Commande |
+|---|---|
+| Unitaires (sans FreeScout) : délais, noms de dossiers, traductions des 7 langues | `php tests/unit/run.php` |
+| Intégration (FreeScout réel, MariaDB, serveur IMAP GreenMail) | `bash tests/integration/run.sh` (`FREESCOUT_REF=1.8.252` pour une version précise) |
+| Éditeur de flux (JavaScript) | `node tests/js/flows-editor.test.js` |
+| Mise à jour depuis les versions précédentes | `bash tests/update/run.sh` |
 
-Détails, versions et ce qui reste à vérifier sur une vraie instance : [tests/RESULTS.md](tests/RESULTS.md).
+Résultats et versions vérifiées : [tests/RESULTS.md](tests/RESULTS.md).
 
 ## Contributeurs
 

@@ -3,34 +3,26 @@
 namespace Modules\WorkflowPacks\Tests\Feature;
 
 use Modules\WorkflowPacks\Jobs\FileIntoImapFolder;
-use Modules\WorkflowPacks\Jobs\RefileMailbox;
-use Modules\WorkflowPacks\Services\Imap\FolderPath;
 use Modules\WorkflowPacks\Services\Imap\ImapFolders;
 use Modules\WorkflowPacks\Services\Imap\ImapMover;
-use Modules\WorkflowPacks\Services\Workflows\Bridge;
 use Modules\WorkflowPacks\Tests\TestCase;
 
 /**
- * Action "file into an e-mail folder [WP]": option, Workflows hooks, and the real move on an IMAP server
+ * "File into an e-mail folder [WP]" (block of the flows): option, queue, history, and the real move on an IMAP server
  * (GreenMail container of tests/integration/run.sh, WP_TEST_IMAP_HOST; those tests are skipped without it).
  */
 class ImapFolderTest extends TestCase
 {
-    /** jobs already run by runQueued() */
-    protected $ranJobs = [];
-
     protected function setUp(): void
     {
         parent::setUp();
         \Option::set(ImapFolders::OPTION_ENABLED, true);
         \Option::set(ImapFolders::OPTION_PREFIX, '[WP]');
-        Bridge::forgetCatalogs();
     }
 
     protected function tearDown(): void
     {
         \Option::set(ImapFolders::OPTION_ENABLED, false);
-        Bridge::forgetCatalogs();
         parent::tearDown();
     }
 
@@ -114,21 +106,6 @@ class ImapFolderTest extends TestCase
         return [$conversation, $thread];
     }
 
-    public function testTheActionIsInTheCatalogOnlyWhenTheOptionIsOn()
-    {
-        $a = $this->mailbox('A');
-        $this->assertArrayHasKey(FolderPath::ACTION, Bridge::catalog($a->id)['actions']);
-        $this->assertFalse(\Eventy::filter('workflow.validate_action', false, ['type' => FolderPath::ACTION, 'value' => 'Factures/Fournisseurs'], null));
-        $this->assertTrue(\Eventy::filter('workflow.validate_action', false, ['type' => FolderPath::ACTION, 'value' => 'Fact*'], null));
-
-        \Option::set(ImapFolders::OPTION_ENABLED, false);
-        Bridge::forgetCatalogs();
-        $this->assertArrayNotHasKey(FolderPath::ACTION, Bridge::catalog($a->id)['actions']);
-        $this->assertTrue(\Eventy::filter('workflow.validate_action', false, ['type' => FolderPath::ACTION, 'value' => 'Factures'], null), 'option off: rule invalid');
-        // other actions are left to Workflows and the other modules
-        $this->assertFalse(\Eventy::filter('workflow.validate_action', false, ['type' => 'status', 'value' => '3'], null));
-    }
-
     public function testTheSettingsPageShowsTheOptionAndSavesIt()
     {
         $admin = $this->user([], true);
@@ -140,27 +117,26 @@ class ImapFolderTest extends TestCase
         $this->assertSame('[Tri]', ImapFolders::prefix(), 'prefix cleaned when read');
     }
 
-    public function testWorkflowsRunningTheActionQueuesTheMoveOfTheLastEmail()
+    public function testTheMoveOfTheLastEmailIsQueued()
     {
         \Queue::fake();
         $a = $this->mailbox('A');
         list($conversation, $thread) = $this->conversation($a, 'wp-'.self::uid().'@example.test');
         // mailbox without IMAP settings: nothing to file on a server, nothing queued
-        $this->assertFalse(\Eventy::filter('workflow.perform_action', false, FolderPath::ACTION, '', 'Factures', $conversation, null));
+        $this->assertFalse(ImapFolders::queue($conversation, 'Factures'));
         \Queue::assertNotPushed(FileIntoImapFolder::class);
 
         $a->in_server = 'imap.example.test';
         $a->in_username = 'box@example.test';
         $a->save();
         $conversation->load('mailbox');
-        $performed = \Eventy::filter('workflow.perform_action', false, FolderPath::ACTION, '', 'Factures/Fournisseurs', $conversation, null);
+        $performed = ImapFolders::queue($conversation, 'Factures/Fournisseurs');
         $this->assertTrue($performed);
         \Queue::assertPushed(FileIntoImapFolder::class, function ($job) use ($a, $thread) {
             return $job->mailboxId === (int) $a->id && $job->threadId === (int) $thread->id && $job->folder === 'Factures/Fournisseurs';
         });
-        // another action, or an invalid folder: nothing queued by this module
-        $this->assertFalse(\Eventy::filter('workflow.perform_action', false, 'unknown', '', 'x', $conversation, null));
-        $this->assertFalse(\Eventy::filter('workflow.perform_action', false, FolderPath::ACTION, '', 'Fact*', $conversation, null));
+        // an invalid folder: nothing queued
+        $this->assertFalse(ImapFolders::queue($conversation, 'Fact*'));
         \Queue::assertPushed(FileIntoImapFolder::class, 1);
     }
 
@@ -175,7 +151,7 @@ class ImapFolderTest extends TestCase
         list($conversation, $thread) = $this->conversation($a, 'wp-'.self::uid().'@example.test');
         // the mailbox where it arrived has no IMAP; the address chosen has one: filed there
         $this->assertFalse(ImapFolders::queue($conversation, 'Factures'));
-        $this->assertTrue(ImapFolders::queue($conversation, 'Factures', null, false, $b->id));
+        $this->assertTrue(ImapFolders::queue($conversation, 'Factures', $b->id));
         \Queue::assertPushed(FileIntoImapFolder::class, function ($job) use ($b, $thread) {
             return $job->mailboxId === (int) $b->id && $job->threadId === (int) $thread->id && $job->folder === 'Factures';
         });
@@ -270,35 +246,6 @@ class ImapFolderTest extends TestCase
         $this->assertFalse((new ImapMover())->move($mailbox, 'x@example.test', 'Factures', '[WP]')['retry'], 'no IMAP settings: no retry');
     }
 
-    public function testAnImportNeedingTheOptionOffersToTurnItOn()
-    {
-        \Option::set(ImapFolders::OPTION_ENABLED, false);
-        Bridge::forgetCatalogs();
-        $a = $this->mailbox('A');
-        $admin = $this->user([], true);
-        $agent = $this->user([$a], false, true);
-        $pack = $this->pack([$this->rule('r1', ['actions' => [['type' => FolderPath::ACTION, 'value' => 'Factures/Fournisseurs']]])]);
-        $form = ['pack_json' => json_encode($pack), 'mailboxes' => [$a->id]];
-
-        // step 2: notice + button for an administrator, "ask an administrator" for the others
-        $page = $this->actingAs($admin)->post(route('workflowpacks.import.configure'), ['pack_json' => json_encode($pack)]);
-        $this->seeIn($page, 'name="enable_imap"');
-        $other = $this->actingAs($agent)->post(route('workflowpacks.import.configure'), ['pack_json' => json_encode($pack)]);
-        $this->assertStringNotContainsString('name="enable_imap"', $other->getContent());
-        $this->seeIn($other, e(__('workflowpacks::messages.imap_off_ask')));
-
-        // the button of someone who may not change the settings does nothing
-        $this->actingAs($agent)->post(route('workflowpacks.import.preview'), $form + ['enable_imap' => '1']);
-        $this->assertFalse(ImapFolders::enabled());
-
-        // an administrator: option on, and the preview at once shows the rule as created (no longer blocked)
-        $preview = $this->actingAs($admin)->post(route('workflowpacks.import.preview'), $form + ['enable_imap' => '1'])->assertStatus(200);
-        $this->assertTrue(ImapFolders::enabled());
-        $this->assertStringNotContainsString('name="enable_imap"', $preview->getContent(), 'notice gone');
-        $this->assertStringNotContainsString(e(__('workflowpacks::texts.imap_disabled')), $preview->getContent());
-        $this->seeIn($preview, 'name="token"');
-    }
-
     public function testTheSettingsSwitchesAreSavedWhenChanged()
     {
         $admin = $this->user([], true);
@@ -328,7 +275,7 @@ class ImapFolderTest extends TestCase
         return $messageId;
     }
 
-    public function testCleanUpSettingsAreForAdministratorsAndShownInTheDiagramAndTheSettings()
+    public function testCleanUpSettingsAreForAdministratorsAndShownInTheSettings()
     {
         $a = $this->mailbox('A');
         $admin = $this->user([], true);
@@ -343,32 +290,9 @@ class ImapFolderTest extends TestCase
         $this->assertSame(['Newsletters/Promos', 7, 'd', 'trash'], [
             \Modules\WorkflowPacks\Entities\Retention::first()->folder, (int) \Modules\WorkflowPacks\Entities\Retention::first()->number,
             \Modules\WorkflowPacks\Entities\Retention::first()->metric, \Modules\WorkflowPacks\Entities\Retention::first()->mode,
-        ], 'folder written as in the rules');
+        ], 'folder written as in the flows');
 
-        // diagram: a clean-up block of its own after the folder; settings: listed with a "Remove" button
-        $class = Bridge::modelClass();
-        $wf = new $class();
-        $wf->mailbox_id = $a->id;
-        $wf->name = 'Promos';
-        $wf->type = 1;
-        $wf->apply_to_prev = false;
-        $wf->max_executions = 1;
-        $wf->conditions = [[['type' => 'subject', 'operator' => 'contains', 'value' => 'promo']]];
-        $wf->actions = [[['type' => FolderPath::ACTION, 'value' => 'Newsletters/Promos']]];
-        $wf->save();
-        $graph = $this->actingAs($admin)->getJson(route('workflowpacks.graph.data'))->json();
-        $node = collect($graph['nodes'])->where('dest', 'imap')->firstWhere('label', 'Promos');
-        $this->assertSame(['number' => 7, 'metric' => 'd', 'mode' => 'trash'], $node['retention']);
-        $clean = collect($graph['nodes'])->firstWhere('dest', 'cleanup');
-        $this->assertSame([$node['key'], 'Newsletters/Promos', $node['depth'] + 1], [$clean['parent'], $clean['folder'], $clean['depth']]);
-        $this->assertSame(__('workflowpacks::messages.cleanup_label_trash', ['delay' => __('workflowpacks::texts.timer_d', ['count' => 7])]), $clean['label']);
-        $this->assertNotNull(collect($graph['edges'])->first(function ($e) use ($node, $clean) {
-            return $e['kind'] === 'cleanup' && $e['from'] === $node['key'] && $e['to'] === $clean['key'];
-        }), 'linked to its folder');
-        $this->assertSame(1, collect($graph['nodes'])->where('dest', 'cleanup')->count(), 'only the folder that has one');
-        // its position is saved like the other blocks
-        $this->actingAs($admin)->postJson(route('workflowpacks.graph.layout'), ['positions' => [$clean['key'] => [120, 40]]])->assertStatus(200);
-        $this->assertSame([120, 40], $this->actingAs($admin)->getJson(route('workflowpacks.graph.data'))->json()['layout']['positions'][$clean['key']] ?? null);
+        // settings: listed with a "Remove" button
         $this->seeIn($this->actingAs($admin)->get(route('settings', ['section' => 'workflowpacks'])), e(__('workflowpacks::messages.retention_remove_btn')));
 
         $this->actingAs($admin)->post(route('workflowpacks.retention.remove'), ['folder' => 'Newsletters/Promos'])->assertRedirect();
@@ -484,166 +408,10 @@ class ImapFolderTest extends TestCase
         \Option::set(ImapFolders::OPTION_PARENT, 'auto');
     }
 
-    /** A rule of the mailbox: by default "subject contains facture" -> folder "Factures" and close the ticket. */
-    protected function filingRule($mailbox, $actions = null, $conditions = null, $sortOrder = 10)
-    {
-        $wf = Bridge::newModel();
-        $wf->mailbox_id = $mailbox->id;
-        $wf->name = 'Règle '.self::uid();
-        $wf->type = 1;
-        $wf->apply_to_prev = false;
-        $wf->max_executions = 1;
-        $wf->conditions = $conditions ?: [[['type' => 'subject', 'operator' => 'contains', 'value' => 'facture']]];
-        $wf->actions = $actions ?: [[['type' => FolderPath::ACTION, 'value' => 'Factures'], ['type' => 'status', 'value' => '3']]];
-        $wf->active = true;
-        $wf->sort_order = $sortOrder;
-        $wf->save();
-
-        return $wf;
-    }
-
-    /**
-     * Runs the jobs queued since the last call (fake queue): searches of "File again", then the filings they queue.
-     * Returns the filing jobs run.
-     */
-    protected function runQueued()
-    {
-        $filings = [];
-        do {
-            $jobs = [];
-            foreach ([RefileMailbox::class, FileIntoImapFolder::class] as $class) {
-                foreach (\Queue::pushed($class) as $job) {
-                    $jobs[spl_object_id($job)] = $job;
-                }
-            }
-            $new = array_diff_key($jobs, $this->ranJobs);
-            $this->ranJobs += $new;
-            foreach ($new as $job) {
-                $job->handle();
-                if ($job instanceof FileIntoImapFolder) {
-                    $filings[] = $job;
-                }
-            }
-        } while ($new);
-
-        return $filings;
-    }
-
-    /** Moves an e-mail on the test server from a folder whose path contains $from into $to (created when missing). */
-    protected function moveByHand($mailbox, $messageId, $from, $to)
-    {
-        $client = \MailHelper::getMailboxClient($mailbox);
-        $client->connect();
-        if (!$client->getFolderByPath($to)) {
-            $client->createFolder($to, false);
-        }
-        foreach ($client->getFolders(false) as $folder) {
-            if (strpos($folder->path, $from) === false) {
-                continue;
-            }
-            foreach ($folder->query()->all()->leaveUnread()->get() as $message) {
-                if (trim((string) $message->getMessageId(), '<> ') === $messageId) {
-                    $message->move($to);
-                }
-            }
-        }
-        $client->disconnect();
-    }
 
     protected function lastFiling($conversation)
     {
         return \Modules\WorkflowPacks\Entities\Activity::where('kind', 'imap_file')->where('conversation_id', $conversation->id)->orderBy('id', 'desc')->first();
-    }
-
-    public function testFileAgainFilesTheExistingTicketsMatchingTheRulesAndThoseMovedElsewhere()
-    {
-        \Queue::fake();
-        $mailbox = $this->imapMailbox();
-        $admin = $this->user([], true);
-        // "New" -> "A traiter" first, then "facture" -> "Factures" (the last one wins), and a rule for replies only
-        $catchAll = $this->filingRule($mailbox, [[['type' => FolderPath::ACTION, 'value' => 'A traiter']]], [[['type' => 'new_or_reply', 'operator' => 'new']]], 1);
-        $invoices = $this->filingRule($mailbox, null, null, 2);
-        $replies = $this->filingRule($mailbox, [[['type' => FolderPath::ACTION, 'value' => 'Réponses']]], [[['type' => 'new_or_reply', 'operator' => 'reply']]], 3);
-
-        // never handled by Workflows (arrived before the rules): one invoice, one other e-mail
-        $invoice = $this->deliver($mailbox, 'Facture 41');
-        $hello = $this->deliver($mailbox, 'Bonjour');
-        list($c1) = $this->conversation($mailbox, $invoice);
-        list($c2) = $this->conversation($mailbox, $hello);
-        $c2->subject = 'Bonjour';
-        $c2->save();
-        // handled and filed by Workflows, then: one moved by hand (its subject no longer matches), one deleted
-        $moved = $this->deliver($mailbox);
-        $trashed = $this->deliver($mailbox, 'Facture 43');
-        list($c3) = $this->conversation($mailbox, $moved);
-        list($c4) = $this->conversation($mailbox, $trashed);
-        foreach ([$c3, $c4] as $c) {
-            ImapFolders::queue($c, 'Factures', $invoices);
-            $invoices->markProcessed($c->id);
-        }
-        $this->runQueued();
-        $this->moveByHand($mailbox, $moved, 'Factures', 'Archive');
-        $this->moveByHand($mailbox, $trashed, 'Factures', 'Trash');
-        $c3->subject = 'Re: commande';
-        $c3->save();
-
-        $response = $this->actingAs($admin)->post(route('workflowpacks.rules.toggle'), ['workflow_ids' => [$catchAll->id, $invoices->id, $replies->id], 'refile' => '1']);
-        $response->assertSessionHas('flash_success_floating', __('workflowpacks::messages.refile_started', ['rules' => 3, 'mailboxes' => 1]));
-        $filings = $this->runQueued();
-        $this->assertCount(4, $filings, 'one filing per ticket, the last rule only');
-        $this->assertTrue($filings[0]->anywhere, 'looked for outside the inbox');
-
-        $this->assertEqualsCanonicalizing([$invoice, $moved], $this->idsIn($mailbox, '[WP] Factures'), 'invoice never handled + e-mail moved by hand');
-        $this->assertSame([$hello], $this->idsIn($mailbox, '[WP] A traiter'), '"New" is true for an existing ticket');
-        $this->assertNull($this->idsIn($mailbox, '[WP] Réponses'), '"Reply" stays an event');
-        $this->assertSame([], $this->idsIn($mailbox, 'Archive'));
-        $this->assertSame([$trashed], $this->idsIn($mailbox, 'Trash'), 'the trash is never taken from');
-        $this->assertSame(\App\Conversation::STATUS_ACTIVE, (int) $c1->fresh()->status, 'the other actions of the rule are not done');
-        $this->assertStringContainsString(__('workflowpacks::messages.history_reason_found_in', ['folder' => 'Archive']), (string) $this->lastFiling($c3)->message);
-        $this->assertSame('not_found', $this->lastFiling($c4)->status);
-        $search = \Modules\WorkflowPacks\Entities\Activity::where('kind', 'rules')->where('mailbox_id', $mailbox->id)->orderBy('id', 'desc')->first();
-        $this->assertSame('ok', $search->status);
-        $this->assertSame(__('workflowpacks::messages.refile_result', ['seen' => 4, 'queued' => 4, 'skipped' => 0]), $search->message);
-
-        // again: already in place, nothing moves
-        $this->actingAs($admin)->post(route('workflowpacks.rules.toggle'), ['workflow_ids' => [$catchAll->id, $invoices->id], 'refile' => '1']);
-        $this->runQueued();
-        $this->assertSame('already', $this->lastFiling($c1)->status);
-        $this->assertSame('already', $this->lastFiling($c2)->status);
-    }
-
-    public function testFileAgainSaysWhatIsSkippedAndIsRefusedWhereNotAllowed()
-    {
-        \Queue::fake();
-        $a = $this->mailbox('A');
-        $b = $this->mailbox('B');
-        $agent = $this->user([$a], false, true);
-        $noFolder = $this->filingRule($a, [[['type' => 'status', 'value' => '3']]]);
-        $noImap = $this->filingRule($a);
-        $other = $this->filingRule($b);
-
-        $result = (new \Modules\WorkflowPacks\Services\Imap\Refiler())->rules($agent, [$noFolder->id, $noImap->id, $other->id]);
-        $this->assertSame([0, 0, 1, [$a->name]], [$result['rules'], $result['mailboxes'], $result['no_folder'], $result['no_imap']]);
-        $this->assertCount(1, $result['refused'], 'mailbox of others');
-        list($ok, $warning) = \Modules\WorkflowPacks\Services\Imap\Refiler::summary($result);
-        $this->assertNull($ok);
-        $this->assertStringContainsString(__('workflowpacks::messages.refile_no_imap', ['list' => $a->name]), $warning);
-        \Queue::assertNotPushed(RefileMailbox::class);
-
-        // only rules without folder: said once, not as a list of errors
-        $only = \Modules\WorkflowPacks\Services\Imap\Refiler::summary((new \Modules\WorkflowPacks\Services\Imap\Refiler())->rules($agent, [$noFolder->id]));
-        $this->assertSame([null, __('workflowpacks::messages.refile_nothing')], $only);
-
-        // the diagram offers it only for the rules filing into a folder
-        $edges = collect((new \Modules\WorkflowPacks\Services\Graph\GraphBuilder())->build($this->user([], true))['edges'])->where('kind', 'applies')->keyBy('workflow_id');
-        $this->assertFalse($edges[$noFolder->id]['files']);
-        $this->assertTrue($edges[$other->id]['files']);
-
-        // option off: nothing started, said
-        \Option::set(ImapFolders::OPTION_ENABLED, false);
-        $this->actingAs($this->user([], true))->post(route('workflowpacks.rules.toggle'), ['workflow_ids' => [$other->id], 'refile' => '1'])
-            ->assertSessionHas('flash_error_floating', __('workflowpacks::messages.history_reason_option_off'));
-        \Queue::assertNotPushed(RefileMailbox::class);
     }
 
     /** Mail server whose search by Message-ID answers nothing (some servers do): only reading the headers finds it. */
